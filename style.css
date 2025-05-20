@@ -1,0 +1,31 @@
+body {
+    background-color: #000000; /* Black background */
+    color: #00ff00; /* Bright green text */
+    font-family: monospace, "Courier New", Courier, monospace;
+    margin: 20px;
+    padding: 20px; /* Add some padding around the content */
+}
+
+.data-item {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #00ff00; /* Green border around each item */
+    display: flex; /* Use flexbox for label and value alignment */
+    align-items: center; /* Vertically align label and value */
+}
+
+.label {
+    font-weight: bold;
+    margin-right: 15px;
+    width: 200px; /* Adjust width as needed for your labels */
+    text-align: left;
+}
+
+.value {
+    /* No specific styling for now, but you can add later */
+}
+
+.loading {
+    font-style: italic;
+    color: #888888; /* Greyed out loading text */
+}
