@@ -1,5 +1,7 @@
 {
   "name": "lockmvp",
   "version": "1.0.0",
-  "dependencies": {}
+  "dependencies": {
+    "firebase-admin": "^12.x.x"
+  }
 }
