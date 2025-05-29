@@ -26,7 +26,7 @@ exports.handler = async function(event, context) {
     }
 
     const db = admin.firestore();
-    const collectionRef = db.collection('bonds_for_umbs'); // **IMPORTANT: REPLACE 'your_collection_name' with your actual Firestore collection name**
+    const collectionRef = db.collection('your_collection_name'); // **REPLACE IF NEEDED**
 
     // Query for the most recent document, ordered by timestamp (descending)
     const snapshot = await collectionRef.orderBy('timestamp', 'desc').limit(1).get();
@@ -42,11 +42,12 @@ exports.handler = async function(event, context) {
     const data = doc.data();
 
     const us10yValue = data.US10Y;
+    const us30yValue = data.US30Y; // Assuming your Firestore document has a field named 'US30Y'
     const timestamp = data.timestamp; // Assuming you have a timestamp field
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ US10Y: us10yValue, timestamp: timestamp }), // Include timestamp for display
+      body: JSON.stringify({ US10Y: us10yValue, US30Y: us30yValue, timestamp: timestamp }), // Include US30Y in the response
     };
 
   } catch (error) {
