@@ -1,4 +1,4 @@
-// netlify/functions/getData.js
+// netlify/functions/getData.js (working version for US10Y)
 
 const admin = require('firebase-admin');
 
@@ -26,7 +26,7 @@ exports.handler = async function(event, context) {
     }
 
     const db = admin.firestore();
-    const collectionRef = db.collection('bonds_for_umbs'); // **IMPORTANT: REPLACE 'your_collection_name' with your actual Firestore collection name**
+    const collectionRef = db.collection('bonds_for_umbs'); // **REPLACE IF NEEDED**
 
     // Query for the most recent document, ordered by timestamp (descending)
     const snapshot = await collectionRef.orderBy('timestamp', 'desc').limit(1).get();
@@ -46,7 +46,7 @@ exports.handler = async function(event, context) {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ US10Y: us10yValue, timestamp: timestamp }), // Include timestamp for display
+      body: JSON.stringify({ US10Y: us10yValue, timestamp: timestamp }),
     };
 
   } catch (error) {
