@@ -1,3 +1,13 @@
+// script.js
+
+console.log("JavaScript Loaded and Running!"); // Indicator in console
+
+// Add a visible indicator on the page
+const jsIndicator = document.createElement('div');
+jsIndicator.textContent = 'JavaScript Running!';
+jsIndicator.className = 'debug-indicator-js';
+document.body.appendChild(jsIndicator);
+
 async function fetchData() {
   try {
     const response = await fetch('/.netlify/functions/getData'); // Your Netlify Function URL
