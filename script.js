@@ -1,51 +1,86 @@
-// script.js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Data Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the data display */
+        body {
+            font-family: 'Inter', sans-serif; /* Using Inter font */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Full viewport height */
+            background-color: #f0f4f8; /* Light background color */
+            color: #333; /* Dark grey text color */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+        .data-card {
+            background-color: #ffffff; /* White background for the card */
+            border-radius: 12px; /* Rounded corners */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            padding: 30px;
+            text-align: center;
+            max-width: 400px; /* Max width for responsiveness */
+            width: 100%; /* Full width on smaller screens */
+            margin-bottom: 20px;
+        }
+        .data-card h1 {
+            color: #2c3e50; /* Dark blue-grey for heading */
+            font-size: 2.5rem; /* Large heading font size */
+            margin-bottom: 20px; /* Spacing below heading */
+        }
+        .data-card p {
+            font-size: 1.2rem; /* Paragraph font size */
+            color: #555; /* Medium grey text color */
+            margin-bottom: 8px; /* Spacing below paragraphs */
+        }
+        /* Specific styling for the US10Y value */
+        .data-card #us10y-value {
+            font-size: 5rem; /* Significantly larger font size */
+            font-weight: bold;
+            color: #3498db; /* Blue color for the main value */
+            display: block; /* Ensures it takes up full width */
+            margin-top: 10px;
+            margin-bottom: 20px; /* Spacing below US10Y value */
+        }
+        /* Specific styling for the US30Y value */
+        .data-card #us30y-value {
+            font-size: 3rem; /* Slightly smaller than US10Y, still prominent */
+            font-weight: bold;
+            color: #27ae60; /* A nice green for US30Y */
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 20px; /* Spacing below US30Y value */
+        }
+        /* Styling for the timestamp */
+        .data-card #us10y-timestamp {
+            font-size: 0.9rem; /* Smaller font for timestamp */
+            color: #7f8c8d; /* Grey color for timestamp */
+            margin-top: 20px; /* Spacing above timestamp */
+        }
+    </style>
+</head>
+<body>
 
-console.log("JavaScript Loaded and Running!"); // Indicator in console
+    <div class="data-card">
+        <h1>Bond Yields</h1>
+        <p>US10Y Bond Yield:</p>
+        <span id="us10y-value">Loading...</span>
 
-// Add a visible indicator on the page
-const jsIndicator = document.createElement('div');
-jsIndicator.textContent = 'JavaScript Running!';
-jsIndicator.className = 'debug-indicator-js';
-document.body.appendChild(jsIndicator);
+        <p>US30Y Bond Yield:</p>
+        <span id="us30y-value">Loading...</span>
 
-async function fetchData() {
-  try {
-    const response = await fetch('/.netlify/functions/getData'); // Your Netlify Function URL
-    const data = await response.json();
+        <p id="us10y-timestamp">Last updated: Loading...</p>
+    </div>
 
-    if (response.ok) {
-      const us10yElement = document.getElementById('us10y-value');
-      const timestampElement = document.getElementById('us10y-timestamp');
+    <script src="script.js"></script>
 
-      if (us10yElement) {
-        us10yElement.textContent = data.US10Y;
-      } else {
-        console.error('Element with ID "us10y-value" not found in HTML.');
-      }
-
-      if (timestampElement) {
-        timestampElement.textContent = `Last updated: ${data.timestamp}`;
-      } else {
-        console.error('Element with ID "us10y-timestamp" not found in HTML.');
-      }
-    } else {
-      console.error('Error fetching data:', data.error);
-      const us10yElement = document.getElementById('us10y-value');
-      const timestampElement = document.getElementById('us10y-timestamp');
-      if (us10yElement) us10yElement.textContent = 'Error loading data';
-      if (timestampElement) timestampElement.textContent = '';
-    }
-  } catch (error) {
-    console.error('Network error:', error);
-    const us10yElement = document.getElementById('us10y-value');
-    const timestampElement = document.getElementById('us10y-timestamp');
-    if (us10yElement) us10yElement.textContent = 'Network error';
-    if (timestampElement) timestampElement.textContent = '';
-  }
-}
-
-// Fetch data initially when the page loads
-fetchData();
-
-// Refresh data every 2 minutes (120000 milliseconds)
-setInterval(fetchData, 120000);
+</body>
+</html>
