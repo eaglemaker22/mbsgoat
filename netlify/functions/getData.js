@@ -26,7 +26,7 @@ exports.handler = async function(event, context) {
     }
 
     const db = admin.firestore();
-    const collectionRef = db.collection('your_collection_name'); // **IMPORTANT: REPLACE 'your_collection_name' with your actual Firestore collection name**
+    const collectionRef = db.collection('bonds_for_umbs'); // **IMPORTANT: REPLACE 'your_collection_name' with your actual Firestore collection name**
 
     // Query for the most recent document, ordered by timestamp (descending)
     const snapshot = await collectionRef.orderBy('timestamp', 'desc').limit(1).get();
