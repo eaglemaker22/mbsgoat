@@ -2,20 +2,30 @@
 
 const admin = require('firebase-admin');
 
-// Initialize Firebase Admin SDK
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-
-// Initialize Firebase Admin SDK
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
-}
-
-const db = admin.firestore();
-
 exports.handler = async function(event, context) {
   try {
+    const rawServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    let serviceAccount;
+
+    try {
+      serviceAccount = JSON.parse(rawServiceAccount);
+    } catch (parseError) {
+      console.error("Error parsing FIREBASE_SERVICE_ACCOUNT_KEY:", parseError);
+      console.error("Raw key value:", rawServiceAccount);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: "Error parsing Firebase service account key" }),
+      };
+    }
+
+    // Initialize Firebase Admin SDK
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    }
+
+    const db = admin.firestore();
     const docRef = db.collection('bonds_for_umbs').doc('0RSDuvdCKNIFcY47UzbS');
     const doc = await docRef.get();
 
