@@ -1,13 +1,7 @@
 {
-
-  "name": "lockmvp",
-
-  "version": "1.0.0",
-
-  "dependencies": {
-
-    "firebase-admin": "^12.x.x"
-
-  }
-
+"name": "lockmvp",
+"version": "1.0.0",
+"dependencies": {
+"firebase-admin": "^12.x.x"
+}
 }
