@@ -1,29 +1,41 @@
 // netlify/functions/getData.js
 
-import { initializeApp, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+const admin = require('firebase-admin');
 
-// Initialize Firebase
+// Initialize Firebase Admin SDK
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
 
-const app = initializeApp({
-  credential: cert(serviceAccount)
-});
+// Initialize Firebase Admin SDK
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+}
 
-const db = getFirestore(app);
+const db = admin.firestore();
 
-export default async (req, res) => {
+exports.handler = async function(event, context) {
   try {
     const docRef = db.collection('bonds_for_umbs').doc('0RSDuvdCKNIFcY47UzbS');
     const doc = await docRef.get();
 
     if (!doc.exists) {
-      return res.status(404).json({ error: 'Document not found' });
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: 'Document not found' }),
+      };
     }
 
-    return res.status(200).json(doc.data());
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return {
+      statusCode: 200,
+      body: JSON.stringify(doc.data()),
+    };
+  } catch (error) {
+    console.error("Function error:", error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
+    };
   }
 };
 
