@@ -1,4 +1,4 @@
-// netlify/functions/getData.js (working version for US10Y)
+// netlify/functions/getData.js (fetching both US10Y and US30Y)
 
 const admin = require('firebase-admin');
 
@@ -42,11 +42,12 @@ exports.handler = async function(event, context) {
     const data = doc.data();
 
     const us10yValue = data.US10Y;
-    const timestamp = data.timestamp; // Assuming you have a timestamp field
+    const us30yValue = data.US30Y; // Assuming 'US30Y' is a field in your Firestore document
+    const timestamp = data.timestamp;
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ US10Y: us10yValue, timestamp: timestamp }),
+      body: JSON.stringify({ US10Y: us10yValue, US30Y: us30yValue, timestamp: timestamp }),
     };
 
   } catch (error) {
