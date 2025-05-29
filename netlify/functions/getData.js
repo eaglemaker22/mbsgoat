@@ -26,20 +26,29 @@ exports.handler = async function(event, context) {
     }
 
     const db = admin.firestore();
-    const docRef = db.collection('bonds_for_umbs').doc('0RSDuvdCKNIFcY47UzbS');
-    const doc = await docRef.get();
+    const collectionRef = db.collection('your_collection_name'); // **IMPORTANT: REPLACE 'your_collection_name' with your actual Firestore collection name**
 
-    if (!doc.exists) {
+    // Query for the most recent document, ordered by timestamp (descending)
+    const snapshot = await collectionRef.orderBy('timestamp', 'desc').limit(1).get();
+
+    if (snapshot.empty) {
       return {
         statusCode: 404,
-        body: JSON.stringify({ error: 'Document not found' }),
+        body: JSON.stringify({ error: 'No documents found' }),
       };
     }
 
+    const doc = snapshot.docs[0]; // Get the first (and only) document
+    const data = doc.data();
+
+    const us10yValue = data.US10Y;
+    const timestamp = data.timestamp; // Assuming you have a timestamp field
+
     return {
       statusCode: 200,
-      body: JSON.stringify(doc.data()),
+      body: JSON.stringify({ US10Y: us10yValue, timestamp: timestamp }), // Include timestamp for display
     };
+
   } catch (error) {
     console.error("Function error:", error);
     return {
