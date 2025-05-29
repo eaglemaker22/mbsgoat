@@ -38,11 +38,17 @@ exports.handler = async function(event, context) {
       };
     }
 
-    const doc = snapshot.docs[0]; // Get the first (and only) document
+  const doc = snapshot.docs[0]; // Get the first (and only) document
     const data = doc.data();
 
     const us10yValue = data.US10Y;
-    const us30yValue = data.US30Y; // Assuming your Firestore document has a field named 'US30Y'
+    let us30yValue = data.US30Y; // Initialize
+
+    if (us30yValue === undefined) {
+      console.log("Warning: US30Y field not found in Firestore document.");
+      us30yValue = null; // Or some default value
+    }
+
     const timestamp = data.timestamp; // Assuming you have a timestamp field
 
     return {
