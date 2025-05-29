@@ -26,7 +26,7 @@ exports.handler = async function(event, context) {
     }
 
     const db = admin.firestore();
-    const collectionRef = db.collection('your_collection_name'); // **REPLACE IF NEEDED**
+    const collectionRef = db.collection('bonds_for_umbs'); // **IMPORTANT: REPLACE 'your_collection_name' with your actual Firestore collection name**
 
     // Query for the most recent document, ordered by timestamp (descending)
     const snapshot = await collectionRef.orderBy('timestamp', 'desc').limit(1).get();
@@ -38,22 +38,15 @@ exports.handler = async function(event, context) {
       };
     }
 
-  const doc = snapshot.docs[0]; // Get the first (and only) document
+    const doc = snapshot.docs[0]; // Get the first (and only) document
     const data = doc.data();
 
     const us10yValue = data.US10Y;
-    let us30yValue = data.US30Y; // Initialize
-
-    if (us30yValue === undefined) {
-      console.log("Warning: US30Y field not found in Firestore document.");
-      us30yValue = null; // Or some default value
-    }
-
     const timestamp = data.timestamp; // Assuming you have a timestamp field
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ US10Y: us10yValue, US30Y: us30yValue, timestamp: timestamp }), // Include US30Y in the response
+      body: JSON.stringify({ US10Y: us10yValue, timestamp: timestamp }), // Include timestamp for display
     };
 
   } catch (error) {
@@ -64,4 +57,3 @@ exports.handler = async function(event, context) {
     };
   }
 };
-
