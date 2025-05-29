@@ -52,15 +52,39 @@
             color: #7f8c8d; /* Grey for timestamp */
             margin-top: 20px;
         }
+        .debug-indicator-html {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: lightcoral;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            z-index: 1000; /* Ensure it's on top */
+        }
+        .debug-indicator-js {
+            position: absolute;
+            top: 30px;
+            left: 10px;
+            background-color: lightseagreen;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            z-index: 1000; /* Ensure it's on top */
+        }
     </style>
 </head>
 <body>
 
+    <div class="debug-indicator-html">Index Loaded!</div>
+
     <div class="data-card">
         <h1>US10Y Bond Yield</h1>
         <p>Current Value:</p>
-        <span id="us10y-value">Loading...</span>
-        <p id="us10y-timestamp">Last updated: Loading...</p>
+        <span id="us10y-value">Waiting for JavaScript...</span>
+        <p id="us10y-timestamp">Waiting for JavaScript...</p>
     </div>
 
     <script src="script.js"></script>
