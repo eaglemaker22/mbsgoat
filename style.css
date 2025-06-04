@@ -1,31 +1,65 @@
+/* Custom CSS for additional styling beyond Tailwind */
+
+/* Ensure the body takes full height and uses flex for sticky footer */
 body {
-    background-color: #000000; /* Black background */
-    color: #00ff00; /* Bright green text */
-    font-family: monospace, "Courier New", Courier, monospace;
-    margin: 20px;
-    padding: 20px; /* Add some padding around the content */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-.data-item {
-    margin-bottom: 15px;
-    padding: 10px;
-    border: 1px solid #00ff00; /* Green border around each item */
-    display: flex; /* Use flexbox for label and value alignment */
-    align-items: center; /* Vertically align label and value */
+/* Main content area to take available space */
+main {
+    flex: 1;
 }
 
-.label {
-    font-weight: bold;
-    margin-right: 15px;
-    width: 200px; /* Adjust width as needed for your labels */
-    text-align: left;
+/* Responsive grid for sections */
+@media (min-width: 768px) { /* md breakpoint */
+    .grid-cols-1 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
-.value {
-    /* No specific styling for now, but you can add later */
+/* General card styling (already mostly handled by Tailwind, but good to have a placeholder) */
+section {
+    display: flex;
+    flex-direction: column;
 }
 
-.loading {
-    font-style: italic;
-    color: #888888; /* Greyed out loading text */
+section h2 {
+    /* Tailwind classes handle most of this, but adding for clarity */
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom-width: 1px;
+    border-color: #e5e7eb; /* gray-200 */
 }
+
+section h3 {
+    /* Tailwind classes handle most of this */
+    margin-bottom: 0.5rem;
+}
+
+/* Ensure content inside sections fills available space */
+section > div:first-of-type {
+    flex-grow: 1;
+}
+
+/* Specific styling for change indicators (will be added by JS) */
+.change-positive {
+    color: #10B981; /* Tailwind green-500 */
+}
+
+.change-negative {
+    color: #EF4444; /* Tailwind red-500 */
+}
+
+/* Basic hover effects for interactive elements (if any are added later) */
+button:hover {
+    opacity: 0.9;
+}
+
+/* Ensure horizontal scrolling is avoided */
+html, body {
+    overflow-x: hidden;
+}
+
+
