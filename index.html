@@ -65,10 +65,10 @@
             margin-bottom: 5px;
         }
         /* Styling for the timestamp */
-        .data-card #timestamp {
+        .data-card .timestamp { /* Changed to class for multiple timestamps */
             font-size: 0.9rem; /* Smaller font for timestamp */
             color: #7f8c8d; /* Grey color for timestamp */
-            margin-top: 20px; /* Spacing above timestamp */
+            margin-top: 5px; /* Reduced top margin for closer proximity */
         }
     </style>
 </head>
@@ -78,7 +78,7 @@
         <h1>Bond Yields</h1>
         <p>US10Y Bond Yield:</p>
         <span id="us10y-value" class="main-value">Loading...</span>
-        <p class="detail-value">Open: <span id="us10y-open">Loading...</span></p>
+        <p id="us10y-timestamp" class="timestamp">Last updated: Loading...</p> <p class="detail-value">Open: <span id="us10y-open">Loading...</span></p>
         <p class="detail-value">+/- Daily: <span id="us10y-daily-change">Loading...</span></p>
         <p class="detail-value">Close: <span id="us10y-close">Loading...</span></p>
 
@@ -116,7 +116,7 @@
         <p class="detail-value">GNMA 5.5 Shadow Open: <span id="gnma-5-5-shadow-open">Loading...</span></p>
         <p class="detail-value">GNMA 6.0 Shadow Open: <span id="gnma-6-0-shadow-open">Loading...</span></p>
 
-        <p id="timestamp">Last updated: Loading...</p>
+        <p id="mbs-timestamp" class="timestamp">MBS Data Last updated: Loading...</p>
     </div>
 
     <script src="script.js"></script>
