@@ -36,31 +36,36 @@
             font-size: 2.5rem; /* Large heading font size */
             margin-bottom: 20px; /* Spacing below heading */
         }
+        .data-card h2 {
+            color: #34495e; /* Slightly lighter heading */
+            font-size: 1.8rem;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
         .data-card p {
             font-size: 1.2rem; /* Paragraph font size */
             color: #555; /* Medium grey text color */
             margin-bottom: 8px; /* Spacing below paragraphs */
         }
-        /* Specific styling for the US10Y value */
-        .data-card #us10y-value {
-            font-size: 5rem; /* Significantly larger font size */
+        /* Specific styling for the main values (e.g., current yields) */
+        .data-card .main-value {
+            font-size: 4rem; /* Significantly larger font size */
             font-weight: bold;
             color: #3498db; /* Blue color for the main value */
             display: block; /* Ensures it takes up full width */
             margin-top: 10px;
-            margin-bottom: 20px; /* Spacing below US10Y value */
+            margin-bottom: 20px; /* Spacing below value */
         }
-        /* Specific styling for the US30Y value */
-        .data-card #us30y-value {
-            font-size: 5rem; /* Slightly smaller than US10Y, still prominent */
-            font-weight: bold;
-            color: #3498db; /* A nice green for US30Y */
-            display: block;
-            margin-top: 10px;
-            margin-bottom: 20px; /* Spacing below US30Y value */
+        /* Styling for other data points like Open, Close, Daily Change */
+        .data-card .detail-value {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 5px;
         }
         /* Styling for the timestamp */
-        .data-card #us10y-timestamp {
+        .data-card #timestamp {
             font-size: 0.9rem; /* Smaller font for timestamp */
             color: #7f8c8d; /* Grey color for timestamp */
             margin-top: 20px; /* Spacing above timestamp */
@@ -72,12 +77,46 @@
     <div class="data-card">
         <h1>Bond Yields</h1>
         <p>US10Y Bond Yield:</p>
-        <span id="us10y-value">Loading...</span>
+        <span id="us10y-value" class="main-value">Loading...</span>
+        <p class="detail-value">Open: <span id="us10y-open">Loading...</span></p>
+        <p class="detail-value">+/- Daily: <span id="us10y-daily-change">Loading...</span></p>
+        <p class="detail-value">Close: <span id="us10y-close">Loading...</span></p>
 
-        <p>US30Y Bond Yield:</p>
-        <span id="us30y-value">Loading...</span>
+        <h2>UMBS 5.5</h2>
+        <p>Current Price:</p>
+        <span id="umbs-5-5-current" class="main-value">Loading...</span>
+        <p class="detail-value">Open: <span id="umbs-5-5-open">Loading...</span></p>
+        <p class="detail-value">+/- Daily: <span id="umbs-5-5-daily-change">Loading...</span></p>
+        <p class="detail-value">Close: <span id="umbs-5-5-close">Loading...</span></p>
 
-        <p id="us10y-timestamp">Last updated: Loading...</p>
+        <h2>UMBS 6.0</h2>
+        <p>Current Price:</p>
+        <span id="umbs-6-0-current" class="main-value">Loading...</span>
+        <p class="detail-value">Open: <span id="umbs-6-0-open">Loading...</span></p>
+        <p class="detail-value">+/- Daily: <span id="umbs-6-0-daily-change">Loading...</span></p>
+        <p class="detail-value">Close: <span id="umbs-6-0-close">Loading...</span></p>
+
+        <h2>GNMA 5.5</h2>
+        <p>Current Price:</p>
+        <span id="gnma-5-5-current" class="main-value">Loading...</span>
+        <p class="detail-value">Open: <span id="gnma-5-5-open">Loading...</span></p>
+        <p class="detail-value">+/- Daily: <span id="gnma-5-5-daily-change">Loading...</span></p>
+        <p class="detail-value">Close: <span id="gnma-5-5-close">Loading...</span></p>
+
+        <h2>GNMA 6.0</h2>
+        <p>Current Price:</p>
+        <span id="gnma-6-0-current" class="main-value">Loading...</span>
+        <p class="detail-value">Open: <span id="gnma-6-0-open">Loading...</span></p>
+        <p class="detail-value">+/- Daily: <span id="gnma-6-0-daily-change">Loading...</span></p>
+        <p class="detail-value">Close: <span id="gnma-6-0-close">Loading...</span></p>
+
+        <h2>Shadow Bonds (Open Only)</h2>
+        <p class="detail-value">UMBS 5.5 Shadow Open: <span id="umbs-5-5-shadow-open">Loading...</span></p>
+        <p class="detail-value">UMBS 6.0 Shadow Open: <span id="umbs-6-0-shadow-open">Loading...</span></p>
+        <p class="detail-value">GNMA 5.5 Shadow Open: <span id="gnma-5-5-shadow-open">Loading...</span></p>
+        <p class="detail-value">GNMA 6.0 Shadow Open: <span id="gnma-6-0-shadow-open">Loading...</span></p>
+
+        <p id="timestamp">Last updated: Loading...</p>
     </div>
 
     <script src="script.js"></script>
