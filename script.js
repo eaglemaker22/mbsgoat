@@ -1,281 +1,222 @@
-// Helper function to format timestamps
-function formatTimestamp(isoString) {
-    if (!isoString) return '--';
-    const date = new Date(isoString);
-    // Use Intl.DateTimeFormat for robust time zone and formatting
-    const options = {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-        timeZoneName: 'short',
-        timeZone: 'America/Phoenix' // MST (Phoenix, Arizona doesn't observe DST)
-    };
-    return new Intl.DateTimeFormat('en-US', options).format(date);
-}
+// Ensure this script runs after the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
 
-// Helper function to apply color based on change
-function applyChangeColor(element, value, dataType) {
-    element.textContent = value !== null ? (value > 0 ? `+${value}` : value.toString()) : '--';
-    element.classList.remove('text-green-600', 'text-red-600', 'text-gray-700'); // Remove previous colors
-
-    if (dataType === 'positive-red-negative-green') {
-        if (value > 0) {
-            element.classList.add('text-red-600');
-        } else if (value < 0) {
-            element.classList.add('text-green-600');
-        } else {
-            element.classList.add('text-gray-700');
-        }
-    } else if (dataType === 'positive-green-negative-red') {
-        if (value > 0) {
-            element.classList.add('text-green-600');
-        } else if (value < 0) {
-            element.classList.add('text-red-600');
-        } else {
-            element.classList.add('text-gray-700');
-        }
-    } else {
-        element.classList.add('text-gray-700'); // Default color if data-type is not specified or recognized
-    }
-}
-
-
-// Fetch MBS Products Data
-async function fetchMBSData() {
-    try {
-        const response = await fetch('/.netlify/functions/getMBSData');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-
-        const products = [
-            { id: 'umbs-5-5', prefix: 'UMBS55' },
-            { id: 'umbs-6-0', prefix: 'UMBS60' },
-            { id: 'gnma-5-5', prefix: 'GNMA55' },
-            { id: 'gnma-6-0', prefix: 'GNMA60' }
-        ];
-
-        products.forEach(product => {
-            const currentElem = document.getElementById(`${product.id}-current`);
-            const changeElem = document.getElementById(`${product.id}-change`);
-            const openElem = document.getElementById(`${product.id}-open`);
-            const todayCloseElem = document.getElementById(`${product.id}-today-close`);
-            const priorCloseElem = document.getElementById(`${product.id}-prior-close`);
-            const highElem = document.getElementById(`${product.id}-high`);
-            const lowElem = document.getElementById(`${product.id}-low`);
-
-            const current = data[`${product.prefix}_Current`];
-            const change = data[`${product.prefix}_Change`];
-            const open = data[`${product.prefix}_Open`];
-            const todayClose = data[`${product.prefix}_Close`]; // Assuming 'Close' refers to Today Close
-            const priorClose = data[`${product.prefix}_PriorDayClose`];
-            const high = data[`${product.prefix}_TodayHigh`];
-            const low = data[`${product.prefix}_TodayLow`];
-
-            if (currentElem) currentElem.textContent = current !== null ? current : '--';
-            if (openElem) openElem.textContent = open !== null ? open : '--';
-            if (todayCloseElem) todayCloseElem.textContent = todayClose !== null ? todayClose : '--';
-            if (priorCloseElem) priorCloseElem.textContent = priorClose !== null ? priorClose : '--';
-            if (highElem) highElem.textContent = high !== null ? high : '--';
-            if (lowElem) lowElem.textContent = low !== null ? low : '--';
-            if (changeElem) {
-                applyChangeColor(changeElem, change, changeElem.dataset.type);
-            }
-        });
-
-        const timestampElem = document.getElementById('mbs-timestamp');
-        if (timestampElem) {
-            timestampElem.textContent = formatTimestamp(data.Timestamp);
-        }
-
-    } catch (error) {
-        console.error('Error fetching MBS data:', error);
-        document.getElementById('mbs-timestamp').textContent = 'Error loading data';
-    }
-}
-
-// Fetch Shadow Bonds Data
-async function fetchShadowBondsData() {
-    try {
-        const response = await fetch('/.netlify/functions/getShadowBondsData');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-
-        const products = [
-            { id: 'umbs-5-5-shadow', prefix: 'UMBS55_Shadow' },
-            { id: 'umbs-6-0-shadow', prefix: 'UMBS60_Shadow' },
-            { id: 'gnma-5-5-shadow', prefix: 'GNMA55_Shadow' },
-            { id: 'gnma-6-0-shadow', prefix: 'GNMA60_Shadow' }
-        ];
-
-        products.forEach(product => {
-            const currentElem = document.getElementById(`${product.id}-current`);
-            const changeElem = document.getElementById(`${product.id}-change`);
-            const openElem = document.getElementById(`${product.id}-open`);
-            const todayCloseElem = document.getElementById(`${product.id}-today-close`);
-            const priorCloseElem = document.getElementById(`${product.id}-prior-close`);
-            const highElem = document.getElementById(`${product.id}-high`);
-            const lowElem = document.getElementById(`${product.id}-low`);
-
-            const current = data[`${product.prefix}_Current`];
-            const change = data[`${product.prefix}_Change`];
-            const open = data[`${product.prefix}_Open`];
-            const todayClose = data[`${product.prefix}_Close`];
-            const priorClose = data[`${product.prefix}_PriorDayClose`];
-            const high = data[`${product.prefix}_TodayHigh`];
-            const low = data[`${product.prefix}_TodayLow`];
-
-            if (currentElem) currentElem.textContent = current !== null ? current : '--';
-            if (openElem) openElem.textContent = open !== null ? open : '--';
-            if (todayCloseElem) todayCloseElem.textContent = todayClose !== null ? todayClose : '--';
-            if (priorCloseElem) priorCloseElem.textContent = priorClose !== null ? priorClose : '--';
-            if (highElem) highElem.textContent = high !== null ? high : '--';
-            if (lowElem) lowElem.textContent = low !== null ? low : '--';
-            if (changeElem) {
-                applyChangeColor(changeElem, change, changeElem.dataset.type);
-            }
-        });
-
-        const timestampElem = document.getElementById('shadow-timestamp');
-        if (timestampElem) {
-            timestampElem.textContent = formatTimestamp(data.Timestamp);
-        }
-
-    } catch (error) {
-        console.error('Error fetching Shadow Bonds data:', error);
-        document.getElementById('shadow-timestamp').textContent = 'Error loading data';
-    }
-}
-
-// Fetch US 10-Year Treasury Yield Data
-async function fetchUS10YData() {
-    try {
-        const response = await fetch('/.netlify/functions/getUS10YData');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-
-        const currentElem = document.getElementById('us10y-current');
-        const changeElem = document.getElementById('us10y-change');
-        const openElem = document.getElementById('us10y-open');
-        const todayCloseElem = document.getElementById('us10y-today-close');
-        const priorCloseElem = document.getElementById('us10y-prior-close');
-        const highElem = document.getElementById('us10y-high');
-        const lowElem = document.getElementById('us10y-low');
-        const timestampElem = document.getElementById('us10y-timestamp');
-
-        if (currentElem) currentElem.textContent = data.US10Y_Current !== null ? data.US10Y_Current : '--';
-        if (openElem) openElem.textContent = data.US10Y_Open !== null ? data.US10Y_Open : '--';
-        if (todayCloseElem) todayCloseElem.textContent = data.US10Y_Close !== null ? data.US10Y_Close : '--';
-        if (priorCloseElem) priorCloseElem.textContent = data.US10Y_PriorDayClose !== null ? data.US10Y_PriorDayClose : '--';
-        if (highElem) highElem.textContent = data.US10Y_TodayHigh !== null ? data.US10Y_TodayHigh : '--';
-        if (lowElem) lowElem.textContent = data.US10Y_TodayLow !== null ? data.US10Y_TodayLow : '--';
-
-        if (changeElem) {
-            applyChangeColor(changeElem, data.US10Y_Change, changeElem.dataset.type);
-        }
-
-        if (timestampElem) {
-            timestampElem.textContent = formatTimestamp(data.Timestamp);
-        }
-
-    } catch (error) {
-        console.error('Error fetching US 10-Year Treasury Yield data:', error);
-        document.getElementById('us10y-timestamp').textContent = 'Error loading data';
-    }
-}
-
-// Fetch Mortgage Rates Data (updated to build table rows dynamically)
-async function fetchMortgageRatesData() {
-    try {
-        const response = await fetch('/.netlify/functions/getMortgageRatesData'); // Adjust endpoint if needed
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        const tableBody = document.getElementById('mortgage-rates-table-body');
-        const timestampElem = document.getElementById('mortgage-rates-timestamp');
-
-        if (!tableBody) {
-            console.error('Mortgage rates table body element not found!');
-            if (timestampElem) timestampElem.textContent = 'Error loading data';
+    // Function to apply color based on value and data-type attribute
+    // This function should be called whenever you update a 'change' value
+    function applyChangeColor(elementId, value) {
+        const element = document.getElementById(elementId);
+        if (!element) {
+            console.warn(`Element with ID ${elementId} not found.`);
             return;
         }
 
-        // Clear existing rows
-        tableBody.innerHTML = '';
+        // Remove any previous color classes to ensure clean state
+        element.classList.remove('text-green-600', 'text-red-600', 'text-gray-700');
 
-        if (data.Rates && Array.isArray(data.Rates)) {
-            data.Rates.forEach(item => {
-                const row = document.createElement('tr');
-                row.classList.add('border-b', 'border-gray-100');
-                row.innerHTML = `
-                    <td class="py-1 px-2 font-semibold text-gray-800">${item.product || '--'}</td>
-                    <td class="py-1 px-2 text-gray-700">${item.rate || '--'}</td>
-                    <td class="py-1 px-2 text-gray-700">${item.apr || '--'}</td>
-                    <td class="py-1 px-2 text-gray-700">${item.points || '--'}</td>
-                    <td class="py-1 px-2 text-gray-700">${item.pi || '--'}</td>
-                `;
-                tableBody.appendChild(row);
-            });
+        const dataType = element.getAttribute('data-type');
+        const numValue = parseFloat(value); // Convert value to a number for comparison
+
+        // Check if the value is a valid number, otherwise set default
+        if (isNaN(numValue)) {
+            element.textContent = '--'; // Display placeholder
+            element.classList.add('text-gray-700'); // Default color
+            return;
+        }
+
+        // Apply coloring logic based on data-type
+        if (dataType === 'positive-red-negative-green') { // For MBS/Shadow Bonds (Price)
+            if (numValue < 0) {
+                element.classList.add('text-green-600'); // Negative change (price up) is good
+            } else if (numValue > 0) {
+                element.classList.add('text-red-600');    // Positive change (price down) is bad
+            } else {
+                element.classList.add('text-gray-700');   // No change
+            }
+        } else if (dataType === 'positive-green-negative-red') { // For US10Y (Yield)
+            if (numValue > 0) {
+                element.classList.add('text-green-600'); // Positive change (yield up) is good for bond holders looking to buy, bad for borrowers
+            } else if (numValue < 0) {
+                element.classList.add('text-red-600');    // Negative change (yield down) is bad for bond holders looking to buy, good for borrowers
+            } else {
+                element.classList.add('text-gray-700');   // No change
+            }
         } else {
-             // If no data or invalid data, display a message
-             const row = document.createElement('tr');
-             row.innerHTML = `<td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">No mortgage rates data available.</td>`;
-             tableBody.appendChild(row);
+            element.classList.add('text-gray-700'); // Fallback default color
         }
 
-        if (timestampElem) {
-            timestampElem.textContent = formatTimestamp(data.Timestamp);
-        }
-
-    } catch (error) {
-        console.error('Error fetching Mortgage Rates data:', error);
-        document.getElementById('mortgage-rates-timestamp').textContent = 'Error loading data';
-        const tableBody = document.getElementById('mortgage-rates-table-body');
-        if (tableBody) {
-             tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-sm text-red-500">Failed to load data. Please try again.</td></tr>`;
-        }
+        // Update the displayed text, adding a '+' sign for positive changes if desired
+        element.textContent = (numValue > 0 && dataType !== 'positive-red-negative-green' ? '+' : '') + value;
+        // Note: For MBS/Shadow Bonds, a positive change is red, so you might not want a '+' sign for it
+        // Adjust the above line as needed based on your exact display preference for positive/negative signs.
     }
-}
+
+    // --- IMPORTANT: How to integrate this into your existing data fetching ---
+    // You will have code that fetches data (e.g., using `fetch()` or `XMLHttpRequest`)
+    // from your Python backend. Let's assume your data comes back in a structure
+    // like this (you'll need to adapt this to your actual data structure):
+    /*
+    const liveData = {
+        mbs: {
+            'umbs-5-5-current': '99.50',
+            'umbs-5-5-change': '-0.125',
+            'umbs-6-0-current': '100.25',
+            'umbs-6-0-change': '0.0625',
+            // ... other MBS data
+        },
+        shadow: {
+            'umbs-5-5-shadow-current': '99.60',
+            'umbs-5-5-shadow-change': '-0.05',
+            // ... other shadow data
+        },
+        us10y: {
+            'us10y-current': '4.25',
+            'us10y-change': '0.02',
+        }
+    };
+    */
+
+    // Example of how you would populate data and then apply colors:
+    function populateAndColorDashboard(data) {
+        // MBS Products
+        document.getElementById('umbs-5-5-current').textContent = data.mbs['umbs-5-5-current'];
+        applyChangeColor('umbs-5-5-change', data.mbs['umbs-5-5-change']);
+
+        document.getElementById('umbs-6-0-current').textContent = data.mbs['umbs-6-0-current'];
+        applyChangeColor('umbs-6-0-change', data.mbs['umbs-6-0-change']);
+
+        document.getElementById('gnma-5-5-current').textContent = data.mbs['gnma-5-5-current'];
+        applyChangeColor('gnma-5-5-change', data.mbs['gnma-5-5-change']);
+
+        document.getElementById('gnma-6-0-current').textContent = data.mbs['gnma-6-0-current'];
+        applyChangeColor('gnma-6-0-change', data.mbs['gnma-6-0-change']);
+
+        // Shadow Bonds
+        document.getElementById('umbs-5-5-shadow-current').textContent = data.shadow['umbs-5-5-shadow-current'];
+        applyChangeColor('umbs-5-5-shadow-change', data.shadow['umbs-5-5-shadow-change']);
+
+        document.getElementById('umbs-6-0-shadow-current').textContent = data.shadow['umbs-6-0-shadow-current'];
+        applyChangeColor('umbs-6-0-shadow-change', data.shadow['umbs-6-0-shadow-change']);
+
+        document.getElementById('gnma-5-5-shadow-current').textContent = data.shadow['gnma-5-5-shadow-current'];
+        applyChangeColor('gnma-5-5-shadow-change', data.shadow['gnma-5-5-shadow-change']);
+
+        document.getElementById('gnma-6-0-shadow-current').textContent = data.shadow['gnma-6-0-shadow-current'];
+        applyChangeColor('gnma-6-0-shadow-change', data.shadow['gnma-6-0-shadow-change']);
+
+        // US 10-Year Treasury Yield
+        document.getElementById('us10y-current').textContent = data.us10y['us10y-current'] + '%';
+        applyChangeColor('us10y-change', data.us10y['us10y-change']);
+
+        // ... continue for other fields like open, high, low, close if your data includes them
+        // document.getElementById('umbs-5-5-open').textContent = data.mbs['umbs-5-5-open'];
+        // etc.
+
+        // Update timestamps (if your data includes them)
+        // document.getElementById('mbs-timestamp').textContent = data.mbs.timestamp;
+        // document.getElementById('shadow-timestamp').textContent = data.shadow.timestamp;
+        // document.getElementById('us10y-timestamp').textContent = data.us10y.timestamp;
+        // document.getElementById('last-updated-overall').textContent = data.overallTimestamp;
+    }
+
+    // --- Example of fetching real data (replace with your actual Python API call) ---
+    // fetch('/your-api-endpoint') // Replace with the actual URL your Python Flask/Django serves data from
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         populateAndColorDashboard(data);
+    //     })
+    //     .catch(error => {
+    //         console.error('Error fetching dashboard data:', error);
+    //         // Optionally display an error message on the dashboard
+    //     });
 
 
-// Initial data fetch on page load
-document.addEventListener('DOMContentLoaded', () => {
-    fetchMBSData();
-    fetchShadowBondsData();
-    fetchUS10YData();
-    fetchMortgageRatesData();
+    // --- For testing, you can use mock data like this. Remove or comment out in production. ---
+    const mockData = {
+        mbs: {
+            'umbs-5-5-current': '99.50',
+            'umbs-5-5-change': '-0.125', // Should be green for MBS
+            'umbs-5-5-open': '99.60',
+            'umbs-5-5-today-close': '99.50',
+            'umbs-5-5-prior-close': '99.625',
+            'umbs-5-5-high': '99.70',
+            'umbs-5-5-low': '99.40',
 
-    // Set up refresh interval (e.g., every 5 minutes for MBS, Shadow, US10Y)
-    // You might want a different interval for mortgage rates if it updates less frequently
-    setInterval(fetchMBSData, 5 * 60 * 1000); // 5 minutes
-    setInterval(fetchShadowBondsData, 5 * 60 * 1000); // 5 minutes
-    setInterval(fetchUS10YData, 5 * 60 * 1000); // 5 minutes
-    setInterval(fetchMortgageRatesData, 10 * 60 * 1000); // 10 minutes
+            'umbs-6-0-current': '100.25',
+            'umbs-6-0-change': '0.0625', // Should be red for MBS
+            'umbs-6-0-open': '100.1875',
+            'umbs-6-0-today-close': '100.25',
+            'umbs-6-0-prior-close': '100.1875',
+            'umbs-6-0-high': '100.30',
+            'umbs-6-0-low': '100.10',
+
+            'gnma-5-5-current': '98.75',
+            'gnma-5-5-change': '-0.03125', // Should be green for MBS
+            'gnma-5-5-open': '98.80',
+            'gnma-5-5-today-close': '98.75',
+            'gnma-5-5-prior-close': '98.78125',
+            'gnma-5-5-high': '98.90',
+            'gnma-5-5-low': '98.60',
+
+            'gnma-6-0-current': '99.875',
+            'gnma-6-0-change': '0.09375', // Should be red for MBS
+            'gnma-6-0-open': '99.78125',
+            'gnma-6-0-today-close': '99.875',
+            'gnma-6-0-prior-close': '99.78125',
+            'gnma-6-0-high': '99.95',
+            'gnma-6-0-low': '99.70',
+        },
+        shadow: {
+            'umbs-5-5-shadow-current': '99.60',
+            'umbs-5-5-shadow-change': '-0.05', // Should be green for Shadows
+            'umbs-5-5-shadow-open': '99.65',
+            'umbs-5-5-shadow-today-close': '99.60',
+            'umbs-5-5-shadow-prior-close': '99.65',
+            'umbs-5-5-shadow-high': '99.75',
+            'umbs-5-5-shadow-low': '99.50',
+
+            'umbs-6-0-shadow-current': '100.30',
+            'umbs-6-0-shadow-change': '0.02', // Should be red for Shadows
+            'umbs-6-0-shadow-open': '100.28',
+            'umbs-6-0-shadow-today-close': '100.30',
+            'umbs-6-0-shadow-prior-close': '100.28',
+            'umbs-6-0-shadow-high': '100.35',
+            'umbs-6-0-shadow-low': '100.20',
+
+            'gnma-5-5-shadow-current': '98.80',
+            'gnma-5-5-shadow-change': '-0.01', // Should be green for Shadows
+            'gnma-5-5-shadow-open': '98.81',
+            'gnma-5-5-shadow-today-close': '98.80',
+            'gnma-5-5-shadow-prior-close': '98.81',
+            'gnma-5-5-shadow-high': '98.85',
+            'gnma-5-5-shadow-low': '98.70',
+
+            'gnma-6-0-shadow-current': '99.90',
+            'gnma-6-0-shadow-change': '0.03', // Should be red for Shadows
+            'gnma-6-0-shadow-open': '99.87',
+            'gnma-6-0-shadow-today-close': '99.90',
+            'gnma-6-0-shadow-prior-close': '99.87',
+            'gnma-6-0-shadow-high': '99.95',
+            'gnma-6-0-shadow-low': '99.80',
+        },
+        us10y: {
+            'us10y-current': '4.25',
+            'us10y-change': '0.02', // Should be green for US10Y
+            'us10y-open': '4.23',
+            'us10y-today-close': '4.25',
+            'us10y-prior-close': '4.23',
+            'us10y-high': '4.27',
+            'us10y-low': '4.20',
+        }
+    };
+
+    populateAndColorDashboard(mockData);
+
+    // You would typically set up a setInterval here to refresh the data periodically
+    // For example, every 30 seconds:
+    // setInterval(() => {
+    //     fetch('/your-api-endpoint')
+    //         .then(response => response.json())
+    //         .then(data => populateAndColorDashboard(data))
+    //         .catch(error => console.error('Error refreshing data:', error));
+    // }, 30000);
 });
-
-// Update overall last updated timestamp (could be based on the latest fetch or a separate API)
-async function updateOverallTimestamp() {
-    // This could be updated to reflect the latest timestamp from any of the fetched data,
-    // or from a dedicated API endpoint for a global last update time.
-    // For now, it will update after all initial fetches are done.
-    const lastUpdatedOverallElem = document.getElementById('last-updated-overall');
-    if (lastUpdatedOverallElem) {
-        // A simple approach: use current time if no specific global timestamp is available
-        lastUpdatedOverallElem.textContent = `Last Updated: ${formatTimestamp(new Date().toISOString())}`;
-    }
-}
-
-// Call updateOverallTimestamp after all fetches are done (or on an interval)
-// For simplicity, let's call it after the initial DOMContentLoaded fetches
-document.addEventListener('DOMContentLoaded', updateOverallTimestamp);
-// And then periodically, perhaps less frequently than individual data fetches
-setInterval(updateOverallTimestamp, 60 * 1000); // Every 1 minute
