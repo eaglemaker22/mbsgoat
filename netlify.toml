@@ -1,10 +1,9 @@
 [build]
-  # Assuming index.html and other static files are in the repository root
-  publish = "." 
-  command = "echo 'Deploying static site from root'"
+  base = "WebApp_LockMVP"
+  publish = "WebApp_LockMVP"
+  command = "echo 'Deploying static site'"
 
 [functions]
-  # Assuming functions are in netlify/functions at the repository root
   directory = "netlify/functions"
   node_bundler = "esbuild"
   node_version = "18"
