@@ -1,12 +1,15 @@
 [build]
-  base = "LockMVP"
-  publish = "LockMVP"
+  base = "WebApp_LockMVP"
+  publish = "WebApp_LockMVP"
   command = "echo 'Deploying static site'"
+  # Set Node.js version as a global environment variable for the build
+  # This often implicitly applies to functions and avoids the specific parsing error.
+  environment = { NODE_VERSION = "18" }
 
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  node_version = "18"
+  # Removed `node_version = "18"` from here to avoid the parsing error.
 
 [[redirects]]
   from = "/*"
