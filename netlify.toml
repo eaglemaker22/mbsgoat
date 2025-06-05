@@ -1,6 +1,6 @@
 [build]
-  base = "WebApp_LockMVP"
-  publish = "WebApp_LockMVP"
+  base = "LockMVP"
+  publish = "LockMVP"
   command = "echo 'Deploying static site'"
   # Set Node.js version as a global environment variable for the build
   # This often implicitly applies to functions and avoids the specific parsing error.
