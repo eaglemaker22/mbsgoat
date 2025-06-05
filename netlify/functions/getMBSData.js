@@ -1,25 +1,33 @@
-// netlify/functions/getMBSData.js
 const admin = require('firebase-admin');
 
-// Initialize Firebase Admin SDK ONLY ONCE
+// Ensure the Firebase Admin SDK is initialized only once.
 if (!admin.apps.length) {
+    let serviceAccount;
     try {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+    } catch (e) {
+        console.error("FIREBASE_SERVICE_ACCOUNT_KEY parsing error:", e);
+        return { statusCode: 500, body: JSON.stringify({ error: "Server configuration error: Invalid Firebase service account key." }) };
+    }
+
+    try {
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
         console.log('Firebase Admin SDK initialized successfully for MBS data.');
-    } catch (error) {
+    } catch (e) {
         console.error('Error initializing Firebase Admin SDK for MBS data:', error);
-        throw new Error('Firebase initialization failed: ' + error.message);
+        return { statusCode: 500, body: JSON.stringify({ error: "Server initialization error: Firebase Admin SDK failed to initialize." }) };
     }
 }
 
-const db = admin.firestore();
+// Get the Firestore database instance
+const db = admin.firestore(); // Correctly get the Firestore client
 
 exports.handler = async (event, context) => {
     try {
-        const mbsRef = db.collection('market_data').document('mbs_products');
+        // UNIQUE PART: Reference to the 'mbs_products' document
+        const mbsRef = db.collection('market_data').doc('mbs_products');
         const doc = await mbsRef.get();
 
         if (!doc.exists) {
