@@ -1,6 +1,6 @@
 [build]
-  base = "WebApp_LockMVP"
-  publish = "WebApp_LockMVP"
+  base = "LockMVP"
+  publish = "LockMVP"
   command = "echo 'Deploying static site'"
 
 [functions]
