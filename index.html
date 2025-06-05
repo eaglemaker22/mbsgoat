@@ -149,7 +149,7 @@
                         <span class="font-medium"> | Change:</span> <span id="gnma-6-0-shadow-change" class="font-bold text-xl text-gray-700" data-type="positive-red-negative-green">--</span>
                     </p>
                     <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Open:</span> <span id="gnma-6-0-shadow-open">--</span> |
+                        <span class="font-medium">Open:</span> <span id="gnma-6-0-open">--</span> |
                         <span class="font-medium">Today Close:</span> <span id="gnma-6-0-today-close">--</span>
                     </p>
                     <p class="text-gray-700 text-sm">
@@ -160,7 +160,7 @@
                 </div>
             </div>
             <div class="mt-auto pt-4 border-t border-gray-100 text-right text-sm text-gray-500">
-                Last Updated: <span id="shadow-timestamp">--</span>
+                Last Updated: <span id="mbs-timestamp">--</span>
             </div>
         </section>
 
@@ -190,24 +190,57 @@
             <h2 class="text-2xl font-semibold text-red-700 mb-4 pb-2 border-b border-gray-200">Mortgage Rates</h2>
             <div class="flex-grow text-sm">
                 <table class="w-full text-left table-auto">
-                    <thead>
-                        <tr class="border-b border-gray-200">
-                            <th class="py-2 px-6 font-medium text-gray-600">Product</th>
-                            <th class="py-2 px-6 font-medium text-gray-600">Rate</th>
-                            <th class="py-2 px-6 font-medium text-gray-600">APR</th>
-                            <th class="py-2 px-6 font-medium text-gray-600">Points</th>
-                            <th class="py-2 px-6 font-medium text-gray-600">Monthly P&I</th>
+                    <tbody>
+                        <tr class="border-b border-gray-100">
+                            <td class="py-1 px-2 font-semibold text-gray-800">Conf 30 Yr Fix</td>
+                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Today</th>
+                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Yesterday</th>
+                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800"></th> </tr>
+                        <tr class="border-b border-gray-100">
+                            <td class="py-1 px-2">Rate</td> <td class="py-1 px-2 text-gray-700">6.88%</td>
+                            <td class="py-1 px-2 text-gray-700">6.88%</td>
+                            <td class="py-1 px-2"></td> </tr>
+                        <tr class="h-2"></tr> <tr class="border-b border-gray-100">
+                            <td class="py-1 px-2 font-semibold text-gray-800">Freddie Mac</td>
+                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">06/05/25</th>
+                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Prior Week</th>
+                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800"></th> </tr>
+                        <tr class="border-b border-gray-100">
+                            <td class="py-1 px-2">30 Yr Fix</td>
+                            <td class="py-1 px-2 text-gray-700">6.85%</td>
+                            <td class="py-1 px-2 text-gray-700">6.89%</td>
+                            <td class="py-1 px-2"></td> </tr>
+                        <tr class="border-b border-gray-100">
+                            <td class="py-1 px-2">15 Yr Fix</td>
+                            <td class="py-1 px-2 text-gray-700">5.99%</td>
+                            <td class="py-1 px-2 text-gray-700">6.04%</td>
+                            <td class="py-1 px-2"></td> </tr>
+                        <tr class="h-2"></tr> <tr class="border-b border-gray-100">
+                            <td class="py-1 px-2 font-semibold text-gray-800">Fed Funds Rate</td>
+                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Since Jan '25</th>
+                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Next Meeting</th>
+                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Target Range</th>
                         </tr>
-                    </thead>
-                    <tbody id="mortgage-rates-table-body">
-                        <tr>
-                            <td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">Loading mortgage rates...</td>
+                        <tr class="border-b border-gray-100">
+                            <td class="py-1 px-2">Effective Rate</td>
+                            <td class="py-1 px-2 text-gray-700">4.33%</td>
+                            <td class="py-1 px-2 text-gray-700">06/18/25</td>
+                            <td class="py-1 px-2 text-gray-700">4.25%-4.5%</td>
                         </tr>
+                        <tr class="h-2"></tr> <tr class="border-b border-gray-100">
+                            <td class="py-1 px-2 font-semibold text-gray-800">Prime Rate</td>
+                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Current Rate</th>
+                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Effective Since</th>
+                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800"></th> </tr>
+                        <tr class="border-b border-gray-100">
+                            <td class="py-1 px-2">Rate</td> <td class="py-1 px-2 text-gray-700">7.50%</td>
+                            <td class="py-1 px-2 text-gray-700">12/18/24</td>
+                            <td class="py-1 px-2"></td> </tr>
                     </tbody>
                 </table>
             </div>
             <div class="mt-auto pt-4 border-t border-gray-100 text-right text-sm text-gray-500">
-                Last Updated: <span id="mortgage-rates-timestamp">--</span>
+                Last Updated: 06/05/2025 2:15 PM MST
             </div>
         </section>
 
