@@ -1,169 +1,65 @@
-/* --- Global Styles --- */
-body {
-    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f0f2f5;
-    color: #333;
-    line-height: 1.6;
-}
-
-/* --- Header & Footer --- */
-header {
-    background-color: #2c3e50; /* Dark blue/grey */
-    color: #ffffff;
-    padding: 20px 0;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Subtle shadow */
-    margin-bottom: 20px; /* Space below header */
-}
-
-header h1 {
-    margin: 0;
-    font-size: 2.2em;
-    letter-spacing: 1px;
-}
-
-footer {
-    background-color: #2c3e50; /* Same as header */
-    color: #ffffff;
-    padding: 15px 0;
-    text-align: center;
-    margin-top: 30px; /* Space above footer */
-    font-size: 0.9em;
-}
-
-/* --- Dashboard Container --- */
+/* Overall dashboard container */
 .dashboard-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 25px; /* Slightly more space between sections */
-    padding: 15px; /* Padding around the entire dashboard area */
-    max-width: 1200px; /* Max width for the dashboard content */
-    margin: 0 auto; /* Center the dashboard container */
+    display: flex; /* Enables Flexbox */
+    flex-wrap: wrap; /* Allows columns to wrap to the next line on smaller screens */
+    gap: 20px; /* Space between columns/sections */
+    padding: 10px; /* Some padding around the entire dashboard */
     justify-content: center; /* Center the columns if there's extra space */
 }
 
-/* --- Dashboard Columns --- */
+/* Individual columns within the dashboard */
 .dashboard-column {
     display: flex;
     flex-direction: column; /* Stack sections vertically within each column */
-    gap: 25px; /* Space between sections within a column */
+    gap: 20px; /* Space between sections within a column */
     flex: 1; /* Allows columns to grow and shrink */
-    min-width: 320px; /* Slightly larger min-width for phone view */
-    max-width: 49%; /* Adjust for side-by-side on larger screens, leaving room for gap */
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    min-width: 300px; /* Minimum width for each column before wrapping */
+    max-width: 48%; /* Adjust for side-by-side on larger screens, leave room for gap */
 }
 
-/* --- Individual Dashboard Sections (the "boxes") --- */
+/* Common styling for all dashboard sections */
 .dashboard-section {
-    background-color: #ffffff; /* Clean white background for boxes */
-    border: 1px solid #e0e0e0; /* Lighter, subtle border */
-    border-radius: 12px; /* More rounded corners */
-    padding: 25px; /* More padding inside the boxes */
-    box-shadow: 0 6px 12px rgba(0,0,0,0.08); /* More pronounced shadow for depth */
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Smooth hover effect */
-    height: 100%; /* Ensure sections take full height available in column */
-    display: flex; /* Use flex for internal content alignment if needed */
-    flex-direction: column; /* Stack content vertically */
-    justify-content: space-between; /* Push last updated to bottom, if content allows */
-}
-
-.dashboard-section:hover {
-    transform: translateY(-5px); /* Slight lift effect on hover */
-    box-shadow: 0 10px 20px rgba(0,0,0,0.15); /* Stronger shadow on hover */
-}
-
-/* IMPORTANT: This rule should define the general style for H3 but NOT the border-bottom */
-.dashboard-section h3 {
-    color: #34495e; /* Darker blue heading */
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.6em;
-    /* REMOVED: border-bottom: 2px solid #5fa2dd; - This is now specific to each ID */
-    padding-bottom: 5px;
-}
-
-/* --- Specific Title Bar Colors (This section ensures specific colors apply) --- */
-/* IDs have higher specificity, so these should override any general h3 border rules */
-#mbs-section h3 {
-    border-bottom: 2px solid #3498db; /* Blue for MBS */
-}
-
-#us10y-section h3 {
-    border-bottom: 2px solid #2ecc71; /* Green for US10Y */
-}
-
-#shadow-mbs-section h3 {
-    border-bottom: 2px solid #e67e22; /* Orange for MBS Shadow */
-}
-
-#mortgage-rates-section h3 {
-    border-bottom: 2px solid #9b59b6; /* Purple for Mortgage Rates */
-}
-
-
-/* --- Mortgage Rates Table Styling --- */
-#mortgage-rates-section table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 0.95em;
-    table-layout: fixed;
-}
-
-#mortgage-rates-section th,
-#mortgage-rates-section td {
-    padding: 10px 8px;
-    text-align: left;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-#mortgage-rates-section th {
-    background-color: #ecf0f1;
-    color: #555;
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 0.85em;
-}
-
-#mortgage-rates-section tbody tr:last-child td {
-    border-bottom: none;
-}
-
-/* --- Last Updated Timestamps --- */
-.last-updated {
-    font-size: 0.8em;
-    color: #7f8c8d;
-    text-align: right;
-    margin-top: auto;
-    padding-top: 10px;
-    border-top: 1px dashed #e0e0e0;
-}
-
-/* --- Responsive Adjustments for Smaller Screens (Phones) --- */
-@media (max-width: 768px) {
-    .dashboard-container {
-        padding: 10px;
-        gap: 15px;
-    }
-
-    .dashboard-column {
-        max-width: 100%;
-        min-width: unset;
-    }
-
-    .dashboard-section {
-        padding: 20px;
-    }
-
-    header h1 {
-        font-size: 1.8em;
-    }
+    background-color: #f9f9f9; /* Light background for sections */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 /* Basic styling for existing content placeholders if they are just <p> tags */
 .dashboard-section p {
     margin-bottom: 10px;
     color: #555;
+}
+
+/* Basic table styling for mortgage rates (if it was already in your HTML then) */
+#mortgage-rates-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+#mortgage-rates-section th,
+#mortgage-rates-section td {
+    border: 1px solid #eee;
+    padding: 8px;
+    text-align: left;
+}
+
+#mortgage-rates-section th {
+    background-color: #e2e2e2;
+}
+
+.last-updated { /* This rule was added to the mortgage rates section first */
+    font-size: 0.8em;
+    color: #666;
+    text-align: right;
+    margin-top: 10px;
+}
+
+/* Adjustments for smaller screens (phones) */
+@media (max-width: 768px) {
+    .dashboard-column {
+        max-width: 100%; /* Full width on smaller screens */
+    }
 }
