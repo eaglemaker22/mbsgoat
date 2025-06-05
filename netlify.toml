@@ -1,23 +1,12 @@
 [build]
-  # Base directory for the build (where your web app files are)
   base = "WebApp_LockMVP"
-  # Directory to publish after the build (where your index.html, style.css, script.js are)
   publish = "WebApp_LockMVP"
-  # Command to build your site (not needed for simple HTML/JS, but good practice)
-  command = "echo 'No build command needed for static site'"
+  command = "echo 'Deploying static site'"
 
 [functions]
-  # Directory where your Netlify Functions JavaScript files will reside
   directory = "netlify/functions"
-  # Node.js version (adjust if needed, but 18 is common)
   node_bundler = "esbuild"
   node_version = "18"
-
-# Redirects (optional, but useful for single-page apps or clean URLs)
-[[redirects]]
-  from = "/old-path"
-  to = "/new-path"
-  status = 301
 
 [[redirects]]
   from = "/*"
