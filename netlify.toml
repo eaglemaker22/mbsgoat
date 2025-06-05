@@ -1,16 +1,2 @@
 [build]
-  base = "WebApp_LockMVP"
-  publish = "WebApp_LockMVP"
-  command = "echo 'Deploying static site'"
-
-[build.environment]
-  NODE_VERSION = "18"
-
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+  functions = "netlify/functions"
