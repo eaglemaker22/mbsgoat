@@ -1,15 +1,13 @@
 [build]
-  base = "LockMVP"
-  publish = "LockMVP"
+  # Corrected: Your website files (index.html, style.css, script.js) are directly in the repository root.
+  base = "."
+  publish = "."
   command = "echo 'Deploying static site'"
-  # Set Node.js version as a global environment variable for the build
-  # This often implicitly applies to functions and avoids the specific parsing error.
   environment = { NODE_VERSION = "18" }
 
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  # Removed `node_version = "18"` from here to avoid the parsing error.
 
 [[redirects]]
   from = "/*"
