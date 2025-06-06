@@ -26,7 +26,10 @@ function formatTimestamp(isoString) {
 
 // Helper function to apply color based on change and format decimals
 function applyChangeColor(element, value, dataType, decimals) {
-    const numValue = parseFloat(value);
+    // Sanitize the input value: remove any existing '+' signs before parsing
+    const cleanValue = String(value).replace(/^\+/, '');
+    const numValue = parseFloat(cleanValue);
+
     if (isNaN(numValue)) {
         element.textContent = '--';
         element.classList.remove('text-green-600', 'text-red-600');
@@ -71,6 +74,7 @@ function applyChangeColor(element, value, dataType, decimals) {
 // Helper function to format general numeric values
 function formatNumericValue(value, decimals) {
     const numValue = parseFloat(value);
+    // If numValue is NaN, return '--'. Otherwise, format to fixed decimals.
     return isNaN(numValue) ? '--' : numValue.toFixed(decimals);
 }
 
@@ -101,6 +105,7 @@ async function fetchMBSData() {
             const highElem = document.getElementById(`${product.id}-high`);
             const lowElem = document.getElementById(`${product.id}-low`);
 
+            // Format numeric values
             const current = formatNumericValue(data[`${product.prefix}_Current`], 2); // 2 decimal places
             const change = data[`${product.prefix}_Daily_Change`]; // Will be formatted by applyChangeColor
             const open = formatNumericValue(data[`${product.prefix}_Open`], 2); // 2 decimal places
