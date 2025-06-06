@@ -37,8 +37,7 @@ function applyChangeColor(element, value, dataType) {
         } else {
             element.classList.add('text-gray-700');
         }
-    }
-    else {
+    } else {
         element.classList.add('text-gray-700'); // Default color if data-type is not specified or recognized
     }
 }
@@ -174,3 +173,108 @@ async function fetchUS10YData() {
 
         if (currentElem) currentElem.textContent = data.US10Y_Current !== null ? data.US10Y_Current : '--';
         if (openElem) openElem.textContent = data.US10Y_Open !== null ? data.US10Y_Open : '--';
+        if (todayCloseElem) todayCloseElem.textContent = data.US10Y_Close !== null ? data.US10Y_Close : '--';
+        if (priorCloseElem) priorCloseElem.textContent = data.US10Y_PriorDayClose !== null ? data.US10Y_PriorDayClose : '--';
+        if (highElem) highElem.textContent = data.US10Y_TodayHigh !== null ? data.US10Y_TodayHigh : '--';
+        if (lowElem) lowElem.textContent = data.US10Y_TodayLow !== null ? data.US10Y_TodayLow : '--';
+
+        if (changeElem) {
+            applyChangeColor(changeElem, data.US10Y_Change, changeElem.dataset.type);
+        }
+
+        if (timestampElem) {
+            timestampElem.textContent = formatTimestamp(data.Timestamp);
+        }
+
+    } catch (error) {
+        console.error('Error fetching US 10-Year Treasury Yield data:', error);
+        document.getElementById('us10y-timestamp').textContent = 'Error loading data';
+    }
+}
+
+// Fetch Mortgage Rates Data (updated to build table rows dynamically)
+async function fetchMortgageRatesData() {
+    try {
+        const response = await fetch('/.netlify/functions/getMortgageRatesData'); // Adjust endpoint if needed
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        const tableBody = document.getElementById('mortgage-rates-table-body');
+        const timestampElem = document.getElementById('mortgage-rates-timestamp');
+
+        if (!tableBody) {
+            console.error('Mortgage rates table body element not found!');
+            if (timestampElem) timestampElem.textContent = 'Error loading data';
+            return;
+        }
+
+        // Clear existing rows
+        tableBody.innerHTML = '';
+
+        if (data.Rates && Array.isArray(data.Rates)) {
+            data.Rates.forEach(item => {
+                const row = document.createElement('tr');
+                row.classList.add('border-b', 'border-gray-100');
+                row.innerHTML = `
+                    <td class="py-1 px-2 font-semibold text-gray-800">${item.product || '--'}</td>
+                    <td class="py-1 px-2 text-gray-700">${item.rate || '--'}</td>
+                    <td class="py-1 px-2 text-gray-700">${item.apr || '--'}</td>
+                    <td class="py-1 px-2 text-gray-700">${item.points || '--'}</td>
+                    <td class="py-1 px-2 text-gray-700">${item.pi || '--'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } else {
+             // If no data or invalid data, display a message
+             const row = document.createElement('tr');
+             row.innerHTML = `<td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">No mortgage rates data available.</td>`;
+             tableBody.appendChild(row);
+        }
+
+        if (timestampElem) {
+            timestampElem.textContent = formatTimestamp(data.Timestamp);
+        }
+
+    } catch (error) {
+        console.error('Error fetching Mortgage Rates data:', error);
+        document.getElementById('mortgage-rates-timestamp').textContent = 'Error loading data';
+        const tableBody = document.getElementById('mortgage-rates-table-body');
+        if (tableBody) {
+             tableBody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-sm text-red-500">Failed to load data. Please try again.</td></tr>`;
+        }
+    }
+}
+
+
+// Initial data fetch on page load
+document.addEventListener('DOMContentLoaded', () => {
+    fetchMBSData();
+    fetchShadowBondsData();
+    fetchUS10YData();
+    fetchMortgageRatesData();
+
+    // Set up refresh interval (e.g., every 5 minutes for MBS, Shadow, US10Y)
+    // You might want a different interval for mortgage rates if it updates less frequently
+    setInterval(fetchMBSData, 5 * 60 * 1000); // 5 minutes
+    setInterval(fetchShadowBondsData, 5 * 60 * 1000); // 5 minutes
+    setInterval(fetchUS10YData, 5 * 60 * 1000); // 5 minutes
+    setInterval(fetchMortgageRatesData, 10 * 60 * 1000); // 10 minutes
+});
+
+// Update overall last updated timestamp (could be based on the latest fetch or a separate API)
+async function updateOverallTimestamp() {
+    // This could be updated to reflect the latest timestamp from any of the fetched data,
+    // or from a dedicated API endpoint for a global last update time.
+    // For now, it will update after all initial fetches are done.
+    const lastUpdatedOverallElem = document.getElementById('last-updated-overall');
+    if (lastUpdatedOverallElem) {
+        lastUpdatedOverallElem.textContent = `Last Updated: ${formatTimestamp(new Date().toISOString())}`;
+    }
+}
+
+// Call updateOverallTimestamp after all fetches are done (or on an interval)
+// For simplicity, let's call it after the initial DOMContentLoaded fetches
+document.addEventListener('DOMContentLoaded', updateOverallTimestamp);
+// And then periodically, perhaps less frequently than individual data fetches
+setInterval(updateOverallTimestamp, 60 * 1000); // Every 1 minute
