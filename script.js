@@ -333,9 +333,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // fetchMortgageRatesData(); // Removed as per request for static mortgage rates
 
     // Set up refresh interval (e.g., every 5 minutes for MBS, Shadow, US10Y)
-    setInterval(fetchMBSData, 5 * 60 * 1000); // 5 minutes
-    setInterval(fetchShadowBondsData, 5 * 60 * 1000); // 5 minutes
-    setInterval(fetchUS10YData, 5 * 60 * 1000); // 5 minutes
+    setInterval(fetchMBSData, 1 * 60 * 1000); // 5 minutes
+    setInterval(fetchShadowBondsData, 1 * 60 * 1000); // 5 minutes
+    setInterval(fetchUS10YData, 1 * 60 * 1000); // 5 minutes
     // setInterval(fetchMortgageRatesData, 10 * 60 * 1000); // Removed as per request
 });
 
