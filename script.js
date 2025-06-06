@@ -24,9 +24,8 @@ function formatTimestamp(isoString) {
     return new Intl.DateTimeFormat('en-US', options).format(date);
 }
 
-// Helper function to apply color based on change
-function applyChangeColor(element, value, dataType) {
-    // Ensure value is a number for comparison, fallback to '--' if not valid
+// Helper function to apply color based on change and format decimals
+function applyChangeColor(element, value, dataType, decimals) {
     const numValue = parseFloat(value);
     if (isNaN(numValue)) {
         element.textContent = '--';
@@ -35,7 +34,17 @@ function applyChangeColor(element, value, dataType) {
         return;
     }
 
-    element.textContent = numValue > 0 ? `+${value}` : value.toString(); // Add '+' for positive, keep sign for negative
+    // Format to specified decimal places
+    let formattedValue = numValue.toFixed(decimals);
+
+    // Ensure only one '+' or '-' sign
+    if (numValue > 0) {
+        formattedValue = `+${formattedValue}`;
+    }
+    // toFixed handles the '-' sign for negative numbers
+
+    element.textContent = formattedValue; // Assign the correctly formatted string
+
     element.classList.remove('text-green-600', 'text-red-600', 'text-gray-700'); // Remove previous colors
 
     if (dataType === 'positive-red-negative-green') {
@@ -57,6 +66,12 @@ function applyChangeColor(element, value, dataType) {
     } else {
         element.classList.add('text-gray-700'); // Default color if data-type is not specified or recognized
     }
+}
+
+// Helper function to format general numeric values
+function formatNumericValue(value, decimals) {
+    const numValue = parseFloat(value);
+    return isNaN(numValue) ? '--' : numValue.toFixed(decimals);
 }
 
 
@@ -86,29 +101,38 @@ async function fetchMBSData() {
             const highElem = document.getElementById(`${product.id}-high`);
             const lowElem = document.getElementById(`${product.id}-low`);
 
-            const current = data[`${product.prefix}_Current`];
-            const change = data[`${product.prefix}_Daily_Change`];
-            const open = data[`${product.prefix}_Open`];
-            const todayClose = data[`${product.prefix}_Close`];
+            const current = formatNumericValue(data[`${product.prefix}_Current`], 2); // 2 decimal places
+            const change = data[`${product.prefix}_Daily_Change`]; // Will be formatted by applyChangeColor
+            const open = formatNumericValue(data[`${product.prefix}_Open`], 2); // 2 decimal places
+            const todayClose = formatNumericValue(data[`${product.prefix}_Close`], 2); // 2 decimal places
 
             // Check for presence of these keys in the received data.
-            // If they are not in the Netlify function's response, they will be '--'.
-            const priorClose = data[`${product.prefix}_PriorDayClose`] !== undefined ? data[`${product.prefix}_PriorDayClose`] : '--';
-            const high = data[`${product.prefix}_TodayHigh`] !== undefined ? data[`${product.prefix}_TodayHigh`] : '--';
-            const low = data[`${product.prefix}_TodayLow`] !== undefined ? data[`${product.prefix}_TodayLow`] : '--';
+            // If they are not in the Netlify function's response or are null, they will be '--'.
+            const priorClose = formatNumericValue(data[`${product.prefix}_PriorDayClose`], 2);
+            const high = formatNumericValue(data[`${product.prefix}_TodayHigh`], 2);
+            const low = formatNumericValue(data[`${product.prefix}_TodayLow`], 2);
 
-            // Log values for debugging
-            console.log(`MBS ${product.id}:`, { current, change, open, todayClose, priorClose, high, low });
+            // Log values for debugging to confirm what's received
+            console.log(`MBS ${product.id} Raw Data:`, {
+                currentRaw: data[`${product.prefix}_Current`],
+                changeRaw: data[`${product.prefix}_Daily_Change`],
+                openRaw: data[`${product.prefix}_Open`],
+                todayCloseRaw: data[`${product.prefix}_Close`],
+                priorCloseRaw: data[`${product.prefix}_PriorDayClose`],
+                highRaw: data[`${product.prefix}_TodayHigh`],
+                lowRaw: data[`${product.prefix}_TodayLow`]
+            });
+            console.log(`MBS ${product.id} Formatted Data:`, { current, change, open, todayClose, priorClose, high, low });
 
 
-            if (currentElem) currentElem.textContent = current !== null ? current : '--';
-            if (openElem) openElem.textContent = open !== null ? open : '--';
-            if (todayCloseElem) todayCloseElem.textContent = todayClose !== null ? todayClose : '--';
+            if (currentElem) currentElem.textContent = current;
+            if (openElem) openElem.textContent = open;
+            if (todayCloseElem) todayCloseElem.textContent = todayClose;
             if (priorCloseElem) priorCloseElem.textContent = priorClose;
             if (highElem) highElem.textContent = high;
             if (lowElem) lowElem.textContent = low;
             if (changeElem) {
-                applyChangeColor(changeElem, change, changeElem.dataset.type);
+                applyChangeColor(changeElem, change, changeElem.dataset.type, 2); // 2 decimal places for change
             }
         });
 
@@ -160,28 +184,37 @@ async function fetchShadowBondsData() {
             const highElem = document.getElementById(`${product.id}-high`);
             const lowElem = document.getElementById(`${product.id}-low`);
 
-            const current = data[`${product.prefix}_Current`];
-            const change = data[`${product.prefix}_Daily_Change`];
-            const open = data[`${product.prefix}_Open`];
-            const todayClose = data[`${product.prefix}_Close`];
+            const current = formatNumericValue(data[`${product.prefix}_Current`], 2); // 2 decimal places
+            const change = data[`${product.prefix}_Daily_Change`]; // Will be formatted by applyChangeColor
+            const open = formatNumericValue(data[`${product.prefix}_Open`], 2); // 2 decimal places
+            const todayClose = formatNumericValue(data[`${product.prefix}_Close`], 2); // 2 decimal places
 
             // Check for presence of these keys in the received data.
-            const priorClose = data[`${product.prefix}_PriorDayClose`] !== undefined ? data[`${product.prefix}_PriorDayClose`] : '--';
-            const high = data[`${product.prefix}_TodayHigh`] !== undefined ? data[`${product.prefix}_TodayHigh`] : '--';
-            const low = data[`${product.prefix}_TodayLow`] !== undefined ? data[`${product.prefix}_TodayLow`] : '--';
+            const priorClose = formatNumericValue(data[`${product.prefix}_PriorDayClose`], 2);
+            const high = formatNumericValue(data[`${product.prefix}_TodayHigh`], 2);
+            const low = formatNumericValue(data[`${product.prefix}_TodayLow`], 2);
 
-            // Log values for debugging
-            console.log(`Shadow Bonds ${product.id}:`, { current, change, open, todayClose, priorClose, high, low });
+            // Log values for debugging to confirm what's received
+            console.log(`Shadow Bonds ${product.id} Raw Data:`, {
+                currentRaw: data[`${product.prefix}_Current`],
+                changeRaw: data[`${product.prefix}_Daily_Change`],
+                openRaw: data[`${product.prefix}_Open`],
+                todayCloseRaw: data[`${product.prefix}_Close`],
+                priorCloseRaw: data[`${product.prefix}_PriorDayClose`],
+                highRaw: data[`${product.prefix}_TodayHigh`],
+                lowRaw: data[`${product.prefix}_TodayLow`]
+            });
+            console.log(`Shadow Bonds ${product.id} Formatted Data:`, { current, change, open, todayClose, priorClose, high, low });
 
 
-            if (currentElem) currentElem.textContent = current !== null ? current : '--';
-            if (openElem) openElem.textContent = open !== null ? open : '--';
-            if (todayCloseElem) todayCloseElem.textContent = todayClose !== null ? todayClose : '--';
+            if (currentElem) currentElem.textContent = current;
+            if (openElem) openElem.textContent = open;
+            if (todayCloseElem) todayCloseElem.textContent = todayClose;
             if (priorCloseElem) priorCloseElem.textContent = priorClose;
             if (highElem) highElem.textContent = high;
             if (lowElem) lowElem.textContent = low;
             if (changeElem) {
-                applyChangeColor(changeElem, change, changeElem.dataset.type);
+                applyChangeColor(changeElem, change, changeElem.dataset.type, 2); // 2 decimal places for change
             }
         });
 
@@ -226,28 +259,38 @@ async function fetchUS10YData() {
         const timestampElem = document.getElementById('us10y-timestamp');
 
         // Assuming keys like US10Y_Current, US10Y_Daily_Change, US10Y_Open, US10Y_Close etc.
-        const current = data.US10Y_Current;
-        const change = data.US10Y_Daily_Change;
-        const open = data.US10Y_Open;
-        const todayClose = data.US10Y_Close;
+        const current = formatNumericValue(data.US10Y_Current, 3); // 3 decimal places
+        const change = data.US10Y_Daily_Change; // Will be formatted by applyChangeColor
+        const open = formatNumericValue(data.US10Y_Open, 3); // 3 decimal places
+        const todayClose = formatNumericValue(data.US10Y_Close, 3); // 3 decimal places
 
         // Check for presence of these keys in the received data.
-        const priorClose = data.US10Y_PriorDayClose !== undefined ? data.US10Y_PriorDayClose : '--';
-        const high = data.US10Y_TodayHigh !== undefined ? data.US10Y_TodayHigh : '--';
-        const low = data.US10Y_TodayLow !== undefined ? data.US10Y_TodayLow : '--';
+        const priorClose = formatNumericValue(data.US10Y_PriorDayClose, 3);
+        const high = formatNumericValue(data.US10Y_TodayHigh, 3);
+        const low = formatNumericValue(data.US10Y_TodayLow, 3);
 
-        // Log values for debugging
-        console.log(`US 10Y:`, { current, change, open, todayClose, priorClose, high, low });
+        // Log values for debugging to confirm what's received
+        console.log(`US 10Y Raw Data:`, {
+            currentRaw: data.US10Y_Current,
+            changeRaw: data.US10Y_Daily_Change,
+            openRaw: data.US10Y_Open,
+            todayCloseRaw: data.US10Y_Close,
+            priorCloseRaw: data.US10Y_PriorDayClose,
+            highRaw: data.US10Y_TodayHigh,
+            lowRaw: data.US10Y_TodayLow
+        });
+        console.log(`US 10Y Formatted Data:`, { current, change, open, todayClose, priorClose, high, low });
 
-        if (currentElem) currentElem.textContent = current !== null ? current : '--';
-        if (openElem) openElem.textContent = open !== null ? open : '--';
-        if (todayCloseElem) todayCloseElem.textContent = todayClose !== null ? todayClose : '--';
+
+        if (currentElem) currentElem.textContent = current;
+        if (openElem) openElem.textContent = open;
+        if (todayCloseElem) todayCloseElem.textContent = todayClose;
         if (priorCloseElem) priorCloseElem.textContent = priorClose;
         if (highElem) highElem.textContent = high;
         if (lowElem) lowElem.textContent = low;
 
         if (changeElem) {
-            applyChangeColor(changeElem, change, changeElem.dataset.type);
+            applyChangeColor(changeElem, change, changeElem.dataset.type, 3); // 3 decimal places for change
         }
 
         if (timestampElem) {
