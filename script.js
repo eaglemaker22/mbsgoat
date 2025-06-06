@@ -11,7 +11,7 @@ function formatTimestamp(isoString) {
         minute: '2-digit',
         hour12: true,
         timeZoneName: 'short',
-        timeZone: 'America/Phoenix' // MST
+        timeZone: 'America/Phoenix' // MST (Phoenix, Arizona doesn't observe DST)
     };
     return new Intl.DateTimeFormat('en-US', options).format(date);
 }
@@ -37,10 +37,12 @@ function applyChangeColor(element, value, dataType) {
         } else {
             element.classList.add('text-gray-700');
         }
-    } else {
+    }
+    else {
         element.classList.add('text-gray-700'); // Default color if data-type is not specified or recognized
     }
 }
+
 
 // Fetch MBS Products Data
 async function fetchMBSData() {
@@ -70,7 +72,7 @@ async function fetchMBSData() {
             const current = data[`${product.prefix}_Current`];
             const change = data[`${product.prefix}_Change`];
             const open = data[`${product.prefix}_Open`];
-            const todayClose = data[`${product.prefix}_Close`];
+            const todayClose = data[`${product.prefix}_Close`]; // Assuming 'Close' refers to Today Close
             const priorClose = data[`${product.prefix}_PriorDayClose`];
             const high = data[`${product.prefix}_TodayHigh`];
             const low = data[`${product.prefix}_TodayLow`];
@@ -172,50 +174,3 @@ async function fetchUS10YData() {
 
         if (currentElem) currentElem.textContent = data.US10Y_Current !== null ? data.US10Y_Current : '--';
         if (openElem) openElem.textContent = data.US10Y_Open !== null ? data.US10Y_Open : '--';
-        if (todayCloseElem) todayCloseElem.textContent = data.US10Y_Close !== null ? data.US10Y_Close : '--';
-        if (priorCloseElem) priorCloseElem.textContent = data.US10Y_PriorDayClose !== null ? data.US10Y_PriorDayClose : '--';
-        if (highElem) highElem.textContent = data.US10Y_TodayHigh !== null ? data.US10Y_TodayHigh : '--';
-        if (lowElem) lowElem.textContent = data.US10Y_TodayLow !== null ? data.US10Y_TodayLow : '--';
-
-        if (changeElem) {
-            applyChangeColor(changeElem, data.US10Y_Change, changeElem.dataset.type);
-        }
-
-        if (timestampElem) {
-            timestampElem.textContent = formatTimestamp(data.Timestamp);
-        }
-
-    } catch (error) {
-        console.error('Error fetching US 10-Year Treasury Yield data:', error);
-        document.getElementById('us10y-timestamp').textContent = 'Error loading data';
-    }
-}
-
-// Initial data fetch on page load
-document.addEventListener('DOMContentLoaded', () => {
-    fetchMBSData();
-    fetchShadowBondsData();
-    fetchUS10YData();
-
-    // Set up refresh interval (e.g., every 5 minutes for MBS, Shadow, US10Y)
-    setInterval(fetchMBSData, 5 * 60 * 1000); // 5 minutes
-    setInterval(fetchShadowBondsData, 5 * 60 * 1000); // 5 minutes
-    setInterval(fetchUS10YData, 5 * 60 * 1000); // 5 minutes
-});
-
-// Update overall last updated timestamp (could be based on the latest fetch or a separate API)
-async function updateOverallTimestamp() {
-    // This could be updated to reflect the latest timestamp from any of the fetched data,
-    // or from a dedicated API endpoint for a global last update time.
-    // For now, it will update after all initial fetches are done.
-    const lastUpdatedOverallElem = document.getElementById('last-updated-overall');
-    if (lastUpdatedOverallElem) {
-        lastUpdatedOverallElem.textContent = `Last Updated: ${formatTimestamp(new Date().toISOString())}`;
-    }
-}
-
-// Call updateOverallTimestamp after all fetches are done (or on an interval)
-// For simplicity, let's call it after the initial DOMContentLoaded fetches
-document.addEventListener('DOMContentLoaded', updateOverallTimestamp);
-// And then periodically, perhaps less frequently than individual data fetches
-setInterval(updateOverallTimestamp, 60 * 1000); // Every 1 minute
