@@ -90,9 +90,15 @@ async function fetchMBSData() {
             const change = data[`${product.prefix}_Daily_Change`];
             const open = data[`${product.prefix}_Open`];
             const todayClose = data[`${product.prefix}_Close`];
-            const priorClose = data[`${product.prefix}_PriorDayClose`] || '--'; // Placeholder if not available in log
-            const high = data[`${product.prefix}_TodayHigh`] || '--'; // Placeholder if not available in log
-            const low = data[`${product.prefix}_TodayLow`] || '--'; // Placeholder if not available in log
+
+            // Check for presence of these keys in the received data.
+            // If they are not in the Netlify function's response, they will be '--'.
+            const priorClose = data[`${product.prefix}_PriorDayClose`] !== undefined ? data[`${product.prefix}_PriorDayClose`] : '--';
+            const high = data[`${product.prefix}_TodayHigh`] !== undefined ? data[`${product.prefix}_TodayHigh`] : '--';
+            const low = data[`${product.prefix}_TodayLow`] !== undefined ? data[`${product.prefix}_TodayLow`] : '--';
+
+            // Log values for debugging
+            console.log(`MBS ${product.id}:`, { current, change, open, todayClose, priorClose, high, low });
 
 
             if (currentElem) currentElem.textContent = current !== null ? current : '--';
@@ -158,9 +164,14 @@ async function fetchShadowBondsData() {
             const change = data[`${product.prefix}_Daily_Change`];
             const open = data[`${product.prefix}_Open`];
             const todayClose = data[`${product.prefix}_Close`];
-            const priorClose = data[`${product.prefix}_PriorDayClose`] || '--'; // Placeholder if not available
-            const high = data[`${product.prefix}_TodayHigh`] || '--'; // Placeholder if not available
-            const low = data[`${product.prefix}_TodayLow`] || '--'; // Placeholder if not available
+
+            // Check for presence of these keys in the received data.
+            const priorClose = data[`${product.prefix}_PriorDayClose`] !== undefined ? data[`${product.prefix}_PriorDayClose`] : '--';
+            const high = data[`${product.prefix}_TodayHigh`] !== undefined ? data[`${product.prefix}_TodayHigh`] : '--';
+            const low = data[`${product.prefix}_TodayLow`] !== undefined ? data[`${product.prefix}_TodayLow`] : '--';
+
+            // Log values for debugging
+            console.log(`Shadow Bonds ${product.id}:`, { current, change, open, todayClose, priorClose, high, low });
 
 
             if (currentElem) currentElem.textContent = current !== null ? current : '--';
@@ -215,16 +226,28 @@ async function fetchUS10YData() {
         const timestampElem = document.getElementById('us10y-timestamp');
 
         // Assuming keys like US10Y_Current, US10Y_Daily_Change, US10Y_Open, US10Y_Close etc.
-        if (currentElem) currentElem.textContent = data.US10Y_Current !== null ? data.US10Y_Current : '--';
-        if (openElem) openElem.textContent = data.US10Y_Open !== null ? data.US10Y_Open : '--';
-        if (todayCloseElem) todayCloseElem.textContent = data.US10Y_Close !== null ? data.US10Y_Close : '--';
-        if (priorCloseElem) priorCloseElem.textContent = data.US10Y_PriorDayClose !== null ? data.US10Y_PriorDayClose : '--';
-        if (highElem) highElem.textContent = data.US10Y_TodayHigh !== null ? data.US10Y_TodayHigh : '--';
-        if (lowElem) lowElem.textContent = data.US10Y_TodayLow !== null ? data.US10Y_TodayLow : '--';
+        const current = data.US10Y_Current;
+        const change = data.US10Y_Daily_Change;
+        const open = data.US10Y_Open;
+        const todayClose = data.US10Y_Close;
 
+        // Check for presence of these keys in the received data.
+        const priorClose = data.US10Y_PriorDayClose !== undefined ? data.US10Y_PriorDayClose : '--';
+        const high = data.US10Y_TodayHigh !== undefined ? data.US10Y_TodayHigh : '--';
+        const low = data.US10Y_TodayLow !== undefined ? data.US10Y_TodayLow : '--';
+
+        // Log values for debugging
+        console.log(`US 10Y:`, { current, change, open, todayClose, priorClose, high, low });
+
+        if (currentElem) currentElem.textContent = current !== null ? current : '--';
+        if (openElem) openElem.textContent = open !== null ? open : '--';
+        if (todayCloseElem) todayCloseElem.textContent = todayClose !== null ? todayClose : '--';
+        if (priorCloseElem) priorCloseElem.textContent = priorClose;
+        if (highElem) highElem.textContent = high;
+        if (lowElem) lowElem.textContent = low;
 
         if (changeElem) {
-            applyChangeColor(changeElem, data.US10Y_Daily_Change, changeElem.dataset.type);
+            applyChangeColor(changeElem, change, changeElem.dataset.type);
         }
 
         if (timestampElem) {
