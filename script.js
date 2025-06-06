@@ -24,105 +24,252 @@ function formatTimestamp(isoString) {
     return new Intl.DateTimeFormat('en-US', options).format(date);
 }
 
-// Fetch MBS Timestamp
-async function fetchMBSTimestamp() {
+// Helper function to apply color based on change
+function applyChangeColor(element, value, dataType) {
+    // Ensure value is a number for comparison, fallback to '--' if not valid
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+        element.textContent = '--';
+        element.classList.remove('text-green-600', 'text-red-600');
+        element.classList.add('text-gray-700');
+        return;
+    }
+
+    element.textContent = numValue > 0 ? `+${value}` : value.toString(); // Add '+' for positive, keep sign for negative
+    element.classList.remove('text-green-600', 'text-red-600', 'text-gray-700'); // Remove previous colors
+
+    if (dataType === 'positive-red-negative-green') {
+        if (numValue > 0) {
+            element.classList.add('text-red-600');
+        } else if (numValue < 0) {
+            element.classList.add('text-green-600');
+        } else {
+            element.classList.add('text-gray-700');
+        }
+    } else if (dataType === 'positive-green-negative-red') {
+        if (numValue > 0) {
+            element.classList.add('text-green-600');
+        } else if (numValue < 0) {
+            element.classList.add('text-red-600');
+        } else {
+            element.classList.add('text-gray-700');
+        }
+    } else {
+        element.classList.add('text-gray-700'); // Default color if data-type is not specified or recognized
+    }
+}
+
+
+// Fetch MBS Products Data
+async function fetchMBSData() {
     try {
         const response = await fetch('/.netlify/functions/getMBSData');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+
+        // Updated prefixes to match Netlify function log exact keys from prior logs
+        const products = [
+            { id: 'umbs-5-5', prefix: 'UMBS_5_5' },
+            { id: 'umbs-6-0', prefix: 'UMBS_6_0' },
+            { id: 'gnma-5-5', prefix: 'GNMA_5_5' },
+            { id: 'gnma-6-0', prefix: 'GNMA_6_0' }
+        ];
+
+        products.forEach(product => {
+            const currentElem = document.getElementById(`${product.id}-current`);
+            const changeElem = document.getElementById(`${product.id}-change`);
+            const openElem = document.getElementById(`${product.id}-open`);
+            const todayCloseElem = document.getElementById(`${product.id}-today-close`);
+            const priorCloseElem = document.getElementById(`${product.id}-prior-close`);
+            const highElem = document.getElementById(`${product.id}-high`);
+            const lowElem = document.getElementById(`${product.id}-low`);
+
+            const current = data[`${product.prefix}_Current`];
+            const change = data[`${product.prefix}_Daily_Change`];
+            const open = data[`${product.prefix}_Open`];
+            const todayClose = data[`${product.prefix}_Close`];
+            const priorClose = data[`${product.prefix}_PriorDayClose`] || '--'; // Placeholder if not available in log
+            const high = data[`${product.prefix}_TodayHigh`] || '--'; // Placeholder if not available in log
+            const low = data[`${product.prefix}_TodayLow`] || '--'; // Placeholder if not available in log
+
+
+            if (currentElem) currentElem.textContent = current !== null ? current : '--';
+            if (openElem) openElem.textContent = open !== null ? open : '--';
+            if (todayCloseElem) todayCloseElem.textContent = todayClose !== null ? todayClose : '--';
+            if (priorCloseElem) priorCloseElem.textContent = priorClose;
+            if (highElem) highElem.textContent = high;
+            if (lowElem) lowElem.textContent = low;
+            if (changeElem) {
+                applyChangeColor(changeElem, change, changeElem.dataset.type);
+            }
+        });
+
         const timestampElem = document.getElementById('mbs-timestamp');
         if (timestampElem) {
-            timestampElem.textContent = formatTimestamp(data.last_updated);
-            console.log("MBS Timestamp received:", data.last_updated);
+            timestampElem.textContent = formatTimestamp(data.last_updated); // Changed to data.last_updated
         }
+
     } catch (error) {
-        console.error('Error fetching MBS timestamp:', error);
-        document.getElementById('mbs-timestamp').textContent = `Error: ${error.message}`;
+        console.error('Error fetching MBS data:', error);
+        document.getElementById('mbs-timestamp').textContent = 'Error loading data';
+        // Also clear other MBS fields on error
+        const products = [
+            { id: 'umbs-5-5' }, { id: 'umbs-6-0' },
+            { id: 'gnma-5-5' }, { id: 'gnma-6-0' }
+        ];
+        products.forEach(product => {
+            ['current', 'change', 'open', 'today-close', 'prior-close', 'high', 'low'].forEach(suffix => {
+                const element = document.getElementById(`${product.id}-${suffix}`);
+                if (element) element.textContent = '--';
+            });
+        });
     }
 }
 
-// Fetch Shadow Bonds Timestamp
-async function fetchShadowBondsTimestamp() {
+// Fetch Shadow Bonds Data (Assuming similar data structure as MBS)
+async function fetchShadowBondsData() {
     try {
         const response = await fetch('/.netlify/functions/getShadowBondsData');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+
+        // Assuming similar key structure for Shadow Bonds based on prior logs
+        const products = [
+            { id: 'umbs-5-5-shadow', prefix: 'UMBS_5_5_Shadow' },
+            { id: 'umbs-6-0-shadow', prefix: 'UMBS_6_0_Shadow' },
+            { id: 'gnma-5-5-shadow', prefix: 'GNMA_5_5_Shadow' },
+            { id: 'gnma-6-0-shadow', prefix: 'GNMA_6_0_Shadow' }
+        ];
+
+        products.forEach(product => {
+            const currentElem = document.getElementById(`${product.id}-current`);
+            const changeElem = document.getElementById(`${product.id}-change`);
+            const openElem = document.getElementById(`${product.id}-open`);
+            const todayCloseElem = document.getElementById(`${product.id}-today-close`);
+            const priorCloseElem = document.getElementById(`${product.id}-prior-close`);
+            const highElem = document.getElementById(`${product.id}-high`);
+            const lowElem = document.getElementById(`${product.id}-low`);
+
+            const current = data[`${product.prefix}_Current`];
+            const change = data[`${product.prefix}_Daily_Change`];
+            const open = data[`${product.prefix}_Open`];
+            const todayClose = data[`${product.prefix}_Close`];
+            const priorClose = data[`${product.prefix}_PriorDayClose`] || '--'; // Placeholder if not available
+            const high = data[`${product.prefix}_TodayHigh`] || '--'; // Placeholder if not available
+            const low = data[`${product.prefix}_TodayLow`] || '--'; // Placeholder if not available
+
+
+            if (currentElem) currentElem.textContent = current !== null ? current : '--';
+            if (openElem) openElem.textContent = open !== null ? open : '--';
+            if (todayCloseElem) todayCloseElem.textContent = todayClose !== null ? todayClose : '--';
+            if (priorCloseElem) priorCloseElem.textContent = priorClose;
+            if (highElem) highElem.textContent = high;
+            if (lowElem) lowElem.textContent = low;
+            if (changeElem) {
+                applyChangeColor(changeElem, change, changeElem.dataset.type);
+            }
+        });
+
         const timestampElem = document.getElementById('shadow-timestamp');
         if (timestampElem) {
-            timestampElem.textContent = formatTimestamp(data.last_updated);
-            console.log("Shadow Bonds Timestamp received:", data.last_updated);
+            timestampElem.textContent = formatTimestamp(data.last_updated); // Changed to data.last_updated
         }
+
     } catch (error) {
-        console.error('Error fetching Shadow Bonds timestamp:', error);
-        document.getElementById('shadow-timestamp').textContent = `Error: ${error.message}`;
+        console.error('Error fetching Shadow Bonds data:', error);
+        document.getElementById('shadow-timestamp').textContent = 'Error loading data';
+        // Also clear other Shadow Bonds fields on error
+        const products = [
+            { id: 'umbs-5-5-shadow' }, { id: 'umbs-6-0-shadow' },
+            { id: 'gnma-5-5-shadow' }, { id: 'gnma-6-0-shadow' }
+        ];
+        products.forEach(product => {
+            ['current', 'change', 'open', 'today-close', 'prior-close', 'high', 'low'].forEach(suffix => {
+                const element = document.getElementById(`${product.id}-${suffix}`);
+                if (element) element.textContent = '--';
+            });
+        });
     }
 }
 
-// Fetch US 10-Year Treasury Yield Timestamp
-async function fetchUS10YTimestamp() {
+// Fetch US 10-Year Treasury Yield Data (Assuming similar data structure)
+async function fetchUS10YData() {
     try {
         const response = await fetch('/.netlify/functions/getUS10YData');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+
+        const currentElem = document.getElementById('us10y-current');
+        const changeElem = document.getElementById('us10y-change');
+        const openElem = document.getElementById('us10y-open');
+        const todayCloseElem = document.getElementById('us10y-today-close');
+        const priorCloseElem = document.getElementById('us10y-prior-close');
+        const highElem = document.getElementById('us10y-high');
+        const lowElem = document.getElementById('us10y-low');
         const timestampElem = document.getElementById('us10y-timestamp');
-        if (timestampElem) {
-            timestampElem.textContent = formatTimestamp(data.last_updated);
-            console.log("US 10Y Timestamp received:", data.last_updated);
+
+        // Assuming keys like US10Y_Current, US10Y_Daily_Change, US10Y_Open, US10Y_Close etc.
+        if (currentElem) currentElem.textContent = data.US10Y_Current !== null ? data.US10Y_Current : '--';
+        if (openElem) openElem.textContent = data.US10Y_Open !== null ? data.US10Y_Open : '--';
+        if (todayCloseElem) todayCloseElem.textContent = data.US10Y_Close !== null ? data.US10Y_Close : '--';
+        if (priorCloseElem) priorCloseElem.textContent = data.US10Y_PriorDayClose !== null ? data.US10Y_PriorDayClose : '--';
+        if (highElem) highElem.textContent = data.US10Y_TodayHigh !== null ? data.US10Y_TodayHigh : '--';
+        if (lowElem) lowElem.textContent = data.US10Y_TodayLow !== null ? data.US10Y_TodayLow : '--';
+
+
+        if (changeElem) {
+            applyChangeColor(changeElem, data.US10Y_Daily_Change, changeElem.dataset.type);
         }
+
+        if (timestampElem) {
+            timestampElem.textContent = formatTimestamp(data.last_updated); // Changed to data.last_updated
+        }
+
     } catch (error) {
-        console.error('Error fetching US 10Y timestamp:', error);
-        document.getElementById('us10y-timestamp').textContent = `Error: ${error.message}`;
+        console.error('Error fetching US 10-Year Treasury Yield data:', error);
+        document.getElementById('us10y-timestamp').textContent = 'Error loading data';
+        // Also clear other US10Y fields on error
+        ['us10y-current', 'us10y-change', 'us10y-open', 'us10y-today-close', 'us10y-prior-close', 'us10y-high', 'us10y-low'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = '--';
+        });
     }
 }
 
-// Fetch Mortgage Rates Timestamp
-async function fetchMortgageRatesTimestamp() {
-    try {
-        const response = await fetch('/.netlify/functions/getMortgageRatesData');
-        if (!response.ok) {
-            const errorText = await response.text(); // Get the raw response text
-            console.error('HTTP error from getMortgageRatesData:', response.status, response.statusText, 'Response text:', errorText);
-            throw new Error(`HTTP error! Status: ${response.status}. Response was: ${errorText.substring(0, 100)}...`); // Show part of the response
-        }
-        const data = await response.json(); // Attempt to parse as JSON
-        const timestampElem = document.getElementById('mortgage-rates-timestamp');
-        if (timestampElem) {
-            timestampElem.textContent = formatTimestamp(data.last_updated);
-            console.log("Mortgage Rates Timestamp received:", data.last_updated);
-        }
-    } catch (error) {
-        console.error('Error fetching Mortgage Rates timestamp:', error);
-        // Display a more specific error message on the page
-        document.getElementById('mortgage-rates-timestamp').textContent = `Error: Function returned invalid data. Check Netlify logs. Details: ${error.message}`;
-    }
-}
 
 // Update the overall last updated timestamp (local browser time)
-function updateOverallTimestamp() {
-    const overallTimestampElement = document.getElementById('last-updated-overall');
-    if (overallTimestampElement) {
-        overallTimestampElement.textContent = formatTimestamp(new Date().toISOString());
+async function updateOverallTimestamp() {
+    // This could be updated to reflect the latest timestamp from any of the fetched data,
+    // or from a dedicated API endpoint for a global last update time.
+    // For now, it will update after all initial fetches are done.
+    const lastUpdatedOverallElem = document.getElementById('last-updated-overall');
+    if (lastUpdatedOverallElem) {
+        lastUpdatedOverallElem.textContent = `Last Updated: ${formatTimestamp(new Date().toISOString())}`;
     }
 }
 
-// Initial fetches and set up intervals
+// Initial data fetch on page load
 document.addEventListener('DOMContentLoaded', () => {
-    updateOverallTimestamp(); // Update immediately on load
-    fetchMBSTimestamp();
-    fetchShadowBondsTimestamp();
-    fetchUS10YTimestamp();
-    fetchMortgageRatesTimestamp();
+    fetchMBSData();
+    fetchShadowBondsData();
+    fetchUS10YData();
+    // fetchMortgageRatesData(); // Removed as per request for static mortgage rates
 
-    // Set up refresh intervals for 15 seconds for easier observation
-    setInterval(updateOverallTimestamp, 15 * 1000);
-    setInterval(fetchMBSTimestamp, 15 * 1000);
-    setInterval(fetchShadowBondsTimestamp, 15 * 1000);
-    setInterval(fetchUS10YTimestamp, 15 * 1000);
-    setInterval(fetchMortgageRatesTimestamp, 15 * 1000);
+    // Set up refresh interval (e.g., every 5 minutes for MBS, Shadow, US10Y)
+    setInterval(fetchMBSData, 5 * 60 * 1000); // 5 minutes
+    setInterval(fetchShadowBondsData, 5 * 60 * 1000); // 5 minutes
+    setInterval(fetchUS10YData, 5 * 60 * 1000); // 5 minutes
+    // setInterval(fetchMortgageRatesData, 10 * 60 * 1000); // Removed as per request
 });
+
+// Call updateOverallTimestamp after all fetches are done (or on an interval)
+// For simplicity, let's call it after the initial DOMContentLoaded fetches
+document.addEventListener('DOMContentLoaded', updateOverallTimestamp);
+// And then periodically, perhaps less frequently than individual data fetches
+setInterval(updateOverallTimestamp, 60 * 1000); // Every 1 minute
