@@ -86,9 +86,11 @@ async function fetchMortgageRatesTimestamp() {
     try {
         const response = await fetch('/.netlify/functions/getMortgageRatesData');
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text(); // Get the raw response text
+            console.error('HTTP error from getMortgageRatesData:', response.status, response.statusText, 'Response text:', errorText);
+            throw new Error(`HTTP error! Status: ${response.status}. Response was: ${errorText.substring(0, 100)}...`); // Show part of the response
         }
-        const data = await response.json();
+        const data = await response.json(); // Attempt to parse as JSON
         const timestampElem = document.getElementById('mortgage-rates-timestamp');
         if (timestampElem) {
             timestampElem.textContent = formatTimestamp(data.last_updated);
@@ -96,7 +98,8 @@ async function fetchMortgageRatesTimestamp() {
         }
     } catch (error) {
         console.error('Error fetching Mortgage Rates timestamp:', error);
-        document.getElementById('mortgage-rates-timestamp').textContent = `Error: ${error.message}`;
+        // Display a more specific error message on the page
+        document.getElementById('mortgage-rates-timestamp').textContent = `Error: Function returned invalid data. Check Netlify logs. Details: ${error.message}`;
     }
 }
 
