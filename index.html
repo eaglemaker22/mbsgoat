@@ -186,15 +186,35 @@
             </div>
         </section>
 
-      <section id="key-economic-indicators-section" class="bg-white rounded-xl shadow-lg p-6 border-b-4 border-yellow-500 flex flex-col">
-  <h2 class="text-2xl font-semibold text-yellow-700 mb-4 pb-2 border-b border-gray-200">FRED Market Indicators</h2>
-  <div class="text-gray-700 text-base" id="fred-data-container">
-    <!-- Injected dynamically -->
-  </div>
-  <div class="mt-auto pt-4 border-t border-gray-100 text-right text-sm text-gray-500">
-    Last Updated: <span id="fred-timestamp">--</span>
-  </div>
-</section>
+        <section id="key-economic-indicators-section" class="bg-white rounded-xl shadow-lg p-6 border-b-4 border-yellow-500 flex flex-col">
+            <h2 class="text-2xl font-semibold text-yellow-700 mb-4 pb-2 border-b border-gray-200">Key Economic Indicators (FRED)</h2>
+            <div class="flex-grow space-y-4 text-gray-700 text-base">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">30-Year Fixed Mortgage Rate</h3>
+                    <p class="ml-2">
+                        <span class="font-medium">Value:</span> <span id="fred-mortgage30us-value" class="font-bold text-xl text-orange-600">--</span>
+                        <span class="font-medium"> | Date:</span> <span id="fred-mortgage30us-date">--</span>
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">Retail Sales</h3>
+                    <p class="ml-2">
+                        <span class="font-medium">Value:</span> <span id="fred-retailsales-value" class="font-bold text-xl text-green-600">--</span>
+                        <span class="font-medium"> | Date:</span> <span id="fred-retailsales-date">--</span>
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">Consumer Sentiment</h3>
+                    <p class="ml-2">
+                        <span class="font-medium">Value:</span> <span id="fred-consumersentiment-value" class="font-bold text-xl text-blue-600">--</span>
+                        <span class="font-medium"> | Date:</span> <span id="fred-consumersentiment-date">--</span>
+                    </p>
+                </div>
+            </div>
+            <div class="mt-auto pt-4 border-t border-gray-100 text-right text-sm text-gray-500">
+                Last Updated: <span id="fred-timestamp">--</span>
+            </div>
+        </section>
 
         <section id="mortgage-rates-section" class="bg-white rounded-xl shadow-lg p-6 border-b-4 border-red-500 flex flex-col">
             <h2 class="text-2xl font-semibold text-red-700 mb-4 pb-2 border-b border-gray-200">Mortgage Rates</h2>
@@ -260,44 +280,6 @@
         <p>&copy; 2025 LockMVP. All rights reserved.</p>
     </footer>
 
-    <script>
-async function fetchT10YIEOnly() {
-  try {
-    const container = document.getElementById("fred-data-container");
-    container.innerHTML = "Loading...";
-
-    const response = await fetch("/.netlify/functions/getAllFredData");
-    const data = await response.json();
-    container.innerHTML = "";
-
-    const report = data["10Y Breakeven Inflation Rate"];
-    const latest = report?.latest ?? "--";
-    const lastMonth = report?.last_month ?? "--";
-    const yearAgo = report?.year_ago ?? "--";
-    const date = report?.latest_date ?? "--";
-
-    const html = `
-      <div class="border-b pb-2">
-        <h3 class="text-lg font-medium text-gray-900">10Y Breakeven Inflation Rate</h3>
-        <p class="ml-2"><span class="font-medium">Latest:</span> <span class="font-bold text-orange-600">${latest}</span></p>
-        <p class="ml-2 text-sm">1M Ago: ${lastMonth} | 1Y Ago: ${yearAgo}</p>
-        <p class="ml-2 text-xs text-gray-500">As of: ${date}</p>
-      </div>
-    `;
-
-    container.insertAdjacentHTML("beforeend", html);
-    document.getElementById("fred-timestamp").textContent = new Date().toLocaleString();
-  } catch (err) {
-    console.error("Error fetching T10YIE:", err);
-    document.getElementById("fred-data-container").innerHTML = "<p class='text-red-600'>Error loading data.</p>";
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  fetchT10YIEOnly();
-  setInterval(fetchT10YIEOnly, 60 * 60 * 1000); // refresh hourly
-});
-</script>
-
+    <script src="script.js"></script>
 </body>
 </html>
