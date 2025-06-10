@@ -146,7 +146,7 @@
                     <h3 class="text-lg font-medium text-gray-900">GNMA 6.0 Shadow</h3>
                     <p class="text-gray-700">
                         <span class="font-medium">Current:</span> <span id="gnma-6-0-shadow-current" class="font-bold text-xl text-purple-600">--</span>
-                        <span class="font-medium"> | Change:</span> <span id="gnma-6-0-shadow-change" class="font-bold text-xl text-gray-700" data-type="positive-green-negative-red">--</span>
+                        <span class="font-medium"> | Change:</span> <span id="gnma-6-0-change" class="font-bold text-xl text-gray-700" data-type="positive-green-negative-red">--</span>
                     </p>
                     <p class="text-gray-700 text-sm">
                         <span class="font-medium">Open:</span> <span id="gnma-6-0-open">--</span> |
@@ -183,6 +183,36 @@
             </div>
             <div class="mt-auto pt-4 border-t border-gray-100 text-right text-sm text-gray-500">
                 Last Updated: <span id="us10y-timestamp">--</span>
+            </div>
+        </section>
+
+        <section id="key-economic-indicators-section" class="bg-white rounded-xl shadow-lg p-6 border-b-4 border-yellow-500 flex flex-col">
+            <h2 class="text-2xl font-semibold text-yellow-700 mb-4 pb-2 border-b border-gray-200">Key Economic Indicators (FRED)</h2>
+            <div class="flex-grow space-y-4 text-gray-700 text-base">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">30-Year Fixed Mortgage Rate</h3>
+                    <p class="ml-2">
+                        <span class="font-medium">Value:</span> <span id="fred-mortgage30us-value" class="font-bold text-xl text-orange-600">--</span>
+                        <span class="font-medium"> | Date:</span> <span id="fred-mortgage30us-date">--</span>
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">Retail Sales</h3>
+                    <p class="ml-2">
+                        <span class="font-medium">Value:</span> <span id="fred-retailsales-value" class="font-bold text-xl text-green-600">--</span>
+                        <span class="font-medium"> | Date:</span> <span id="fred-retailsales-date">--</span>
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">Consumer Sentiment</h3>
+                    <p class="ml-2">
+                        <span class="font-medium">Value:</span> <span id="fred-consumersentiment-value" class="font-bold text-xl text-blue-600">--</span>
+                        <span class="font-medium"> | Date:</span> <span id="fred-consumersentiment-date">--</span>
+                    </p>
+                </div>
+            </div>
+            <div class="mt-auto pt-4 border-t border-gray-100 text-right text-sm text-gray-500">
+                Last Updated: <span id="fred-timestamp">--</span>
             </div>
         </section>
 
