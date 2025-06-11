@@ -92,42 +92,79 @@
       <thead>
         <tr><th>Instrument</th><th>Change</th><th>Actual</th><th>Open</th><th>Prior</th><th>High</th><th>Low</th><th>Updated</th></tr>
       </thead>
-      <tbody id="bond-table-body">
-        <!-- Rows will be populated dynamically -->
-      </tbody>
+      <tbody id="bond-table-body"></tbody>
     </table>
   </div>
 
-  <h2 class="section-title">Daily Rates</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-    <div class="rate-card">30Y Fixed<br>Today: <span id="30yfix-today">--</span><br>Yesterday: <span id="30yfix-yes">--</span><br>Last Week: <span id="30yfix-week">--</span><br>Last Year: <span id="30yfix-year">--</span></div>
-    <div class="rate-card">30Y VA<br>Today: <span id="30yva-today">--</span><br>Yesterday: <span id="30yva-yes">--</span><br>Last Week: <span id="30yva-week">--</span><br>Last Year: <span id="30yva-year">--</span></div>
-    <div class="rate-card">30Y FHA<br>Today: <span id="30yfha-today">--</span><br>Yesterday: <span id="30yfha-yes">--</span><br>Last Week: <span id="30yfha-week">--</span><br>Last Year: <span id="30yfha-year">--</span></div>
-    <div class="rate-card rate-card-purple">30Y Jumbo<br>Today: <span id="30yjumbo-today">--</span><br>Yesterday: <span id="30yjumbo-yes">--</span><br>Last Week: <span id="30yjumbo-week">--</span><br>Last Year: <span id="30yjumbo-year">--</span></div>
-    <div class="rate-card rate-card-purple">30Y USDA<br>Today: <span id="30yusda-today">--</span><br>Yesterday: <span id="30yusda-yes">--</span><br>Last Week: <span id="30yusda-week">--</span><br>Last Year: <span id="30yusda-year">--</span></div>
-    <div class="rate-card rate-card-purple">30Y Investment<br>Today: <span id="30yinv-today">--</span><br>Yesterday: <span id="30yinv-yes">--</span><br>Last Week: <span id="30yinv-week">--</span><br>Last Year: <span id="30yinv-year">--</span></div>
-  </div>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBRKEG-8z29rtc9WuRUAAX1vT8tpFYEAd0",
+      authDomain: "peaceful-guide-460403-v5.firebaseapp.com",
+      projectId: "peaceful-guide-460403-v5",
+      storageBucket: "peaceful-guide-460403-v5.appspot.com",
+      messagingSenderId: "818426236765",
+      appId: "1:818426236765:web:b1686a788077530af862b4"
+    };
 
-  <h2 class="section-title">Freddie Mac Avg Rate</h2>
-  <table class="metric-table mb-10">
-    <thead>
-      <tr><th>Metric</th><th>This</th><th>Last</th><th>Month</th><th>Year</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>30Y Fixed Rate</td><td id="freddie-30-this">--</td><td id="freddie-30-last">--</td><td id="freddie-30-month">--</td><td id="freddie-30-year">--</td></tr>
-      <tr><td>15Y Fixed Rate</td><td id="freddie-15-this">--</td><td id="freddie-15-last">--</td><td id="freddie-15-month">--</td><td id="freddie-15-year">--</td></tr>
-    </tbody>
-  </table>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-  <h2 class="section-title">Monthly Data</h2>
-  <table class="metric-table mb-10">
-    <thead>
-      <tr><th>Metric</th><th>Current</th><th>Last M</th><th>Last Y</th><th>Next</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>Housing Starts</td><td id="starts-current">--</td><td id="starts-lastm">--</td><td id="starts-lasty">--</td><td id="starts-next">--</td></tr>
-      <tr><td>Permits</td><td id="permits-current">--</td><td id="permits-lastm">--</td><td id="permits-lasty">--</td><td id="permits-next">--</td></tr>
-    </tbody>
-  </table>
+    async function fetchBondTickerData() {
+      const tickerData = {};
+
+      const mbsSnap = await db.collection("mbs_quotes").orderBy("timestamp", "desc").limit(1).get();
+      const bondSnap = await db.collection("bonds_for_umbs").orderBy("timestamp", "desc").limit(1).get();
+
+      if (!mbsSnap.empty) {
+        const mbs = mbsSnap.docs[0].data();
+        tickerData['UMBS_5_5'] = { actual: mbs.UMBS_5_5_Current, change: mbs.UMBS_5_5_Daily_Change };
+        tickerData['UMBS_6_0'] = { actual: mbs.UMBS_6_0_Current, change: mbs.UMBS_6_0_Daily_Change };
+        tickerData['GNMA_5_5'] = { actual: mbs.GNMA_5_5_Current, change: mbs.GNMA_5_5_Daily_Change };
+        tickerData['GNMA_6_0'] = { actual: mbs.GNMA_6_0_Current, change: mbs.GNMA_6_0_Daily_Change };
+        tickerData['Shadow_5_5'] = { actual: mbs.UMBS_5_5_Shadow_Open };
+        tickerData['Shadow_6_0'] = { actual: mbs.UMBS_6_0_Shadow_Open };
+        tickerData['Shadow_GNMA_5_5'] = { actual: mbs.GNMA_5_5_Shadow_Open };
+        tickerData['Shadow_GNMA_6_0'] = { actual: mbs.GNMA_6_0_Shadow_Open };
+      }
+
+      if (!bondSnap.empty) {
+        const bond = bondSnap.docs[0].data();
+        tickerData['US10Y'] = { actual: bond.US10Y };
+        tickerData['US30Y'] = { actual: bond.US30Y };
+        tickerData['MBB'] = { actual: bond.MBB };
+      }
+
+      renderBondTicker(tickerData);
+    }
+
+    function renderBondTicker(data) {
+      const bondTableBody = document.getElementById('bond-table-body');
+      bondTableBody.innerHTML = '';
+
+      const instruments = [
+        ['UMBS 5.5', 'UMBS_5_5'], ['UMBS 6.0', 'UMBS_6_0'], ['GNMA 5.5', 'GNMA_5_5'],
+        ['GNMA 6.0', 'GNMA_6_0'], ['Shadow 5.5', 'Shadow_5_5'], ['Shadow 6.0', 'Shadow_6_0'],
+        ['Shadow GNMA 5.5', 'Shadow_GNMA_5_5'], ['Shadow GNMA 6.0', 'Shadow_GNMA_6_0'],
+        ['US 10Y Treasury', 'US10Y'], ['US 30Y Treasury', 'US30Y'], ['MBB', 'MBB']
+      ];
+
+      instruments.forEach(([label, key]) => {
+        const d = data[key] || {};
+        bondTableBody.innerHTML += `
+          <tr>
+            <td>${label}</td>
+            <td>${d.change || '--'}</td>
+            <td>${d.actual || '--'}</td>
+            <td>${d.open || '--'}</td>
+            <td>${d.prior || '--'}</td>
+            <td>${d.high || '--'}</td>
+            <td>${d.low || '--'}</td>
+            <td>${d.updated || '--'}</td>
+          </tr>`;
+      });
+    }
+
+    fetchBondTickerData();
+  </script>
 </body>
 </html>
