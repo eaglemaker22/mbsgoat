@@ -11,7 +11,7 @@
     body {
       background-color: #0f172a;
       color: white;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Courier New', Courier, monospace;
     }
     .card {
       background: linear-gradient(135deg, #1e3a8a, #9333ea);
@@ -33,10 +33,11 @@
     }
     .banner {
       font-weight: bold;
-      font-size: 1.25rem;
+      font-size: 1rem;
       padding: 1rem;
       border-radius: 0.5rem;
-      text-align: center;
+      text-align: left;
+      line-height: 1.4;
     }
     .red-banner {
       background: #7f1d1d;
@@ -78,12 +79,28 @@
   </style>
 </head>
 <body class="p-6">
-  <h1 class="text-3xl font-bold text-center text-yellow-300 mb-10">Loan Officer Financial Dashboard</h1>
-
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <div class="banner red-banner">UMBS 5.5<br><span id="umbs55">--</span></div>
-    <div class="banner green-banner">US10Y<br><span id="us10y">--</span></div>
-    <div class="banner blue-banner">30Y Fixed<br><span id="mortgage30">--</span></div>
+    <div class="banner red-banner">
+      <strong>UMBS 5.5</strong><br>
+      Current: <span id="umbs55-current">--</span><br>
+      Open: <span id="umbs55-open">--</span><br>
+      High: <span id="umbs55-high">--</span><br>
+      Low: <span id="umbs55-low">--</span><br>
+      Updated: <span id="umbs55-updated">--</span>
+    </div>
+    <div class="banner green-banner">
+      <strong>US10Y</strong><br>
+      Current: <span id="us10y-current">--</span><br>
+      Open: <span id="us10y-open">--</span><br>
+      High: <span id="us10y-high">--</span><br>
+      Low: <span id="us10y-low">--</span><br>
+      Updated: <span id="us10y-updated">--</span>
+    </div>
+    <div class="banner blue-banner">
+      <strong>30Y Fixed</strong><br>
+      Current: <span id="mortgage30">--</span><br>
+      Yesterday: <span id="mortgage30-yes">--</span>
+    </div>
   </div>
 
   <h2 class="section-title">Bond/Treasury Ticker</h2>
@@ -109,62 +126,32 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    async function fetchBondTickerData() {
-      const tickerData = {};
-
+    async function fetchTopSection() {
       const mbsSnap = await db.collection("mbs_quotes").orderBy("timestamp", "desc").limit(1).get();
       const bondSnap = await db.collection("bonds_for_umbs").orderBy("timestamp", "desc").limit(1).get();
 
       if (!mbsSnap.empty) {
         const mbs = mbsSnap.docs[0].data();
-        tickerData['UMBS_5_5'] = { actual: mbs.UMBS_5_5_Current, change: mbs.UMBS_5_5_Daily_Change };
-        tickerData['UMBS_6_0'] = { actual: mbs.UMBS_6_0_Current, change: mbs.UMBS_6_0_Daily_Change };
-        tickerData['GNMA_5_5'] = { actual: mbs.GNMA_5_5_Current, change: mbs.GNMA_5_5_Daily_Change };
-        tickerData['GNMA_6_0'] = { actual: mbs.GNMA_6_0_Current, change: mbs.GNMA_6_0_Daily_Change };
-        tickerData['Shadow_5_5'] = { actual: mbs.UMBS_5_5_Shadow_Open };
-        tickerData['Shadow_6_0'] = { actual: mbs.UMBS_6_0_Shadow_Open };
-        tickerData['Shadow_GNMA_5_5'] = { actual: mbs.GNMA_5_5_Shadow_Open };
-        tickerData['Shadow_GNMA_6_0'] = { actual: mbs.GNMA_6_0_Shadow_Open };
+        document.getElementById("umbs55-current").textContent = mbs.UMBS_5_5_Current || '--';
+        document.getElementById("umbs55-open").textContent = mbs.UMBS_5_5_Open || '--';
+        document.getElementById("umbs55-high").textContent = mbs.UMBS_5_5_TodayHigh || '--';
+        document.getElementById("umbs55-low").textContent = mbs.UMBS_5_5_TodayLow || '--';
+        document.getElementById("umbs55-updated").textContent = mbs.timestamp || '--';
+        document.getElementById("mortgage30").textContent = mbs.MORTGAGE30US || '--';
+        document.getElementById("mortgage30-yes").textContent = mbs.MORTGAGE30US_Yesterday || '--';
       }
 
       if (!bondSnap.empty) {
         const bond = bondSnap.docs[0].data();
-        tickerData['US10Y'] = { actual: bond.US10Y };
-        tickerData['US30Y'] = { actual: bond.US30Y };
-        tickerData['MBB'] = { actual: bond.MBB };
+        document.getElementById("us10y-current").textContent = bond.US10Y || '--';
+        document.getElementById("us10y-open").textContent = bond.US10Y_Open || '--';
+        document.getElementById("us10y-high").textContent = bond.US10Y_High || '--';
+        document.getElementById("us10y-low").textContent = bond.US10Y_Low || '--';
+        document.getElementById("us10y-updated").textContent = bond.timestamp || '--';
       }
-
-      renderBondTicker(tickerData);
     }
 
-    function renderBondTicker(data) {
-      const bondTableBody = document.getElementById('bond-table-body');
-      bondTableBody.innerHTML = '';
-
-      const instruments = [
-        ['UMBS 5.5', 'UMBS_5_5'], ['UMBS 6.0', 'UMBS_6_0'], ['GNMA 5.5', 'GNMA_5_5'],
-        ['GNMA 6.0', 'GNMA_6_0'], ['Shadow 5.5', 'Shadow_5_5'], ['Shadow 6.0', 'Shadow_6_0'],
-        ['Shadow GNMA 5.5', 'Shadow_GNMA_5_5'], ['Shadow GNMA 6.0', 'Shadow_GNMA_6_0'],
-        ['US 10Y Treasury', 'US10Y'], ['US 30Y Treasury', 'US30Y'], ['MBB', 'MBB']
-      ];
-
-      instruments.forEach(([label, key]) => {
-        const d = data[key] || {};
-        bondTableBody.innerHTML += `
-          <tr>
-            <td>${label}</td>
-            <td>${d.change || '--'}</td>
-            <td>${d.actual || '--'}</td>
-            <td>${d.open || '--'}</td>
-            <td>${d.prior || '--'}</td>
-            <td>${d.high || '--'}</td>
-            <td>${d.low || '--'}</td>
-            <td>${d.updated || '--'}</td>
-          </tr>`;
-      });
-    }
-
-    fetchBondTickerData();
+    fetchTopSection();
   </script>
 </body>
 </html>
