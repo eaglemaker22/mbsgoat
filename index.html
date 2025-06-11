@@ -8,10 +8,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <style>
-    @keyframes flashHighlight {
-      0% { background-color: #facc15; }
-      100% { background-color: inherit; }
-    }
     body {
       background-color: #0f172a;
       color: white;
@@ -20,15 +16,12 @@
     .card {
       background: linear-gradient(135deg, #1e3a8a, #9333ea);
       border-radius: 0.75rem;
-      padding: 1.25rem;
+      padding: 1rem;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       transition: transform 0.3s ease-in-out;
     }
     .card:hover {
       transform: scale(1.02);
-    }
-    .flash {
-      animation: flashHighlight 1s ease-in-out;
     }
     .section-title {
       font-size: 1.5rem;
@@ -38,87 +31,103 @@
       color: #38bdf8;
       border-bottom: 2px solid #334155;
     }
+    .banner {
+      font-weight: bold;
+      font-size: 1.25rem;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      text-align: center;
+    }
+    .red-banner {
+      background: #7f1d1d;
+      color: #f87171;
+    }
+    .green-banner {
+      background: #064e3b;
+      color: #4ade80;
+    }
+    .blue-banner {
+      background: #1e3a8a;
+      color: #93c5fd;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 0.5rem;
+      text-align: left;
+      border-bottom: 1px solid #334155;
+    }
+    .rate-card {
+      background: linear-gradient(to right, #7f1d1d, #dc2626);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin: 0.5rem;
+      color: white;
+    }
+    .rate-card-purple {
+      background: linear-gradient(to right, #6d28d9, #db2777);
+    }
+    .metric-table th {
+      color: #93c5fd;
+    }
+    .metric-table td {
+      color: #facc15;
+    }
   </style>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBRKEG-8z29rtc9WuRUUAX1vT8tpFYEAd0",
-      authDomain: "peaceful-guide-460403-v5.firebaseapp.com",
-      projectId: "peaceful-guide-460403-v5",
-      storageBucket: "peaceful-guide-460403-v5.appspot.com",
-      messagingSenderId: "818426236765",
-      appId: "1:818426236765:web:b1686a788077530af862b4",
-      measurementId: "G-JH3EF76TP5"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    const updateText = (id, val) => {
-      const el = document.getElementById(id);
-      if (!el || val === undefined) return;
-      if (el.textContent !== String(val)) {
-        el.textContent = val;
-        el.classList.add("flash");
-        setTimeout(() => el.classList.remove("flash"), 1000);
-      }
-    };
-
-    const loadDoc = (collection, docId, fields) => {
-      db.collection(collection).doc(docId).get().then(snapshot => {
-        if (!snapshot.exists) return;
-        const data = snapshot.data();
-        fields.forEach(f => updateText(f.id, data[f.key]));
-      });
-    };
-
-    window.addEventListener("DOMContentLoaded", () => {
-      [
-        { collection: "market_data", doc: "mbs_products", fields: [
-          { id: "umbs55", key: "UMBS_5_5_Current" },
-          { id: "umbs60", key: "UMBS_6_0_Current" },
-          { id: "gnma55", key: "GNMA_5_5_Current" },
-          { id: "gnma60", key: "GNMA_6_0_Current" }
-        ]},
-        { collection: "market_data", doc: "shadow_bonds", fields: [
-          { id: "shadumbs55", key: "UMBS_5_5_Shadow" },
-          { id: "shadumbs60", key: "UMBS_6_0_Shadow" },
-          { id: "shadognma55", key: "GNMA_5_5_Shadow" },
-          { id: "shadognma60", key: "GNMA_6_0_Shadow" }
-        ]},
-        { collection: "market_data", doc: "us10y_current", fields: [
-          { id: "us10y", key: "Current" }
-        ]},
-        { collection: "bonds_for_umbs", doc: "0438NXPZ4R9vSz6AAibM", fields: [
-          { id: "us30y", key: "US30Y" },
-          { id: "mbb", key: "MBB" },
-          { id: "tlt", key: "TLT" },
-          { id: "tn1", key: "TN1" },
-          { id: "zn1", key: "ZN1" }
-        ]}
-      ].forEach(cfg => loadDoc(cfg.collection, cfg.doc, cfg.fields));
-    });
-  </script>
 </head>
-<body>
-  <div class="p-6">
-    <h1 class="text-3xl font-bold text-center text-yellow-300 mb-10">Loan Officer Financial Dashboard</h1>
+<body class="p-6">
+  <h1 class="text-3xl font-bold text-center text-yellow-300 mb-10">Loan Officer Financial Dashboard</h1>
 
-    <h2 class="section-title">Live Bond Prices</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="card"><h2>UMBS 5.5</h2><p>Current: <span id="umbs55">--</span></p></div>
-      <div class="card"><h2>UMBS 6.0</h2><p>Current: <span id="umbs60">--</span></p></div>
-      <div class="card"><h2>GNMA 5.5</h2><p>Current: <span id="gnma55">--</span></p></div>
-      <div class="card"><h2>GNMA 6.0</h2><p>Current: <span id="gnma60">--</span></p></div>
-      <div class="card"><h2>Shadow UMBS 5.5</h2><p>Current: <span id="shadumbs55">--</span></p></div>
-      <div class="card"><h2>Shadow UMBS 6.0</h2><p>Current: <span id="shadumbs60">--</span></p></div>
-      <div class="card"><h2>Shadow GNMA 5.5</h2><p>Current: <span id="shadognma55">--</span></p></div>
-      <div class="card"><h2>Shadow GNMA 6.0</h2><p>Current: <span id="shadognma60">--</span></p></div>
-      <div class="card"><h2>US 10Y Treasury</h2><p>Current: <span id="us10y">--</span></p></div>
-      <div class="card"><h2>US 30Y Treasury</h2><p>Current: <span id="us30y">--</span></p></div>
-      <div class="card"><h2>MBB</h2><p>Price: <span id="mbb">--</span></p></div>
-      <div class="card"><h2>TLT</h2><p>Price: <span id="tlt">--</span></p></div>
-      <div class="card"><h2>TN1 (10Y Futures)</h2><p>Price: <span id="tn1">--</span></p></div>
-      <div class="card"><h2>ZN1 (10Y Note)</h2><p>Price: <span id="zn1">--</span></p></div>
-    </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="banner red-banner">UMBS 5.5<br><span id="umbs55">--</span></div>
+    <div class="banner green-banner">US10Y<br><span id="us10y">--</span></div>
+    <div class="banner blue-banner">30Y Fixed<br><span id="mortgage30">--</span></div>
   </div>
+
+  <h2 class="section-title">Bond/Treasury Ticker</h2>
+  <div class="overflow-auto mb-10">
+    <table>
+      <thead>
+        <tr><th>Instrument</th><th>Change</th><th>Actual</th><th>Open</th><th>Prior</th><th>High</th><th>Low</th><th>Updated</th></tr>
+      </thead>
+      <tbody id="bond-table-body">
+        <!-- Rows will be populated dynamically -->
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section-title">Daily Rates</h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+    <div class="rate-card">30Y Fixed<br>Today: <span id="30yfix-today">--</span><br>Yesterday: <span id="30yfix-yes">--</span><br>Last Week: <span id="30yfix-week">--</span><br>Last Year: <span id="30yfix-year">--</span></div>
+    <div class="rate-card">30Y VA<br>Today: <span id="30yva-today">--</span><br>Yesterday: <span id="30yva-yes">--</span><br>Last Week: <span id="30yva-week">--</span><br>Last Year: <span id="30yva-year">--</span></div>
+    <div class="rate-card">30Y FHA<br>Today: <span id="30yfha-today">--</span><br>Yesterday: <span id="30yfha-yes">--</span><br>Last Week: <span id="30yfha-week">--</span><br>Last Year: <span id="30yfha-year">--</span></div>
+    <div class="rate-card rate-card-purple">30Y Jumbo<br>Today: <span id="30yjumbo-today">--</span><br>Yesterday: <span id="30yjumbo-yes">--</span><br>Last Week: <span id="30yjumbo-week">--</span><br>Last Year: <span id="30yjumbo-year">--</span></div>
+    <div class="rate-card rate-card-purple">30Y USDA<br>Today: <span id="30yusda-today">--</span><br>Yesterday: <span id="30yusda-yes">--</span><br>Last Week: <span id="30yusda-week">--</span><br>Last Year: <span id="30yusda-year">--</span></div>
+    <div class="rate-card rate-card-purple">30Y Investment<br>Today: <span id="30yinv-today">--</span><br>Yesterday: <span id="30yinv-yes">--</span><br>Last Week: <span id="30yinv-week">--</span><br>Last Year: <span id="30yinv-year">--</span></div>
+  </div>
+
+  <h2 class="section-title">Freddie Mac Avg Rate</h2>
+  <table class="metric-table mb-10">
+    <thead>
+      <tr><th>Metric</th><th>This</th><th>Last</th><th>Month</th><th>Year</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>30Y Fixed Rate</td><td id="freddie-30-this">--</td><td id="freddie-30-last">--</td><td id="freddie-30-month">--</td><td id="freddie-30-year">--</td></tr>
+      <tr><td>15Y Fixed Rate</td><td id="freddie-15-this">--</td><td id="freddie-15-last">--</td><td id="freddie-15-month">--</td><td id="freddie-15-year">--</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="section-title">Monthly Data</h2>
+  <table class="metric-table mb-10">
+    <thead>
+      <tr><th>Metric</th><th>Current</th><th>Last M</th><th>Last Y</th><th>Next</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Housing Starts</td><td id="starts-current">--</td><td id="starts-lastm">--</td><td id="starts-lasty">--</td><td id="starts-next">--</td></tr>
+      <tr><td>Permits</td><td id="permits-current">--</td><td id="permits-lastm">--</td><td id="permits-lasty">--</td><td id="permits-next">--</td></tr>
+    </tbody>
+  </table>
 </body>
 </html>
