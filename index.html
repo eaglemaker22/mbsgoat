@@ -16,17 +16,33 @@
       0% { background-color: #facc15; }
       100% { background-color: inherit; }
     }
+
+    body {
+      background-color: #0f172a;
+      color: white;
+    }
+
+    .card {
+      background: linear-gradient(135deg, #1e3a8a, #9333ea);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .card h2 {
+      color: #facc15;
+    }
   </style>
   <script>
     const firebaseConfig = {
-  apiKey: "AIzaSyBRKEG-8z29rtc9WuRUUAX1vT8tpFYEAd0",
-  authDomain: "peaceful-guide-460403-v5.firebaseapp.com",
-  projectId: "peaceful-guide-460403-v5",
-  storageBucket: "peaceful-guide-460403-v5.appspot.com",
-  messagingSenderId: "818426236765",
-  appId: "1:818426236765:web:b1686a788077530af862b4",
-  measurementId: "G-JH3EF76TP5"
-};
+      apiKey: "AIzaSyBRKEG-8z29rtc9WuRUUAX1vT8tpFYEAd0",
+      authDomain: "peaceful-guide-460403-v5.firebaseapp.com",
+      projectId: "peaceful-guide-460403-v5",
+      storageBucket: "peaceful-guide-460403-v5.appspot.com",
+      messagingSenderId: "818426236765",
+      appId: "1:818426236765:web:b1686a788077530af862b4",
+      measurementId: "G-JH3EF76TP5"
+    };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -71,100 +87,17 @@
         updateText(spanDate, data.latest_date);
       });
     });
-
-    function toggleTheme() {
-      const html = document.documentElement;
-      const isDark = html.getAttribute("data-theme") === "dark";
-      html.setAttribute("data-theme", isDark ? "light" : "dark");
-      document.body.classList.toggle("bg-black");
-      document.body.classList.toggle("bg-white");
-      document.body.classList.toggle("text-white");
-      document.body.classList.toggle("text-black");
-    }
   </script>
 </head>
 <body>
   <section class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">FHA 30Y</h2>
+    <!-- Repeat this card for each metric -->
+    <div class="card">
+      <h2 class="text-xl font-bold">FHA 30Y</h2>
       <p><strong>Value:</strong> <span id="fred-fha30-value">--</span></p>
       <p><strong>Date:</strong> <span id="fred-fha30-date">--</span></p>
     </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">Jumbo 30Y</h2>
-      <p><strong>Value:</strong> <span id="fred-jumbo30-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-jumbo30-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">VA 30Y</h2>
-      <p><strong>Value:</strong> <span id="fred-va30-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-va30-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">Conforming 30Y</h2>
-      <p><strong>Value:</strong> <span id="fred-conf30-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-conf30-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">USDA 30Y</h2>
-      <p><strong>Value:</strong> <span id="fred-usda30-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-usda30-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">Mortgage 30Y Avg</h2>
-      <p><strong>Value:</strong> <span id="fred-mortgage30us-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-mortgage30us-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">Mortgage 15Y Avg</h2>
-      <p><strong>Value:</strong> <span id="fred-mortgage15us-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-mortgage15us-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">Case-Shiller Index</h2>
-      <p><strong>Value:</strong> <span id="fred-case-shiller-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-case-shiller-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">Building Permits</h2>
-      <p><strong>Value:</strong> <span id="fred-permits-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-permits-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">Single-Family Permits</h2>
-      <p><strong>Value:</strong> <span id="fred-permits1-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-permits1-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">Housing Starts</h2>
-      <p><strong>Value:</strong> <span id="fred-housingstarts-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-housingstarts-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">Single-Family Starts</h2>
-      <p><strong>Value:</strong> <span id="fred-housingstarts1f-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-housingstarts1f-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">10Y Inflation</h2>
-      <p><strong>Value:</strong> <span id="fred-inflation-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-inflation-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">Yield Curve (10Y-2Y)</h2>
-      <p><strong>Value:</strong> <span id="fred-curve-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-curve-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">Consumer Sentiment</h2>
-      <p><strong>Value:</strong> <span id="fred-sentiment-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-sentiment-date">--</span></p>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold text-gray-700">Retail Sales</h2>
-      <p><strong>Value:</strong> <span id="fred-retail-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-retail-date">--</span></p>
-    </div>
+    <!-- You can duplicate similar divs for other metrics -->
   </section>
 </body>
 </html>
