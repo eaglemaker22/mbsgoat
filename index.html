@@ -11,26 +11,37 @@
     .flash {
       animation: flashHighlight 1s ease-in-out;
     }
-
     @keyframes flashHighlight {
       0% { background-color: #facc15; }
       100% { background-color: inherit; }
     }
-
     body {
       background-color: #0f172a;
       color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
     .card {
       background: linear-gradient(135deg, #1e3a8a, #9333ea);
-      border-radius: 0.5rem;
-      padding: 1rem;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      transition: transform 0.3s ease-in-out;
     }
-
+    .card:hover {
+      transform: scale(1.02);
+    }
     .card h2 {
       color: #facc15;
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #38bdf8;
+      border-bottom: 2px solid #334155;
     }
   </style>
   <script>
@@ -43,11 +54,10 @@
       appId: "1:818426236765:web:b1686a788077530af862b4",
       measurementId: "G-JH3EF76TP5"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const updateText = (id, val, change = null) => {
+    const updateText = (id, val) => {
       const el = document.getElementById(id);
       if (!el || val === undefined) return;
       if (el.textContent !== String(val)) {
@@ -55,49 +65,72 @@
         el.classList.add("flash");
         setTimeout(() => el.classList.remove("flash"), 1000);
       }
-      if (change !== null) {
-        el.className = change > 0 ? 'text-green-400' : change < 0 ? 'text-red-400' : 'text-white';
-      }
     };
 
-    const fredDocs = [
-      { id: "30Y Mortgage Avg US", spanVal: "fred-mortgage30us-value", spanDate: "fred-mortgage30us-date" },
-      { id: "15Y Mortgage Avg US", spanVal: "fred-mortgage15us-value", spanDate: "fred-mortgage15us-date" },
-      { id: "30Y Fixed Rate FHA Mortgage Index", spanVal: "fred-fha30-value", spanDate: "fred-fha30-date" },
-      { id: "30Y Fixed Rate Jumbo Mortgage Index", spanVal: "fred-jumbo30-value", spanDate: "fred-jumbo30-date" },
-      { id: "30Y Fixed Rate Veterans Affairs Mortgage Index", spanVal: "fred-va30-value", spanDate: "fred-va30-date" },
-      { id: "30Y Fixed Rate Conforming Mortgage Index", spanVal: "fred-conf30-value", spanDate: "fred-conf30-date" },
-      { id: "30Y Fixed Rate USDA Mortgage Index", spanVal: "fred-usda30-value", spanDate: "fred-usda30-date" },
-      { id: "S&P CoreLogic Case-Shiller U.S. National Home Price Index", spanVal: "fred-case-shiller-value", spanDate: "fred-case-shiller-date" },
-      { id: "Building Permits", spanVal: "fred-permits-value", spanDate: "fred-permits-date" },
-      { id: "Single-Family Building Permits", spanVal: "fred-permits1-value", spanDate: "fred-permits1-date" },
-      { id: "Total Housing Starts", spanVal: "fred-housingstarts-value", spanDate: "fred-housingstarts-date" },
-      { id: "Single-Family Housing Starts", spanVal: "fred-housingstarts1f-value", spanDate: "fred-housingstarts1f-date" },
-      { id: "10Y Breakeven Inflation Rate", spanVal: "fred-inflation-value", spanDate: "fred-inflation-date" },
-      { id: "10Y Treasury Minus 2Y Treasury", spanVal: "fred-curve-value", spanDate: "fred-curve-date" },
-      { id: "Consumer Sentiment Index", spanVal: "fred-sentiment-value", spanDate: "fred-sentiment-date" },
-      { id: "Retail Sales", spanVal: "fred-retail-value", spanDate: "fred-retail-date" }
+    const docs = [
+      { id: "30Y Fixed Rate FHA Mortgage Index", spanVal: "fha30-val", spanDate: "fha30-date" },
+      { id: "30Y Fixed Rate Jumbo Mortgage Index", spanVal: "jumbo30-val", spanDate: "jumbo30-date" },
+      { id: "30Y Fixed Rate Veterans Affairs Mortgage Index", spanVal: "va30-val", spanDate: "va30-date" },
+      { id: "30Y Fixed Rate Conforming Mortgage Index", spanVal: "conf30-val", spanDate: "conf30-date" },
+      { id: "30Y Fixed Rate USDA Mortgage Index", spanVal: "usda30-val", spanDate: "usda30-date" },
+      { id: "30Y Mortgage Avg US", spanVal: "mortgage30us-val", spanDate: "mortgage30us-date" },
+      { id: "15Y Mortgage Avg US", spanVal: "mortgage15us-val", spanDate: "mortgage15us-date" },
+      { id: "S&P CoreLogic Case-Shiller U.S. National Home Price Index", spanVal: "case-val", spanDate: "case-date" },
+      { id: "Building Permits", spanVal: "permits-val", spanDate: "permits-date" },
+      { id: "Single-Family Building Permits", spanVal: "permits1-val", spanDate: "permits1-date" },
+      { id: "Total Housing Starts", spanVal: "starts-val", spanDate: "starts-date" },
+      { id: "Single-Family Housing Starts", spanVal: "starts1f-val", spanDate: "starts1f-date" },
+      { id: "10Y Breakeven Inflation Rate", spanVal: "inflation-val", spanDate: "inflation-date" },
+      { id: "10Y Treasury Minus 2Y Treasury", spanVal: "curve-val", spanDate: "curve-date" },
+      { id: "Consumer Sentiment Index", spanVal: "sentiment-val", spanDate: "sentiment-date" },
+      { id: "Retail Sales", spanVal: "retail-val", spanDate: "retail-date" }
     ];
 
-    fredDocs.forEach(({ id, spanVal, spanDate }) => {
-      db.collection("fred_reports").doc(id).get().then((doc) => {
-        if (!doc.exists) return;
-        const data = doc.data();
-        updateText(spanVal, data.latest);
-        updateText(spanDate, data.latest_date);
+    window.addEventListener("DOMContentLoaded", () => {
+      docs.forEach(doc => {
+        db.collection("fred_reports").doc(doc.id).get().then(snapshot => {
+          if (!snapshot.exists) return;
+          const data = snapshot.data();
+          updateText(doc.spanVal, data.latest);
+          updateText(doc.spanDate, data.latest_date);
+        });
       });
     });
   </script>
 </head>
 <body>
-  <section class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    <!-- Repeat this card for each metric -->
-    <div class="card">
-      <h2 class="text-xl font-bold">FHA 30Y</h2>
-      <p><strong>Value:</strong> <span id="fred-fha30-value">--</span></p>
-      <p><strong>Date:</strong> <span id="fred-fha30-date">--</span></p>
+  <div class="p-6">
+    <h1 class="text-3xl font-bold text-center text-yellow-300 mb-10">Loan Officer Financial Dashboard</h1>
+
+    <div>
+      <h2 class="section-title">Mortgage Rates</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="card"><h2>FHA 30Y</h2><p>Value: <span id="fha30-val">--</span></p><p>Date: <span id="fha30-date">--</span></p></div>
+        <div class="card"><h2>Jumbo 30Y</h2><p>Value: <span id="jumbo30-val">--</span></p><p>Date: <span id="jumbo30-date">--</span></p></div>
+        <div class="card"><h2>VA 30Y</h2><p>Value: <span id="va30-val">--</span></p><p>Date: <span id="va30-date">--</span></p></div>
+        <div class="card"><h2>Conforming 30Y</h2><p>Value: <span id="conf30-val">--</span></p><p>Date: <span id="conf30-date">--</span></p></div>
+        <div class="card"><h2>USDA 30Y</h2><p>Value: <span id="usda30-val">--</span></p><p>Date: <span id="usda30-date">--</span></p></div>
+        <div class="card"><h2>Mortgage 30Y Avg</h2><p>Value: <span id="mortgage30us-val">--</span></p><p>Date: <span id="mortgage30us-date">--</span></p></div>
+        <div class="card"><h2>Mortgage 15Y Avg</h2><p>Value: <span id="mortgage15us-val">--</span></p><p>Date: <span id="mortgage15us-date">--</span></p></div>
+      </div>
+
+      <h2 class="section-title">Housing Data</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="card"><h2>Building Permits</h2><p>Value: <span id="permits-val">--</span></p><p>Date: <span id="permits-date">--</span></p></div>
+        <div class="card"><h2>Single-Family Permits</h2><p>Value: <span id="permits1-val">--</span></p><p>Date: <span id="permits1-date">--</span></p></div>
+        <div class="card"><h2>Housing Starts</h2><p>Value: <span id="starts-val">--</span></p><p>Date: <span id="starts-date">--</span></p></div>
+        <div class="card"><h2>Single-Family Starts</h2><p>Value: <span id="starts1f-val">--</span></p><p>Date: <span id="starts1f-date">--</span></p></div>
+      </div>
+
+      <h2 class="section-title">Market Indicators</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="card"><h2>10Y Inflation</h2><p>Value: <span id="inflation-val">--</span></p><p>Date: <span id="inflation-date">--</span></p></div>
+        <div class="card"><h2>Yield Curve (10Y-2Y)</h2><p>Value: <span id="curve-val">--</span></p><p>Date: <span id="curve-date">--</span></p></div>
+        <div class="card"><h2>Consumer Sentiment</h2><p>Value: <span id="sentiment-val">--</span></p><p>Date: <span id="sentiment-date">--</span></p></div>
+        <div class="card"><h2>Retail Sales</h2><p>Value: <span id="retail-val">--</span></p><p>Date: <span id="retail-date">--</span></p></div>
+        <div class="card"><h2>Case-Shiller Index</h2><p>Value: <span id="case-val">--</span></p><p>Date: <span id="case-date">--</span></p></div>
+      </div>
     </div>
-    <!-- You can duplicate similar divs for other metrics -->
-  </section>
+  </div>
 </body>
 </html>
