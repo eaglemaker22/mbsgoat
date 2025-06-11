@@ -1,285 +1,166 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LockMVP Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loan Officer Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <style>
+    .flash {
+      animation: flashHighlight 1s ease-in-out;
+    }
+
+    @keyframes flashHighlight {
+      0% { background-color: #facc15; }
+      100% { background-color: inherit; }
+    }
+  </style>
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const updateText = (id, val, change = null) => {
+      const el = document.getElementById(id);
+      if (!el || val === undefined) return;
+      if (el.textContent !== String(val)) {
+        el.textContent = val;
+        el.classList.add("flash");
+        setTimeout(() => el.classList.remove("flash"), 1000);
+      }
+      if (change !== null) {
+        el.className = change > 0 ? 'text-green-400' : change < 0 ? 'text-red-400' : 'text-white';
+      }
+    };
+
+    const fredDocs = [
+      { id: "30Y Mortgage Avg US", spanVal: "fred-mortgage30us-value", spanDate: "fred-mortgage30us-date" },
+      { id: "15Y Mortgage Avg US", spanVal: "fred-mortgage15us-value", spanDate: "fred-mortgage15us-date" },
+      { id: "30Y Fixed Rate FHA Mortgage Index", spanVal: "fred-fha30-value", spanDate: "fred-fha30-date" },
+      { id: "30Y Fixed Rate Jumbo Mortgage Index", spanVal: "fred-jumbo30-value", spanDate: "fred-jumbo30-date" },
+      { id: "30Y Fixed Rate Veterans Affairs Mortgage Index", spanVal: "fred-va30-value", spanDate: "fred-va30-date" },
+      { id: "30Y Fixed Rate Conforming Mortgage Index", spanVal: "fred-conf30-value", spanDate: "fred-conf30-date" },
+      { id: "30Y Fixed Rate USDA Mortgage Index", spanVal: "fred-usda30-value", spanDate: "fred-usda30-date" },
+      { id: "S&P CoreLogic Case-Shiller U.S. National Home Price Index", spanVal: "fred-case-shiller-value", spanDate: "fred-case-shiller-date" },
+      { id: "Building Permits", spanVal: "fred-permits-value", spanDate: "fred-permits-date" },
+      { id: "Single-Family Building Permits", spanVal: "fred-permits1-value", spanDate: "fred-permits1-date" },
+      { id: "Total Housing Starts", spanVal: "fred-housingstarts-value", spanDate: "fred-housingstarts-date" },
+      { id: "Single-Family Housing Starts", spanVal: "fred-housingstarts1f-value", spanDate: "fred-housingstarts1f-date" },
+      { id: "10Y Breakeven Inflation Rate", spanVal: "fred-inflation-value", spanDate: "fred-inflation-date" },
+      { id: "10Y Treasury Minus 2Y Treasury", spanVal: "fred-curve-value", spanDate: "fred-curve-date" },
+      { id: "Consumer Sentiment Index", spanVal: "fred-sentiment-value", spanDate: "fred-sentiment-date" },
+      { id: "Retail Sales", spanVal: "fred-retail-value", spanDate: "fred-retail-date" }
+    ];
+
+    fredDocs.forEach(({ id, spanVal, spanDate }) => {
+      db.collection("fred_reports").doc(id).get().then((doc) => {
+        if (!doc.exists) return;
+        const data = doc.data();
+        updateText(spanVal, data.latest);
+        updateText(spanDate, data.latest_date);
+      });
+    });
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute("data-theme") === "dark";
+      html.setAttribute("data-theme", isDark ? "light" : "dark");
+      document.body.classList.toggle("bg-black");
+      document.body.classList.toggle("bg-white");
+      document.body.classList.toggle("text-white");
+      document.body.classList.toggle("text-black");
+    }
+  </script>
 </head>
-<body class="bg-gray-100 font-inter antialiased flex flex-col min-h-screen">
-    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 shadow-lg">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-3xl font-bold rounded-md px-3 py-1 bg-blue-800 bg-opacity-50">LockMVP Dashboard</h1>
-            <span id="last-updated-overall" class="text-sm opacity-80">Loading data...</span>
-        </div>
-    </header>
-
-    <main class="container mx-auto p-4 flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 py-8">
-
-        <section id="mbs-products-section" class="bg-white rounded-xl shadow-lg p-6 border-b-4 border-green-500 flex flex-col">
-            <h2 class="text-2xl font-semibold text-sky-700 mb-4 pb-2 border-b border-gray-200">MBS Products</h2>
-            <div class="flex-grow space-y-4">
-                <div class="border-b pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
-                    <h3 class="text-lg font-medium text-gray-900">UMBS 5.5</h3>
-                    <p class="text-gray-700">
-                        <span class="font-medium">Current:</span> <span id="umbs-5-5-current" class="font-bold text-xl text-blue-600">--</span>
-                        <span class="font-medium"> | Change:</span> <span id="umbs-5-5-change" class="font-bold text-xl text-gray-700" data-type="positive-green-negative-red">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Open:</span> <span id="umbs-5-5-open">--</span> |
-                        <span class="font-medium">Today Close:</span> <span id="umbs-5-5-today-close">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Prior Day Close:</span> <span id="umbs-5-5-prior-close">--</span> |
-                        <span class="font-medium">Today High:</span> <span id="umbs-5-5-high">--</span> |
-                        <span class="font-medium">Today Low:</span> <span id="umbs-5-5-low">--</span>
-                    </p>
-                </div>
-                <div class="border-b pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
-                    <h3 class="text-lg font-medium text-gray-900">UMBS 6.0</h3>
-                    <p class="text-gray-700">
-                        <span class="font-medium">Current:</span> <span id="umbs-6-0-current" class="font-bold text-xl text-blue-600">--</span>
-                        <span class="font-medium"> | Change:</span> <span id="umbs-6-0-change" class="font-bold text-xl text-gray-700" data-type="positive-green-negative-red">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Open:</span> <span id="umbs-6-0-open">--</span> |
-                        <span class="font-medium">Today Close:</span> <span id="umbs-6-0-today-close">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Prior Day Close:</span> <span id="umbs-6-0-prior-close">--</span> |
-                        <span class="font-medium">Today High:</span> <span id="umbs-6-0-high">--</span> |
-                        <span class="font-medium">Today Low:</span> <span id="umbs-6-0-low">--</span>
-                    </p>
-                </div>
-                <div class="border-b pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
-                    <h3 class="text-lg font-medium text-gray-900">GNMA 5.5</h3>
-                    <p class="text-gray-700">
-                        <span class="font-medium">Current:</span> <span id="gnma-5-5-current" class="font-bold text-xl text-blue-600">--</span>
-                        <span class="font-medium"> | Change:</span> <span id="gnma-5-5-change" class="font-bold text-xl text-gray-700" data-type="positive-green-negative-red">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Open:</span> <span id="gnma-5-5-open">--</span> |
-                        <span class="font-medium">Today Close:</span> <span id="gnma-5-5-today-close">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Prior Day Close:</span> <span id="gnma-5-5-prior-close">--</span> |
-                        <span class="font-medium">Today High:</span> <span id="gnma-5-5-high">--</span> |
-                        <span class="font-medium">Today Low:</span> <span id="gnma-5-5-low">--</span>
-                    </p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-medium text-gray-900">GNMA 6.0</h3>
-                    <p class="text-gray-700">
-                        <span class="font-medium">Current:</span> <span id="gnma-6-0-current" class="font-bold text-xl text-blue-600">--</span>
-                        <span class="font-medium"> | Change:</span> <span id="gnma-6-0-change" class="font-bold text-xl text-gray-700" data-type="positive-green-negative-red">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Open:</span> <span id="gnma-6-0-open">--</span> |
-                        <span class="font-medium">Today Close:</span> <span id="gnma-6-0-today-close">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Prior Day Close:</span> <span id="gnma-6-0-prior-close">--</span> |
-                        <span class="font-medium">Today High:</span> <span id="gnma-6-0-high">--</span> |
-                        <span class="font-medium">Today Low:</span> <span id="gnma-6-0-low">--</span>
-                    </p>
-                </div>
-            </div>
-            <div class="mt-auto pt-4 border-t border-gray-100 text-right text-sm text-gray-500">
-                Last Updated: <span id="mbs-timestamp">--</span>
-            </div>
-        </section>
-
-        <section id="shadow-bonds-section" class="bg-white rounded-xl shadow-lg p-6 border-b-4 border-purple-500 flex flex-col">
-            <h2 class="text-2xl font-semibold text-purple-700 mb-4 pb-2 border-b border-gray-200">Shadow Bonds Beta</h2>
-            <div class="flex-grow space-y-4">
-                <div class="border-b pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
-                    <h3 class="text-lg font-medium text-gray-900">UMBS 5.5 Shadow</h3>
-                    <p class="text-gray-700">
-                        <span class="font-medium">Current:</span> <span id="umbs-5-5-shadow-current" class="font-bold text-xl text-purple-600">--</span>
-                        <span class="font-medium"> | Change:</span> <span id="umbs-5-5-shadow-change" class="font-bold text-xl text-gray-700" data-type="positive-green-negative-red">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Open:</span> <span id="umbs-5-5-shadow-open">--</span> |
-                        <span class="font-medium">Today Close:</span> <span id="umbs-5-5-shadow-today-close">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Prior Day Close:</span> <span id="umbs-5-5-shadow-prior-close">--</span> |
-                        <span class="font-medium">Today High:</span> <span id="umbs-5-5-shadow-high">--</span> |
-                        <span class="font-medium">Today Low:</span> <span id="umbs-5-5-shadow-low">--</span>
-                    </p>
-                </div>
-                <div class="border-b pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
-                    <h3 class="text-lg font-medium text-gray-900">UMBS 6.0 Shadow</h3>
-                    <p class="text-gray-700">
-                        <span class="font-medium">Current:</span> <span id="umbs-6-0-shadow-current" class="font-bold text-xl text-purple-600">--</span>
-                        <span class="font-medium"> | Change:</span> <span id="umbs-6-0-shadow-change" class="font-bold text-xl text-gray-700" data-type="positive-green-negative-red">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Open:</span> <span id="umbs-6-0-shadow-open">--</span> |
-                        <span class="font-medium">Today Close:</span> <span id="umbs-6-0-shadow-today-close">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Prior Day Close:</span> <span id="umbs-6-0-prior-close">--</span> |
-                        <span class="font-medium">Today High:</span> <span id="umbs-6-0-high">--</span> |
-                        <span class="font-medium">Today Low:</span> <span id="umbs-6-0-low">--</span>
-                    </p>
-                </div>
-                <div class="border-b pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
-                    <h3 class="text-lg font-medium text-gray-900">GNMA 5.5 Shadow</h3>
-                    <p class="text-gray-700">
-                        <span class="font-medium">Current:</span> <span id="gnma-5-5-shadow-current" class="font-bold text-xl text-purple-600">--</span>
-                        <span class="font-medium"> | Change:</span> <span id="gnma-5-5-shadow-change" class="font-bold text-xl text-gray-700" data-type="positive-green-negative-red">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Open:</span> <span id="gnma-5-5-shadow-open">--</span> |
-                        <span class="font-medium">Today Close:</span> <span id="gnma-5-5-shadow-today-close">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Prior Day Close:</span> <span id="gnma-5-5-shadow-prior-close">--</span> |
-                        <span class="font-medium">Today High:</span> <span id="gnma-5-5-shadow-high">--</span> |
-                        <span class="font-medium">Today Low:</span> <span id="gnma-5-5-shadow-low">--</span>
-                    </p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-medium text-gray-900">GNMA 6.0 Shadow</h3>
-                    <p class="text-gray-700">
-                        <span class="font-medium">Current:</span> <span id="gnma-6-0-shadow-current" class="font-bold text-xl text-purple-600">--</span>
-                        <span class="font-medium"> | Change:</span> <span id="gnma-6-0-change" class="font-bold text-xl text-gray-700" data-type="positive-green-negative-red">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Open:</span> <span id="gnma-6-0-open">--</span> |
-                        <span class="font-medium">Today Close:</span> <span id="gnma-6-0-today-close">--</span>
-                    </p>
-                    <p class="text-gray-700 text-sm">
-                        <span class="font-medium">Prior Day Close:</span> <span id="gnma-6-0-prior-close">--</span> |
-                        <span class="font-medium">Today High:</span> <span id="gnma-6-0-high">--</span> |
-                        <span class="font-medium">Today Low:</span> <span id="gnma-6-0-low">--</span>
-                    </p>
-                </div>
-            </div>
-            <div class="mt-auto pt-4 border-t border-gray-100 text-right text-sm text-gray-500">
-                Last Updated: <span id="shadow-timestamp">--</span>
-            </div>
-        </section>
-
-        <section id="us10y-section" class="bg-white rounded-xl shadow-lg p-6 border-b-4 border-blue-500 flex flex-col">
-            <h2 class="text-2xl font-semibold text-blue-700 mb-4 pb-2 border-b border-gray-200">US 10-Year Treasury Yield</h2>
-            <div class="flex-grow space-y-3">
-                <p class="text-gray-700">
-                    <span class="font-medium">Current Yield:</span> <span id="us10y-current" class="font-bold text-xl text-blue-600">--</span>
-                    <span class="font-medium"> | Daily Change:</span> <span id="us10y-change" class="font-bold text-xl text-gray-700" data-type="positive-green-negative-red">--</span>
-                </p>
-                <p class="text-gray-700">
-                    <span class="font-medium">Open:</span> <span id="us10y-open" class="font-semibold text-gray-800">--</span> |
-                    <span class="font-medium">Today Close:</span> <span id="us10y-today-close" class="font-semibold text-gray-800">--</span>
-                </p>
-                <p class="text-gray-700">
-                    <span class="font-medium">Prior Day Close:</span> <span id="us10y-prior-close" class="font-semibold text-gray-800">--</span> |
-                    <span class="font-medium">Today High:</span> <span id="us10y-high" class="font-semibold text-gray-800">--</span> |
-                    <span class="font-medium">Today Low:</span> <span id="us10y-low" class="font-semibold text-gray-800">--</span>
-                </p>
-            </div>
-            <div class="mt-auto pt-4 border-t border-gray-100 text-right text-sm text-gray-500">
-                Last Updated: <span id="us10y-timestamp">--</span>
-            </div>
-        </section>
-
-        <section id="key-economic-indicators-section" class="bg-white rounded-xl shadow-lg p-6 border-b-4 border-yellow-500 flex flex-col">
-            <h2 class="text-2xl font-semibold text-yellow-700 mb-4 pb-2 border-b border-gray-200">Key Economic Indicators (FRED)</h2>
-            <div class="flex-grow space-y-4 text-gray-700 text-base">
-                <div>
-                    <h3 class="text-lg font-medium text-gray-900">30-Year Fixed Mortgage Rate</h3>
-                    <p class="ml-2">
-                        <span class="font-medium">Value:</span> <span id="fred-mortgage30us-value" class="font-bold text-xl text-orange-600">--</span>
-                        <span class="font-medium"> | Date:</span> <span id="fred-mortgage30us-date">--</span>
-                    </p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-medium text-gray-900">Retail Sales</h3>
-                    <p class="ml-2">
-                        <span class="font-medium">Value:</span> <span id="fred-retailsales-value" class="font-bold text-xl text-green-600">--</span>
-                        <span class="font-medium"> | Date:</span> <span id="fred-retailsales-date">--</span>
-                    </p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-medium text-gray-900">Consumer Sentiment</h3>
-                    <p class="ml-2">
-                        <span class="font-medium">Value:</span> <span id="fred-consumersentiment-value" class="font-bold text-xl text-blue-600">--</span>
-                        <span class="font-medium"> | Date:</span> <span id="fred-consumersentiment-date">--</span>
-                    </p>
-                </div>
-            </div>
-            <div class="mt-auto pt-4 border-t border-gray-100 text-right text-sm text-gray-500">
-                Last Updated: <span id="fred-timestamp">--</span>
-            </div>
-        </section>
-
-        <section id="mortgage-rates-section" class="bg-white rounded-xl shadow-lg p-6 border-b-4 border-red-500 flex flex-col">
-            <h2 class="text-2xl font-semibold text-red-700 mb-4 pb-2 border-b border-gray-200">Mortgage Rates</h2>
-            <div class="flex-grow text-sm">
-                <table class="w-full text-left table-auto">
-                    <tbody>
-                        <tr class="border-b border-gray-100">
-                            <td class="py-1 px-2 font-semibold text-gray-800">Conf 30 Yr Fix</td>
-                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Today</th>
-                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Yesterday</th>
-                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800"></th> </tr>
-                        <tr class="border-b border-gray-100">
-                            <td class="py-1 px-2">Rate</td> <td class="py-1 px-2 text-gray-700">6.88%</td>
-                            <td class="py-1 px-2 text-gray-700">6.88%</td>
-                            <td class="py-1 px-2"></td> </tr>
-                        <tr class="h-2"></tr> <tr class="border-b border-gray-100">
-                            <td class="py-1 px-2 font-semibold text-gray-800">Freddie Mac</td>
-                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">06/05/25</th>
-                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Prior Week</th>
-                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800"></th> </tr>
-                        <tr class="border-b border-gray-100">
-                            <td class="py-1 px-2">30 Yr Fix</td>
-                            <td class="py-1 px-2 text-gray-700">6.85%</td>
-                            <td class="py-1 px-2 text-gray-700">6.89%</td>
-                            <td class="py-1 px-2"></td> </tr>
-                        <tr class="border-b border-gray-100">
-                            <td class="py-1 px-2">15 Yr Fix</td>
-                            <td class="py-1 px-2 text-gray-700">5.99%</td>
-                            <td class="py-1 px-2 text-gray-700">6.04%</td>
-                            <td class="py-1 px-2"></td> </tr>
-                        <tr class="h-2"></tr> <tr class="border-b border-gray-100">
-                            <td class="py-1 px-2 font-semibold text-gray-800">Fed Funds Rate</td>
-                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Since Jan '25</th>
-                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Next Meeting</th>
-                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Target Range</th>
-                        </tr>
-                        <tr class="border-b border-gray-100">
-                            <td class="py-1 px-2">Effective Rate</td>
-                            <td class="py-1 px-2 text-gray-700">4.33%</td>
-                            <td class="py-1 px-2 text-gray-700">06/18/25</td>
-                            <td class="py-1 px-2 text-gray-700">4.25%-4.5%</td>
-                        </tr>
-                        <tr class="h-2"></tr> <tr class="border-b border-gray-100">
-                            <td class="py-1 px-2 font-semibold text-gray-800">Prime Rate</td>
-                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Current Rate</th>
-                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800">Effective Since</th>
-                            <th class="py-1 px-2 font-medium text-gray-600 bg-blue-50 text-blue-800"></th> </tr>
-                        <tr class="border-b border-gray-100">
-                            <td class="py-1 px-2">Rate</td> <td class="py-1 px-2 text-gray-700">7.50%</td>
-                            <td class="py-1 px-2 text-gray-700">12/18/24</td>
-                            <td class="py-1 px-2"></td> </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-auto pt-4 border-t border-gray-100 text-right text-sm text-gray-500">
-                Last Updated: 06/05/2025 2:15 PM MST
-            </div>
-        </section>
-
-    </main>
-
-    <footer class="bg-gray-800 text-white p-4 text-center text-sm shadow-inner mt-8">
-        <p>&copy; 2025 LockMVP. All rights reserved.</p>
-    </footer>
-
-    <script src="script.js"></script>
+<body>
+  <section class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">FHA 30Y</h2>
+      <p><strong>Value:</strong> <span id="fred-fha30-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-fha30-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">Jumbo 30Y</h2>
+      <p><strong>Value:</strong> <span id="fred-jumbo30-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-jumbo30-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">VA 30Y</h2>
+      <p><strong>Value:</strong> <span id="fred-va30-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-va30-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">Conforming 30Y</h2>
+      <p><strong>Value:</strong> <span id="fred-conf30-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-conf30-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">USDA 30Y</h2>
+      <p><strong>Value:</strong> <span id="fred-usda30-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-usda30-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">Mortgage 30Y Avg</h2>
+      <p><strong>Value:</strong> <span id="fred-mortgage30us-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-mortgage30us-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">Mortgage 15Y Avg</h2>
+      <p><strong>Value:</strong> <span id="fred-mortgage15us-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-mortgage15us-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">Case-Shiller Index</h2>
+      <p><strong>Value:</strong> <span id="fred-case-shiller-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-case-shiller-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">Building Permits</h2>
+      <p><strong>Value:</strong> <span id="fred-permits-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-permits-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">Single-Family Permits</h2>
+      <p><strong>Value:</strong> <span id="fred-permits1-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-permits1-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">Housing Starts</h2>
+      <p><strong>Value:</strong> <span id="fred-housingstarts-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-housingstarts-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">Single-Family Starts</h2>
+      <p><strong>Value:</strong> <span id="fred-housingstarts1f-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-housingstarts1f-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">10Y Inflation</h2>
+      <p><strong>Value:</strong> <span id="fred-inflation-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-inflation-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">Yield Curve (10Y-2Y)</h2>
+      <p><strong>Value:</strong> <span id="fred-curve-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-curve-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">Consumer Sentiment</h2>
+      <p><strong>Value:</strong> <span id="fred-sentiment-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-sentiment-date">--</span></p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-xl font-semibold text-gray-700">Retail Sales</h2>
+      <p><strong>Value:</strong> <span id="fred-retail-value">--</span></p>
+      <p><strong>Date:</strong> <span id="fred-retail-date">--</span></p>
+    </div>
+  </section>
 </body>
 </html>
