@@ -1,13 +1,29 @@
-    [build]
-      publish = "."  # Publish the root directory directly
-      command = "# No build command needed for this simple HTML/JS POC"
+[build]
 
-    [functions]
-      directory = "netlify/functions"
-      node_bundler = "esbuild"
+  # Corrected: Your website files (index.html, style.css, script.js) are directly in the repository root.
 
-    [[redirects]]
-      from = "/*"
-      to = "/index.html"
-      status = 200
-    
+  base = "."
+
+  publish = "."
+
+  command = "echo 'Deploying static site'"
+
+  environment = { NODE_VERSION = "18" }
+
+
+
+[functions]
+
+  directory = "netlify/functions"
+
+  node_bundler = "esbuild"
+
+
+
+[[redirects]]
+
+  from = "/*"
+
+  to = "/index.html"
+
+  status = 200 
