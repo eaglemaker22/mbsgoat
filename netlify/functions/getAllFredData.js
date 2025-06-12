@@ -1,15 +1,10 @@
 const admin = require('firebase-admin');
+const serviceAccount = require('../../private/firebase-config.json'); // Load credentials from JSON file
 
 if (!admin.apps.length) {
     try {
-        const serviceAccount = {
-            type: "service_account",
-            project_id: process.env.FIREBASE_PROJECT_ID,
-            private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Fixes formatting
-            client_email: process.env.FIREBASE_CLIENT_EMAIL
-        };
-
         admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+        console.log("Firebase initialized with JSON file.");
     } catch (error) {
         console.error("Firebase Admin initialization failed:", error);
         return {
@@ -22,7 +17,6 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 module.exports.handler = async (event, context) => {
-
     try {
         const snapshot = await db.collection('fred_reports').get();
 
