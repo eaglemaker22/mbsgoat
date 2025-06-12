@@ -1,29 +1,14 @@
 [build]
-
-  # Corrected: Your website files (index.html, style.css, script.js) are directly in the repository root.
-
-  base = "."
-
-  publish = "."
-
-  command = "echo 'Deploying static site'"
-
-  environment = { NODE_VERSION = "18" }
-
-
+  base = "."
+  publish = "."
+  command = "echo 'Deploying static site'"
+  environment = { NODE_VERSION = "18" }
 
 [functions]
-
-  directory = "netlify/functions"
-
-  node_bundler = "esbuild"
-
-
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
 
 [[redirects]]
-
-  from = "/*"
-
-  to = "/index.html"
-
-  status = 200 
+  from = "/*"
+  to = "/index.html"
+  status = 200
