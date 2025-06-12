@@ -1,38 +1,96 @@
-/* Custom CSS for LockMVP Dashboard - Very minimal, Tailwind handles most styling */
+/* Basic CSS for the retro terminal aesthetic */
+/* This file is loaded by index.html and provides the core visual theme */
 
-/*
-   If you had any specific fonts or base styles that aren't
-   handled by Tailwind's defaults or your CDN links, they'd go here.
-   For example, if you wanted a specific global line-height or text color
-   that differs from Tailwind's defaults on the body.
-*/
-
-/*
-   The previous custom CSS for .dashboard-container, .dashboard-column,
-   .dashboard-section, etc., is largely replaced by Tailwind classes
-   directly in the HTML.
-
-   The border colors for the sections (the "bars under the title")
-   are now controlled by classes like `border-blue-500`, `border-green-500`,
-   `border-purple-500`, `border-red-500` directly on the <section> tags.
-
-   The `last-updated` styling is handled by Tailwind classes like
-   `text-sm text-gray-500` in the HTML.
-*/
-
-/* You might need this if the empty table row for spacing gets a default border */
-#mortgage-rates-section table tr.h-2 {
-    border-bottom: none !important;
+body {
+    background-color: #1a202c; /* Deeper dark gray */
+    color: #e2e8f0; /* Off-white for text */
+    font-family: 'Space Mono', monospace; /* Monospaced font for terminal feel */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Optional: if you want more precise control over the inner table text */
-#mortgage-rates-section table {
-    /* You can add specific font-size here if `text-sm` on the parent div
-       isn't enough or you need a slightly different size */
-    /* font-size: 0.85rem; */ /* Example: slightly smaller than Tailwind's text-sm */
+/* General section styling for consistency */
+section {
+    background-color: #2d3748; /* Slightly lighter gray for sections */
+    border: 1px solid #4a5568; /* Subtle border for definition */
+    border-radius: 0.5rem; /* Slightly rounded corners */
+    padding: 1.5rem; /* Consistent padding */
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.1); /* Subtle green glow */
+    transition: all 0.3s ease-in-out; /* Smooth transitions for interactivity */
 }
 
-/* Optional: If you need to make the last row of the table explicitly no bottom border */
-#mortgage-rates-section tbody tr:last-of-type td {
-    border-bottom: none;
+section:hover {
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); /* Enhanced glow on hover */
+    transform: translateY(-2px); /* Slight lift on hover */
+}
+
+h1, h2, h3 {
+    color: #68d391; /* Green for headings to simulate terminal text */
+    text-shadow: 0 0 5px rgba(104, 211, 145, 0.5); /* Subtle glow for headings */
+}
+
+/* Adjust Tailwind colors for specific elements if needed to match theme */
+.text-green-600 { color: #38a169; } /* Darker green for consistent theme */
+.text-red-600 { color: #e53e3e; } /* Standard red for negative change */
+.text-blue-600 { color: #4299e1; } /* Standard blue for other metrics */
+.text-purple-600 { color: #9f7aea; } /* Standard purple */
+.text-orange-600 { color: #ed8936; } /* Standard orange */
+
+/* Text colors for data */
+.text-gray-700 { color: #a0aec0; } /* Lighter gray for data values */
+.text-gray-900 { color: #e2e8f0; } /* Nearly white for important labels */
+
+/* Table styling for retro look */
+table {
+    border-collapse: collapse; /* Ensure borders collapse */
+    width: 100%;
+}
+
+th, td {
+    padding: 0.75rem; /* Ample padding for readability */
+    border-bottom: 1px dashed #4a5568; /* Dashed border for terminal look */
+    color: #a0aec0; /* Data text color */
+}
+
+th {
+    background-color: #2d3748; /* Darker header background */
+    color: #68d391; /* Green header text */
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+tbody tr:last-child td {
+    border-bottom: none; /* No border on the last row */
+}
+
+/* Specific adjustments for text inside the tables for a more subtle look */
+.table-auto .text-gray-700 {
+    color: #a0aec0; /* Ensure table data uses the slightly lighter gray */
+}
+
+/* Footer styling */
+footer {
+    background-color: #1a202c; /* Same as body for seamless dark look */
+    color: #a0aec0; /* Lighter gray for footer text */
+    border-top: 1px solid #4a5568; /* Subtle border */
+    padding: 1rem;
+    text-align: center;
+}
+
+/* Specific color adjustments for dynamic elements */
+.text-green-400 { color: #68d391; }
+.text-blue-400 { color: #63b3ed; }
+.text-orange-400 { color: #f6ad55; }
+.text-purple-400 { color: #b794f4; }
+.text-red-400 { color: #fc8181; }
+.text-teal-400 { color: #4fd1c5; }
+
+/* Data display colors */
+.font-extrabold {
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3); /* Slight glow for main values */
+}
+
+/* Adjustments for text-xs in top cards */
+.text-sm {
+    color: #a0aec0; /* Ensure smaller text remains readable */
 }
