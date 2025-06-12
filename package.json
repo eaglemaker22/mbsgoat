@@ -12,6 +12,7 @@
     "vite": "^6.3.5"
   },
   "dependencies": {
-    "firebase": "^11.9.1"
+    "firebase": "^11.9.1",
+    "firebase-admin": "^11.9.1"  <-- ADD THIS LINE
   }
 }
