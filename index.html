@@ -1,157 +1,63 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Loan Officer Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <style>
-    body {
-      background-color: #0f172a;
-      color: white;
-      font-family: 'Courier New', Courier, monospace;
-    }
-    .card {
-      background: linear-gradient(135deg, #1e3a8a, #9333ea);
-      border-radius: 0.75rem;
-      padding: 1rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      transition: transform 0.3s ease-in-out;
-    }
-    .card:hover {
-      transform: scale(1.02);
-    }
-    .section-title {
-      font-size: 1.5rem;
-      font-weight: bold;
-      margin-top: 2rem;
-      margin-bottom: 1rem;
-      color: #38bdf8;
-      border-bottom: 2px solid #334155;
-    }
-    .banner {
-      font-weight: bold;
-      font-size: 1rem;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      text-align: left;
-      line-height: 1.4;
-    }
-    .red-banner {
-      background: #7f1d1d;
-      color: #f87171;
-    }
-    .green-banner {
-      background: #064e3b;
-      color: #4ade80;
-    }
-    .blue-banner {
-      background: #1e3a8a;
-      color: #93c5fd;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 0.5rem;
-      text-align: left;
-      border-bottom: 1px solid #334155;
-    }
-    .rate-card {
-      background: linear-gradient(to right, #7f1d1d, #dc2626);
-      border-radius: 0.5rem;
-      padding: 1rem;
-      margin: 0.5rem;
-      color: white;
-    }
-    .rate-card-purple {
-      background: linear-gradient(to right, #6d28d9, #db2777);
-    }
-    .metric-table th {
-      color: #93c5fd;
-    }
-    .metric-table td {
-      color: #facc15;
-    }
-  </style>
-</head>
-<body class="p-6">
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <div class="banner red-banner">
-      <strong>UMBS 5.5</strong><br>
-      Current: <span id="umbs55-current">--</span><br>
-      Open: <span id="umbs55-open">--</span><br>
-      High: <span id="umbs55-high">--</span><br>
-      Low: <span id="umbs55-low">--</span><br>
-      Updated: <span id="umbs55-updated">--</span>
-    </div>
-    <div class="banner green-banner">
-      <strong>US10Y</strong><br>
-      Current: <span id="us10y-current">--</span><br>
-      Open: <span id="us10y-open">--</span><br>
-      High: <span id="us10y-high">--</span><br>
-      Low: <span id="us10y-low">--</span><br>
-      Updated: <span id="us10y-updated">--</span>
-    </div>
-    <div class="banner blue-banner">
-      <strong>30Y Fixed</strong><br>
-      Current: <span id="mortgage30">--</span><br>
-      Yesterday: <span id="mortgage30-yes">--</span>
-    </div>
-  </div>
+// netlify/functions/getFredReport.js
+// This Netlify Function fetches specific FRED report data from your Firestore database
+// based on the 'reportName' query parameter.
 
-  <h2 class="section-title">Bond/Treasury Ticker</h2>
-  <div class="overflow-auto mb-10">
-    <table>
-      <thead>
-        <tr><th>Instrument</th><th>Change</th><th>Actual</th><th>Open</th><th>Prior</th><th>High</th><th>Low</th><th>Updated</th></tr>
-      </thead>
-      <tbody id="bond-table-body"></tbody>
-    </table>
-  </div>
+const admin = require('firebase-admin'); // Import Firebase Admin SDK
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBRKEG-8z29rtc9WuRUAAX1vT8tpFYEAd0",
-      authDomain: "peaceful-guide-460403-v5.firebaseapp.com",
-      projectId: "peaceful-guide-460403-v5",
-      storageBucket: "peaceful-guide-460403-v5.appspot.com",
-      messagingSenderId: "818426236765",
-      appId: "1:818426236765:web:b1686a788077530af862b4"
-    };
+// Initialize Firebase Admin SDK only once
+if (!admin.apps.length) {
+    try {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+    } catch (e) {
+        console.error("Firebase Admin initialization error:", e);
+        throw new Error("Failed to initialize Firebase Admin. Check FIREBASE_SERVICE_ACCOUNT environment variable.");
+    }
+}
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+const db = admin.firestore(); // Get Firestore instance
 
-    async function fetchTopSection() {
-      const mbsSnap = await db.collection("mbs_quotes").orderBy("timestamp", "desc").limit(1).get();
-      const bondSnap = await db.collection("bonds_for_umbs").orderBy("timestamp", "desc").limit(1).get();
+exports.handler = async function(event, context) {
+    // Get the reportName from the query parameters
+    const reportName = event.queryStringParameters.reportName;
 
-      if (!mbsSnap.empty) {
-        const mbs = mbsSnap.docs[0].data();
-        document.getElementById("umbs55-current").textContent = mbs.UMBS_5_5_Current || '--';
-        document.getElementById("umbs55-open").textContent = mbs.UMBS_5_5_Open || '--';
-        document.getElementById("umbs55-high").textContent = mbs.UMBS_5_5_TodayHigh || '--';
-        document.getElementById("umbs55-low").textContent = mbs.UMBS_5_5_TodayLow || '--';
-        document.getElementById("umbs55-updated").textContent = mbs.timestamp || '--';
-        document.getElementById("mortgage30").textContent = mbs.MORTGAGE30US || '--';
-        document.getElementById("mortgage30-yes").textContent = mbs.MORTGAGE30US_Yesterday || '--';
-      }
-
-      if (!bondSnap.empty) {
-        const bond = bondSnap.docs[0].data();
-        document.getElementById("us10y-current").textContent = bond.US10Y || '--';
-        document.getElementById("us10y-open").textContent = bond.US10Y_Open || '--';
-        document.getElementById("us10y-high").textContent = bond.US10Y_High || '--';
-        document.getElementById("us10y-low").textContent = bond.US10Y_Low || '--';
-        document.getElementById("us10y-updated").textContent = bond.timestamp || '--';
-      }
+    if (!reportName) {
+        return {
+            statusCode: 400,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: "Missing 'reportName' query parameter." })
+        };
     }
 
-    fetchTopSection();
-  </script>
-</body>
-</html>
+    try {
+        // Reference to the specific document in Firestore's 'fred_reports' collection
+        const docRef = db.collection('fred_reports').document(reportName);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            console.warn(`No such document: fred_reports/${reportName}`);
+            return {
+                statusCode: 404,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: `FRED report '${reportName}' not found in Firestore.` })
+            };
+        }
+
+        const data = doc.data(); // Get all data from the document
+
+        return {
+            statusCode: 200,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        };
+    } catch (error) {
+        console.error(`Error fetching FRED report '${reportName}' from Firestore:`, error);
+        return {
+            statusCode: 500,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: `Failed to fetch FRED report '${reportName}'.`, error: error.message })
+        };
+    }
+};
