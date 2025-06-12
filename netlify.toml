@@ -1,24 +1,13 @@
-[build]
-  # 'base' can specify a subdirectory for your project if your repo root is not the project root.
-  # Since your project root is the repo root, this is fine.
-  base = "."
-  # This command tells Netlify to run your Vite build process.
-  command = "npm run build"
-  # This tells Netlify that the compiled and optimized files will be in the 'dist' directory.
-  publish = "dist"
-  # Ensures Node.js version 18 is used for the build environment.
-  environment = { NODE_VERSION = "18" }
+    [build]
+      publish = "."  # Publish the root directory directly
+      command = "# No build command needed for this simple HTML/JS POC"
 
-[functions]
-  # This tells Netlify where your serverless functions are located.
-  directory = "netlify/functions"
-  # Specifies 'esbuild' as the bundler for Node.js functions, which is generally efficient.
-  node_bundler = "esbuild"
+    [functions]
+      directory = "netlify/functions"
+      node_bundler = "esbuild"
 
-# This redirect rule is crucial for Single Page Applications (SPAs) like your dashboard.
-# It ensures that all requests that don't match a file are redirected to index.html,
-# allowing client-side routing to handle different paths.
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+    [[redirects]]
+      from = "/*"
+      to = "/index.html"
+      status = 200
+    
