@@ -13,6 +13,6 @@
   },
   "dependencies": {
     "firebase": "^11.9.1",
-    "firebase-admin": "^11.9.1"  <-- ADD THIS LINE
+    "firebase-admin": "^11.9.1"
   }
 }
