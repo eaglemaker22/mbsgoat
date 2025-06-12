@@ -21,7 +21,8 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-exports.handler = async function(event, context) {
+module.exports.handler = async (event, context) => {
+
     try {
         const snapshot = await db.collection('fred_reports').get();
 
