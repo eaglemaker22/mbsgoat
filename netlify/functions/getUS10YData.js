@@ -23,7 +23,7 @@ admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 
 const db = admin.firestore();
 
-exports.handler = async (event, context) => {
+module.exports.handler = async (event, context) => {
     try {
         const docRef = db.collection('market_data').doc('us10y_current');
         const doc = await docRef.get();
