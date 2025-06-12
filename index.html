@@ -1,63 +1,52 @@
-// netlify/functions/getFredReport.js
-// This Netlify Function fetches specific FRED report data from your Firestore database
-// based on the 'reportName' query parameter.
-
-const admin = require('firebase-admin'); // Import Firebase Admin SDK
-
-// Initialize Firebase Admin SDK only once
-if (!admin.apps.length) {
-    try {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
-        });
-    } catch (e) {
-        console.error("Firebase Admin initialization error:", e);
-        throw new Error("Failed to initialize Firebase Admin. Check FIREBASE_SERVICE_ACCOUNT environment variable.");
-    }
-}
-
-const db = admin.firestore(); // Get Firestore instance
-
-exports.handler = async function(event, context) {
-    // Get the reportName from the query parameters
-    const reportName = event.queryStringParameters.reportName;
-
-    if (!reportName) {
-        return {
-            statusCode: 400,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: "Missing 'reportName' query parameter." })
-        };
-    }
-
-    try {
-        // Reference to the specific document in Firestore's 'fred_reports' collection
-        const docRef = db.collection('fred_reports').document(reportName);
-        const doc = await docRef.get();
-
-        if (!doc.exists) {
-            console.warn(`No such document: fred_reports/${reportName}`);
-            return {
-                statusCode: 404,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: `FRED report '${reportName}' not found in Firestore.` })
-            };
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US10Y Data Proof-of-Concept</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #374151; }
+        .container { max-width: 48rem; margin: 3rem auto; padding: 2rem; background-color: #fff; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        h1 { font-size: 2.25rem; font-weight: 700; text-align: center; margin-bottom: 2rem; color: #1f2937; }
+        .data-box {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background-color: #f9fafb;
         }
+        .data-label { font-size: 1.125rem; font-weight: 600; color: #4b5563; margin-bottom: 0.5rem; }
+        .data-value { font-size: 2.5rem; font-weight: 700; color: #10b981; } /* Green for success */
+        .data-timestamp { font-size: 0.875rem; color: #6b7280; margin-top: 1rem; text-align: right; }
+        .status-message {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            text-align: center;
+        }
+        .status-success { background-color: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .status-error { background-color: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .status-loading { background-color: #e0f2fe; color: #1e40af; border: 1px solid #3b82f6; }
+    </style>
+</head>
+<body>
 
-        const data = doc.data(); // Get all data from the document
+    <div class="container">
+        <h1>US10Y Data Proof-of-Concept</h1>
 
-        return {
-            statusCode: 200,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-        };
-    } catch (error) {
-        console.error(`Error fetching FRED report '${reportName}' from Firestore:`, error);
-        return {
-            statusCode: 500,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: `Failed to fetch FRED report '${reportName}'.`, error: error.message })
-        };
-    }
-};
+        <div class="data-box">
+            <div class="data-label">Current US 10-Year Treasury Yield:</div>
+            <div class="data-value" id="us10y-current-value">Loading...</div>
+            <div class="data-timestamp">Last Updated: <span id="us10y-timestamp">--</span></div>
+        </div>
+
+        <div class="status-message status-loading" id="status-display">Attempting to fetch data...</div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
