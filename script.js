@@ -1,11 +1,18 @@
+// src/main.js - The main application logic for your LockMVP Dashboard
+
 // Helper function to format timestamps nicely
 function formatTimestamp(isoString) {
     if (!isoString) return '--';
+    // If the string is in 'YYYY-MM-DD HH:MM:SS' format, convert it to ISO for Date parsing
+    if (typeof isoString === 'string' && isoString.includes(' ') && !isoString.includes('T')) {
+        isoString = isoString.replace(' ', 'T');
+    }
     const date = new Date(isoString);
     if (isNaN(date.getTime())) {
         console.warn("Invalid date string for formatting:", isoString);
         return '--'; // Handle cases where date parsing fails
     }
+    // Use Intl.DateTimeFormat for robust time zone and formatting
     const options = {
         year: 'numeric',
         month: '2-digit',
@@ -19,35 +26,30 @@ function formatTimestamp(isoString) {
     return new Intl.DateTimeFormat('en-US', options).format(date);
 }
 
-// Helper function to format dates from FRED API (YYYY-MM-DD)
+// Helper function to format FRED dates (YYYY-MM-DD)
 function formatFredDate(dateString) {
     if (!dateString) return '--';
     // FRED dates are YYYY-MM-DD, so we can just return as is
     return dateString;
 }
 
-// Helper function to apply color to change values
-function applyChangeColor(elementId, value) {
+// Helper function to apply color to change values and format decimals
+function applyChangeColor(elementId, value, decimals) {
     const element = document.getElementById(elementId);
     if (!element) return;
 
-    element.classList.remove('text-green-600', 'text-red-600'); // Remove existing colors
+    element.classList.remove('text-green-400', 'text-red-400', 'text-gray-400'); // Remove existing colors (using 400 for retro theme)
 
     const dataType = element.getAttribute('data-type');
     const numericValue = parseFloat(value);
 
     if (isNaN(numericValue)) {
         element.textContent = '--';
+        element.classList.add('text-gray-400'); // Default to neutral gray
         return;
     }
 
-    let formattedValue;
-    // Determine decimal places based on element ID
-    if (elementId.includes('us10y')) {
-        formattedValue = numericValue.toFixed(3);
-    } else { // For MBS and Shadow Bonds
-        formattedValue = numericValue.toFixed(2);
-    }
+    let formattedValue = numericValue.toFixed(decimals);
 
     // Add '+' sign for positive values, toFixed handles '-' for negative
     if (numericValue > 0) {
@@ -59,23 +61,23 @@ function applyChangeColor(elementId, value) {
     // Apply colors based on data-type attribute
     if (dataType === 'positive-green-negative-red') {
         if (numericValue > 0) {
-            element.classList.add('text-green-600');
+            element.classList.add('text-green-400'); // Green for positive change
         } else if (numericValue < 0) {
-            element.classList.add('text-red-600');
+            element.classList.add('text-red-400'); // Red for negative change
         } else {
-            element.classList.add('text-gray-700'); // Neutral color for zero change
+            element.classList.add('text-gray-400'); // Neutral gray for zero change
         }
     } else if (dataType === 'positive-red-negative-green') {
-        // This type is used for US10Y change, where positive is red and negative is green
+        // This type is used for US10Y change, where positive (yields going up) is red and negative is green
         if (numericValue > 0) {
-            element.classList.add('text-red-600');
+            element.classList.add('text-red-400');
         } else if (numericValue < 0) {
-            element.classList.add('text-green-600');
+            element.classList.add('text-green-400');
         } else {
-            element.classList.add('text-gray-700'); // Neutral color for zero change
+            element.classList.add('text-gray-400'); // Neutral gray for zero change
         }
     } else {
-        element.classList.add('text-gray-700'); // Default color if data-type is not specified or recognized
+        element.classList.add('text-gray-400'); // Default color if data-type is not specified or recognized
     }
 }
 
@@ -86,250 +88,333 @@ function formatNumericValue(value, decimals) {
     return isNaN(numValue) ? '--' : numValue.toFixed(decimals);
 }
 
-// Fetch MBS Products Data
-async function fetchMBSData() {
+// --- Fetching Functions for Real-Time/Near Real-Time Data from 'market_data' collection ---
+
+async function fetchMarketData() {
+    console.log("Fetching market_data (MBS, Shadow, US10Y)...");
     try {
-        const response = await fetch('/.netlify/functions/getMBSData');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        // Fetch MBS Data
+        const mbsResponse = await fetch('/.netlify/functions/getMBSData');
+        const mbsData = await mbsResponse.json();
+        if (mbsResponse.ok) {
+            const products = [
+                { id: 'umbs-5-5', prefix: 'UMBS_5_5' },
+                { id: 'umbs-6-0', prefix: 'UMBS_6_0' },
+                { id: 'gnma-5-5', prefix: 'GNMA_5_5' },
+                { id: 'gnma-6-0', prefix: 'GNMA_6_0' }
+            ];
+
+            products.forEach(product => {
+                const current = formatNumericValue(mbsData[`${product.prefix}_Current`], 2);
+                const change = mbsData[`${product.prefix}_Daily_Change`];
+                const open = formatNumericValue(mbsData[`${product.prefix}_Open`], 2);
+                const todayClose = formatNumericValue(mbsData[`${product.prefix}_Close`], 2);
+                const priorClose = formatNumericValue(mbsData[`${product.prefix}_PriorDayClose`], 2);
+                const high = formatNumericValue(mbsData[`${product.prefix}_TodayHigh`], 2);
+                const low = formatNumericValue(mbsData[`${product.prefix}_TodayLow`], 2);
+
+                // Populate Ticker Table (explicitly creating rows if not present)
+                const tickerTableBody = document.getElementById('ticker-table-body');
+                if (tickerTableBody) {
+                    let row = document.getElementById(`ticker-${product.id}`);
+                    if (!row) {
+                        row = document.createElement('tr');
+                        row.id = `ticker-${product.id}`;
+                        row.innerHTML = `
+                            <td class="py-1 px-3">${product.id.replace(/-/g, ' ').toUpperCase()}</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-change" data-type="positive-green-negative-red">--</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-actual">--</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-open">--</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-prior">--</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-high">--</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-low">--</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-updated">--</td>
+                        `;
+                        tickerTableBody.appendChild(row);
+                    }
+
+                    document.getElementById(`${row.id}-actual`).textContent = current;
+                    document.getElementById(`${row.id}-open`).textContent = open;
+                    document.getElementById(`${row.id}-prior`).textContent = priorClose;
+                    document.getElementById(`${row.id}-high`).textContent = high;
+                    document.getElementById(`${row.id}-low`).textContent = low;
+                    document.getElementById(`${row.id}-updated`).textContent = formatTimestamp(mbsData.last_updated).split(' ')[1]; // Time only
+                    applyChangeColor(`${row.id}-change`, change, 2);
+                }
+
+
+                // Update Top Metric Card for UMBS 5.5
+                if (product.id === 'umbs-5-5') {
+                    document.getElementById('top-umbs-5-5-current').textContent = current;
+                    applyChangeColor('top-umbs-5-5-change', change, 2);
+                }
+            });
+            document.getElementById('mbs-timestamp').textContent = formatTimestamp(mbsData.last_updated);
+        } else {
+            console.error('Error fetching MBS data:', mbsData.message || mbsResponse.statusText);
         }
-        const data = await response.json();
 
-        const products = [
-            { id: 'umbs-5-5', prefix: 'UMBS_5_5' },
-            { id: 'umbs-6-0', prefix: 'UMBS_6_0' },
-            { id: 'gnma-5-5', prefix: 'GNMA_5_5' },
-            { id: 'gnma-6-0', prefix: 'GNMA_6_0' }
-        ];
+        // Fetch Shadow Bonds Data
+        const shadowResponse = await fetch('/.netlify/functions/getShadowBondsData');
+        const shadowData = await shadowResponse.json();
+        if (shadowResponse.ok) {
+            const products = [
+                { id: 'umbs-5-5-shadow', prefix: 'UMBS_5_5_Shadow' },
+                { id: 'umbs-6-0-shadow', prefix: 'UMBS_6_0_Shadow' },
+                { id: 'gnma-5-5-shadow', prefix: 'GNMA_5_5_Shadow' },
+                { id: 'gnma-6-0-shadow', prefix: 'GNMA_6_0_Shadow' }
+            ];
 
-        products.forEach(product => {
-            const currentElem = document.getElementById(`${product.id}-current`);
-            const changeElem = document.getElementById(`${product.id}-change`);
-            const openElem = document.getElementById(`${product.id}-open`);
-            const todayCloseElem = document.getElementById(`${product.id}-today-close`);
-            const priorCloseElem = document.getElementById(`${product.id}-prior-close`);
-            const highElem = document.getElementById(`${product.id}-high`);
-            const lowElem = document.getElementById(`${product.id}-low`);
+            products.forEach(product => {
+                const current = formatNumericValue(shadowData[`${product.prefix}_Current`], 2);
+                const change = shadowData[`${product.prefix}_Daily_Change`];
+                const open = formatNumericValue(shadowData[`${product.prefix}_Open`], 2);
+                const todayClose = formatNumericValue(shadowData[`${product.prefix}_Close`], 2);
+                const priorClose = formatNumericValue(shadowData[`${product.prefix}_PriorDayClose`], 2);
+                const high = formatNumericValue(shadowData[`${product.prefix}_TodayHigh`], 2);
+                const low = formatNumericValue(shadowData[`${product.prefix}_TodayLow`], 2);
 
-            const current = formatNumericValue(data[`${product.prefix}_Current`], 2); // 2 decimal places
-            const change = data[`${product.prefix}_Daily_Change`];
-            const open = formatNumericValue(data[`${product.prefix}_Open`], 2); // 2 decimal places
-            const todayClose = formatNumericValue(data[`${product.prefix}_Close`], 2); // 2 decimal places
-            const priorClose = formatNumericValue(data[`${product.prefix}_PriorDayClose`], 2);
-            const high = formatNumericValue(data[`${product.prefix}_TodayHigh`], 2);
-            const low = formatNumericValue(data[`${product.prefix}_TodayLow`], 2);
+                // Populate Ticker Table
+                const tickerTableBody = document.getElementById('ticker-table-body');
+                if (tickerTableBody) {
+                    let row = document.getElementById(`ticker-${product.id}`);
+                    if (!row) {
+                        row = document.createElement('tr');
+                        row.id = `ticker-${product.id}`;
+                        row.innerHTML = `
+                            <td class="py-1 px-3">${product.id.replace(/-/g, ' ').toUpperCase()}</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-change" data-type="positive-green-negative-red">--</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-actual">--</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-open">--</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-prior">--</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-high">--</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-low">--</td>
+                            <td class="py-1 px-3 text-right" id="${row.id}-updated">--</td>
+                        `;
+                        tickerTableBody.appendChild(row);
+                    }
+                    document.getElementById(`${row.id}-actual`).textContent = current;
+                    document.getElementById(`${row.id}-open`).textContent = open;
+                    document.getElementById(`${row.id}-prior`).textContent = priorClose;
+                    document.getElementById(`${row.id}-high`).textContent = high;
+                    document.getElementById(`${row.id}-low`).textContent = low;
+                    document.getElementById(`${row.id}-updated`).textContent = formatTimestamp(shadowData.last_updated).split(' ')[1]; // Time only
+                    applyChangeColor(`${row.id}-change`, change, 2);
+                }
 
-            if (currentElem) currentElem.textContent = current;
-            if (openElem) openElem.textContent = open;
-            if (todayCloseElem) todayCloseElem.textContent = todayClose;
-            if (priorCloseElem) priorCloseElem.textContent = priorClose;
-            if (highElem) highElem.textContent = high;
-            if (lowElem) lowElem.textContent = low;
-            if (changeElem) applyChangeColor(changeElem.id, change); // Pass element ID
-
-        });
-
-        const timestampElem = document.getElementById('mbs-timestamp');
-        if (timestampElem) {
-            timestampElem.textContent = formatTimestamp(data.last_updated);
+                // Update Top Metric Card for Shadow GNMA 5.5
+                if (product.id === 'gnma-5-5-shadow') {
+                    document.getElementById('top-shadow-gnma-5-5-current').textContent = current;
+                    applyChangeColor('top-shadow-gnma-5-5-change', change, 2);
+                }
+            });
+            document.getElementById('shadow-timestamp').textContent = formatTimestamp(shadowData.last_updated);
+        } else {
+            console.error('Error fetching Shadow Bonds data:', shadowData.message || shadowResponse.statusText);
         }
+
+        // Fetch US10Y Data
+        const us10yResponse = await fetch('/.netlify/functions/getUS10YData');
+        const us10yData = await us10yResponse.json();
+        if (us10yResponse.ok) {
+            const current = formatNumericValue(us10yData.US10Y_Current, 3);
+            const change = us10yData.US10Y_Daily_Change;
+            const open = formatNumericValue(us10yData.US10Y_Open, 3);
+            const todayClose = formatNumericValue(us10yData.US10Y_Close, 3);
+            const priorClose = formatNumericValue(us10yData.US10Y_PriorDayClose, 3);
+            const high = formatNumericValue(us10yData.US10Y_TodayHigh, 3);
+            const low = formatNumericValue(us10yData.US10Y_TodayLow, 3);
+
+            // Populate Ticker Table (US10Y row)
+            const tickerTableBody = document.getElementById('ticker-table-body');
+            if (tickerTableBody) {
+                let row = document.getElementById(`ticker-us10y`);
+                if (!row) {
+                    row = document.createElement('tr');
+                    row.id = `ticker-us10y`;
+                    row.innerHTML = `
+                        <td class="py-1 px-3">US10Y</td>
+                        <td class="py-1 px-3 text-right" id="${row.id}-change" data-type="positive-red-negative-green">--</td>
+                        <td class="py-1 px-3 text-right" id="${row.id}-actual">--</td>
+                        <td class="py-1 px-3 text-right" id="${row.id}-open">--</td>
+                        <td class="py-1 px-3 text-right" id="${row.id}-prior">--</td>
+                        <td class="py-1 px-3 text-right" id="${row.id}-high">--</td>
+                        <td class="py-1 px-3 text-right" id="${row.id}-low">--</td>
+                        <td class="py-1 px-3 text-right" id="${row.id}-updated">--</td>
+                    `;
+                    tickerTableBody.appendChild(row);
+                }
+                document.getElementById(`${row.id}-actual`).textContent = current;
+                document.getElementById(`${row.id}-open`).textContent = open;
+                document.getElementById(`${row.id}-prior`).textContent = priorClose;
+                document.getElementById(`${row.id}-high`).textContent = high;
+                document.getElementById(`${row.id}-low`).textContent = low;
+                document.getElementById(`${row.id}-updated`).textContent = formatTimestamp(us10yData.last_updated).split(' ')[1]; // Time only
+                applyChangeColor(`${row.id}-change`, change, 3);
+            }
+
+            // Update Top Metric Card for US10Y
+            document.getElementById('top-us10y-current').textContent = current;
+            applyChangeColor('top-us10y-change', change, 3);
+
+            document.getElementById('us10y-timestamp').textContent = formatTimestamp(us10yData.last_updated);
+        } else {
+            console.error('Error fetching US10Y data:', us10yData.message || us10yResponse.statusText);
+        }
+
+        // --- Clear existing "Loading real-time data..." row once data is fetched ---
+        const tickerTableBody = document.getElementById('ticker-table-body');
+        if (tickerTableBody && tickerTableBody.querySelector('td[colspan="8"]')) {
+            tickerTableBody.innerHTML = ''; // Clear only if the loading row is present
+        }
+
 
     } catch (error) {
-        console.error('Error fetching MBS data:', error);
+        console.error('Error in fetchMarketData:', error);
+        // Fallback for all market data if any fetch fails
         document.getElementById('mbs-timestamp').textContent = 'Error loading data';
-        const products = [
-            { id: 'umbs-5-5' }, { id: 'umbs-6-0' },
-            { id: 'gnma-5-5' }, { id: 'gnma-6-0' }
-        ];
-        products.forEach(product => {
-            ['current', 'change', 'open', 'today-close', 'prior-close', 'high', 'low'].forEach(suffix => {
-                const element = document.getElementById(`${product.id}-${suffix}`);
-                if (element) element.textContent = '--';
-            });
-        });
-    }
-}
-
-// Fetch Shadow Bonds Data
-async function fetchShadowBondsData() {
-    try {
-        const response = await fetch('/.netlify/functions/getShadowBondsData');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-
-        const products = [
-            { id: 'umbs-5-5-shadow', prefix: 'UMBS_5_5_Shadow' },
-            { id: 'umbs-6-0-shadow', prefix: 'UMBS_6_0_Shadow' },
-            { id: 'gnma-5-5-shadow', prefix: 'GNMA_5_5_Shadow' },
-            { id: 'gnma-6-0-shadow', prefix: 'GNMA_6_0_Shadow' }
-        ];
-
-        products.forEach(product => {
-            const currentElem = document.getElementById(`${product.id}-current`);
-            const changeElem = document.getElementById(`${product.id}-change`);
-            const openElem = document.getElementById(`${product.id}-open`);
-            const todayCloseElem = document.getElementById(`${product.id}-today-close`);
-            const priorCloseElem = document.getElementById(`${product.id}-prior-close`);
-            const highElem = document.getElementById(`${product.id}-high`);
-            const lowElem = document.getElementById(`${product.id}-low`);
-
-            const current = formatNumericValue(data[`${product.prefix}_Current`], 2);
-            const change = data[`${product.prefix}_Daily_Change`];
-            const open = formatNumericValue(data[`${product.prefix}_Open`], 2);
-            const todayClose = formatNumericValue(data[`${product.prefix}_Close`], 2);
-            const priorClose = formatNumericValue(data[`${product.prefix}_PriorDayClose`], 2);
-            const high = formatNumericValue(data[`${product.prefix}_TodayHigh`], 2);
-            const low = formatNumericValue(data[`${product.prefix}_TodayLow`], 2);
-
-            if (currentElem) currentElem.textContent = current;
-            if (openElem) openElem.textContent = open;
-            if (todayCloseElem) todayCloseElem.textContent = todayClose;
-            if (priorCloseElem) priorCloseElem.textContent = priorClose;
-            if (highElem) highElem.textContent = high;
-            if (lowElem) lowElem.textContent = low;
-            if (changeElem) applyChangeColor(changeElem.id, change);
-        });
-
-        const timestampElem = document.getElementById('shadow-timestamp');
-        if (timestampElem) {
-            timestampElem.textContent = formatTimestamp(data.last_updated);
-        }
-
-    } catch (error) {
-        console.error('Error fetching Shadow Bonds data:', error);
         document.getElementById('shadow-timestamp').textContent = 'Error loading data';
-        const products = [
-            { id: 'umbs-5-5-shadow' }, { id: 'umbs-6-0-shadow' },
-            { id: 'gnma-5-5-shadow' }, { id: 'gnma-6-0-shadow' }
-        ];
-        products.forEach(product => {
-            ['current', 'change', 'open', 'today-close', 'prior-close', 'high', 'low'].forEach(suffix => {
-                const element = document.getElementById(`${product.id}-${suffix}`);
-                if (element) element.textContent = '--';
-            });
-        });
-    }
-}
-
-// Fetch US 10-Year Treasury Yield Data
-async function fetchUS10YData() {
-    try {
-        const response = await fetch('/.netlify/functions/getUS10YData');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-
-        const currentElem = document.getElementById('us10y-current');
-        const changeElem = document.getElementById('us10y-change');
-        const openElem = document.getElementById('us10y-open');
-        const todayCloseElem = document.getElementById('us10y-today-close');
-        const priorCloseElem = document.getElementById('us10y-prior-close');
-        const highElem = document.getElementById('us10y-high');
-        const lowElem = document.getElementById('us10y-low');
-        const timestampElem = document.getElementById('us10y-timestamp');
-
-        const current = formatNumericValue(data.US10Y_Current, 3);
-        const change = data.US10Y_Daily_Change;
-        const open = formatNumericValue(data.US10Y_Open, 3);
-        const todayClose = formatNumericValue(data.US10Y_Close, 3);
-        const priorClose = formatNumericValue(data.US10Y_PriorDayClose, 3);
-        const high = formatNumericValue(data.US10Y_TodayHigh, 3);
-        const low = formatNumericValue(data.US10Y_TodayLow, 3);
-
-        if (currentElem) currentElem.textContent = current;
-        if (openElem) openElem.textContent = open;
-        if (todayCloseElem) todayCloseElem.textContent = todayClose;
-        if (priorCloseElem) priorCloseElem.textContent = priorClose;
-        if (highElem) highElem.textContent = high;
-        if (lowElem) lowElem.textContent = low;
-
-        if (changeElem) applyChangeColor(changeElem.id, change);
-
-        if (timestampElem) {
-            timestampElem.textContent = formatTimestamp(data.last_updated);
-        }
-
-    } catch (error) {
-        console.error('Error fetching US 10-Year Treasury Yield data:', error);
         document.getElementById('us10y-timestamp').textContent = 'Error loading data';
-        ['us10y-current', 'us10y-change', 'us10y-open', 'us10y-today-close', 'us10y-prior-close', 'us10y-high', 'us10y-low'].forEach(id => {
-            const element = document.getElementById(id);
-            if (element) element.textContent = '--';
-        });
     }
 }
 
 
-// --- NEW: FRED Data Fetching Functions ---
+// --- Fetching Functions for FRED Data (Daily, Weekly, Monthly) from 'fred_reports' collection ---
 
-async function fetchFredMortgage30US() {
-    console.log("Fetching FRED Mortgage30US data...");
+async function fetchFredData() {
+    console.log("Fetching FRED data...");
     try {
-        const response = await fetch('/.netlify/functions/getMortgage30US');
-        const data = await response.json();
-        if (response.ok) {
-            document.getElementById('fred-mortgage30us-value').textContent = parseFloat(data.value).toFixed(2) + '%';
-            document.getElementById('fred-mortgage30us-date').textContent = formatFredDate(data.date);
-            document.getElementById('fred-timestamp').textContent = formatTimestamp(new Date().toISOString()); // Update FRED timestamp
-            console.log("FRED Mortgage30US data updated.");
-        } else {
-            console.error("Failed to fetch FRED Mortgage30US:", data.message);
-            document.getElementById('fred-mortgage30us-value').textContent = 'Error';
-            document.getElementById('fred-timestamp').textContent = 'Error loading data';
+        // Daily Data (Mortgage Rates, Inflation, Treasury Spread)
+        const dailyRates = [
+            { id: 'daily-30y-fixed', label: '30Y Fixed Rate Conforming', seriesId: 'OBMMIC30YF' },
+            { id: 'daily-30y-va', label: '30Y VA Mortgage Index', seriesId: 'OBMMIVA30YF' },
+            { id: 'daily-30y-fha', label: '30Y FHA Mortgage Index', seriesId: 'OBMMIFHA30YF' },
+            { id: 'daily-30y-jumbo', label: '30Y Jumbo Mortgage Index', seriesId: 'OBMMIJUMBO30YF' },
+            { id: 'daily-30y-usda', label: '30Y USDA Mortgage Index', seriesId: 'OBMMIUSDA30YF' },
+            { id: 'daily-30y-investment', label: '30Y Fixed Rate Conforming', seriesId: 'OBMMIC30YF' }, // Assuming investment is same as conforming for now, adjust if separate series exists
+            { id: 'daily-breakeven', label: '10Y Breakeven Inflation Rate', seriesId: 'T10YIE' },
+            { id: 'daily-treasury-spread', label: '10Y Treasury Minus 2Y Treasury', seriesId: 'T10Y2Y' },
+        ];
+
+        for (const rate of dailyRates) {
+            try {
+                const response = await fetch(`/.netlify/functions/getFredReport?reportName=${encodeURIComponent(rate.label)}`);
+                const data = await response.json();
+                if (response.ok && data.series_id === rate.seriesId) {
+                    // Display Latest (Today)
+                    document.getElementById(`${rate.id}-today`).textContent = data.latest !== null ? `${data.latest.toFixed(2)}%` : '--'; // Add % for rates
+                    // For "Yesterday" and "Last Week", use placeholder as discussed
+                    document.getElementById(`${rate.id}-yesterday`).textContent = '--';
+                    document.getElementById(`${rate.id}-last-week`).textContent = '--';
+                    document.getElementById(`${rate.id}-last-year`).textContent = data.year_ago !== null ? `${data.year_ago.toFixed(2)}%` : '--';
+                    document.getElementById(`${rate.id}-updated`).textContent = formatFredDate(data.latest_date); // FRED date for latest
+                } else {
+                    console.warn(`Failed to fetch/match FRED data for ${rate.label}:`, data.message || response.statusText);
+                    document.getElementById(`${rate.id}-today`).textContent = 'Error';
+                    document.getElementById(`${rate.id}-last-year`).textContent = 'Error';
+                    document.getElementById(`${rate.id}-updated`).textContent = 'Error';
+                }
+            } catch (error) {
+                console.error(`Error fetching FRED Daily Data for ${rate.label}:`, error);
+                document.getElementById(`${rate.id}-today`).textContent = 'Error';
+                document.getElementById(`${rate.id}-last-year`).textContent = 'Error';
+                document.getElementById(`${rate.id}-updated`).textContent = 'Error';
+            }
         }
+        // Update top 30Y Fixed Rate card using MORTGAGE30US from FRED (which is weekly but good for "latest")
+        try {
+            const response = await fetch(`/.netlify/functions/getFredReport?reportName=${encodeURIComponent('30Y Mortgage Avg US')}`);
+            const data = await response.json();
+            if (response.ok && data.series_id === 'MORTGAGE30US') {
+                document.getElementById('top-30y-fixed-rate').textContent = data.latest !== null ? `${data.latest.toFixed(2)}%` : '--';
+                document.getElementById('top-30y-fixed-date').textContent = formatFredDate(data.latest_date);
+            } else {
+                console.warn(`Failed to fetch top 30Y Fixed Rate from FRED:`, data.message || response.statusText);
+                document.getElementById('top-30y-fixed-rate').textContent = 'Error';
+                document.getElementById('top-30y-fixed-date').textContent = 'Error';
+            }
+        } catch (error) {
+            console.error('Error fetching top 30Y Fixed Rate (FRED):', error);
+            document.getElementById('top-30y-fixed-rate').textContent = 'Error';
+            document.getElementById('top-30y-fixed-date').textContent = 'Error';
+        }
+
+
+        // Weekly Data (Freddie Mac Avg Rates)
+        const weeklyRates = [
+            { id: 'weekly-30y', label: '30Y Mortgage Avg US', seriesId: 'MORTGAGE30US' },
+            { id: 'weekly-15y', label: '15Y Mortgage Avg US', seriesId: 'MORTGAGE15US' },
+        ];
+
+        for (const rate of weeklyRates) {
+            try {
+                const response = await fetch(`/.netlify/functions/getFredReport?reportName=${encodeURIComponent(rate.label)}`);
+                const data = await response.json();
+                if (response.ok && data.series_id === rate.seriesId) {
+                    document.getElementById(`${rate.id}-this-week`).textContent = data.latest !== null ? `${data.latest.toFixed(2)}%` : '--';
+                    document.getElementById(`${rate.id}-last-week`).textContent = '--'; // Placeholder as discussed
+                    document.getElementById(`${rate.id}-last-month`).textContent = data.last_month !== null ? `${data.last_month.toFixed(2)}%` : '--';
+                    document.getElementById(`${rate.id}-last-year`).textContent = data.year_ago !== null ? `${data.year_ago.toFixed(2)}%` : '--';
+                } else {
+                    console.warn(`Failed to fetch/match FRED Weekly Data for ${rate.label}:`, data.message || response.statusText);
+                    document.getElementById(`${rate.id}-this-week`).textContent = 'Error';
+                    document.getElementById(`${rate.id}-last-week`).textContent = 'Error';
+                    document.getElementById(`${rate.id}-last-month`).textContent = 'Error';
+                    document.getElementById(`${rate.id}-last-year`).textContent = 'Error';
+                }
+            } catch (error) {
+                console.error(`Error fetching FRED Weekly Data for ${rate.label}:`, error);
+                document.getElementById(`${rate.id}-this-week`).textContent = 'Error';
+                document.getElementById(`${rate.id}-last-week`).textContent = 'Error';
+                document.getElementById(`${rate.id}-last-month`).textContent = 'Error';
+                document.getElementById(`${rate.id}-last-year`).textContent = 'Error';
+            }
+        }
+        document.getElementById('weekly-data-updated').textContent = formatTimestamp(new Date().toISOString()); // Use current time or a 'max(data.latest_date)'
+
+
+        // Monthly Data (Housing, Permits, Retail Sales)
+        const monthlyData = [
+            { id: 'monthly-housing-starts', label: 'Total Housing Starts', seriesId: 'HOUST' },
+            { id: 'monthly-permits', label: 'Building Permits', seriesId: 'PERMIT' },
+            { id: 'monthly-sf-housing-starts', label: 'Single-Family Housing Starts', seriesId: 'HOUST1F' },
+            { id: 'monthly-sf-permits', label: 'Single-Family Permits', seriesId: 'PERMIT1' },
+            { id: 'monthly-retail-sales', label: 'Retail Sales (Excl. Food)', seriesId: 'RSXFS' },
+        ];
+
+        for (const dataPoint of monthlyData) {
+            try {
+                const response = await fetch(`/.netlify/functions/getFredReport?reportName=${encodeURIComponent(dataPoint.label)}`);
+                const data = await response.json();
+                if (response.ok && data.series_id === dataPoint.seriesId) {
+                    document.getElementById(`${dataPoint.id}-current`).textContent = data.latest !== null ? formatNumericValue(data.latest, 0) : '--'; // Round to whole numbers
+                    document.getElementById(`${dataPoint.id}-last-month`).textContent = data.last_month !== null ? formatNumericValue(data.last_month, 0) : '--';
+                    document.getElementById(`${dataPoint.id}-last-year`).textContent = data.year_ago !== null ? formatNumericValue(data.year_ago, 0) : '--';
+                    document.getElementById(`${dataPoint.id}-next`).textContent = '--'; // Placeholder as discussed
+                } else {
+                    console.warn(`Failed to fetch/match FRED Monthly Data for ${dataPoint.label}:`, data.message || response.statusText);
+                    document.getElementById(`${dataPoint.id}-current`).textContent = 'Error';
+                    document.getElementById(`${dataPoint.id}-last-month`).textContent = 'Error';
+                    document.getElementById(`${dataPoint.id}-last-year`).textContent = 'Error';
+                    document.getElementById(`${dataPoint.id}-next`).textContent = 'Error';
+                }
+            } catch (error) {
+                console.error(`Error fetching FRED Monthly Data for ${dataPoint.label}:`, error);
+                document.getElementById(`${dataPoint.id}-current`).textContent = 'Error';
+                document.getElementById(`${dataPoint.id}-last-month`).textContent = 'Error';
+                document.getElementById(`${dataPoint.id}-last-year`).textContent = 'Error';
+                document.getElementById(`${dataPoint.id}-next`).textContent = 'Error';
+            }
+        }
+        document.getElementById('monthly-data-updated').textContent = formatTimestamp(new Date().toISOString()); // Use current time or 'max(data.latest_date)' for monthlies
+
     } catch (error) {
-        console.error("Error calling Netlify Function for FRED Mortgage30US:", error);
-        document.getElementById('fred-mortgage30us-value').textContent = 'Error';
-        document.getElementById('fred-timestamp').textContent = 'Error loading data';
+        console.error('Overall Error in fetchFredData:', error);
+        // Set FRED section timestamp to error
+        document.getElementById('fred-timestamp').textContent = 'Error loading FRED data';
     }
 }
 
-async function fetchFredRetailSales() {
-    console.log("Fetching FRED RetailSales data...");
-    try {
-        const response = await fetch('/.netlify/functions/getRetailSales');
-        const data = await response.json();
-        if (response.ok) {
-            document.getElementById('fred-retailsales-value').textContent = parseFloat(data.value).toFixed(2);
-            document.getElementById('fred-retailsales-date').textContent = formatFredDate(data.date);
-            document.getElementById('fred-timestamp').textContent = formatTimestamp(new Date().toISOString()); // Update FRED timestamp
-            console.log("FRED RetailSales data updated.");
-        } else {
-            console.error("Failed to fetch FRED RetailSales:", data.message);
-            document.getElementById('fred-retailsales-value').textContent = 'Error';
-            document.getElementById('fred-timestamp').textContent = 'Error loading data';
-        }
-    } catch (error) {
-        console.error("Error calling Netlify Function for FRED RetailSales:", error);
-        document.getElementById('fred-retailsales-value').textContent = 'Error';
-        document.getElementById('fred-timestamp').textContent = 'Error loading data';
-    }
-}
-
-async function fetchFredConsumerSentiment() {
-    console.log("Fetching FRED ConsumerSentiment data...");
-    try {
-        const response = await fetch('/.netlify/functions/getConsumerSentiment');
-        const data = await response.json();
-        if (response.ok) {
-            document.getElementById('fred-consumersentiment-value').textContent = parseFloat(data.value).toFixed(2);
-            document.getElementById('fred-consumersentiment-date').textContent = formatFredDate(data.date);
-            document.getElementById('fred-timestamp').textContent = formatTimestamp(new Date().toISOString()); // Update FRED timestamp
-            console.log("FRED ConsumerSentiment data updated.");
-        } else {
-            console.error("Failed to fetch FRED ConsumerSentiment:", data.message);
-            document.getElementById('fred-consumersentiment-value').textContent = 'Error';
-            document.getElementById('fred-timestamp').textContent = 'Error loading data';
-        }
-    } catch (error) {
-        console.error("Error calling Netlify Function for FRED ConsumerSentiment:", error);
-        document.getElementById('fred-consumersentiment-value').textContent = 'Error';
-        document.getElementById('fred-timestamp').textContent = 'Error loading data';
-    }
-}
 
 // Function to update the overall last updated timestamp in the header
 function updateOverallTimestamp() {
@@ -337,31 +422,22 @@ function updateOverallTimestamp() {
     const overallTimestampElement = document.getElementById('last-updated-overall');
     if (overallTimestampElement) {
         overallTimestampElement.textContent = `Last Refreshed: ${formatTimestamp(new Date().toISOString())}`;
-        console.log("Overall timestamp updated.");
     }
 }
 
-// Initial data fetch on page load and set up refresh intervals
+// Initial data fetches and set up refresh intervals
 document.addEventListener('DOMContentLoaded', () => {
-    // Initial fetches for all sections
-    fetchMBSData();
-    fetchShadowBondsData();
-    fetchUS10YData();
-    fetchFredMortgage30US();
-    fetchFredRetailSales();
-    fetchFredConsumerSentiment();
+    // Initial fetches
+    fetchMarketData(); // Combines MBS, Shadow, US10Y
+    fetchFredData(); // Combines Daily, Weekly, Monthly FRED data
     updateOverallTimestamp(); // Update immediately on load
 
     // Set up refresh intervals
-    // Market data (MBS, Shadow, US10Y) updates more frequently
-    setInterval(fetchMBSData, 5 * 60 * 1000); // 5 minutes
-    setInterval(fetchShadowBondsData, 5 * 60 * 1000); // 5 minutes
-    setInterval(fetchUS10YData, 5 * 60 * 1000); // 5 minutes
+    // Market data (MBS, Shadow, US10Y) updates more frequently (e.g., every 5 minutes)
+    setInterval(fetchMarketData, 5 * 60 * 1000); // 5 minutes
 
-    // FRED data updates less frequently, so longer intervals are fine
-    setInterval(fetchFredMortgage30US, 60 * 60 * 1000); // Every hour
-    setInterval(fetchFredRetailSales, 60 * 60 * 1000); // Every hour
-    setInterval(fetchFredConsumerSentiment, 60 * 60 * 1000); // Every hour
+    // FRED data updates less frequently (e.g., every 60 minutes or longer for monthly data)
+    setInterval(fetchFredData, 60 * 60 * 1000); // 60 minutes
 
     // Overall timestamp updates more frequently to show activity
     setInterval(updateOverallTimestamp, 60 * 1000); // Every 1 minute
