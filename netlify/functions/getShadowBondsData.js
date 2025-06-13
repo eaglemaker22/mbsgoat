@@ -1,36 +1,57 @@
 const admin = require('firebase-admin');
 
+// Load Firebase service account credentials
+const serviceAccount = require("./firebase-config.json"); // ✅ Updated path for Netlify
+
+console.log("🔍 Debug: Checking Firebase credentials:", JSON.stringify(serviceAccount, null, 2));
+
+if (!serviceAccount.private_key) {
+    console.error("❌ Error: Missing private_key in firebase-config.json.");
+    process.exit(1); // Stop execution if credentials are missing
+}
+
+// Initialize Firebase only if not already initialized
 if (!admin.apps.length) {
     try {
-        const serviceAccount = require("./firebase-config.json"); // ✅ Correct path
-
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
-        });
-        console.log("Firebase Admin SDK initialized for Shadow Bonds.");
+        admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+        console.log("✅ Firebase initialized successfully for Shadow Bonds.");
     } catch (error) {
-        console.error("Firebase Admin initialization failed:", error);
-        return { statusCode: 500, body: JSON.stringify({ error: "Firebase setup issue." }) };
+        console.error("❌ Firebase initialization failed:", error);
+        process.exit(1);
     }
 }
 
+// Get Firestore database reference
 const db = admin.firestore();
 
+// Netlify function handler
 exports.handler = async (event, context) => {
     try {
+        // Validate Firestore connection before proceeding
+        if (!db) {
+            console.error("❌ Error: Firestore not initialized.");
+            return { statusCode: 500, body: JSON.stringify({ error: "Firestore connection failed." }) };
+        }
+
+        // Fetch data from Firestore
         const docRef = db.collection('market_data').doc('shadow_bonds');
         const doc = await docRef.get();
 
         if (!doc.exists) {
-            console.warn("Shadow Bonds data not found.");
+            console.warn("⚠️ No Shadow Bonds data found in Firestore.");
             return { statusCode: 404, body: JSON.stringify({ message: "No Shadow Bonds data available." }) };
         }
 
         return { statusCode: 200, body: JSON.stringify(doc.data()) };
     } catch (error) {
-        console.error("Error fetching Shadow Bonds data:", error);
-        return { statusCode: 500, body: JSON.stringify({ error: "Failed to fetch Shadow Bonds data." }) };
+        console.error("❌ Firestore query error:", error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({
+                error: "Failed to fetch Shadow Bonds data.",
+                details: error.message,
+                stack: error.stack // ✅ Includes stack trace for debugging
+            })
+        };
     }
 };
