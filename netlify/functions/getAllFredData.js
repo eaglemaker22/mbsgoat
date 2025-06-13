@@ -1,31 +1,43 @@
 const admin = require('firebase-admin');
-const serviceAccount = require("./firebase-config.json"); // Load credentials
 
-console.log("🔍 Debug: Loaded service account credentials:", JSON.stringify(serviceAccount, null, 2)); // Debugging step
+// Load Firebase service account credentials
+const serviceAccount = require("./firebase-config.json"); // ✅ Updated path for Netlify
+
+console.log("🔍 Debug: Checking Firebase credentials:", JSON.stringify(serviceAccount, null, 2));
 
 if (!serviceAccount.private_key) {
-    console.error("❌ Error: private_key is missing or undefined.");
-    process.exit(1); // Stop execution to prevent further errors
+    console.error("❌ Error: Missing private_key in firebase-config.json.");
+    process.exit(1); // Stop execution if credentials are missing
 }
 
+// Initialize Firebase only if not already initialized
 if (!admin.apps.length) {
     try {
         admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
         console.log("✅ Firebase initialized successfully!");
     } catch (error) {
-        console.error("❌ Firebase Admin initialization failed:", error);
+        console.error("❌ Firebase initialization failed:", error);
         process.exit(1);
     }
 }
 
+// Get Firestore database reference
 const db = admin.firestore();
 
-module.exports.handler = async (event, context) => {
+// Netlify function handler
+exports.handler = async (event, context) => {
     try {
+        // Validate Firestore connection before proceeding
+        if (!db) {
+            console.error("❌ Error: Firestore not initialized.");
+            return { statusCode: 500, body: JSON.stringify({ error: "Firestore connection failed." }) };
+        }
+
+        // Fetch data from Firestore
         const snapshot = await db.collection('fred_reports').get();
 
         if (snapshot.empty) {
-            console.warn("⚠️ No FRED reports found.");
+            console.warn("⚠️ No FRED reports found in Firestore.");
             return { statusCode: 404, body: JSON.stringify({ message: "No data available." }) };
         }
 
@@ -36,7 +48,7 @@ module.exports.handler = async (event, context) => {
 
         return { statusCode: 200, body: JSON.stringify(results) };
     } catch (error) {
-        console.error("❌ Firestore error:", error);
-        return { statusCode: 500, body: JSON.stringify({ error: "Error retrieving data", details: error.message }) };
+        console.error("❌ Firestore query error:", error);
+        return { statusCode: 500, body: JSON.stringify({ error: "Failed to fetch FRED data", details: error.message }) };
     }
 };
