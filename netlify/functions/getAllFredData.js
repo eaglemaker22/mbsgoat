@@ -1,18 +1,20 @@
 const admin = require('firebase-admin');
-const serviceAccount = require("../private/firebase-config.json"); // Ensure correct path
+const serviceAccount = require("../private/firebase-config.json"); // Load credentials
 
-console.log("Loaded service account:", serviceAccount); // 🛠 Debugging step
+console.log("🔍 Debug: Loaded service account credentials:", JSON.stringify(serviceAccount, null, 2)); // Debugging step
+
+if (!serviceAccount.private_key) {
+    console.error("❌ Error: private_key is missing or undefined.");
+    process.exit(1); // Stop execution to prevent further errors
+}
 
 if (!admin.apps.length) {
     try {
         admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-        console.log("Firebase initialized successfully!");
+        console.log("✅ Firebase initialized successfully!");
     } catch (error) {
-        console.error("Firebase Admin initialization failed:", error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: "Firebase initialization failed", details: error.message })
-        };
+        console.error("❌ Firebase Admin initialization failed:", error);
+        process.exit(1);
     }
 }
 
@@ -23,7 +25,7 @@ module.exports.handler = async (event, context) => {
         const snapshot = await db.collection('fred_reports').get();
 
         if (snapshot.empty) {
-            console.warn("No FRED reports found.");
+            console.warn("⚠️ No FRED reports found.");
             return { statusCode: 404, body: JSON.stringify({ message: "No data available." }) };
         }
 
@@ -34,7 +36,7 @@ module.exports.handler = async (event, context) => {
 
         return { statusCode: 200, body: JSON.stringify(results) };
     } catch (error) {
-        console.error("Firestore error:", error);
+        console.error("❌ Firestore error:", error);
         return { statusCode: 500, body: JSON.stringify({ error: "Error retrieving data", details: error.message }) };
     }
 };
