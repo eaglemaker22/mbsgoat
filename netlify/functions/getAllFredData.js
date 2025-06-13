@@ -1,10 +1,12 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('../../private/firebase-config.json'); // Load credentials from JSON file
+const serviceAccount = require("../private/firebase-config.json"); // Ensure correct path
+
+console.log("Loaded service account:", serviceAccount); // 🛠 Debugging step
 
 if (!admin.apps.length) {
     try {
         admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-        console.log("Firebase initialized with JSON file.");
+        console.log("Firebase initialized successfully!");
     } catch (error) {
         console.error("Firebase Admin initialization failed:", error);
         return {
