@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const serviceAccount = require("../private/firebase-config.json"); // Load credentials
+const serviceAccount = require("./firebase-config.json"); // Load credentials
 
 console.log("🔍 Debug: Loaded service account credentials:", JSON.stringify(serviceAccount, null, 2)); // Debugging step
 
