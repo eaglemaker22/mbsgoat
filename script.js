@@ -60,7 +60,8 @@ document.getElementById('subscribe-button').addEventListener('click', async () =
     if (response.ok && result.url) {
       window.location.href = result.url; // Redirect to Stripe Checkout
     } else {
-      alert('Failed to start subscription: ' + (result.error || 'Unknown error'));
+      alert('Failed to start subscription: ' + JSON.stringify(result));
+
     }
   } catch (err) {
     console.error('Error during checkout:', err);
