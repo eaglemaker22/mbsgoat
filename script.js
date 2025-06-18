@@ -8,9 +8,10 @@ jsIndicator.textContent = 'JavaScript Running!';
 jsIndicator.className = 'debug-indicator-js';
 document.body.appendChild(jsIndicator);
 
+// Fetch Bond Data
 async function fetchData() {
   try {
-    const response = await fetch('/.netlify/functions/getData'); // Your Netlify Function URL
+    const response = await fetch('/.netlify/functions/getData');
     const data = await response.json();
 
     if (response.ok) {
@@ -43,34 +44,40 @@ async function fetchData() {
     if (timestampElement) timestampElement.textContent = '';
   }
 }
-document.getElementById('subscribe-button').addEventListener('click', async () => {
+
+// Stripe Checkout Handler
+async function subscribeToMBSGOAT() {
   try {
-    const response = await fetch('https://us-central1-mbsgoat-d3eb2.cloudfunctions.net/createCheckoutSession', {
+    const response = await fetch('/.netlify/functions/createCheckoutSession', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        email: 'test@example.com' // 🔁 Replace with real user's email if available
+        email: 'testuser@example.com' // Replace with dynamic or real email later
       })
     });
 
     const result = await response.json();
 
     if (response.ok && result.url) {
-      window.location.href = result.url; // Redirect to Stripe Checkout
+      window.location.href = result.url;
     } else {
       alert('Failed to start subscription: ' + JSON.stringify(result));
-
     }
-  } catch (err) {
-    console.error('Error during checkout:', err);
-    alert('Network or server error. Try again later.');
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+// Fetch data on load
+fetchData();
+setInterval(fetchData, 120000); // Refresh every 2 minutes
+
+// Bind button if present
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('subscribe-btn');
+  if (btn) {
+    btn.addEventListener('click', subscribeToMBSGOAT);
   }
 });
-
-// Fetch data initially when the page loads
-fetchData();
-
-// Refresh data every 2 minutes (120000 milliseconds)
-setInterval(fetchData, 120000);
