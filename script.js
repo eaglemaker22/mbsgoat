@@ -43,6 +43,30 @@ async function fetchData() {
     if (timestampElement) timestampElement.textContent = '';
   }
 }
+document.getElementById('subscribe-button').addEventListener('click', async () => {
+  try {
+    const response = await fetch('https://us-central1-mbsgoat-d3eb2.cloudfunctions.net/createCheckoutSession', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: 'test@example.com' // 🔁 Replace with real user's email if available
+      })
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.url) {
+      window.location.href = result.url; // Redirect to Stripe Checkout
+    } else {
+      alert('Failed to start subscription: ' + (result.error || 'Unknown error'));
+    }
+  } catch (err) {
+    console.error('Error during checkout:', err);
+    alert('Network or server error. Try again later.');
+  }
+});
 
 // Fetch data initially when the page loads
 fetchData();
