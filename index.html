@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MBSGOAT Dashboard</title>
+  <script defer src="script.js"></script>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 p-4">
+  <header class="mb-6">
+    <h1 class="text-3xl font-bold">MBSGOAT</h1>
+    <p class="text-sm text-gray-600">Real-Time Bond and MBS Tracker</p>
+  </header>
+
+  <main>
+    <section id="mortgage-rates-section" class="bg-white rounded shadow p-4 mb-4 border-b-4 border-blue-500">
+      <h2 class="text-xl font-semibold mb-2">10-Year Treasury Yield</h2>
+      <p id="us10y-value" class="text-2xl font-bold">Loading...</p>
+      <p id="us10y-timestamp" class="text-sm text-gray-500"></p>
+    </section>
+  </main>
+
+  <div class="mt-6">
+    <button id="subscribe-button" class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition">
+      Subscribe to MBSGOAT
+    </button>
+  </div>
+</body>
+</html>
