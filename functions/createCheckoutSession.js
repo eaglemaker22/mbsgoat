@@ -1,34 +1,43 @@
-const functions = require('firebase-functions');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-const PRICE_ID = functions.config().stripe.price_id;
-
-exports.createCheckoutSession = async (req, res) => {
-  if (req.method !== 'POST') {
-    return res.status(405).send({ error: 'Method Not Allowed' });
+exports.handler = async (event, context) => {
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: 'Method Not Allowed' }),
+    };
   }
 
   try {
-    const { email } = req.body;
+    const { email } = JSON.parse(event.body);
 
     if (!email) {
-      return res.status(400).send({ error: 'Missing email' });
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Missing email' }),
+      };
     }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer_email: email,
-      line_items: [{ price: PRICE_ID, quantity: 1 }],
+      line_items: [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }],
       mode: 'subscription',
       success_url: 'https://mbsgoat.netlify.app/success',
       cancel_url: 'https://mbsgoat.netlify.app/cancel',
       metadata: { email }
     });
 
-    return res.status(200).send({ url: session.url });
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ url: session.url }),
+    };
 
   } catch (error) {
     console.error('Stripe error:', error);
-    return res.status(500).send({ error: error.message });
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message }),
+    };
   }
 };
