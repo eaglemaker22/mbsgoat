@@ -1,12 +1,6 @@
 [build]
-  base = "."
-  publish = "."
-  command = "echo 'Deploying static site'"
-  environment = { NODE_VERSION = "18" }
-
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
+  publish = "public"  # or just "" if your files are directly in root
+  command = "echo 'Deploying MBS GOAT static site'"
 
 [[redirects]]
   from = "/*"
