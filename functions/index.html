@@ -1,0 +1,60 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MBSGOAT Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+  </head>
+  <body class="bg-gray-100 text-gray-900">
+    <div class="max-w-screen-xl mx-auto p-4">
+      <header class="mb-6">
+        <h1 class="text-3xl font-bold text-center text-blue-600">MBSGOAT Dashboard</h1>
+        <p class="text-center text-sm text-gray-500">Mortgage Market Monitoring for Loan Officers</p>
+      </header>
+
+      <main class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section id="mortgage-rates-section" class="border-b-4 border-blue-500 p-4 bg-white shadow rounded">
+          <h2 class="text-xl font-semibold mb-2">Mortgage Rates</h2>
+          <table class="w-full text-sm">
+            <thead>
+              <tr><th>Product</th><th>Rate</th><th>Change</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>30Y Fixed</td><td>7.02%</td><td>-0.04</td></tr>
+              <tr><td>15Y Fixed</td><td>6.45%</td><td>-0.01</td></tr>
+              <tr class="h-2"><td colspan="3"></td></tr>
+            </tbody>
+          </table>
+          <p class="text-sm text-gray-500 mt-2">Last updated: <span id="rate-updated">--</span></p>
+        </section>
+
+        <section class="border-b-4 border-green-500 p-4 bg-white shadow rounded">
+          <h2 class="text-xl font-semibold mb-2">UMBS 5.5</h2>
+          <p>Current: <span class="font-mono">99.21</span></p>
+          <p>Daily Change: <span class="text-green-600 font-semibold">+0.09</span></p>
+        </section>
+
+        <section class="border-b-4 border-purple-500 p-4 bg-white shadow rounded">
+          <h2 class="text-xl font-semibold mb-2">10-Year Treasury</h2>
+          <p>Current Yield: <span class="font-mono">4.37%</span></p>
+          <p>Change: <span class="text-red-600">-0.03</span></p>
+        </section>
+
+        <section class="border-b-4 border-red-500 p-4 bg-white shadow rounded">
+          <h2 class="text-xl font-semibold mb-2">Shadow MBS Pricing</h2>
+          <p>Estimated UMBS 5.5: <span class="font-mono">99.18</span></p>
+          <p>Estimated GNMA 6.0: <span class="font-mono">101.10</span></p>
+        </section>
+      </main>
+
+      <footer class="mt-6 text-center text-xs text-gray-400">
+        &copy; 2025 MBSGOAT. All rights reserved.
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
