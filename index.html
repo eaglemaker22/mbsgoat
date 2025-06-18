@@ -1,45 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MBSGOAT Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="script.js"></script>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-10">
-    <h1 class="text-3xl font-bold text-center mb-8">MBSGOAT Market Dashboard</h1>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MBSGOAT Dashboard</title>
+  <script defer src="script.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 p-4">
+  <header class="mb-6">
+    <h1 class="text-3xl font-bold">MBSGOAT</h1>
+    <p class="text-sm text-gray-600">Real-Time Bond and MBS Tracker</p>
+  </header>
 
-    <div id="dashboard" class="w-full max-w-3xl bg-white shadow-md rounded-lg p-6">
-      <section id="mortgage-rates-section" class="mb-6">
-        <h2 class="text-xl font-semibold border-b-2 border-blue-500 pb-2 mb-4">
-          US10Y Treasury Yield
-        </h2>
-        <table class="w-full text-sm text-left">
-          <thead>
-            <tr class="bg-gray-200">
-              <th class="p-2">Value</th>
-              <th class="p-2">Last Updated</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="p-2" id="us10y-value">Loading...</td>
-              <td class="p-2" id="us10y-timestamp"></td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      <section class="text-center">
-        <a
-          href="https://us-central1-mbsgoat-d3eb2.cloudfunctions.net/createCheckoutSession"
-          class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-        >
-          Test Stripe Checkout Link
-        </a>
-      </section>
-    </div>
-  </body>
+  <main>
+    <section id="mortgage-rates-section" class="bg-white rounded shadow p-4 mb-4 border-b-4 border-blue-500">
+      <h2 class="text-xl font-semibold mb-2">10-Year Treasury Yield</h2>
+      <p id="us10y-value" class="text-2xl font-bold">Loading...</p>
+      <p id="us10y-timestamp" class="text-sm text-gray-500"></p>
+    </section>
+  </main>
+</body>
 </html>
