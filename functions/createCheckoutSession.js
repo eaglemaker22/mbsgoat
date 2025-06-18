@@ -1,5 +1,5 @@
 const functions = require('firebase-functions');
-const stripe = require('stripe')(functions.config().stripe.secret_key);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const PRICE_ID = functions.config().stripe.price_id;
 
