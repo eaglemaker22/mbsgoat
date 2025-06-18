@@ -1,6 +1,11 @@
 [build]
-  publish = "public"  # or just "" if your files are directly in root
+  publish = "."
   command = "echo 'Deploying MBS GOAT static site'"
+
+[functions]
+  directory = "functions"
+  node_bundler = "esbuild"
+  node_version = "18"
 
 [[redirects]]
   from = "/*"
