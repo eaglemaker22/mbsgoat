@@ -1,12 +1,9 @@
 const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')(functions.config().stripe.secret_key);
 
-const PRICE_ID = process.env.STRIPE_PRICE_ID;
+const PRICE_ID = functions.config().stripe.price_id;
 
-admin.initializeApp();
-
-exports.createCheckoutSession = functions.https.onRequest(async (req, res) => {
+exports.createCheckoutSession = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).send({ error: 'Method Not Allowed' });
   }
@@ -34,5 +31,4 @@ exports.createCheckoutSession = functions.https.onRequest(async (req, res) => {
     console.error('Stripe error:', error);
     return res.status(500).send({ error: error.message });
   }
-});
-
+};
