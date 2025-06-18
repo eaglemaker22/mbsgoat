@@ -11,19 +11,16 @@
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"
 
-# Redirect /success to /success.html
 [[redirects]]
   from = "/success"
   to = "/success.html"
   status = 200
 
-# Redirect /cancel to /cancel.html
 [[redirects]]
   from = "/cancel"
   to = "/cancel.html"
   status = 200
 
-# Catch-all redirect (keep this one last)
 [[redirects]]
   from = "/*"
   to = "/index.html"
