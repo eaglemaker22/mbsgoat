@@ -23,8 +23,8 @@ exports.handler = async (event, context) => {
       customer_email: email,
       line_items: [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }],
       mode: 'subscription',
-      success_url: 'https://mbsgoat.netlify.app/success.html',
-      cancel_url: 'https://mbsgoat.netlify.app/cancel.html',
+      success_url: 'https://mbsgoat.com/success.html',
+      cancel_url: 'https://mbsgoat.com/cancel.html',
       metadata: { email }
     });
 
