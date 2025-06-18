@@ -1,0 +1,14 @@
+/* Custom LockMVP Styling - Tailwind handles most styles */
+
+#mortgage-rates-section table tr.h-2 {
+  border-bottom: none !important;
+}
+
+#mortgage-rates-section table {
+  /* Optional font-tweaks if needed */
+  /* font-size: 0.85rem; */
+}
+
+#mortgage-rates-section tbody tr:last-of-type td {
+  border-bottom: none;
+}
