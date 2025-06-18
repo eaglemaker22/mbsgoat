@@ -1,6 +1,6 @@
 [build]
-  base = "."
-  publish = "."
+  base = ""  # empty means repo root
+  publish = "."  # publish from root directory
   command = "echo 'Deploying static site'"
   environment = { NODE_VERSION = "18" }
 
