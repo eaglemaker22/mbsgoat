@@ -1,3 +1,4 @@
+console.log("✅ script.js is loaded");
 async function updateTopDashboard() {
   try {
     const response = await fetch('/.netlify/functions/getTopDashboardData');
