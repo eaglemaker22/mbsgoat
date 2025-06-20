@@ -14,7 +14,9 @@ const db = admin.firestore();
 
 exports.handler = async function (event, context) {
   try {
-    const doc = await db.collection("mbs_data").doc("market_data").get();
+    // ✅ Corrected path: market_data > mbs_products
+    const doc = await db.collection("market_data").doc("mbs_products").get();
+
     if (!doc.exists) {
       return {
         statusCode: 404,
