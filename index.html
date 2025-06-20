@@ -44,8 +44,8 @@
     </div>
   </div>
 
-  <!-- Timestamp Row -->
-  <div class="text-right text-xs text-gray-400 mb-2">Loading...</div>
+  <!-- Last Updated Footer -->
+  <div id="last-updated-footer" class="text-right text-xs text-gray-400 mb-2">Updated: --</div>
 
   <script>
     fetch('/.netlify/functions/getTopDashboardData')
@@ -60,18 +60,26 @@
           } else if (changeVal < 0) {
             document.getElementById(boxId).classList.replace('bg-gray-800', 'bg-green-700');
           }
-          let displayVal = useYield ? item.yield : item.current;
-          document.getElementById(valueId).textContent = `${changeStr} | ${displayVal || 'N/A'}`;
+
+          let displayVal = useYield ? item.yield || "N/A" : item.current || "N/A";
+          document.getElementById(valueId).textContent = `${changeStr} | ${displayVal}`;
 
           let updatedTime = new Date(item.last_updated);
           let timeString = isNaN(updatedTime) ? 'Invalid Date' : updatedTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
           document.getElementById(updatedId).textContent = `Updated: ${timeString}`;
+          return updatedTime;
         };
 
-        updateBox('box-umbs-live', 'umbs-live-value', 'umbs-live-updated', data.UMBS_5_5);
-        updateBox('box-umbs-shadow', 'umbs-shadow-value', 'umbs-shadow-updated', data.UMBS_5_5_Shadow);
-        updateBox('box-us10y', 'us10y-value', 'us10y-updated', data.US10Y, true);
-        updateBox('box-us30y', 'us30y-value', 'us30y-updated', data.US30Y, true);
+        const timestamps = [
+          updateBox('box-umbs-live', 'umbs-live-value', 'umbs-live-updated', data.UMBS_5_5),
+          updateBox('box-umbs-shadow', 'umbs-shadow-value', 'umbs-shadow-updated', data.UMBS_5_5_Shadow),
+          updateBox('box-us10y', 'us10y-value', 'us10y-updated', data.US10Y, true),
+          updateBox('box-us30y', 'us30y-value', 'us30y-updated', data.US30Y, true),
+        ];
+
+        const latestTime = new Date(Math.max(...timestamps.map(t => t.getTime())));
+        document.getElementById('last-updated-footer').textContent =
+          `Last Refreshed: ${latestTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
       })
       .catch(error => console.error('Error fetching top dashboard data:', error));
   </script>
