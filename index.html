@@ -11,135 +11,80 @@
       font-family: 'JetBrains Mono', monospace;
     }
     .glow {
-      box-shadow: 0 0 5px rgba(255,255,255,0.2), 0 0 15px rgba(0,255,0,0.2);
+      box-shadow: 0 0 4px rgba(255,255,255,0.1), 0 0 10px rgba(0,255,0,0.2);
     }
-    .gradient-card {
-      background: linear-gradient(to bottom right, #991b1b, #4b5563);
+    .card {
+      background-color: #0f172a; /* darker slate for stronger contrast */
     }
   </style>
 </head>
 <body class="bg-gray-900 text-white p-4">
 
-  <!-- Top 4 Box Ticker Section -->
-  <div class="grid grid-cols-4 gap-4 mb-4">
-    <div id="box-umbs-live" class="p-4 rounded-md bg-gray-200 text-center">
-      <div class="text-sm font-semibold">UMBS 5.5 (Live)</div>
-      <div class="text-lg" id="umbs-live-value">-- | --</div>
-      <div class="text-xs" id="umbs-live-updated">Updated: --</div>
+  <!-- Ticker Section -->
+  <div id="top-cards" class="grid grid-cols-4 gap-2 mb-4">
+    <div id="umbs-box" class="card p-3 rounded glow">
+      <div class="text-xs">UMBS 5.5</div>
+      <div id="umbs-change" class="text-sm">...</div>
+      <div id="umbs-time" class="text-[10px] text-gray-400 mt-1">...</div>
     </div>
-    <div id="box-umbs-shadow" class="p-4 rounded-md bg-gray-200 text-center">
-      <div class="text-sm font-semibold">UMBS 5.5 (Shadow)</div>
-      <div class="text-lg" id="umbs-shadow-value">-- | --</div>
-      <div class="text-xs" id="umbs-shadow-updated">Updated: --</div>
+    <div id="shadow-box" class="card p-3 rounded glow">
+      <div class="text-xs">UMBS 5.5 Shadow</div>
+      <div id="shadow-change" class="text-sm">...</div>
+      <div id="shadow-time" class="text-[10px] text-gray-400 mt-1">...</div>
     </div>
-    <div id="box-us10y" class="p-4 rounded-md bg-gray-200 text-center">
-      <div class="text-sm font-semibold">US10Y</div>
-      <div class="text-lg" id="us10y-value">-- | --</div>
-      <div class="text-xs" id="us10y-updated">Updated: --</div>
+    <div id="us10y-box" class="card p-3 rounded glow">
+      <div class="text-xs">US10Y</div>
+      <div id="us10y-change" class="text-sm">...</div>
+      <div id="us10y-yield" class="text-sm">...</div>
+      <div id="us10y-time" class="text-[10px] text-gray-400 mt-1">...</div>
     </div>
-    <div id="box-us30y" class="p-4 rounded-md bg-gray-200 text-center">
-      <div class="text-sm font-semibold">US30Y</div>
-      <div class="text-lg" id="us30y-value">-- | --</div>
-      <div class="text-xs" id="us30y-updated">Updated: --</div>
-    </div>
-  </div>
-
-  <!-- Bond/Treasury Table -->
-  <div class="border border-gray-700 mb-4">
-    <div class="bg-black text-red-500 px-2 py-1 text-xs font-semibold border-b border-gray-700">BOND/TREASURY TICKER</div>
-    <table class="w-full text-xs">
-      <thead class="bg-gray-800 text-gray-300">
-        <tr>
-          <th class="px-2 py-1 text-left">Instrument</th>
-          <th class="px-2 py-1 text-left">Change</th>
-          <th class="px-2 py-1 text-left">Actual</th>
-          <th class="px-2 py-1 text-left">Open</th>
-          <th class="px-2 py-1 text-left">Prior</th>
-          <th class="px-2 py-1 text-left">High</th>
-          <th class="px-2 py-1 text-left">Low</th>
-          <th class="px-2 py-1 text-left">Updated</th>
-        </tr>
-      </thead>
-      <tbody class="bg-gray-900 divide-y divide-gray-700">
-        <tr>
-          <td class="px-2 py-1">UMBS 5.5</td>
-          <td class="px-2 py-1">-0.05</td>
-          <td class="px-2 py-1">99.54</td>
-          <td class="px-2 py-1">100.54</td>
-          <td class="px-2 py-1">101.54</td>
-          <td class="px-2 py-1">102.54</td>
-          <td class="px-2 py-1">103.54</td>
-          <td class="px-2 py-1">10:00AM</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Daily Rates Section -->
-  <div class="text-red-400 text-xs font-semibold mb-2">DAILY RATES</div>
-  <div class="grid grid-cols-3 gap-2 mb-4 text-sm">
-    <div class="p-3 rounded gradient-card">
-      <div class="font-semibold text-white">30Y Fixed</div>
-      <div>Today: 6.88%</div>
-      <div>Yesterday: 7.88%</div>
-      <div>Last Week: 8.88%</div>
-      <div>Last Year: 9.88%</div>
-      <div class="text-xs text-gray-300 mt-1">Updated: 10:00AM</div>
-    </div>
-    <div class="p-3 rounded gradient-card">
-      <div class="font-semibold text-white">30Y VA</div>
-      <div>Today: 7.88%</div>
-      <div>Yesterday: 8.88%</div>
-      <div>Last Week: 9.88%</div>
-      <div>Last Year: 10.88%</div>
-      <div class="text-xs text-gray-300 mt-1">Updated: 10:00AM</div>
-    </div>
-    <div class="p-3 rounded gradient-card">
-      <div class="font-semibold text-white">30Y FHA</div>
-      <div>Today: 8.88%</div>
-      <div>Yesterday: 9.88%</div>
-      <div>Last Week: 10.88%</div>
-      <div>Last Year: 11.88%</div>
-      <div class="text-xs text-gray-300 mt-1">Updated: 10:00AM</div>
+    <div id="us30y-box" class="card p-3 rounded glow">
+      <div class="text-xs">US30Y</div>
+      <div id="us30y-change" class="text-sm">...</div>
+      <div id="us30y-yield" class="text-sm">...</div>
+      <div id="us30y-time" class="text-[10px] text-gray-400 mt-1">...</div>
     </div>
   </div>
 
-  <div class="text-xs text-gray-400">FREDDIE MAC AVG RATE<br>Updated: 10:00AM 6/11/2025</div>
+  <!-- Timestamp Row -->
+  <div class="text-right text-xs text-gray-400 mb-2">Loading...</div>
+
+  <!-- Bond/Treasury Table and other sections would follow here -->
 
   <script>
-    fetch('/.netlify/functions/getTopDashboardData')
-      .then(response => response.json())
-      .then(data => {
-        const updateBox = (prefix, item, valueKey) => {
-          const box = document.getElementById(`box-${prefix}`);
-          const valueEl = document.getElementById(`${prefix}-value`);
-          const updatedEl = document.getElementById(`${prefix}-updated`);
+    async function fetchTopData() {
+      const res = await fetch("/.netlify/functions/getTopDashboardData");
+      const data = await res.json();
 
-          const value = item[valueKey] || '--';
-          const change = item.change !== null ? parseFloat(item.change).toFixed(2) : "0.00";
-          const changeStr = item.change > 0 ? "+" + change : change;
+      if (data.UMBS_5_5) {
+        document.getElementById("umbs-change").innerText = `${data.UMBS_5_5.change ?? "-"} | ${data.UMBS_5_5.current ?? "-"}`;
+        document.getElementById("umbs-time").innerText = `Updated: ${data.UMBS_5_5.last_updated ?? "-"}`;
+        document.getElementById("umbs-box").classList.add((parseFloat(data.UMBS_5_5.change) ?? 0) >= 0 ? "bg-green-700" : "bg-red-700");
+      }
 
-          valueEl.textContent = `${changeStr} | ${value}`;
+      if (data.UMBS_5_5_Shadow) {
+        document.getElementById("shadow-change").innerText = `${data.UMBS_5_5_Shadow.change ?? "-"} | ${data.UMBS_5_5_Shadow.current ?? "-"}`;
+        document.getElementById("shadow-time").innerText = `Updated: ${data.UMBS_5_5_Shadow.last_updated ?? "-"}`;
+        document.getElementById("shadow-box").classList.add((parseFloat(data.UMBS_5_5_Shadow.change) ?? 0) >= 0 ? "bg-green-700" : "bg-red-700");
+      }
 
-          if (item.last_updated) {
-            const time = new Date(item.last_updated).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-            updatedEl.textContent = `Updated: ${time}`;
-          }
+      if (data.US10Y) {
+        document.getElementById("us10y-change").innerText = `Δ ${data.US10Y.change ?? "-"}`;
+        document.getElementById("us10y-yield").innerText = `${data.US10Y.yield ?? "-"}`;
+        document.getElementById("us10y-time").innerText = `Updated: ${data.US10Y.last_updated ?? "-"}`;
+        document.getElementById("us10y-box").classList.add((parseFloat(data.US10Y.change) ?? 0) >= 0 ? "bg-red-700" : "bg-green-700");
+      }
 
-          box.classList.remove('bg-gray-200', 'bg-green-200', 'bg-red-200');
-          if (item.change > 0) box.classList.add('bg-red-200');
-          else if (item.change < 0) box.classList.add('bg-green-200');
-          else box.classList.add('bg-gray-200');
-        };
+      if (data.US30Y) {
+        document.getElementById("us30y-change").innerText = `Δ ${data.US30Y.change ?? "-"}`;
+        document.getElementById("us30y-yield").innerText = `${data.US30Y.yield ?? "-"}`;
+        document.getElementById("us30y-time").innerText = `Updated: ${data.US30Y.last_updated ?? "-"}`;
+        document.getElementById("us30y-box").classList.add((parseFloat(data.US30Y.change) ?? 0) >= 0 ? "bg-red-700" : "bg-green-700");
+      }
+    }
 
-        updateBox("umbs-live", data.UMBS_5_5, "current");
-        updateBox("umbs-shadow", data.UMBS_5_5_Shadow, "current");
-        updateBox("us10y", data.US10Y, "yield");
-        updateBox("us30y", data.US30Y, "yield");
-      })
-      .catch(error => {
-        console.error('Error fetching top dashboard data:', error);
-      });
+    fetchTopData();
   </script>
+
 </body>
 </html>
