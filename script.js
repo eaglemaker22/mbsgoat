@@ -1,60 +1,38 @@
-console.log("✅ script.js is loaded");
-async function updateTopDashboard() {
+// public/script.js
+document.addEventListener("DOMContentLoaded", async () => {
   try {
-    const response = await fetch('/.netlify/functions/getTopDashboardData');
-    const data = await response.json();
+    const res = await fetch("/.netlify/functions/getTopDashboardData");
+    const data = await res.json();
 
-    // --- Update UMBS 5.5 ---
-    document.getElementById("umbs-current").textContent = data.umbs_5_5.current;
-    document.getElementById("umbs-change").textContent = data.umbs_5_5.daily_change || "N/A";
-    document.getElementById("umbs-timestamp").textContent = data.umbs_5_5.last_updated;
+    if (!data || !data.UMBS_5_5 || !data.US10Y) return;
 
-    const umbsBox = document.getElementById("umbs-box");
-    if (parseFloat(data.umbs_5_5.daily_change) > 0) {
-      umbsBox.style.backgroundColor = "red";
-    } else if (parseFloat(data.umbs_5_5.daily_change) < 0) {
-      umbsBox.style.backgroundColor = "green";
-    } else {
-      umbsBox.style.backgroundColor = "gray";
-    }
+    // === TOP TICKERS ===
+    const umbsChange = data.UMBS_5_5.change || "N/A";
+    const umbsCurrent = data.UMBS_5_5.current || "N/A";
+    const us10yChange = data.US10Y.change || "N/A";
+    const us10yYield = data.US10Y.yield || "N/A";
 
-    // --- Shadow 5.5 ---
-    document.getElementById("shadow-current").textContent = data.shadow_5_5.current;
-    document.getElementById("shadow-change").textContent = data.shadow_5_5.daily_change || "N/A";
-    const shadowBox = document.getElementById("shadow-box");
-    if (parseFloat(data.shadow_5_5.daily_change) > 0) {
-      shadowBox.style.backgroundColor = "red";
-    } else if (parseFloat(data.shadow_5_5.daily_change) < 0) {
-      shadowBox.style.backgroundColor = "green";
-    } else {
-      shadowBox.style.backgroundColor = "gray";
-    }
+    // Replace hardcoded values in ticker section
+    document.querySelectorAll(".grid.grid-cols-3 > div")[0].innerHTML = `
+      <div class="text-xs">UMBS 5.5</div>
+      <div class="text-sm">${umbsChange} | ${umbsCurrent}</div>
+    `;
+    document.querySelectorAll(".grid.grid-cols-3 > div")[1].innerHTML = `
+      <div class="text-xs">US10Y</div>
+      <div class="text-sm">${us10yChange} | ${us10yYield}</div>
+    `;
 
-    // --- US10Y ---
-    document.getElementById("us10y-current").textContent = data.us10y.current;
-    const us10yBox = document.getElementById("us10y-box");
-    if (parseFloat(data.us10y.daily_change) > 0) {
-      us10yBox.style.backgroundColor = "red";
-    } else if (parseFloat(data.us10y.daily_change) < 0) {
-      us10yBox.style.backgroundColor = "green";
-    } else {
-      us10yBox.style.backgroundColor = "gray";
-    }
-
-    // --- US30Y ---
-    document.getElementById("us30y-current").textContent = data.us30y.current;
-    const us30yBox = document.getElementById("us30y-box");
-    if (parseFloat(data.us30y.current) > parseFloat(data.us10y.current)) {
-      us30yBox.style.backgroundColor = "red";
-    } else if (parseFloat(data.us30y.current) < parseFloat(data.us10y.current)) {
-      us30yBox.style.backgroundColor = "green";
-    } else {
-      us30yBox.style.backgroundColor = "gray";
+    // === TIMESTAMP ===
+    const timestampEl = document.querySelector(".text-right.text-xs.text-gray-400.mb-2");
+    const rawTime = data.UMBS_5_5.last_updated;
+    if (rawTime && timestampEl) {
+      const dateObj = new Date(rawTime.replace(" ", "T"));
+      const timeString = dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      const dateString = dateObj.toLocaleDateString();
+      timestampEl.textContent = `${timeString} ${dateString}`;
     }
 
   } catch (err) {
-    console.error("Error updating dashboard:", err);
+    console.error("Dashboard fetch error:", err);
   }
-}
-
-updateTopDashboard();
+});
