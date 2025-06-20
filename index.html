@@ -22,25 +22,25 @@
 
   <!-- Ticker Section -->
   <div id="top-cards" class="grid grid-cols-4 gap-2 mb-4">
-    <div id="box-umbs-live" class="bg-gray-200 p-3 rounded glow">
+    <div id="box-umbs-live" class="bg-gray-800 p-3 rounded glow">
       <div class="text-xs">UMBS 5.5</div>
       <div id="umbs-live-value" class="text-sm">...</div>
-      <div id="umbs-live-updated" class="text-xs text-gray-700 mt-1">Updated: --</div>
+      <div id="umbs-live-updated" class="text-xs text-gray-400 mt-1">Updated: --</div>
     </div>
-    <div id="box-umbs-shadow" class="bg-gray-200 p-3 rounded glow">
+    <div id="box-umbs-shadow" class="bg-gray-800 p-3 rounded glow">
       <div class="text-xs">UMBS 5.5 Shadow</div>
       <div id="umbs-shadow-value" class="text-sm">...</div>
-      <div id="umbs-shadow-updated" class="text-xs text-gray-700 mt-1">Updated: --</div>
+      <div id="umbs-shadow-updated" class="text-xs text-gray-400 mt-1">Updated: --</div>
     </div>
-    <div id="box-us10y" class="bg-gray-200 p-3 rounded glow">
+    <div id="box-us10y" class="bg-gray-800 p-3 rounded glow">
       <div class="text-xs">US10Y</div>
       <div id="us10y-value" class="text-sm">...</div>
-      <div id="us10y-updated" class="text-xs text-gray-700 mt-1">Updated: --</div>
+      <div id="us10y-updated" class="text-xs text-gray-400 mt-1">Updated: --</div>
     </div>
-    <div id="box-us30y" class="bg-gray-200 p-3 rounded glow">
+    <div id="box-us30y" class="bg-gray-800 p-3 rounded glow">
       <div class="text-xs">US30Y</div>
       <div id="us30y-value" class="text-sm">...</div>
-      <div id="us30y-updated" class="text-xs text-gray-700 mt-1">Updated: --</div>
+      <div id="us30y-updated" class="text-xs text-gray-400 mt-1">Updated: --</div>
     </div>
   </div>
 
@@ -48,74 +48,32 @@
   <div class="text-right text-xs text-gray-400 mb-2">Loading...</div>
 
   <script>
-    // Fetch the latest data for the top dashboard
     fetch('/.netlify/functions/getTopDashboardData')
-      .then(response => response.json()) 
+      .then(response => response.json())
       .then(data => {
-        // Update UMBS 5.5
-        let item = data.UMBS_5_5;
-        let changeVal = item.change !== null ? parseFloat(item.change) : 0;
-        let changeStr = item.change === null ? "0.00" : item.change;
-        if (changeVal > 0) { 
-          changeStr = "+" + changeStr;
-          document.getElementById('box-umbs-live').classList.replace('bg-gray-200', 'bg-red-200');
-        } else if (changeVal < 0) {
-          document.getElementById('box-umbs-live').classList.replace('bg-gray-200', 'bg-green-200');
-        }
-        let currentVal = item.current || item.yield;
-        document.getElementById('umbs-live-value').textContent = `${changeStr} | ${currentVal}`;
-        let updatedTime = new Date(item.last_updated);
-        let timeString = updatedTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-        document.getElementById('umbs-live-updated').textContent = `Updated: ${timeString}`;
+        const updateBox = (boxId, valueId, updatedId, item, useYield = false) => {
+          let changeVal = item.change !== null ? parseFloat(item.change) : 0;
+          let changeStr = item.change === null ? "0.00" : item.change;
+          if (changeVal > 0) {
+            changeStr = "+" + changeStr;
+            document.getElementById(boxId).classList.replace('bg-gray-800', 'bg-red-700');
+          } else if (changeVal < 0) {
+            document.getElementById(boxId).classList.replace('bg-gray-800', 'bg-green-700');
+          }
+          let displayVal = useYield ? item.yield : item.current;
+          document.getElementById(valueId).textContent = `${changeStr} | ${displayVal || 'N/A'}`;
 
-        // UMBS 5.5 Shadow
-        item = data.UMBS_5_5_Shadow;
-        changeVal = item.change !== null ? parseFloat(item.change) : 0;
-        changeStr = item.change === null ? "0.00" : item.change;
-        if (changeVal > 0) {
-          changeStr = "+" + changeStr;
-          document.getElementById('box-umbs-shadow').classList.replace('bg-gray-200', 'bg-red-200');
-        } else if (changeVal < 0) {
-          document.getElementById('box-umbs-shadow').classList.replace('bg-gray-200', 'bg-green-200');
-        }
-        document.getElementById('umbs-shadow-value').textContent = `${changeStr} | ${item.current}`;
-        updatedTime = new Date(item.last_updated);
-        timeString = updatedTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-        document.getElementById('umbs-shadow-updated').textContent = `Updated: ${timeString}`;
+          let updatedTime = new Date(item.last_updated);
+          let timeString = isNaN(updatedTime) ? 'Invalid Date' : updatedTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+          document.getElementById(updatedId).textContent = `Updated: ${timeString}`;
+        };
 
-        // US10Y
-        item = data.US10Y;
-        changeVal = item.change !== null ? parseFloat(item.change) : 0;
-        changeStr = item.change === null ? "0.00" : item.change;
-        if (changeVal > 0) {
-          changeStr = "+" + changeStr;
-          document.getElementById('box-us10y').classList.replace('bg-gray-200', 'bg-red-200');
-        } else if (changeVal < 0) {
-          document.getElementById('box-us10y').classList.replace('bg-gray-200', 'bg-green-200');
-        }
-        document.getElementById('us10y-value').textContent = `${changeStr} | ${item.yield}`;
-        updatedTime = new Date(item.last_updated);
-        timeString = updatedTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-        document.getElementById('us10y-updated').textContent = `Updated: ${timeString}`;
-
-        // US30Y
-        item = data.US30Y;
-        changeVal = item.change !== null ? parseFloat(item.change) : 0;
-        changeStr = item.change === null ? "0.00" : item.change;
-        if (changeVal > 0) {
-          changeStr = "+" + changeStr;
-          document.getElementById('box-us30y').classList.replace('bg-gray-200', 'bg-red-200');
-        } else if (changeVal < 0) {
-          document.getElementById('box-us30y').classList.replace('bg-gray-200', 'bg-green-200');
-        }
-        document.getElementById('us30y-value').textContent = `${changeStr} | ${item.yield}`;
-        updatedTime = new Date(item.last_updated);
-        timeString = updatedTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-        document.getElementById('us30y-updated').textContent = `Updated: ${timeString}`;
+        updateBox('box-umbs-live', 'umbs-live-value', 'umbs-live-updated', data.UMBS_5_5);
+        updateBox('box-umbs-shadow', 'umbs-shadow-value', 'umbs-shadow-updated', data.UMBS_5_5_Shadow);
+        updateBox('box-us10y', 'us10y-value', 'us10y-updated', data.US10Y, true);
+        updateBox('box-us30y', 'us30y-value', 'us30y-updated', data.US30Y, true);
       })
-      .catch(error => {
-        console.error('Error fetching top dashboard data:', error);
-      });
+      .catch(error => console.error('Error fetching top dashboard data:', error));
   </script>
 
 </body>
