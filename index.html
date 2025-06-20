@@ -1,88 +1,86 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MBSGOAT Terminal Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .glow {
-      box-shadow: 0 0 5px rgba(255,255,255,0.2), 0 0 15px rgba(0,255,0,0.2);
-    }
-    .ticker-box {
-      background-color: #111827;
-    }
-  </style>
-</head>
-<body class="bg-gray-900 text-white p-4">
-
-  <!-- Ticker Section -->
-  <div id="top-cards" class="grid grid-cols-4 gap-2 mb-4">
-    <div id="umbs-box" class="ticker-box p-3 rounded glow">
-      <div class="text-xs">UMBS 5.5</div>
-      <div id="umbs-change" class="text-sm">...</div>
-      <div id="umbs-time" class="text-[10px] text-gray-400 mt-1">...</div>
-    </div>
-    <div id="shadow-box" class="ticker-box p-3 rounded glow">
-      <div class="text-xs">UMBS 5.5 Shadow</div>
-      <div id="shadow-change" class="text-sm">...</div>
-      <div id="shadow-time" class="text-[10px] text-gray-400 mt-1">...</div>
-    </div>
-    <div id="us10y-box" class="ticker-box p-3 rounded glow">
-      <div class="text-xs">US10Y</div>
-      <div id="us10y-change" class="text-sm">...</div>
-      <div id="us10y-yield" class="text-sm">...</div>
-      <div id="us10y-time" class="text-[10px] text-gray-400 mt-1">...</div>
-    </div>
-    <div id="us30y-box" class="ticker-box p-3 rounded glow">
-      <div class="text-xs">US30Y</div>
-      <div id="us30y-change" class="text-sm">...</div>
-      <div id="us30y-yield" class="text-sm">...</div>
-      <div id="us30y-time" class="text-[10px] text-gray-400 mt-1">...</div>
-    </div>
-  </div>
-
-  <!-- Timestamp Row -->
-  <div class="text-right text-xs text-gray-400 mb-2">Loading...</div>
-
-  <script>
-    async function fetchTopData() {
-      const res = await fetch("/.netlify/functions/getTopDashboardData");
-      const data = await res.json();
-
-      if (data.UMBS_5_5) {
-        document.getElementById("umbs-change").innerText = `${data.UMBS_5_5.change ?? "-"} | ${data.UMBS_5_5.current ?? "-"}`;
-        document.getElementById("umbs-time").innerText = `Updated: ${data.UMBS_5_5.last_updated ?? "-"}`;
-        document.getElementById("umbs-box").classList.add((parseFloat(data.UMBS_5_5.change) ?? 0) >= 0 ? "bg-green-800" : "bg-red-800");
+<script>
+  // Fetch the latest data for the top dashboard
+  fetch('/.netlify/functions/getTopDashboardData')
+    .then(response => response.json()) 
+    .then(data => {
+      // Update UMBS 5.5 (Live)
+      let item = data.UMBS_5_5;
+      let changeVal = item.change !== null ? parseFloat(item.change) : 0;
+      let changeStr = item.change === null ? "0.00" : item.change;
+      if (changeVal > 0) { 
+        changeStr = "+" + changeStr;            // prepend '+' for positive
+        document.getElementById('box-umbs-live').classList.remove('bg-gray-200');
+        document.getElementById('box-umbs-live').classList.add('bg-red-200');
+      } else if (changeVal < 0) {
+        // negative change (string already contains '-')
+        document.getElementById('box-umbs-live').classList.remove('bg-gray-200');
+        document.getElementById('box-umbs-live').classList.add('bg-green-200');
       }
-
-      if (data.UMBS_5_5_Shadow) {
-        document.getElementById("shadow-change").innerText = `${data.UMBS_5_5_Shadow.change ?? "-"} | ${data.UMBS_5_5_Shadow.current ?? "-"}`;
-        document.getElementById("shadow-time").innerText = `Updated: ${data.UMBS_5_5_Shadow.last_updated ?? "-"}`;
-        document.getElementById("shadow-box").classList.add((parseFloat(data.UMBS_5_5_Shadow.change) ?? 0) >= 0 ? "bg-green-800" : "bg-red-800");
+      // Determine current value (UMBS uses 'current')
+      let currentVal = item.current || item.yield;
+      // Format and insert text
+      document.getElementById('umbs-live-value').textContent = `${changeStr} | ${currentVal}`;
+      // Format timestamp to local time
+      let updatedTime = new Date(item.last_updated);  // create Date object from timestamp
+      let timeString = updatedTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      document.getElementById('umbs-live-updated').textContent = `Updated: ${timeString}`;
+      
+      // Update UMBS 5.5 (Shadow)
+      item = data.UMBS_5_5_Shadow;
+      changeVal = item.change !== null ? parseFloat(item.change) : 0;
+      changeStr = item.change === null ? "0.00" : item.change;
+      if (changeVal > 0) {
+        changeStr = "+" + changeStr;
+        document.getElementById('box-umbs-shadow').classList.remove('bg-gray-200');
+        document.getElementById('box-umbs-shadow').classList.add('bg-red-200');
+      } else if (changeVal < 0) {
+        document.getElementById('box-umbs-shadow').classList.remove('bg-gray-200');
+        document.getElementById('box-umbs-shadow').classList.add('bg-green-200');
       }
-
-      if (data.US10Y) {
-        document.getElementById("us10y-change").innerText = `Δ ${data.US10Y.change ?? "-"}`;
-        document.getElementById("us10y-yield").innerText = `${data.US10Y.yield ?? "-"}`;
-        document.getElementById("us10y-time").innerText = `Updated: ${data.US10Y.last_updated ?? "-"}`;
-        document.getElementById("us10y-box").classList.add((parseFloat(data.US10Y.change) ?? 0) >= 0 ? "bg-red-800" : "bg-green-800");
+      let shadowVal = item.current || item.yield;
+      document.getElementById('umbs-shadow-value').textContent = `${changeStr} | ${shadowVal}`;
+      updatedTime = new Date(item.last_updated);
+      timeString = updatedTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      document.getElementById('umbs-shadow-updated').textContent = `Updated: ${timeString}`;
+      
+      // Update US10Y
+      item = data.US10Y;
+      changeVal = item.change !== null ? parseFloat(item.change) : 0;
+      changeStr = item.change === null ? "0.00" : item.change;
+      if (changeVal > 0) {
+        changeStr = "+" + changeStr;
+        document.getElementById('box-us10y').classList.remove('bg-gray-200');
+        document.getElementById('box-us10y').classList.add('bg-red-200');
+      } else if (changeVal < 0) {
+        document.getElementById('box-us10y').classList.remove('bg-gray-200');
+        document.getElementById('box-us10y').classList.add('bg-green-200');
       }
-
-      if (data.US30Y) {
-        document.getElementById("us30y-change").innerText = `Δ ${data.US30Y.change ?? "-"}`;
-        document.getElementById("us30y-yield").innerText = `${data.US30Y.yield ?? "-"}`;
-        document.getElementById("us30y-time").innerText = `Updated: ${data.US30Y.last_updated ?? "-"}`;
-        document.getElementById("us30y-box").classList.add((parseFloat(data.US30Y.change) ?? 0) >= 0 ? "bg-red-800" : "bg-green-800");
+      // US10Y uses 'yield' field for the value
+      let us10yVal = item.current || item.yield;
+      document.getElementById('us10y-value').textContent = `${changeStr} | ${us10yVal}`;
+      updatedTime = new Date(item.last_updated);
+      timeString = updatedTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      document.getElementById('us10y-updated').textContent = `Updated: ${timeString}`;
+      
+      // Update US30Y
+      item = data.US30Y;
+      changeVal = item.change !== null ? parseFloat(item.change) : 0;
+      changeStr = item.change === null ? "0.00" : item.change;
+      if (changeVal > 0) {
+        changeStr = "+" + changeStr;
+        document.getElementById('box-us30y').classList.remove('bg-gray-200');
+        document.getElementById('box-us30y').classList.add('bg-red-200');
+      } else if (changeVal < 0) {
+        document.getElementById('box-us30y').classList.remove('bg-gray-200');
+        document.getElementById('box-us30y').classList.add('bg-green-200');
       }
-    }
-
-    fetchTopData();
-  </script>
-
-</body>
-</html>
+      let us30yVal = item.current || item.yield;
+      document.getElementById('us30y-value').textContent = `${changeStr} | ${us30yVal}`;
+      updatedTime = new Date(item.last_updated);
+      timeString = updatedTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      document.getElementById('us30y-updated').textContent = `Updated: ${timeString}`;
+    })
+    .catch(error => {
+      console.error('Error fetching top dashboard data:', error);
+    });
+</script>
