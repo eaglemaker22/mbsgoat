@@ -15,9 +15,11 @@ const db = admin.firestore();
 
 exports.handler = async function (event, context) {
   try {
-    const mbsDoc = await db.collection("market_data").doc("mbs_products").get();
-    const shadowDoc = await db.collection("market_data").doc("shadow_bonds").get();
-    const us10yDoc = await db.collection("market_data").doc("us10y_current").get();
+    const [mbsDoc, shadowDoc, us10yDoc] = await Promise.all([
+      db.collection("market_data").doc("mbs_products").get(),
+      db.collection("market_data").doc("shadow_bonds").get(),
+      db.collection("market_data").doc("us10y_current").get()
+    ]);
 
     if (!mbsDoc.exists || !shadowDoc.exists || !us10yDoc.exists) {
       return {
@@ -37,31 +39,31 @@ exports.handler = async function (event, context) {
           current: mbs.UMBS_5_5_Current,
           change: mbs.UMBS_5_5_Daily_Change,
           open: mbs.UMBS_5_5_Open,
-          last_updated: mbs.last_updated
+          last_updated: mbs.last_updated,
         },
         UMBS_5_5_Shadow: {
           current: shadow.UMBS_5_5_Shadow_Current,
           change: shadow.UMBS_5_5_Shadow_Daily_Change,
           open: shadow.UMBS_5_5_Shadow_Open,
-          last_updated: shadow.last_updated
+          last_updated: shadow.last_updated,
         },
         US10Y: {
           yield: treasuries.US10Y,
           change: treasuries.US10Y_Daily_Change ?? null,
-          last_updated: treasuries.timestamp
+          last_updated: treasuries.timestamp,
         },
         US30Y: {
           yield: treasuries.US30Y,
           change: treasuries.US30Y_Daily_Change ?? null,
-          last_updated: treasuries.timestamp
-        }
-      })
+          last_updated: treasuries.timestamp,
+        },
+      }),
     };
   } catch (err) {
-    console.error("Top Dashboard Data Error:", err);
+    console.error("❌ Top Dashboard Data Error:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: err.message })
+      body: JSON.stringify({ error: err.message }),
     };
   }
 };
