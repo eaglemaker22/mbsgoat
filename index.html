@@ -13,32 +13,29 @@
     .glow {
       box-shadow: 0 0 4px rgba(255,255,255,0.1), 0 0 10px rgba(0,255,0,0.2);
     }
-    .card {
-      background-color: #0f172a; /* darker slate for stronger contrast */
-    }
   </style>
 </head>
 <body class="bg-gray-900 text-white p-4">
 
   <!-- Ticker Section -->
   <div id="top-cards" class="grid grid-cols-4 gap-2 mb-4">
-    <div id="umbs-box" class="card p-3 rounded glow">
+    <div id="umbs-box" class="p-3 rounded glow">
       <div class="text-xs">UMBS 5.5</div>
       <div id="umbs-change" class="text-sm">...</div>
       <div id="umbs-time" class="text-[10px] text-gray-400 mt-1">...</div>
     </div>
-    <div id="shadow-box" class="card p-3 rounded glow">
+    <div id="shadow-box" class="p-3 rounded glow">
       <div class="text-xs">UMBS 5.5 Shadow</div>
       <div id="shadow-change" class="text-sm">...</div>
       <div id="shadow-time" class="text-[10px] text-gray-400 mt-1">...</div>
     </div>
-    <div id="us10y-box" class="card p-3 rounded glow">
+    <div id="us10y-box" class="p-3 rounded glow">
       <div class="text-xs">US10Y</div>
       <div id="us10y-change" class="text-sm">...</div>
       <div id="us10y-yield" class="text-sm">...</div>
       <div id="us10y-time" class="text-[10px] text-gray-400 mt-1">...</div>
     </div>
-    <div id="us30y-box" class="card p-3 rounded glow">
+    <div id="us30y-box" class="p-3 rounded glow">
       <div class="text-xs">US30Y</div>
       <div id="us30y-change" class="text-sm">...</div>
       <div id="us30y-yield" class="text-sm">...</div>
@@ -49,8 +46,6 @@
   <!-- Timestamp Row -->
   <div class="text-right text-xs text-gray-400 mb-2">Loading...</div>
 
-  <!-- Bond/Treasury Table and other sections would follow here -->
-
   <script>
     async function fetchTopData() {
       const res = await fetch("/.netlify/functions/getTopDashboardData");
@@ -59,27 +54,27 @@
       if (data.UMBS_5_5) {
         document.getElementById("umbs-change").innerText = `${data.UMBS_5_5.change ?? "-"} | ${data.UMBS_5_5.current ?? "-"}`;
         document.getElementById("umbs-time").innerText = `Updated: ${data.UMBS_5_5.last_updated ?? "-"}`;
-        document.getElementById("umbs-box").classList.add((parseFloat(data.UMBS_5_5.change) ?? 0) >= 0 ? "bg-green-700" : "bg-red-700");
+        document.getElementById("umbs-box").classList.add((parseFloat(data.UMBS_5_5.change) ?? 0) >= 0 ? "bg-green-800" : "bg-red-800");
       }
 
       if (data.UMBS_5_5_Shadow) {
         document.getElementById("shadow-change").innerText = `${data.UMBS_5_5_Shadow.change ?? "-"} | ${data.UMBS_5_5_Shadow.current ?? "-"}`;
         document.getElementById("shadow-time").innerText = `Updated: ${data.UMBS_5_5_Shadow.last_updated ?? "-"}`;
-        document.getElementById("shadow-box").classList.add((parseFloat(data.UMBS_5_5_Shadow.change) ?? 0) >= 0 ? "bg-green-700" : "bg-red-700");
+        document.getElementById("shadow-box").classList.add((parseFloat(data.UMBS_5_5_Shadow.change) ?? 0) >= 0 ? "bg-green-800" : "bg-red-800");
       }
 
       if (data.US10Y) {
         document.getElementById("us10y-change").innerText = `Δ ${data.US10Y.change ?? "-"}`;
         document.getElementById("us10y-yield").innerText = `${data.US10Y.yield ?? "-"}`;
         document.getElementById("us10y-time").innerText = `Updated: ${data.US10Y.last_updated ?? "-"}`;
-        document.getElementById("us10y-box").classList.add((parseFloat(data.US10Y.change) ?? 0) >= 0 ? "bg-red-700" : "bg-green-700");
+        document.getElementById("us10y-box").classList.add((parseFloat(data.US10Y.change) ?? 0) >= 0 ? "bg-red-800" : "bg-green-800");
       }
 
       if (data.US30Y) {
         document.getElementById("us30y-change").innerText = `Δ ${data.US30Y.change ?? "-"}`;
         document.getElementById("us30y-yield").innerText = `${data.US30Y.yield ?? "-"}`;
         document.getElementById("us30y-time").innerText = `Updated: ${data.US30Y.last_updated ?? "-"}`;
-        document.getElementById("us30y-box").classList.add((parseFloat(data.US30Y.change) ?? 0) >= 0 ? "bg-red-700" : "bg-green-700");
+        document.getElementById("us30y-box").classList.add((parseFloat(data.US30Y.change) ?? 0) >= 0 ? "bg-red-800" : "bg-green-800");
       }
     }
 
