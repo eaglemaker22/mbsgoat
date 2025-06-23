@@ -1,52 +1,39 @@
 const admin = require("firebase-admin");
+const serviceAccount = require("../../firebase-config.json");
 
-// Only initialize once
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
+    credential: admin.credential.cert(serviceAccount)
   });
 }
 
 const db = admin.firestore();
 
-exports.handler = async function (event, context) {
+exports.handler = async function(event, context) {
   try {
-    const realDocRef = db.collection("market_data").doc("mbs_products");
-    const shadowDocRef = db.collection("market_data").doc("shadow_bonds");
+    const mbsDoc = await db.collection("market_data").doc("mbs_products").get();
+    const shadowDoc = await db.collection("market_data").doc("shadow_bonds").get();
 
-    const [realSnap, shadowSnap] = await Promise.all([
-      realDocRef.get(),
-      shadowDocRef.get()
-    ]);
-
-    if (!realSnap.exists || !shadowSnap.exists) {
-      throw new Error("One or more documents not found");
-    }
-
-    const realData = realSnap.data();
-    const shadowData = shadowSnap.data();
-
-    function extractBondFields(data, prefix) {
-      return {
-        change: data[`${prefix}_Daily_Change`] || null,
-        current: data[`${prefix}_Current`] || null,
-        prevClose: data[`${prefix}_PriorDayClose`] || null,
-        open: data[`${prefix}_Open`] || null,
-        high: data[`${prefix}_TodayHigh`] || null,
-        low: data[`${prefix}_TodayLow`] || null,
-      };
-    }
+    const mbsData = mbsDoc.data();
+    const shadowData = shadowDoc.data();
 
     const result = {
-      UMBS_5_5: extractBondFields(realData, "UMBS_5_5"),
-      UMBS_6_0: extractBondFields(realData, "UMBS_6_0"),
-      GNMA_5_5: extractBondFields(realData, "GNMA_5_5"),
-      GNMA_6_0: extractBondFields(realData, "GNMA_6_0"),
-
-      UMBS_5_5_Shadow: extractBondFields(shadowData, "UMBS_5_5_Shadow"),
-      UMBS_6_0_Shadow: extractBondFields(shadowData, "UMBS_6_0_Shadow"),
-      GNMA_5_5_Shadow: extractBondFields(shadowData, "GNMA_5_5_Shadow"),
-      GNMA_6_0_Shadow: extractBondFields(shadowData, "GNMA_6_0_Shadow")
+      UMBS_5_5: {
+        change: mbsData?.UMBS_5_5_Daily_Change || null,
+        current: mbsData?.UMBS_5_5_Current || null,
+        prevClose: mbsData?.UMBS_5_5_Close || null,
+        open: mbsData?.UMBS_5_5_Open || null,
+        high: mbsData?.UMBS_5_5_TodayHigh || null,
+        low: mbsData?.UMBS_5_5_TodayLow || null
+      },
+      UMBS_5_5_Shadow: {
+        change: shadowData?.UMBS_5_5_Shadow_Daily_Change || null,
+        current: shadowData?.UMBS_5_5_Shadow_Current || null,
+        prevClose: shadowData?.UMBS_5_5_Shadow_PriorDayClose || null,
+        open: shadowData?.UMBS_5_5_Shadow_Open || null,
+        high: shadowData?.UMBS_5_5_Shadow_TodayHigh || null,
+        low: shadowData?.UMBS_5_5_Shadow_TodayLow || null
+      }
     };
 
     return {
@@ -54,11 +41,11 @@ exports.handler = async function (event, context) {
       body: JSON.stringify(result)
     };
 
-  } catch (error) {
-    console.error("Error in getAllBondData:", error);
+  } catch (err) {
+    console.error("getAllBondData error:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ error: "Failed to fetch bond data" })
     };
   }
 };
