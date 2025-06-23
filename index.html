@@ -89,6 +89,13 @@
             try {
                 // Mandatory: Initialize Firebase using global variables from the Canvas environment
                 const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Get the appId
+
+                // Ensure projectId is present, using __app_id as a fallback if necessary
+                if (!firebaseConfig.projectId && typeof __app_id !== 'undefined') {
+                    firebaseConfig.projectId = __app_id;
+                }
+
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
@@ -113,38 +120,43 @@
                     });
                 });
 
-                // Fetch data directly from Firestore
+                // Fetch data directly from Firestore using the public data path
                 const [mbsDoc, shadowDoc, us10yDoc, us30yDoc] = await Promise.all([
-                    getDoc(doc(db, "market_data", "mbs_products")),
-                    getDoc(doc(db, "market_data", "shadow_bonds")),
-                    getDoc(doc(db, "market_data", "us10y_current")),
-                    getDoc(doc(db, "market_data", "us30y_current")),
+                    getDoc(doc(db, `artifacts/${appId}/public/data/market_data`, "mbs_products")),
+                    getDoc(doc(db, `artifacts/${appId}/public/data/market_data`, "shadow_bonds")),
+                    getDoc(doc(db, `artifacts/${appId}/public/data/market_data`, "us10y_current")),
+                    getDoc(doc(db, `artifacts/${appId}/public/data/market_data`, "us30y_current")),
                 ]);
 
-                if (!mbsDoc.exists || !shadowDoc.exists || !us10yDoc.exists || !us30yDoc.exists) {
-                    throw new Error("One or more required market data documents not found in Firestore.");
+                // Ensure data objects are not undefined, providing empty objects as fallbacks
+                const mbs = mbsDoc.data() || {};
+                const shadow = shadowDoc.data() || {};
+                const treasuries10 = us10yDoc.data() || {};
+                const treasuries30 = us30yDoc.data() || {};
+
+                if (!mbsDoc.exists && Object.keys(mbs).length === 0 || 
+                    !shadowDoc.exists && Object.keys(shadow).length === 0 || 
+                    !us10yDoc.exists && Object.keys(treasuries10).length === 0 || 
+                    !us30yDoc.exists && Object.keys(treasuries30).length === 0) {
+                    throw new Error("One or more required market data documents not found or are empty in Firestore. Check data in /artifacts/{appId}/public/data/market_data collection.");
                 }
 
-                const mbs = mbsDoc.data();
-                const shadow = shadowDoc.data();
-                const treasuries10 = us10yDoc.data();
-                const treasuries30 = us30yDoc.data();
 
                 // Consolidated data structure matching your previous function's output
                 const data = {
                     UMBS_5_5: {
-                        current: mbs.UMBS_5_5_Current,
-                        change: mbs.UMBS_5_5_Daily_Change,
-                        open: mbs.UMBS_5_5_Open,
-                        high: mbs.UMBS_5_5_TodayHigh,
-                        low: mbs.UMBS_5_5_TodayLow
+                        current: mbs.UMBS_5_5_Current ?? null,
+                        change: mbs.UMBS_5_5_Daily_Change ?? null,
+                        open: mbs.UMBS_5_5_Open ?? null,
+                        high: mbs.UMBS_5_5_TodayHigh ?? null,
+                        low: mbs.UMBS_5_5_TodayLow ?? null
                     },
                     UMBS_5_5_Shadow: {
-                        current: shadow.UMBS_5_5_Shadow_Current,
-                        change: shadow.UMBS_5_5_Shadow_Daily_Change,
-                        open: shadow.UMBS_5_5_Shadow_Open,
-                        high: shadow.UMBS_5_5_Shadow_TodayHigh,
-                        low: shadow.UMBS_5_5_Shadow_TodayLow
+                        current: shadow.UMBS_5_5_Shadow_Current ?? null,
+                        change: shadow.UMBS_5_5_Shadow_Daily_Change ?? null,
+                        open: shadow.UMBS_5_5_Shadow_Open ?? null,
+                        high: shadow.UMBS_5_5_Shadow_TodayHigh ?? null,
+                        low: shadow.UMBS_5_5_Shadow_TodayLow ?? null
                     },
                     US10Y: {
                         yield: treasuries10.US10Y_Current ?? null,
