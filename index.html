@@ -1,65 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Market Data Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Data Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-  <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Market Snapshot</h1>
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Market Snapshot</h1>
 
-    <div id="loading" class="flex justify-center items-center py-8 text-gray-600">
-      <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      Loading market data...
+        <!-- Loading Indicator -->
+        <div id="loading" class="flex justify-center items-center py-8 text-gray-600">
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Loading market data...
+        </div>
+
+        <!-- Data Display Area -->
+        <div id="data-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
+            <!-- UMBS 5.5 Section -->
+            <div class="bg-blue-50 border border-blue-200 p-5 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold text-blue-800 mb-3">UMBS 5.5</h2>
+                <p class="text-gray-700"><span class="font-medium">Current:</span> <span id="UMBS_5_5_current"></span></p>
+                <p class="text-gray-700"><span class="font-medium">Change:</span> <span id="UMBS_5_5_change"></span></p>
+                <p class="text-gray-700"><span class="font-medium">Open:</span> <span id="UMBS_5_5_open"></span></p>
+                <p class="text-gray-700"><span class="font-medium">High:</span> <span id="UMBS_5_5_high"></span></p>
+                <p class="text-gray-700"><span class="font-medium">Low:</span> <span id="UMBS_5_5_low"></span></p>
+            </div>
+
+            <!-- UMBS 5.5 Shadow Section -->
+            <div class="bg-purple-50 border border-purple-200 p-5 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold text-purple-800 mb-3">UMBS 5.5 Shadow</h2>
+                <p class="text-gray-700"><span class="font-medium">Current:</span> <span id="UMBS_5_5_Shadow_current"></span></p>
+                <p class="text-gray-700"><span class="font-medium">Change:</span> <span id="UMBS_5_5_Shadow_change"></span></p>
+                <p class="text-gray-700"><span class="font-medium">Open:</span> <span id="UMBS_5_5_Shadow_open"></span></p>
+                <p class="text-gray-700"><span class="font-medium">High:</span> <span id="UMBS_5_5_Shadow_high"></span></p>
+                <p class="text-gray-700"><span class="font-medium">Low:</span> <span id="UMBS_5_5_Shadow_low"></span></p>
+            </div>
+
+            <!-- US10Y Section -->
+            <div class="bg-green-50 border border-green-200 p-5 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold text-green-800 mb-3">US10Y</h2>
+                <p class="text-gray-700"><span class="font-medium">Yield:</span> <span id="US10Y_yield"></span></p>
+                <p class="text-gray-700"><span class="font-medium">Change:</span> <span id="US10Y_change"></span></p>
+            </div>
+
+            <!-- US30Y Section -->
+            <div class="bg-red-50 border border-red-200 p-5 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold text-red-800 mb-3">US30Y</h2>
+                <p class="text-gray-700"><span class="font-medium">Yield:</span> <span id="US30Y_yield"></span></p>
+                <p class="text-gray-700"><span class="font-medium">Change:</span> <span id="US30Y_change"></span></p>
+            </div>
+        </div>
+
+        <!-- Error Message Area -->
+        <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <strong class="font-bold">Error!</strong>
+            <span class="block sm:inline" id="error-text"></span>
+        </div>
     </div>
 
-    <div id="data-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
-      <div class="bg-blue-50 border border-blue-200 p-5 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold text-blue-800 mb-3">UMBS 5.5</h2>
-        <p><span class="font-medium">Current:</span> <span id="UMBS_5_5_current"></span></p>
-        <p><span class="font-medium">Change:</span> <span id="UMBS_5_5_change"></span></p>
-        <p><span class="font-medium">Open:</span> <span id="UMBS_5_5_open"></span></p>
-        <p><span class="font-medium">High:</span> <span id="UMBS_5_5_high"></span></p>
-        <p><span class="font-medium">Low:</span> <span id="UMBS_5_5_low"></span></p>
-      </div>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-      <div class="bg-purple-50 border border-purple-200 p-5 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold text-purple-800 mb-3">UMBS 5.5 Shadow</h2>
-        <p><span class="font-medium">Current:</span> <span id="UMBS_5_5_Shadow_current"></span></p>
-        <p><span class="font-medium">Change:</span> <span id="UMBS_5_5_Shadow_change"></span></p>
-        <p><span class="font-medium">Open:</span> <span id="UMBS_5_5_Shadow_open"></span></p>
-        <p><span class="font-medium">High:</span> <span id="UMBS_5_5_Shadow_high"></span></p>
-        <p><span class="font-medium">Low:</span> <span id="UMBS_5_5_Shadow_low"></span></p>
-      </div>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loadingIndicator = document.getElementById('loading');
+            const dataContainer = document.getElementById('data-container');
+            const errorMessage = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
 
-      <div class="bg-green-50 border border-green-200 p-5 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold text-green-800 mb-3">US10Y</h2>
-        <p><span class="font-medium">Yield:</span> <span id="US10Y_yield"></span></p>
-        <p><span class="font-medium">Change:</span> <span id="US10Y_change"></span></p>
-      </div>
+            let db;
+            let auth;
 
-      <div class="bg-red-50 border border-red-200 p-5 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold text-red-800 mb-3">US30Y</h2>
-        <p><span class="font-medium">Yield:</span> <span id="US30Y_yield"></span></p>
-        <p><span class="font-medium">Change:</span> <span id="US30Y_change"></span></p>
-      </div>
-    </div>
+            try {
+                // Mandatory: Initialize Firebase using global variables from the Canvas environment
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Get the appId
 
-    <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-      <strong class="font-bold">Error!</strong>
-      <span class="block sm:inline" id="error-text"></span>
-    </div>
-  </div>
+                // Ensure projectId is present, using __app_id as a fallback if necessary
+                if (!firebaseConfig.projectId && typeof __app_id !== 'undefined') {
+                    firebaseConfig.projectId = __app_id;
+                }
 
-  <script src="/script.js"></script>
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Mandatory: Sign in with custom token if available, otherwise anonymously
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                    console.log("Firebase authenticated with custom token.");
+                } else {
+                    await signInAnonymously(auth);
+                    console.log("Firebase signed in anonymously.");
+                }
+
+                // Wait for authentication state to be ready
+                await new Promise(resolve => {
+                    const unsubscribe = onAuthStateChanged(auth, user => {
+                        if (user) {
+                            console.log("Auth state changed, user is logged in.");
+                            unsubscribe(); // Stop listening once authenticated
+                            resolve();
+                        }
+                    });
+                });
+
+                // Fetch data directly from Firestore using the public data path
+                const [mbsDoc, shadowDoc, us10yDoc, us30yDoc] = await Promise.all([
+                    getDoc(doc(db, `artifacts/${appId}/public/data/market_data`, "mbs_products")),
+                    getDoc(doc(db, `artifacts/${appId}/public/data/market_data`, "shadow_bonds")),
+                    getDoc(doc(db, `artifacts/${appId}/public/data/market_data`, "us10y_current")),
+                    getDoc(doc(db, `artifacts/${appId}/public/data/market_data`, "us30y_current")),
+                ]);
+
+                // Ensure data objects are not undefined, providing empty objects as fallbacks
+                const mbs = mbsDoc.data() || {};
+                const shadow = shadowDoc.data() || {};
+                const treasuries10 = us10yDoc.data() || {};
+                const treasuries30 = us30yDoc.data() || {};
+
+                if (!mbsDoc.exists && Object.keys(mbs).length === 0 || 
+                    !shadowDoc.exists && Object.keys(shadow).length === 0 || 
+                    !us10yDoc.exists && Object.keys(treasuries10).length === 0 || 
+                    !us30yDoc.exists && Object.keys(treasuries30).length === 0) {
+                    throw new Error("One or more required market data documents not found or are empty in Firestore. Check data in /artifacts/{appId}/public/data/market_data collection.");
+                }
+
+
+                // Consolidated data structure matching your previous function's output
+                const data = {
+                    UMBS_5_5: {
+                        current: mbs.UMBS_5_5_Current ?? null,
+                        change: mbs.UMBS_5_5_Daily_Change ?? null,
+                        open: mbs.UMBS_5_5_Open ?? null,
+                        high: mbs.UMBS_5_5_TodayHigh ?? null,
+                        low: mbs.UMBS_5_5_TodayLow ?? null
+                    },
+                    UMBS_5_5_Shadow: {
+                        current: shadow.UMBS_5_5_Shadow_Current ?? null,
+                        change: shadow.UMBS_5_5_Shadow_Daily_Change ?? null,
+                        open: shadow.UMBS_5_5_Shadow_Open ?? null,
+                        high: shadow.UMBS_5_5_Shadow_TodayHigh ?? null,
+                        low: shadow.UMBS_5_5_Shadow_TodayLow ?? null
+                    },
+                    US10Y: {
+                        yield: treasuries10.US10Y_Current ?? null,
+                        change: treasuries10.US10Y_Daily_Change ?? null,
+                    },
+                    US30Y: {
+                        yield: treasuries30.US30Y_Current ?? null,
+                        change: treasuries30.US30Y_Daily_Change ?? null,
+                    },
+                };
+
+                console.log("Fetched data from Firebase:", data); // Log the actual data
+
+                // Populate UMBS 5.5
+                document.getElementById('UMBS_5_5_current').textContent = data.UMBS_5_5.current !== null ? data.UMBS_5_5.current : 'N/A';
+                document.getElementById('UMBS_5_5_change').textContent = data.UMBS_5_5.change !== null ? data.UMBS_5_5.change : 'N/A';
+                document.getElementById('UMBS_5_5_open').textContent = data.UMBS_5_5.open !== null ? data.UMBS_5_5.open : 'N/A';
+                document.getElementById('UMBS_5_5_high').textContent = data.UMBS_5_5.high !== null ? data.UMBS_5_5.high : 'N/A';
+                document.getElementById('UMBS_5_5_low').textContent = data.UMBS_5_5.low !== null ? data.UMBS_5_5.low : 'N/A';
+
+                // Populate UMBS 5.5 Shadow
+                document.getElementById('UMBS_5_5_Shadow_current').textContent = data.UMBS_5_5_Shadow.current !== null ? data.UMBS_5_5_Shadow.current : 'N/A';
+                document.getElementById('UMBS_5_5_Shadow_change').textContent = data.UMBS_5_5_Shadow.change !== null ? data.UMBS_5_5_Shadow.change : 'N/A';
+                document.getElementById('UMBS_5_5_Shadow_open').textContent = data.UMBS_5_5_Shadow.open !== null ? data.UMBS_5_5_Shadow.open : 'N/A';
+                document.getElementById('UMBS_5_5_Shadow_high').textContent = data.UMBS_5_5_Shadow.high !== null ? data.UMBS_5_5_Shadow.high : 'N/A';
+                document.getElementById('UMBS_5_5_Shadow_low').textContent = data.UMBS_5_5_Shadow.low !== null ? data.UMBS_5_5_Shadow.low : 'N/A';
+
+                // Populate US10Y
+                document.getElementById('US10Y_yield').textContent = data.US10Y.yield !== null ? data.US10Y.yield : 'N/A';
+                document.getElementById('US10Y_change').textContent = data.US10Y.change !== null ? data.US10Y.change : 'N/A';
+
+                // Populate US30Y
+                document.getElementById('US30Y_yield').textContent = data.US30Y.yield !== null ? data.US30Y.yield : 'N/A';
+                document.getElementById('US30Y_change').textContent = data.US30Y.change !== null ? data.US30Y.change : 'N/A';
+                
+                // Show data, hide loading
+                dataContainer.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Failed to fetch market data from Firebase:", error);
+                errorText.textContent = `Failed to load data: ${error.message}. Please check Firebase rules or data.`;
+                errorMessage.classList.remove('hidden');
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>
