@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Data Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    </head>
+<body>
+    <header class="dashboard-header">
+        <div class="header-item ums-section">
+            <span class="label">UMS 5.5</span>
+            <span class="value" id="ums55Value">99.55</span>
+            <span class="change negative" id="ums55Change">-0.05</span>
+        </div>
+        <div class="header-item us10y-section">
+            <span class="label">US10Y</span>
+            <span class="change positive" id="us10yChange">+0.01</span>
+            <span class="value" id="us10yValue">4.425</span>
+        </div>
+        <div class="header-item fixed-30y-section">
+            <span class="label">30Y Fixed</span>
+            <span class="change positive" id="fixed30yChange">+0.03%</span>
+            <span class="value" id="fixed30yValue">6.85%</span>
+        </div>
+        <div class="header-time">10:00AM 6/11/2025</div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="bond-ticker-section">
+            <h2 class="section-title">BOND/TREASURY TICKER</h2>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Instrument</th>
+                            <th>Change</th>
+                            <th>Actual</th>
+                            <th>Open</th>
+                            <th>Prior</th>
+                            <th>High</th>
+                            <th>Low</th>
+                            <th>Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bondTickerTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="daily-rates-section">
+            <h2 class="section-title">DAILY RATES</h2>
+            <div class="rates-grid">
+                <div class="rate-box red-bg">
+                    <h3>30Y Fixed</h3>
+                    <p>Today: <span id="fixed30yToday">7.88%</span></p>
+                    <p>Yesterday: <span id="fixed30yYesterday">8.88%</span></p>
+                    <p>Last Week: <span id="fixed30yLastWeek">9.88%</span></p>
+                    <p class="update-time">Updated: 10:00AM</p>
+                </div>
+                <div class="rate-box red-bg">
+                    <h3>30Y VA</h3>
+                    <p>Today: <span id="va30yToday">7.88%</span></p>
+                    <p>Yesterday: <span id="va30yYesterday">8.88%</span></p>
+                    <p>Last Week: <span id="va30yLastWeek">9.88%</span></p>
+                    <p class="update-time">Updated: 10:00AM</p>
+                </div>
+                <div class="rate-box red-bg">
+                    <h3>30Y FHA</h3>
+                    <p>Today: <span id="fha30yToday">8.88%</span></p>
+                    <p>Yesterday: <span id="fha30yYesterday">9.88%</span></p>
+                    <p>Last Week: <span id="fha30yLastWeek">10.88%</span></p>
+                    <p class="update-time">Updated: 10:00AM</p>
+                </div>
+                <div class="rate-box purple-bg">
+                    <h3>30Y Jumbo</h3>
+                    <p>Today: <span id="jumbo30yToday">9.88%</span></p>
+                    <p>Yesterday: <span id="jumbo30yYesterday">10.88%</span></p>
+                    <p>Last Year: <span id="jumbo30yLastYear">12.88%</span></p>
+                    <p class="update-time">Updated: 10:00AM</p>
+                </div>
+                <div class="rate-box purple-bg">
+                    <h3>30Y USDA</h3>
+                    <p>Today: <span id="usda30yToday">10.88%</span></p>
+                    <p>Yesterday: <span id="usda30yYesterday">11.88%</span></p>
+                    <p>Last Year: <span id="usda30yLastYear">12.88%</span></p>
+                    <p class="update-time">Updated: 10:00AM</p>
+                </div>
+                <div class="rate-box purple-bg">
+                    <h3>30Y Investment</h3>
+                    <p>Today: <span id="investment30yToday">9.88%</span></p>
+                    <p>Yesterday: <span id="investment30yYesterday">12.88%</span></p>
+                    <p>Last Year: <span id="investment30yLastYear">14.88%</span></p>
+                    <p class="update-time">Updated: 10:00AM</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="freddie-mac-section">
+            <h2 class="section-title">FREDDIE MAC AVG RATE</h2>
+            <p class="update-time">Updated: 10:00AM 6/11/2025</p>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
