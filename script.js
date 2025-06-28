@@ -1,34 +1,3 @@
-// --- Firebase Configuration (Placeholder) ---
-// IMPORTANT: Replace with your actual Firebase project configuration
-// You can find this in your Firebase project settings -> Project settings -> General -> Your apps -> Firebase SDK snippet -> Config
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID",
-    databaseURL: "YOUR_DATABASE_URL", // For Realtime Database
-};
-
-// Initialize Firebase (if you are using the CDN links in index.html)
-// if (typeof firebase !== 'undefined') {
-//     firebase.initializeApp(firebaseConfig);
-//     const database = firebase.database();
-//     console.log("Firebase initialized!");
-// } else {
-//     console.warn("Firebase SDK not loaded. Ensure CDN links or module imports are correct.");
-// }
-
-// If you are using Firebase with modular imports (e.g., with a bundler like Webpack/Vite):
-/*
-import { initializeApp } from "firebase/app";
-import { getDatabase, ref, onValue } from "firebase/database";
-
-const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
-*/
-
 // --- Helper Functions to Update DOM Elements ---
 
 /**
@@ -46,185 +15,203 @@ function updateTextElement(elementId, value) {
 }
 
 /**
- * Updates a change indicator (value and color).
- * @param {string} valueElementId - ID for the value span.
+ * Updates a change indicator (value and color) for header items.
+ * @param {string} valueElementId - ID for the main value span.
  * @param {string} changeElementId - ID for the change span.
- * @param {number|string} value - The main value (e.g., 99.55).
- * @param {number|string} change - The change value (e.g., -0.05).
+ * @param {string} value - The main value (e.g., "4.425").
+ * @param {string} change - The change value (e.g., "-0.212").
  */
 function updateChangeIndicator(valueElementId, changeElementId, value, change) {
     updateTextElement(valueElementId, value);
     const changeElement = document.getElementById(changeElementId);
     if (changeElement) {
-        changeElement.textContent = (typeof change === 'number' && change > 0 ? '+' : '') + change;
+        changeElement.textContent = change; // Display the change value as-is
+
         changeElement.classList.remove('positive', 'negative');
-        if (typeof change === 'number') {
-            if (change > 0) {
-                changeElement.classList.add('positive');
-            } else if (change < 0) {
-                changeElement.classList.add('negative');
-            }
-        } else if (typeof change === 'string') {
-            // Handle string changes like "+0.03%"
-            if (change.startsWith('+')) {
-                changeElement.classList.add('positive');
-            } else if (change.startsWith('-')) {
-                changeElement.classList.add('negative');
+        if (change.startsWith('-')) {
+            changeElement.classList.add('negative');
+        } else if (change.startsWith('+')) {
+            changeElement.classList.add('positive');
+        } else {
+            // If it's a number that might not have a sign, check its value
+            const numericChange = parseFloat(change);
+            if (!isNaN(numericChange)) {
+                if (numericChange > 0) {
+                    changeElement.classList.add('positive');
+                } else if (numericChange < 0) {
+                    changeElement.classList.add('negative');
+                }
             }
         }
     }
 }
 
 /**
- * Populates the bond ticker table.
- * @param {Array<Object>} data - An array of objects, each representing a row.
- * Example: [{instrument: "UMS 5.5", change: -0.05, actual: 99.54, ...}]
+ * Updates a specific row in the bond ticker table by its ID.
+ * @param {string} rowId - The ID of the <tr> element (e.g., 'shadow55Row').
+ * @param {Object} rowData - An object containing the data for the row's cells.
+ * Expected keys: change, actual, open, priorDayClose, high, low, updated.
+ *
+ * NOTE: The keys here (`change`, `actual` etc.) must match the keys returned by your Netlify Function for this bond type.
  */
-function populateBondTickerTable(data) {
-    const tableBody = document.getElementById('bondTickerTableBody');
-    if (!tableBody) {
-        console.error("Bond ticker table body not found!");
+function updateBondTableRow(rowId, rowData) {
+    const row = document.getElementById(rowId);
+    if (!row) {
+        console.warn(`Row with ID '${rowId}' not found.`);
         return;
     }
-    tableBody.innerHTML = ''; // Clear existing rows
 
-    data.forEach(rowData => {
-        const row = tableBody.insertRow();
-        const cells = [
-            rowData.instrument,
-            rowData.change,
-            rowData.actual,
-            rowData.open,
-            rowData.prior,
-            rowData.high,
-            rowData.low,
-            rowData.updated
-        ];
+    // Get the cells starting from the second one (index 1), as the first is the Instrument name
+    const cells = row.children;
 
-        cells.forEach(cellData => {
-            const cell = row.insertCell();
-            cell.textContent = cellData;
-            // Apply specific class for 'change' column if negative/positive
-            if (cellData === rowData.change) { // Check if it's the change value
-                if (typeof cellData === 'number') {
-                    if (cellData < 0) {
+    // Define the order of data and the corresponding cell index
+    // This mapping assumes the order of <td> elements in your HTML for this row
+    const cellOrderMap = [
+        { key: 'change', cellIndex: 1 },
+        { key: 'actual', cellIndex: 2 },
+        { key: 'open', cellIndex: 3 },
+        { key: 'priorDayClose', cellIndex: 4 }, // Maps to "Prior Day Close" header
+        { key: 'high', cellIndex: 5 },
+        { key: 'low', cellIndex: 6 },
+        { key: 'updated', cellIndex: 7 }
+    ];
+
+    cellOrderMap.forEach(mapping => {
+        const cell = cells[mapping.cellIndex];
+        const value = rowData[mapping.key];
+
+        if (cell && value !== undefined) {
+            cell.textContent = value;
+
+            // Special handling for the 'change' column to apply colors
+            if (mapping.key === 'change') {
+                cell.classList.remove('positive', 'negative');
+                const numericChange = parseFloat(value);
+                if (!isNaN(numericChange)) {
+                    if (numericChange < 0) {
                         cell.classList.add('negative');
-                    } else if (cellData > 0) {
+                    } else if (numericChange > 0) {
                         cell.classList.add('positive');
                     }
-                } else if (typeof cellData === 'string') {
-                    if (cellData.startsWith('-')) {
+                } else if (typeof value === 'string') {
+                    if (value.startsWith('-')) {
                         cell.classList.add('negative');
-                    } else if (cellData.startsWith('+')) {
+                    } else if (value.startsWith('+')) {
                         cell.classList.add('positive');
                     }
                 }
             }
-        });
+        } else if (cell) {
+             cell.textContent = '--'; // Default for missing data
+        }
     });
 }
 
-// --- Data Fetching and Updating Logic (Simulated Data First) ---
-
-// Simulate fetching data from Firebase (replace with actual Firebase calls)
-async function fetchAndDisplayData() {
-    console.log("Attempting to fetch and display data...");
-
-    // --- Header Data ---
-    // In a real scenario, you'd get these from your database
-    const headerData = {
-        ums55: { value: 99.55, change: -0.05 },
-        us10y: { value: 4.425, change: 0.01 },
-        fixed30y: { value: "6.85%", change: "+0.03%" },
-    };
-    updateChangeIndicator('ums55Value', 'ums55Change', headerData.ums55.value, headerData.ums55.change);
-    updateChangeIndicator('us10yValue', 'us10yChange', headerData.us10y.value, headerData.us10y.change);
-    updateChangeIndicator('fixed30yValue', 'fixed30yChange', headerData.fixed30y.value, headerData.fixed30y.change);
-
-
-    // --- Bond Ticker Data ---
-    // This structure assumes an array of objects from your Firebase
-    const bondTickerData = [
-        { instrument: "UMS 5.5", change: -0.05, actual: 99.54, open: 100.54, prior: 101.54, high: 102.54, low: 103.54, updated: "10:00AM" },
-        { instrument: "UMS 6.0", change: -0.05, actual: 100.24, open: 101.24, prior: 102.24, high: 103.24, low: 104.24, updated: "10:00AM" },
-        { instrument: "GMA 5.5", change: -0.05, actual: 99.25, open: 100.25, prior: 101.25, high: 102.25, low: 103.25, updated: "10:00AM" },
-        { instrument: "GMA 6.0", change: -0.05, actual: 101.25, open: 102.25, prior: 103.25, high: 104.25, low: 105.25, updated: "10:00AM" },
-        { instrument: "Shadow 5.5", change: -0.05, actual: 99.54, open: 100.54, prior: 101.54, high: 102.54, low: 103.54, updated: "10:00AM" },
-        { instrument: "Shadow 6.0", change: -0.05, actual: 100.24, open: 101.24, prior: 102.24, high: 103.24, low: 104.24, updated: "10:00AM" },
-        { instrument: "Shadow GMNA 5.5", change: -0.05, actual: 99.25, open: 100.25, prior: 101.25, high: 102.25, low: 103.25, updated: "10:00AM" },
-        { instrument: "Shadow GMNA 6.0", change: -0.05, actual: 101.25, open: 102.25, prior: 103.25, high: 104.25, low: 105.25, updated: "10:00AM" },
-    ];
-    populateBondTickerTable(bondTickerData);
-
-    // --- Daily Rates Data ---
-    // This assumes a structure like this in your Firebase
-    const dailyRatesData = {
-        fixed30y: { today: "7.88%", yesterday: "8.88%", lastWeek: "9.88%" },
-        va30y: { today: "7.88%", yesterday: "8.88%", lastWeek: "9.88%" },
-        fha30y: { today: "8.88%", yesterday: "9.88%", lastWeek: "10.88%" },
-        jumbo30y: { today: "9.88%", yesterday: "10.88%", lastYear: "12.88%" },
-        usda30y: { today: "10.88%", yesterday: "11.88%", lastYear: "12.88%" },
-        investment30y: { today: "9.88%", yesterday: "12.88%", lastYear: "14.88%" },
-    };
-
-    updateTextElement('fixed30yToday', dailyRatesData.fixed30y.today);
-    updateTextElement('fixed30yYesterday', dailyRatesData.fixed30y.yesterday);
-    updateTextElement('fixed30yLastWeek', dailyRatesData.fixed30y.lastWeek);
-
-    updateTextElement('va30yToday', dailyRatesData.va30y.today);
-    updateTextElement('va30yYesterday', dailyRatesData.va30y.yesterday);
-    updateTextElement('va30yLastWeek', dailyRatesData.va30y.lastWeek);
-
-    updateTextElement('fha30yToday', dailyRatesData.fha30y.today);
-    updateTextElement('fha30yYesterday', dailyRatesData.fha30y.yesterday);
-    updateTextElement('fha30yLastWeek', dailyRatesData.fha30y.lastWeek);
-
-    updateTextElement('jumbo30yToday', dailyRatesData.jumbo30y.today);
-    updateTextElement('jumbo30yYesterday', dailyRatesData.jumbo30y.yesterday);
-    updateTextElement('jumbo30yLastYear', dailyRatesData.jumbo30y.lastYear); // Note: lastYear for Jumbo
-
-    updateTextElement('usda30yToday', dailyRatesData.usda30y.today);
-    updateTextElement('usda30yYesterday', dailyRatesData.usda30y.yesterday);
-    updateTextElement('usda30yLastYear', dailyRatesData.usda30y.lastYear); // Note: lastYear for USDA
-
-    updateTextElement('investment30yToday', dailyRatesData.investment30y.today);
-    updateTextElement('investment30yYesterday', dailyRatesData.investment30y.yesterday);
-    updateTextElement('investment30yLastYear', dailyRatesData.investment30y.lastYear); // Note: lastYear for Investment
-
-    // --- Firebase Integration Example (Realtime Database) ---
-    // If you uncommented the Firebase initialization above:
-    /*
-    const headerRef = ref(database, 'header_data'); // Adjust path to your data
-    onValue(headerRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            updateChangeIndicator('ums55Value', 'ums55Change', data.ums55.value, data.ums55.change);
-            // ... update other header elements ...
-        }
-    });
-
-    const bondTickerRef = ref(database, 'bond_ticker'); // Adjust path to your data
-    onValue(bondTickerRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            // Firebase Realtime DB often returns objects, convert to array if needed
-            const bondTickerArray = Object.values(data);
-            populateBondTickerTable(bondTickerArray);
-        }
-    });
-
-    const dailyRatesRef = ref(database, 'daily_rates'); // Adjust path to your data
-    onValue(dailyRatesRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            updateTextElement('fixed30yToday', data.fixed30y.today);
-            // ... update other daily rates ...
-        }
-    });
-    */
+// Helper to format missing data (re-added from your original script for consistency)
+function formatValue(val) {
+    return val !== null && val !== undefined && val !== "" ? val : "--";
 }
 
 
-// --- Initial Data Load ---
-// Call the function to fetch and display data when the DOM is fully loaded.
-document.addEventListener('DOMContentLoaded', fetchAndDisplayData);
+// --- Data Fetching Logic using Netlify Functions ---
+document.addEventListener("DOMContentLoaded", async () => {
+    console.log("Fetching data from Netlify Functions...");
+
+    try {
+        // --- Fetch Top Dashboard Data (for US10Y) ---
+        const resTop = await fetch("/.netlify/functions/getTopDashboardData");
+        if (!resTop.ok) {
+            throw new Error(`HTTP error! status: ${resTop.status}`);
+        }
+        const dataTop = await resTop.json();
+        console.log("Top Dashboard Data:", dataTop);
+
+        // --- US10Y Update ---
+        // Assumption: getTopDashboardData returns data like { US10Y: { change: "-0.212", yield: "4.296" } }
+        // Based on your old script's usage: dataTop.US10Y.change, dataTop.US10Y.yield
+        if (dataTop?.US10Y) {
+            // US10Y_Current maps to 'yield' in your old script's data.US10Y.yield
+            // US10Y_Daily_Change maps to 'change' in your old script's data.US10Y.change
+            const us10yValue = formatValue(dataTop.US10Y.yield); // Maps to US10Y_Current from Firebase
+            const us10yChange = formatValue(dataTop.US10Y.change); // Maps to US10Y_Daily_Change from Firebase
+
+            updateChangeIndicator('us10yValue', 'us10yChange', us10yValue, us10yChange);
+        } else {
+            console.warn("US10Y data not found in getTopDashboardData response.");
+        }
+
+        // --- Update Header Timestamp (if available from Top Dashboard Data) ---
+        // Based on your old script: dataTop.UMBS_5_5.last_updated
+        const timestampEl = document.querySelector(".header-time"); // Targeting the header-time class
+        if (dataTop?.UMBS_5_5?.last_updated && timestampEl) {
+            const rawTime = dataTop.UMBS_5_5.last_updated;
+            // Assuming format "YYYY-MM-DD HH:MM:SS"
+            const dateObj = new Date(rawTime.replace(" ", "T"));
+            const timeString = dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            const dateString = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }); // Formats like M/D/YYYY
+            timestampEl.textContent = `${timeString} ${dateString}`;
+        }
+
+
+        // --- Fetch All Bond Data (for Shadow 5.5 / UMBS_5_5_Shadow) ---
+        const resAll = await fetch("/.netlify/functions/getAllBondData");
+        if (!resAll.ok) {
+            throw new Error(`HTTP error! status: ${resAll.status}`);
+        }
+        const dataAll = await resAll.json();
+        console.log("All Bond Data:", dataAll);
+
+        // --- Shadow 5.5 / UMBS_5_5_Shadow Update ---
+        // Assumption: getAllBondData returns a structure like { UMBS_5_5_Shadow: { change: "...", current: "...", ... }, ... }
+        // User's specific field mapping request:
+        // change= UMBS_5_5_Shadow_Daily_Change -> assumed dataAll["UMBS_5_5_Shadow"].change
+        // Actual = UMBS_5_5_Shadow_Current -> assumed dataAll["UMBS_5_5_Shadow"].current
+        // Open = UMBS_5_5_Shadow_Open -> assumed dataAll["UMBS_5_5_Shadow"].open
+        // Prior = UMBS_5_5_Shadow_PriorDayClose -> assumed dataAll["UMBS_5_5_Shadow"].prevClose
+        // High = UMBS_5_5_Shadow_TodayHigh -> assumed dataAll["UMBS_5_5_Shadow"].high
+        // Low = UMBS_5_5_Shadow_TodayLow -> assumed dataAll["UMBS_5_5_Shadow"].low
+        // updated = last_updated from the 'shadow_bonds' document overall
+        const umbs55ShadowData = dataAll.UMBS_5_5_Shadow;
+        if (umbs55ShadowData) {
+            const bondUpdateTime = dataAll.last_updated; // Assuming a top-level last_updated for all bonds
+            let formattedBondUpdateTime = '';
+            if (bondUpdateTime) {
+                try {
+                    // Try to parse the time part, e.g., "14:55:04" from "2025-06-24 14:55:04"
+                    const timePart = bondUpdateTime.substring(bondUpdateTime.indexOf(' ') + 1, bondUpdateTime.lastIndexOf(':'));
+                    formattedBondUpdateTime = timePart;
+                } catch (e) {
+                    console.warn("Could not parse bond update time:", e);
+                    formattedBondUpdateTime = 'N/A';
+                }
+            }
+
+
+            const rowData = {
+                change: formatValue(umbs55ShadowData.change), // Matches old script's 'change'
+                actual: formatValue(umbs55ShadowData.current), // Matches old script's 'current'
+                open: formatValue(umbs55ShadowData.open), // Matches old script's 'open'
+                priorDayClose: formatValue(umbs55ShadowData.prevClose), // Matches old script's 'prevClose'
+                high: formatValue(umbs55ShadowData.high), // Matches old script's 'high'
+                low: formatValue(umbs55ShadowData.low), // Matches old script's 'low'
+                updated: formatValue(formattedBondUpdateTime) // Using the overall bond update time
+            };
+            
+            updateBondTableRow('shadow55Row', rowData);
+        } else {
+            console.warn("UMBS_5_5_Shadow data not found in getAllBondData response.");
+        }
+
+        // --- 30Y VA Section (Ignored for now as requested) ---
+        // You can clear or set placeholder values for this section if no data is fetched
+        updateTextElement('va30yToday', '---');
+        updateTextElement('va30yYesterday', '---');
+        updateTextElement('va30yLastWeek', '---');
+
+
+    } catch (err) {
+        console.error("Dashboard data fetch error:", err);
+        // Display error messages on the dashboard if desired
+        // document.getElementById('errorDisplay').textContent = "Failed to load data.";
+    }
+});
