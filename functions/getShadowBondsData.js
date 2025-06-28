@@ -34,11 +34,10 @@ exports.handler = async function (event, context) {
 
     const data = doc.data();
 
-    // This function returns a FLAT object with only Current, Daily_Change, and last_updated from 'timestamp'
     const response = {
       UMBS_5_5_Current: data.UMBS_5_5_Current ?? null,
       UMBS_5_5_Daily_Change: data.UMBS_5_5_Daily_Change ?? null,
-      last_updated: data.timestamp ?? null, // <-- This is why it showed "--" (N/A No Data)
+      last_updated: data.last_updated ?? null,
     };
 
     return {
