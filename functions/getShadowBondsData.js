@@ -37,7 +37,7 @@ exports.handler = async function (event, context) {
     const response = {
       UMBS_5_5_Current: data.UMBS_5_5_Current ?? null,
       UMBS_5_5_Daily_Change: data.UMBS_5_5_Daily_Change ?? null,
-      last_updated: data.timestamp ?? null,
+      last_updated: data.last_updated ?? null,
     };
 
     return {
