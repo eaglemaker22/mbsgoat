@@ -107,7 +107,7 @@ function updateBondTableRow(rowId, rowData) {
     });
 }
 
-// Helper to format missing data (re-added from your original script for consistency)
+// Helper to format missing data
 function formatValue(val) {
     return val !== null && val !== undefined && val !== "" ? val : "--";
 }
@@ -130,8 +130,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Assumption: getTopDashboardData returns data like { US10Y: { change: "-0.212", yield: "4.296" } }
         // Based on your old script's usage: dataTop.US10Y.change, dataTop.US10Y.yield
         if (dataTop?.US10Y) {
-            // US10Y_Current maps to 'yield' in your old script's data.US10Y.yield
-            // US10Y_Daily_Change maps to 'change' in your old script's data.US10Y.change
             const us10yValue = formatValue(dataTop.US10Y.yield); // Maps to US10Y_Current from Firebase
             const us10yChange = formatValue(dataTop.US10Y.change); // Maps to US10Y_Daily_Change from Firebase
 
@@ -162,39 +160,47 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("All Bond Data:", dataAll);
 
         // --- Shadow 5.5 / UMBS_5_5_Shadow Update ---
-        // Assumption: getAllBondData returns a structure like { UMBS_5_5_Shadow: { change: "...", current: "...", ... }, ... }
-        // User's specific field mapping request:
-        // change= UMBS_5_5_Shadow_Daily_Change -> assumed dataAll["UMBS_5_5_Shadow"].change
-        // Actual = UMBS_5_5_Shadow_Current -> assumed dataAll["UMBS_5_5_Shadow"].current
-        // Open = UMBS_5_5_Shadow_Open -> assumed dataAll["UMBS_5_5_Shadow"].open
-        // Prior = UMBS_5_5_Shadow_PriorDayClose -> assumed dataAll["UMBS_5_5_Shadow"].prevClose
-        // High = UMBS_5_5_Shadow_TodayHigh -> assumed dataAll["UMBS_5_5_Shadow"].high
-        // Low = UMBS_5_5_Shadow_TodayLow -> assumed dataAll["UMBS_5_5_Shadow"].low
-        // updated = last_updated from the 'shadow_bonds' document overall
         const umbs55ShadowData = dataAll.UMBS_5_5_Shadow;
         if (umbs55ShadowData) {
-            const bondUpdateTime = dataAll.last_updated; // Assuming a top-level last_updated for all bonds
+            // *** HERE IS THE CHANGE FOR THE 'UPDATED' FIELD ***
+            const bondUpdateTime = dataAll.last_updated; // This is the field you specified
             let formattedBondUpdateTime = '';
-            if (bondUpdateTime) {
-                try {
-                    // Try to parse the time part, e.g., "14:55:04" from "2025-06-24 14:55:04"
-                    const timePart = bondUpdateTime.substring(bondUpdateTime.indexOf(' ') + 1, bondUpdateTime.lastIndexOf(':'));
-                    formattedBondUpdateTime = timePart;
-                } catch (e) {
-                    console.warn("Could not parse bond update time:", e);
-                    formattedBondUpdateTime = 'N/A';
-                }
-            }
+            console.log("Raw 'last_updated' for bond table:", bondUpdateTime); // <<< CHECK YOUR BROWSER CONSOLE FOR THIS VALUE
 
+            if (typeof bondUpdateTime === 'string' && bondUpdateTime.trim() !== '') {
+                try {
+                    // Attempt to parse as a Date object for reliable formatting
+                    const dateObj = new Date(bondUpdateTime.replace(' ', 'T')); // Replace space with 'T' for ISO format parsing
+                    if (!isNaN(dateObj.getTime())) { // Check if the date parsing was successful
+                        formattedBondUpdateTime = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Format to HH:MM (e.g., "02:55 PM")
+                    } else {
+                        // Fallback to simpler substring if Date parsing fails (e.g., if format is slightly off)
+                        const timePartMatch = bondUpdateTime.match(/\d{2}:\d{2}(:\d{2})?/); // Matches HH:MM or HH:MM:SS
+                        if (timePartMatch && timePartMatch[0]) {
+                            formattedBondUpdateTime = timePartMatch[0]; // Gets "HH:MM" or "HH:MM:SS"
+                            // If you specifically want HH:MM, you might slice it:
+                            // formattedBondUpdateTime = timePartMatch[0].substring(0, 5);
+                        } else {
+                            formattedBondUpdateTime = 'N/A (Parse Fail)'; // Indicate parsing issue
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Error processing bond update time:", e);
+                    formattedBondUpdateTime = 'N/A (Error)'; // General error
+                }
+            } else {
+                formattedBondUpdateTime = 'N/A (No Data)'; // No 'last_updated' value or it's empty
+            }
+            // *************************************************
 
             const rowData = {
-                change: formatValue(umbs55ShadowData.change), // Matches old script's 'change'
-                actual: formatValue(umbs55ShadowData.current), // Matches old script's 'current'
-                open: formatValue(umbs55ShadowData.open), // Matches old script's 'open'
-                priorDayClose: formatValue(umbs55ShadowData.prevClose), // Matches old script's 'prevClose'
-                high: formatValue(umbs55ShadowData.high), // Matches old script's 'high'
-                low: formatValue(umbs55ShadowData.low), // Matches old script's 'low'
-                updated: formatValue(formattedBondUpdateTime) // Using the overall bond update time
+                change: formatValue(umbs55ShadowData.change),
+                actual: formatValue(umbs55ShadowData.current),
+                open: formatValue(umbs55ShadowData.open),
+                priorDayClose: formatValue(umbs55ShadowData.prevClose),
+                high: formatValue(umbs55ShadowData.high),
+                low: formatValue(umbs55ShadowData.low),
+                updated: formatValue(formattedBondUpdateTime) // Using the now more robustly parsed time
             };
             
             updateBondTableRow('shadow55Row', rowData);
@@ -202,8 +208,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             console.warn("UMBS_5_5_Shadow data not found in getAllBondData response.");
         }
 
-        // --- 30Y VA Section (Ignored for now as requested) ---
-        // You can clear or set placeholder values for this section if no data is fetched
+        // --- 30Y VA Section (Ignored for now) ---
         updateTextElement('va30yToday', '---');
         updateTextElement('va30yYesterday', '---');
         updateTextElement('va30yLastWeek', '---');
@@ -211,7 +216,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     } catch (err) {
         console.error("Dashboard data fetch error:", err);
-        // Display error messages on the dashboard if desired
-        // document.getElementById('errorDisplay').textContent = "Failed to load data.";
     }
 });
