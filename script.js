@@ -33,7 +33,6 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change) {
         } else if (typeof change === 'string' && change.startsWith('+')) {
             changeElement.classList.add('positive');
         } else {
-            // If it's a number that might not have a sign, check its value
             const numericChange = parseFloat(change);
             if (!isNaN(numericChange)) {
                 if (numericChange > 0) {
@@ -56,7 +55,7 @@ function formatValue(val) {
 }
 
 /**
- * Formats a raw timestamp string to HH:MM (e.g., "02:55 PM").
+ * Formats a raw timestamp string to HH:MM (e.g., "02:55 PM") or "N/A".
  * @param {string} rawTimestamp - The timestamp string (e.g., "YYYY-MM-DD HH:MM:SS").
  * @returns {string} Formatted time or "N/A".
  */
@@ -80,7 +79,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("Fetching data from Netlify Functions...");
 
     try {
-        // === TOP DASHBOARD DATA ===
+        // === TOP DASHBOARD DATA (US10Y) ===
         const resTop = await fetch("/.netlify/functions/getTopDashboardData");
         if (!resTop.ok) {
             throw new Error(`HTTP error fetching Top Dashboard Data! Status: ${resTop.status}`);
@@ -97,7 +96,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             console.warn("US10Y data not found in getTopDashboardData response.");
         }
 
-        // --- Update Header Timestamp ---
+        // --- Update Header Timestamp (Example from UMBS_5_5 in Top Data) ---
         const timestampEl = document.querySelector(".header-time");
         if (dataTop?.UMBS_5_5?.last_updated && timestampEl) {
             const rawTime = dataTop.UMBS_5_5.last_updated;
@@ -108,75 +107,59 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
 
-        // === FULL BOND TABLE DATA (specifically for Shadow Bonds from getShadowBondsData) ===
-        // Calling your getShadowBondsData function which now returns all shadow bond data
-        const resAllShadowBonds = await fetch("/.netlify/functions/getShadowBondsData");
-        if (!resAllShadowBonds.ok) {
-            throw new Error(`HTTP error fetching Shadow Bond Data! Status: ${resAllShadowBonds.status}`);
+        // === SHADOW 5.5 BOND DATA (from getShadowBondsData) ===
+        // This call will hit your getShadowBondsData.js which returns a FLAT object.
+        const resShadowBond = await fetch("/.netlify/functions/getShadowBondsData");
+        if (!resShadowBond.ok) {
+            throw new Error(`HTTP error fetching Shadow Bond Data! Status: ${resShadowBond.status}`);
         }
-        const dataShadowBonds = await resAllShadowBonds.json();
-        console.log("Shadow Bond Data (from getShadowBondsData):", dataShadowBonds);
+        const dataShadowBond = await resShadowBond.json();
+        console.log("Shadow 5.5 Raw Data (from getShadowBondsData):", dataShadowBond);
 
-        // Define the specific keys for the shadow bonds we want to update
-        const shadowBondKeys = [
-            "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", "GNMA_5_5_Shadow", "GNMA_6_0_Shadow"
-        ];
+        // Access the specific data points directly from the flat response
+        const shadow55Change = dataShadowBond.UMBS_5_5_Daily_Change;
+        const shadow55Actual = dataShadowBond.UMBS_5_5_Current;
+        const shadow55UpdatedRaw = dataShadowBond.last_updated; // This will likely be null or 'N/A' as per your backend
 
-        // Overall update time for the bond table, pulled from the new function's response
-        const overallBondUpdatedTime = formatTimeToHHMM(dataShadowBonds.last_updated);
-        console.log("Overall Shadow Bond Updated Time:", overallBondUpdatedTime);
+        // Format the updated time
+        const shadow55UpdatedFormatted = formatTimeToHHMM(shadow55UpdatedRaw);
+        console.log("Shadow 5.5 Formatted Updated Time:", shadow55UpdatedFormatted);
 
 
-        shadowBondKeys.forEach((key) => {
-            // Access the bond data using the key (e.g., dataShadowBonds.UMBS_5_5_Shadow)
-            const bond = dataShadowBonds[key] || {};
+        // --- Update the Shadow 5.5 row in the table ---
+        const shadow55Row = document.getElementById('shadow55Row');
+        if (shadow55Row) {
+            // Get the cells of the specific row (skipping the first cell which is the instrument name)
+            const cells = Array.from(shadow55Row.children).slice(1);
 
-            // Determine the target row ID based on the bond key
-            let targetRowId = '';
-            if (key === "UMBS_5_5_Shadow") targetRowId = "shadow55Row";
-            // Add more conditions here if you want to update other shadow bond rows dynamically
-            // else if (key === "UMBS_6_0_Shadow") targetRowId = "shadow60Row"; etc.
-            // For now, only shadow55Row is uniquely ID'd in your HTML snippet.
-
-            if (targetRowId) {
-                const row = document.getElementById(targetRowId);
-                if (row) {
-                    // Get the cells of the specific row (skipping the first cell which is the instrument name)
-                    const cells = Array.from(row.children).slice(1); // Convert HTMLCollection to Array and slice
-
-                    // Ensure there are enough cells before attempting to update
-                    if (cells.length >= 7) { // change, actual, open, prevClose, high, low, updated
-                        // Change with color + arrow
-                        const changeVal = formatValue(bond.change);
-                        cells[0].textContent = changeVal; // 0-indexed cell for Change
-                        cells[0].classList.remove("positive", "negative");
-                        if (changeVal.startsWith("-")) {
-                            cells[0].classList.add("negative");
-                            cells[0].textContent = `↓ ${changeVal}`;
-                        } else if (changeVal !== "--") {
-                            cells[0].classList.add("positive");
-                            cells[0].textContent = `↑ ${changeVal}`;
-                        }
-
-                        // Other bond values
-                        cells[1].textContent = formatValue(bond.current);     // Actual
-                        cells[2].textContent = formatValue(bond.open);        // Open
-                        cells[3].textContent = formatValue(bond.prevClose);   // Prior Day Close
-                        cells[4].textContent = formatValue(bond.high);        // High
-                        cells[5].textContent = formatValue(bond.low);         // Low
-                        cells[6].textContent = overallBondUpdatedTime;        // Updated (using overall time)
-
-                    } else {
-                        console.warn(`Not enough cells found for row '${targetRowId}' to update all data.`);
-                    }
-                } else {
-                    console.warn(`Target row with ID '${targetRowId}' not found.`);
+            // Ensure there are enough cells before attempting to update
+            if (cells.length >= 7) { // change, actual, open, prevClose, high, low, updated
+                // Change with color + arrow
+                const changeVal = formatValue(shadow55Change);
+                cells[0].textContent = changeVal;
+                cells[0].classList.remove("positive", "negative");
+                if (changeVal.startsWith("-")) {
+                    cells[0].classList.add("negative");
+                    cells[0].textContent = `↓ ${changeVal}`;
+                } else if (changeVal !== "--") { // Only add arrow if it's not empty or negative
+                    cells[0].classList.add("positive");
+                    cells[0].textContent = `↑ ${changeVal}`;
                 }
+
+                // Other bond values (these will likely be '--' as the backend doesn't provide them in this version)
+                cells[1].textContent = formatValue(shadow55Actual);       // Actual
+                cells[2].textContent = "--";                              // Open (not provided by this backend function)
+                cells[3].textContent = "--";                              // Prior Day Close (not provided)
+                cells[4].textContent = "--";                              // High (not provided)
+                cells[5].textContent = "--";                              // Low (not provided)
+                cells[6].textContent = formatValue(shadow55UpdatedFormatted); // Updated
+
             } else {
-                // If a shadow bond key doesn't have a specific ID, we skip it for now.
-                // console.log(`No specific row ID defined for bond key: ${key}. Skipping update.`);
+                console.warn(`Not enough cells found for row 'shadow55Row' to update all data.`);
             }
-        });
+        } else {
+            console.warn(`Target row with ID 'shadow55Row' not found.`);
+        }
 
 
         // === DAILY RATES SECTION (Still placeholder, as requested) ===
