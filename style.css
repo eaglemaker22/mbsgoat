@@ -1,0 +1,241 @@
+/* Basic Reset & Box Sizing */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #0d0d0d; /* Dark background */
+    color: #f0f0f0; /* Light text color */
+    line-height: 1.6;
+    padding: 20px; /* Overall padding for the dashboard */
+}
+
+/* --- Header Styling --- */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #1a1a1a; /* Slightly lighter dark background for header */
+    padding: 15px 25px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.header-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 15px;
+    border-radius: 5px;
+    flex: 1; /* Distribute space evenly */
+    margin-right: 15px; /* Spacing between items */
+}
+
+.header-item:last-of-type {
+    margin-right: 0;
+}
+
+.header-item .label {
+    font-size: 0.9em;
+    color: #bbb;
+    margin-bottom: 5px;
+}
+
+.header-item .value {
+    font-size: 1.4em;
+    font-weight: bold;
+}
+
+/* Specific Header Item Backgrounds/Borders */
+.ums-section {
+    background-color: #330000; /* Dark Red */
+    border-left: 5px solid #ff0000; /* Red bar */
+}
+
+.us10y-section {
+    background-color: #003300; /* Dark Green */
+    border-left: 5px solid #00cc00; /* Green bar */
+}
+
+.fixed-30y-section {
+    background-color: #003300; /* Dark Green */
+    border-left: 5px solid #00cc00; /* Green bar */
+}
+
+.header-time {
+    font-size: 0.9em;
+    color: #bbb;
+    white-space: nowrap; /* Prevent wrapping */
+}
+
+/* Change Indicators */
+.change {
+    font-size: 0.9em;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.change.positive {
+    color: #00cc00; /* Bright Green */
+}
+
+.change.negative {
+    color: #ff0000; /* Bright Red */
+}
+
+/* --- Main Content Sections --- */
+.section-title {
+    background-color: #2a2a2a; /* Slightly lighter background for titles */
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    font-size: 1.1em;
+    font-weight: normal;
+    text-transform: uppercase;
+}
+
+.bond-ticker-section,
+.daily-rates-section,
+.freddie-mac-section {
+    background-color: #1a1a1a; /* Same as header background */
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Table Styling (Bond Ticker) --- */
+.table-container {
+    overflow-x: auto; /* Ensures table is scrollable on smaller screens */
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+
+.data-table th,
+.data-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #333; /* Darker border for rows */
+}
+
+.data-table th {
+    background-color: #2a2a2a; /* Header background */
+    font-weight: bold;
+    color: #ccc;
+    text-transform: uppercase;
+}
+
+.data-table tbody tr:hover {
+    background-color: #222; /* Hover effect */
+}
+
+/* Ensure change indicators in table are styled */
+.data-table td.negative {
+    color: #ff0000;
+}
+.data-table td.positive {
+    color: #00cc00;
+}
+
+
+/* --- Daily Rates Grid --- */
+.rates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid */
+    gap: 20px; /* Space between grid items */
+}
+
+.rate-box {
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Pushes update time to bottom */
+    min-height: 150px; /* Ensure consistent height */
+}
+
+.rate-box h3 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: #fff;
+}
+
+.rate-box p {
+    margin-bottom: 5px;
+}
+
+.rate-box p span {
+    font-weight: bold;
+    color: #fff;
+}
+
+.rate-box .update-time {
+    font-size: 0.8em;
+    color: #bbb;
+    margin-top: auto; /* Pushes it to the bottom */
+}
+
+/* Daily Rates Box Backgrounds */
+.rate-box.red-bg {
+    background-color: #4a0000; /* Darker red */
+    border-left: 5px solid #ff0000;
+}
+
+.rate-box.purple-bg {
+    background-color: #3b003b; /* Darker purple */
+    border-left: 5px solid #a020f0; /* Electric purple */
+}
+
+/* --- Freddie Mac Section --- */
+.freddie-mac-section .update-time {
+    font-size: 0.9em;
+    color: #bbb;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
+    }
+    .header-item {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    .header-time {
+        margin-top: 10px;
+        width: 100%;
+        text-align: right;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    .dashboard-header,
+    .bond-ticker-section,
+    .daily-rates-section,
+    .freddie-mac-section {
+        padding: 15px;
+    }
+    .section-title {
+        font-size: 1em;
+    }
+    .header-item .value {
+        font-size: 1.2em;
+    }
+    .data-table {
+        font-size: 0.8em;
+    }
+}
