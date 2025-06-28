@@ -152,7 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
         // --- Fetch All Bond Data (for Shadow 5.5 / UMBS_5_5_Shadow) ---
-        const resAll = await fetch("/.netlify/functions/getAllBondData");
+        const resAll = await fetch("/.netlify/functions/getShadowBondsData");
         if (!resAll.ok) {
             throw new Error(`HTTP error! status: ${resAll.status}`);
         }
