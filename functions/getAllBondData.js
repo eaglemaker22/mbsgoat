@@ -1,3 +1,4 @@
+// netlify/functions/getAllBondData.js
 const admin = require("firebase-admin");
 
 // Only initialize once
@@ -34,7 +35,7 @@ exports.handler = async function (event, context) {
       return {
         change: data[`${prefix}_Daily_Change`] || null,
         current: data[`${prefix}_Current`] || null,
-        prevClose: data[`${prefix}_PriorDayClose`] || null,
+        prevClose: data[`${prefix}_PriorDayClose`] || null, // Assuming this is the field name in Firestore
         open: data[`${prefix}_Open`] || null,
         high: data[`${prefix}_TodayHigh`] || null,
         low: data[`${prefix}_TodayLow`] || null,
@@ -42,6 +43,11 @@ exports.handler = async function (event, context) {
     }
 
     const result = {
+      // Add the last_updated field here.
+      // We assume it's present in the 'shadow_bonds' document based on prior discussion,
+      // but if it's in 'mbs_products' or both, adjust accordingly.
+      last_updated: shadowData.last_updated || null, // FIX: Added this line to include the timestamp
+
       UMBS_5_5: extractBondFields(realData, "UMBS_5_5"),
       UMBS_6_0: extractBondFields(realData, "UMBS_6_0"),
       GNMA_5_5: extractBondFields(realData, "GNMA_5_5"),
