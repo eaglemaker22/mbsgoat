@@ -112,6 +112,41 @@ function formatPercentage(val) {
     return formatted !== '--' ? `${formatted}%` : '--';
 }
 
+// Helper to format large numbers with commas and optional units
+function formatNumberWithCommas(val, unit = '') {
+    const formatted = formatValue(val);
+    if (formatted === '--') return formatted;
+    // For large numbers, apply comma formatting
+    let num = parseFloat(formatted);
+    if (!isNaN(num)) {
+        return num.toLocaleString('en-US') + unit;
+    }
+    return formatted;
+}
+
+// Helper to format monthly change with +/- sign and color
+function formatMonthlyChange(val, unit = '') {
+    const changeElement = document.createElement('span'); // Create a temporary span to apply classes
+    let formattedChange = formatValue(val);
+
+    changeElement.classList.remove('positive', 'negative');
+    if (formattedChange !== '--' && parseFloat(formattedChange) !== 0) {
+        const numericChange = parseFloat(formattedChange);
+        if (numericChange > 0) {
+            formattedChange = `+${numericChange}${unit}`;
+            changeElement.classList.add('positive');
+        } else {
+            formattedChange = `${numericChange}${unit}`;
+            changeElement.classList.add('negative');
+        }
+    } else {
+        formattedChange = ''; // No display for 0 or -- change
+    }
+    changeElement.textContent = formattedChange;
+    return changeElement; // Return the span element, not just text
+}
+
+
 // --- Function for frequently updated Market Data (US10Y, Bond Tickers) ---
 async function fetchAndUpdateMarketData() {
     console.log("Fetching market data..."); // Log each market data refresh
@@ -123,7 +158,6 @@ async function fetchAndUpdateMarketData() {
             throw new Error(`HTTP error! status: ${resTop.status}`);
         }
         const dataTop = await resTop.json();
-        // console.log("Top Dashboard Data:", dataTop); // Keep this for debugging if needed
 
         // --- US10Y Update ---
         if (dataTop?.US10Y) {
@@ -152,7 +186,6 @@ async function fetchAndUpdateMarketData() {
             throw new Error(`HTTP error! status: ${resAll.status}`);
         }
         const dataAll = await resAll.json();
-        // console.log("All Bond Data:", dataAll); // Keep this for debugging if needed
 
         // --- Common formatted update time for all bonds in the table ---
         const bondUpdateTime = dataAll.last_updated;
@@ -314,13 +347,15 @@ async function fetchAndUpdateMarketData() {
                 open: formatValue(gnma60ShadowData.open),
                 priorDayClose: formatValue(gnma60ShadowData.prevClose),
                 high: formatValue(gnma60ShadowData.high),
-                low: formatValue(gnma60ShadowData.low),
+                low: formatValue(gnma60Data.low),
                 updated: formatValue(formattedBondUpdateTime)
             };
             updateBondTableRow('shadowGMNA60Row', rowData);
         } else {
             console.warn("GNMA_6_0_Shadow data not found in getAllBondData response.");
         }
+
+
     } catch (err) {
         console.error("Market data fetch error:", err);
     }
@@ -336,13 +371,11 @@ async function fetchAndUpdateDailyRates() {
             throw new Error(`HTTP error! status: ${resRates.status}`);
         }
         const dailyRatesData = await resRates.json();
-        // console.log("Daily Rates Data:", dailyRatesData); // Keep this for debugging if needed
 
         // Helper to update daily rate boxes
         function updateDailyRateBox(prefix, data) {
             // Update Current, Yesterday, Last Month, 1 Year Ago
             updateTextElement(`${prefix}Current`, formatPercentage(data?.latest));
-            // 'data?.yesterday' will be '--' until you implement its capture in your scraper/Firestore
             updateTextElement(`${prefix}Yesterday`, formatPercentage(data?.yesterday));
             updateTextElement(`${prefix}LastMonth`, formatPercentage(data?.last_month));
             updateTextElement(`${prefix}YearAgo`, formatPercentage(data?.year_ago));
@@ -384,11 +417,77 @@ async function fetchAndUpdateDailyRates() {
         updateDailyRateBox('va30y', dailyRatesData.va30Y);
         updateDailyRateBox('fha30y', dailyRatesData.fha30Y);
         updateDailyRateBox('jumbo30y', dailyRatesData.jumbo30Y);
-        updateDailyRateBox('usda30y', dailyRatesData.usda30Y);
+        updateDailyRateBox('usda30y', dailyRatesData.usda30y);
         updateDailyRateBox('fixed15y', dailyRatesData.fixed15Y);
 
     } catch (err) {
         console.error("Daily Rates data fetch error:", err);
+    }
+}
+
+// --- New Function for Economic Indicators (less frequent update) ---
+async function fetchAndUpdateEconomicIndicators() {
+    console.log("Fetching economic indicators data...");
+
+    try {
+        const res = await fetch("/.netlify/functions/getEconomicIndicatorsData");
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+
+        function updateEconomicIndicatorBox(prefix, indicatorData, unit = '', isPercentage = false) {
+            if (!indicatorData) {
+                console.warn(`No data for ${prefix}`);
+                return;
+            }
+
+            // Current, Last Month, 1 Year Ago Values
+            const currentVal = isPercentage ? formatPercentage(indicatorData.latest) : formatNumberWithCommas(indicatorData.latest, unit);
+            const lastMonthVal = isPercentage ? formatPercentage(indicatorData.last_month) : formatNumberWithCommas(indicatorData.last_month, unit);
+            const yearAgoVal = isPercentage ? formatPercentage(indicatorData.year_ago) : formatNumberWithCommas(indicatorData.year_ago, unit);
+
+            updateTextElement(`${prefix}Current`, currentVal);
+            updateTextElement(`${prefix}LastMonth`, lastMonthVal);
+            updateTextElement(`${prefix}YearAgo`, yearAgoVal);
+
+            // Monthly Change
+            const monthlyChangeElement = document.getElementById(`${prefix}MonthlyChange`);
+            if (monthlyChangeElement) {
+                const changeSpan = formatMonthlyChange(indicatorData.monthly_change, isPercentage ? '%' : '');
+                // Clear previous content and append the new span
+                monthlyChangeElement.innerHTML = '';
+                monthlyChangeElement.appendChild(changeSpan);
+            }
+
+            // "As Of" Date
+            const updateTimeElement = document.getElementById(`${prefix}UpdateTime`);
+            if (updateTimeElement && indicatorData.latest_date) {
+                const dateObj = new Date(indicatorData.latest_date + 'T00:00:00');
+                if (!isNaN(dateObj.getTime())) {
+                    const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+                    updateTimeElement.textContent = `As Of: ${formattedDate}`;
+                } else {
+                    updateTimeElement.textContent = 'As Of: N/A';
+                }
+            } else if (updateTimeElement) {
+                updateTimeElement.textContent = 'As Of: N/A';
+            }
+        }
+
+        // --- Update each Economic Indicator Box ---
+        updateEconomicIndicatorBox('houst', data.HOUST, 'k'); // Total Housing Starts (thousands)
+        updateEconomicIndicatorBox('permit1', data.PERMIT1, 'k'); // Single-Family Permits (thousands)
+        updateEconomicIndicatorBox('permit', data.PERMIT, 'k'); // Building Permits Total (thousands)
+        updateEconomicIndicatorBox('rsxfs', data.RSXFS, 'M', false, true); // Retail Sales (Millions), assuming no percentage
+        updateEconomicIndicatorBox('umcsent', data.UMCSENT, ''); // Consumer Sentiment (points)
+        updateEconomicIndicatorBox('csushpinsa', data.CSUSHPINSA, ''); // Case-Shiller HPI (index value)
+        updateEconomicIndicatorBox('t10yie', data.T10YIE, '', true); // 10Y Breakeven (percentage)
+        updateEconomicIndicatorBox('t10y2y', data.T10Y2Y, '', true); // 10Y - 2Y Treasury (percentage points)
+
+
+    } catch (err) {
+        console.error("Economic indicators data fetch error:", err);
     }
 }
 
@@ -397,11 +496,12 @@ async function fetchAndUpdateDailyRates() {
 document.addEventListener("DOMContentLoaded", () => {
     // Initial fetch for all data when the page loads
     fetchAndUpdateMarketData();
-    fetchAndUpdateDailyRates(); // Daily rates are fetched once on load
+    fetchAndUpdateDailyRates();
+    fetchAndUpdateEconomicIndicators(); // New: Fetch economic indicators on load
 
     // Set interval for market data to refresh every 60 seconds
     setInterval(fetchAndUpdateMarketData, 60000); // 60000 milliseconds = 60 seconds
 
-    // No setInterval for daily rates, as they typically don't change intra-day.
-    // If a tab is open for multiple days, a refresh is needed for new daily rates.
+    // No setInterval for daily rates or economic indicators, as they typically don't change intra-day.
+    // If a tab is open for multiple days, a refresh is needed for new daily/monthly rates.
 });
