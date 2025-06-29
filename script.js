@@ -15,36 +15,43 @@ function updateTextElement(elementId, value) {
 }
 
 /**
- * Updates a change indicator (value and color) for header items or general use.
- * @param {string} valueElementId - ID for the main value span.
- * @param {string} changeElementId - ID for the change span.
- * @param {string} value - The main value (e.g., "4.425").
- * @param {string} change - The change value (e.g., "-0.212").
+ * Updates a change indicator (value and color) for header items.
+ * Assumes the HTML structure has a span for value and a span for change,
+ * where change is a number string like "+0.123" or "-0.45".
+ * @param {string} valueElementId - ID for the main value span (e.g., 'ums55Value').
+ * @param {string} changeElementId - ID for the change span (e.g., 'ums55Change').
+ * @param {string|number} value - The main value (e.g., "4.425" or 4.425).
+ * @param {string|number} change - The change value (e.g., "-0.212" or -0.212).
  */
 function updateChangeIndicator(valueElementId, changeElementId, value, change) {
-    updateTextElement(valueElementId, value);
+    updateTextElement(valueElementId, formatValue(value)); // Update the main value
+
     const changeElement = document.getElementById(changeElementId);
     if (changeElement) {
-        changeElement.textContent = change; // Display the change value as-is
+        let formattedChange = formatValue(change);
 
+        // Remove existing color classes
         changeElement.classList.remove('positive', 'negative');
-        if (change.startsWith('-')) {
-            changeElement.classList.add('negative');
-        } else if (change.startsWith('+')) {
-            changeElement.classList.add('positive');
-        } else {
-            // If it's a number that might not have a sign, check its value
-            const numericChange = parseFloat(change);
-            if (!isNaN(numericChange)) {
-                if (numericChange > 0) {
-                    changeElement.classList.add('positive');
-                } else if (numericChange < 0) {
-                    changeElement.classList.add('negative');
-                }
+
+        // Determine sign and apply class
+        if (typeof change === 'number') {
+            if (change > 0) {
+                formattedChange = `+${formattedChange}`;
+                changeElement.classList.add('positive');
+            } else if (change < 0) {
+                changeElement.classList.add('negative');
+            }
+        } else if (typeof change === 'string') {
+            if (change.startsWith('+')) {
+                changeElement.classList.add('positive');
+            } else if (change.startsWith('-')) {
+                changeElement.classList.add('negative');
             }
         }
+        changeElement.textContent = formattedChange; // Set text content
     }
 }
+
 
 /**
  * Updates a specific row in the bond ticker table by its ID.
@@ -59,8 +66,7 @@ function updateBondTableRow(rowId, rowData) {
         return;
     }
 
-    const cells = row.children;
-
+    // Map the data keys to their respective cell indices
     const cellOrderMap = [
         { key: 'change', cellIndex: 1 },
         { key: 'actual', cellIndex: 2 },
@@ -72,13 +78,14 @@ function updateBondTableRow(rowId, rowData) {
     ];
 
     cellOrderMap.forEach(mapping => {
-        const cell = cells[mapping.cellIndex];
+        const cell = row.children[mapping.cellIndex];
         const value = rowData[mapping.key];
 
         if (cell && value !== undefined) {
-            cell.textContent = value;
+            cell.textContent = formatValue(value);
 
             if (mapping.key === 'change') {
+                // Remove existing classes first
                 cell.classList.remove('positive', 'negative');
                 const numericChange = parseFloat(value);
                 if (!isNaN(numericChange)) {
@@ -96,7 +103,7 @@ function updateBondTableRow(rowId, rowData) {
                 }
             }
         } else if (cell) {
-             cell.textContent = '--';
+             cell.textContent = '--'; // Set to default if data is missing
         }
     });
 }
@@ -121,10 +128,10 @@ function formatNumberWithCommas(val, unit = '') {
     if (!isNaN(num)) {
         return num.toLocaleString('en-US') + unit;
     }
-    return formatted;
+    return formatted; // Return as-is if not a valid number
 }
 
-// Helper to format monthly change with +/- sign and color
+// Helper to format monthly change with +/- sign and color for economic indicators
 function formatMonthlyChange(val, unit = '') {
     const changeElement = document.createElement('span'); // Create a temporary span to apply classes
     let formattedChange = formatValue(val);
@@ -152,31 +159,56 @@ async function fetchAndUpdateMarketData() {
     console.log("Fetching market data..."); // Log each market data refresh
 
     try {
-        // --- Fetch Top Dashboard Data (for US10Y) ---
+        // --- Fetch Top Dashboard Data (for US10Y and Header UMBS) ---
         const resTop = await fetch("/.netlify/functions/getTopDashboardData");
         if (!resTop.ok) {
             throw new Error(`HTTP error! status: ${resTop.status}`);
         }
         const dataTop = await resTop.json();
 
-        // --- US10Y Update ---
+        // --- US10Y Update in Header ---
         if (dataTop?.US10Y) {
-            const us10yValue = formatValue(dataTop.US10Y.yield);
-            const us10yChange = formatValue(dataTop.US10Y.change);
-
-            updateChangeIndicator('us10yValue', 'us10yChange', us10yValue, us10yChange);
+            const us10yYield = parseFloat(dataTop.US10Y.yield);
+            const us10yChange = parseFloat(dataTop.US10Y.change);
+            updateChangeIndicator('us10yValue', 'us10yChange', us10yYield.toFixed(3), us10yChange.toFixed(3)); // Ensure numbers are formatted
         } else {
             console.warn("US10Y data not found in getTopDashboardData response.");
         }
+
+        // --- Update Header UMBS 5.5 ---
+        if (dataTop?.UMBS_5_5) {
+            const umbs55Value = parseFloat(dataTop.UMBS_5_5.current);
+            const umbs55Change = parseFloat(dataTop.UMBS_5_5.change);
+            updateChangeIndicator('ums55Value', 'ums55Change', umbs55Value.toFixed(3), umbs55Change.toFixed(3));
+        } else {
+            console.warn("UMBS_5_5 data not found for header in getTopDashboardData response.");
+        }
+
+        // --- Update Header 30Y Fixed (using data from Daily Rates if available, or default to --) ---
+        // This is a bit tricky as 30Y Fixed for the header usually comes from a different source
+        // For now, let's update it from `dailyRatesData.fixed30Y` after it's fetched,
+        // or just set to default if `fetchAndUpdateDailyRates` hasn't run yet.
+        // For initial load, it will be '--'. It will be updated by fetchAndUpdateDailyRates.
+        // Or, if dataTop has this, use it. Assuming it does not have it for now.
+        updateTextElement('fixed30yCurrentHeader', '--'); // Set to default
+        updateTextElement('fixed30yDailyChangeHeader', '--'); // Set to default
+
 
         // --- Update Header Timestamp (if available from Top Dashboard Data) ---
         const timestampEl = document.querySelector(".header-time");
         if (dataTop?.UMBS_5_5?.last_updated && timestampEl) {
             const rawTime = dataTop.UMBS_5_5.last_updated;
-            const dateObj = new Date(rawTime.replace(" ", "T"));
-            const timeString = dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-            const dateString = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
-            timestampEl.textContent = `${timeString} ${dateString}`;
+            // Assuming rawTime is "YYYY-MM-DD HH:MM:SS"
+            const dateObj = new Date(rawTime.replace(" ", "T")); // Replaces space with 'T' for robust parsing
+            if (!isNaN(dateObj.getTime())) {
+                // Format time for local timezone (Surprise, Arizona is MST)
+                const timeString = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/Phoenix' }); // MST (Arizona)
+                const dateString = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+                timestampEl.textContent = `${timeString} ${dateString}`;
+            } else {
+                console.warn("Invalid date for header timestamp:", rawTime);
+                timestampEl.textContent = 'N/A';
+            }
         }
 
 
@@ -199,7 +231,7 @@ async function fetchAndUpdateMarketData() {
                         hour: 'numeric',
                         minute: '2-digit',
                         hour12: true,
-                        timeZone: 'America/Los_Angeles' // Assuming PST/MST for bond market times
+                        timeZone: 'America/Phoenix' // Assuming MST for bond market times
                     });
                 }
             } catch (e) {
@@ -207,153 +239,56 @@ async function fetchAndUpdateMarketData() {
             }
         }
 
-        // --- Update Header UMBS 5.5 ---
-        const headerUmbs55Data = dataAll.UMBS_5_5;
-        if (headerUmbs55Data) {
-            const umbs55Value = formatValue(headerUmbs55Data.current);
-            const umbs55Change = formatValue(headerUmbs55Data.change);
-            updateChangeIndicator('ums55Value', 'ums55Change', umbs55Value, umbs55Change);
-        } else {
-            console.warn("UMBS_5_5 data not found for header in getAllBondData response.");
-        }
-
-
-        // --- Update UMBS 5.5 Table Row ---
-        const umbs55Data = dataAll.UMBS_5_5;
-        if (umbs55Data) {
-            const rowData = {
-                change: formatValue(umbs55Data.change),
-                actual: formatValue(umbs55Data.current),
-                open: formatValue(umbs55Data.open),
-                priorDayClose: formatValue(umbs55Data.prevClose),
-                high: formatValue(umbs55Data.high),
-                low: formatValue(umbs55Data.low),
-                updated: formatValue(formattedBondUpdateTime)
-            };
-            updateBondTableRow('umbs55Row', rowData);
-        } else {
-            console.warn("UMBS_5_5 data not found in getAllBondData response.");
-        }
-
-        // --- Update UMBS 6.0 Table Row ---
-        const umbs60Data = dataAll.UMBS_6_0;
-        if (umbs60Data) {
-            const rowData = {
-                change: formatValue(umbs60Data.change),
-                actual: formatValue(umbs60Data.current),
-                open: formatValue(umbs60Data.open),
-                priorDayClose: formatValue(umbs60Data.prevClose),
-                high: formatValue(umbs60Data.high),
-                low: formatValue(umbs60Data.low),
-                updated: formatValue(formattedBondUpdateTime)
-            };
-            updateBondTableRow('umbs60Row', rowData);
-        } else {
-            console.warn("UMBS_6_0 data not found in getAllBondData response.");
-        }
-
-        // --- Update GNMA 5.5 Table Row ---
-        const gnma55Data = dataAll.GNMA_5_5;
-        if (gnma55Data) {
-            const rowData = {
-                change: formatValue(gnma55Data.change),
-                actual: formatValue(gnma55Data.current),
-                open: formatValue(gnma55Data.open),
-                priorDayClose: formatValue(gnma55Data.prevClose),
-                high: formatValue(gnma55Data.high),
-                low: formatValue(gnma55Data.low),
-                updated: formatValue(formattedBondUpdateTime)
-            };
-            updateBondTableRow('gnma55Row', rowData);
-        } else {
-            console.warn("GNMA_5_5 data not found in getAllBondData response.");
-        }
-
-        // --- Update GNMA 6.0 Table Row ---
-        const gnma60Data = dataAll.GNMA_6_0;
-        if (gnma60Data) {
-            const rowData = {
-                change: formatValue(gnma60Data.change),
-                actual: formatValue(gnma60Data.current),
-                open: formatValue(gnma60Data.open),
-                priorDayClose: formatValue(gnma60Data.prevClose),
-                high: formatValue(gnma60Data.high),
-                low: formatValue(gnma60Data.low),
-                updated: formatValue(formattedBondUpdateTime)
-            };
-            updateBondTableRow('gnma60Row', rowData);
-        } else {
-            console.warn("GNMA_6_0 data not found in getAllBondData response.");
-        }
-
-
-        // --- Update Shadow 5.5 ---
-        const umbs55ShadowData = dataAll.UMBS_5_5_Shadow;
-        if (umbs55ShadowData) {
-            const rowData = {
-                change: formatValue(umbs55ShadowData.change),
-                actual: formatValue(umbs55ShadowData.current),
-                open: formatValue(umbs55ShadowData.open),
-                priorDayClose: formatValue(umbs55ShadowData.prevClose),
-                high: formatValue(umbs55ShadowData.high),
-                low: formatValue(umbs55ShadowData.low),
-                updated: formatValue(formattedBondUpdateTime)
-            };
-            updateBondTableRow('shadow55Row', rowData);
-        } else {
-            console.warn("UMBS_5_5_Shadow data not found in getAllBondData response.");
-        }
-
-        // --- Update Shadow 6.0 ---
-        const umbs60ShadowData = dataAll.UMBS_6_0_Shadow;
-        if (umbs60ShadowData) {
-            const rowData = {
-                change: formatValue(umbs60ShadowData.change),
-                actual: formatValue(umbs60ShadowData.current),
-                open: formatValue(umbs60ShadowData.open),
-                priorDayClose: formatValue(umbs60ShadowData.prevClose),
-                high: formatValue(umbs60ShadowData.high),
-                low: formatValue(umbs60ShadowData.low),
-                updated: formatValue(formattedBondUpdateTime)
-            };
-            updateBondTableRow('shadow60Row', rowData);
-        } else {
-            console.warn("UMBS_6_0_Shadow data not found in getAllBondData response.");
-        }
-
-        // --- Update Shadow GMNA 5.5 ---
-        const gnma55ShadowData = dataAll.GNMA_5_5_Shadow;
-        if (gnma55ShadowData) {
-            const rowData = {
-                change: formatValue(gnma55ShadowData.change),
-                actual: formatValue(gnma55ShadowData.current),
-                open: formatValue(gnma55ShadowData.open),
-                priorDayClose: formatValue(gnma55ShadowData.prevClose),
-                high: formatValue(gnma55ShadowData.high),
-                low: formatValue(gnma55ShadowData.low),
-                updated: formatValue(formattedBondUpdateTime)
-            };
-            updateBondTableRow('shadowGMNA55Row', rowData);
-        } else {
-            console.warn("GNMA_5_5_Shadow data not found in getAllBondData response.");
-        }
-
-        // --- Update Shadow GMNA 6.0 ---
-        const gnma60ShadowData = dataAll.GNMA_6_0_Shadow;
-        if (gnma60ShadowData) {
-            const rowData = {
-                change: formatValue(gnma60ShadowData.change),
-                actual: formatValue(gnma60ShadowData.current),
-                open: formatValue(gnma60ShadowData.open),
-                priorDayClose: formatValue(gnma60ShadowData.prevClose),
-                high: formatValue(gnma60ShadowData.high),
-                low: formatValue(gnma60Data.low),
-                updated: formatValue(formattedBondUpdateTime)
-            };
-            updateBondTableRow('shadowGMNA60Row', rowData);
-        } else {
-            console.warn("GNMA_6_0_Shadow data not found in getAllBondData response.");
-        }
+        // --- Update Bond Ticker Table Rows ---
+        // (Ensuring all properties are converted to string for formatValue)
+        updateBondTableRow('umbs55Row', {
+            change: formatValue(dataAll.UMBS_5_5?.change), actual: formatValue(dataAll.UMBS_5_5?.current),
+            open: formatValue(dataAll.UMBS_5_5?.open), priorDayClose: formatValue(dataAll.UMBS_5_5?.prevClose),
+            high: formatValue(dataAll.UMBS_5_5?.high), low: formatValue(dataAll.UMBS_5_5?.low),
+            updated: formattedBondUpdateTime
+        });
+        updateBondTableRow('umbs60Row', {
+            change: formatValue(dataAll.UMBS_6_0?.change), actual: formatValue(dataAll.UMBS_6_0?.current),
+            open: formatValue(dataAll.UMBS_6_0?.open), priorDayClose: formatValue(dataAll.UMBS_6_0?.prevClose),
+            high: formatValue(dataAll.UMBS_6_0?.high), low: formatValue(dataAll.UMBS_6_0?.low),
+            updated: formattedBondUpdateTime
+        });
+        updateBondTableRow('gnma55Row', {
+            change: formatValue(dataAll.GNMA_5_5?.change), actual: formatValue(dataAll.GNMA_5_5?.current),
+            open: formatValue(dataAll.GNMA_5_5?.open), priorDayClose: formatValue(dataAll.GNMA_5_5?.prevClose),
+            high: formatValue(dataAll.GNMA_5_5?.high), low: formatValue(dataAll.GNMA_5_5?.low),
+            updated: formattedBondUpdateTime
+        });
+        updateBondTableRow('gnma60Row', {
+            change: formatValue(dataAll.GNMA_6_0?.change), actual: formatValue(dataAll.GNMA_6_0?.current),
+            open: formatValue(dataAll.GNMA_6_0?.open), priorDayClose: formatValue(dataAll.GNMA_6_0?.prevClose),
+            high: formatValue(dataAll.GNMA_6_0?.high), low: formatValue(dataAll.GNMA_6_0?.low),
+            updated: formattedBondUpdateTime
+        });
+        updateBondTableRow('shadow55Row', {
+            change: formatValue(dataAll.UMBS_5_5_Shadow?.change), actual: formatValue(dataAll.UMBS_5_5_Shadow?.current),
+            open: formatValue(dataAll.UMBS_5_5_Shadow?.open), priorDayClose: formatValue(dataAll.UMBS_5_5_Shadow?.prevClose),
+            high: formatValue(dataAll.UMBS_5_5_Shadow?.high), low: formatValue(dataAll.UMBS_5_5_Shadow?.low),
+            updated: formattedBondUpdateTime
+        });
+        updateBondTableRow('shadow60Row', {
+            change: formatValue(dataAll.UMBS_6_0_Shadow?.change), actual: formatValue(dataAll.UMBS_6_0_Shadow?.current),
+            open: formatValue(dataAll.UMBS_6_0_Shadow?.open), priorDayClose: formatValue(dataAll.UMBS_6_0_Shadow?.prevClose),
+            high: formatValue(dataAll.UMBS_6_0_Shadow?.high), low: formatValue(dataAll.UMBS_6_0_Shadow?.low),
+            updated: formattedBondUpdateTime
+        });
+        updateBondTableRow('shadowGMNA55Row', {
+            change: formatValue(dataAll.GNMA_5_5_Shadow?.change), actual: formatValue(dataAll.GNMA_5_5_Shadow?.current),
+            open: formatValue(dataAll.GNMA_5_5_Shadow?.open), priorDayClose: formatValue(dataAll.GNMA_5_5_Shadow?.prevClose),
+            high: formatValue(dataAll.GNMA_5_5_Shadow?.high), low: formatValue(dataAll.GNMA_5_5_Shadow?.low),
+            updated: formattedBondUpdateTime
+        });
+        updateBondTableRow('shadowGMNA60Row', {
+            change: formatValue(dataAll.GNMA_6_0_Shadow?.change), actual: formatValue(dataAll.GNMA_6_0_Shadow?.current),
+            open: formatValue(dataAll.GNMA_6_0_Shadow?.open), priorDayClose: formatValue(dataAll.GNMA_6_0_Shadow?.prevClose),
+            high: formatValue(dataAll.GNMA_6_0_Shadow?.high), low: formatValue(dataAll.GNMA_6_0_Shadow?.low),
+            updated: formattedBondUpdateTime
+        });
 
 
     } catch (err) {
@@ -380,21 +315,26 @@ async function fetchAndUpdateDailyRates() {
             updateTextElement(`${prefix}LastMonth`, formatPercentage(data?.last_month));
             updateTextElement(`${prefix}YearAgo`, formatPercentage(data?.year_ago));
 
-            // Update Daily Change (Current vs Last Month)
+            // Update Daily Change (Current vs Yesterday for daily rates)
             const dailyChangeElement = document.getElementById(`${prefix}DailyChange`);
             if (dailyChangeElement) {
                 const changeValue = formatValue(data?.daily_change);
-                dailyChangeElement.textContent = changeValue !== '--' && parseFloat(changeValue) !== 0 ?
-                                                    (parseFloat(changeValue) > 0 ? `+${changeValue}%` : `${changeValue}%`) :
-                                                    ''; // Add % and sign, or empty if 0 or --
-                dailyChangeElement.classList.remove('positive', 'negative');
+                // Ensure daily_change for rates is always treated as a number for formatting
                 const numericChange = parseFloat(changeValue);
-                if (!isNaN(numericChange)) {
+
+                dailyChangeElement.textContent = ''; // Clear previous content
+                dailyChangeElement.classList.remove('positive', 'negative');
+
+                if (!isNaN(numericChange) && numericChange !== 0) {
+                    let formattedChange = numericChange.toFixed(3); // Adjust precision as needed
                     if (numericChange > 0) {
+                        formattedChange = `+${formattedChange}%`;
                         dailyChangeElement.classList.add('positive');
-                    } else if (numericChange < 0) {
+                    } else {
+                        formattedChange = `${formattedChange}%`;
                         dailyChangeElement.classList.add('negative');
                     }
+                    dailyChangeElement.textContent = formattedChange;
                 }
             }
 
@@ -420,6 +360,17 @@ async function fetchAndUpdateDailyRates() {
         updateDailyRateBox('usda30y', dailyRatesData.usda30y);
         updateDailyRateBox('fixed15y', dailyRatesData.fixed15Y);
 
+        // Update 30Y Fixed in header with data from daily rates
+        const fixed30yData = dailyRatesData.fixed30Y;
+        if (fixed30yData) {
+            const currentRate = parseFloat(fixed30yData.latest);
+            const dailyChange = parseFloat(fixed30yData.daily_change);
+            if (!isNaN(currentRate) && !isNaN(dailyChange)) {
+                updateChangeIndicator('fixed30yCurrentHeader', 'fixed30yDailyChangeHeader', currentRate.toFixed(3), dailyChange.toFixed(3));
+            }
+        }
+
+
     } catch (err) {
         console.error("Daily Rates data fetch error:", err);
     }
@@ -439,6 +390,13 @@ async function fetchAndUpdateEconomicIndicators() {
         function updateEconomicIndicatorBox(prefix, indicatorData, unit = '', isPercentage = false) {
             if (!indicatorData) {
                 console.warn(`No data for ${prefix}`);
+                // Clear any existing content if data is missing
+                updateTextElement(`${prefix}Current`, '--');
+                updateTextElement(`${prefix}LastMonth`, '--');
+                updateTextElement(`${prefix}YearAgo`, '--');
+                const monthlyChangeElement = document.getElementById(`${prefix}MonthlyChange`);
+                if (monthlyChangeElement) monthlyChangeElement.textContent = '';
+                updateTextElement(`${prefix}UpdateTime`, 'As Of: N/A');
                 return;
             }
 
@@ -456,7 +414,7 @@ async function fetchAndUpdateEconomicIndicators() {
             if (monthlyChangeElement) {
                 const changeSpan = formatMonthlyChange(indicatorData.monthly_change, isPercentage ? '%' : '');
                 // Clear previous content and append the new span
-                monthlyChangeElement.innerHTML = '';
+                monthlyChangeElement.innerHTML = ''; // Use innerHTML to clear, then appendChild
                 monthlyChangeElement.appendChild(changeSpan);
             }
 
@@ -478,10 +436,12 @@ async function fetchAndUpdateEconomicIndicators() {
         // --- Update each Economic Indicator Box ---
         updateEconomicIndicatorBox('houst', data.HOUST, 'k'); // Total Housing Starts (thousands)
         updateEconomicIndicatorBox('permit1', data.PERMIT1, 'k'); // Single-Family Permits (thousands)
+        // HOUST1F (Single-Family Housing Starts) was in your initial list but not in the mockup. Adding it here for completeness if you use it.
+        updateEconomicIndicatorBox('houst1f', data.HOUST1F, 'k'); // Single-Family Housing Starts (thousands)
+        updateEconomicIndicatorBox('rsxfs', data.RSXFS, 'M'); // Retail Sales (Millions), no percentage
+        updateEconomicIndicatorBox('umcsent', data.UMCSENT); // Consumer Sentiment (points)
+        updateEconomicIndicatorBox('csushpinsa', data.CSUSHPINSA); // Case-Shiller HPI (index value)
         updateEconomicIndicatorBox('permit', data.PERMIT, 'k'); // Building Permits Total (thousands)
-        updateEconomicIndicatorBox('rsxfs', data.RSXFS, 'M', false, true); // Retail Sales (Millions), assuming no percentage
-        updateEconomicIndicatorBox('umcsent', data.UMCSENT, ''); // Consumer Sentiment (points)
-        updateEconomicIndicatorBox('csushpinsa', data.CSUSHPINSA, ''); // Case-Shiller HPI (index value)
         updateEconomicIndicatorBox('t10yie', data.T10YIE, '', true); // 10Y Breakeven (percentage)
         updateEconomicIndicatorBox('t10y2y', data.T10Y2Y, '', true); // 10Y - 2Y Treasury (percentage points)
 
@@ -497,11 +457,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initial fetch for all data when the page loads
     fetchAndUpdateMarketData();
     fetchAndUpdateDailyRates();
-    fetchAndUpdateEconomicIndicators(); // New: Fetch economic indicators on load
+    fetchAndUpdateEconomicIndicators(); // Fetch economic indicators on load
 
     // Set interval for market data to refresh every 60 seconds
     setInterval(fetchAndUpdateMarketData, 60000); // 60000 milliseconds = 60 seconds
 
-    // No setInterval for daily rates or economic indicators, as they typically don't change intra-day.
-    // If a tab is open for multiple days, a refresh is needed for new daily/monthly rates.
+    // Daily rates and economic indicators typically don't change intra-day.
+    // They will refresh on page load. If a tab is open for multiple days,
+    // a page refresh (F5) would be needed for the newest daily/monthly rates.
 });
