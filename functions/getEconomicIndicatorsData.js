@@ -13,11 +13,11 @@ if (!admin.apps.length) {
   });
 }
 
-const db = admin.firestore();
+ db = admin.firestore();
 
 exports.handler = async function (event, context) {
   try {
-    const indicatorsCollectionRef = db.collection("economic_indicators");
+    const indicatorsCollectionRef = db.collection("fred_reports");
 
     // List of series IDs you want to fetch
     const seriesIds = [
