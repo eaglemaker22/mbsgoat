@@ -100,6 +100,8 @@ body {
 
 .bond-ticker-section,
 .daily-rates-section,
+/* Add the new economic-indicators-section here */
+.economic-indicators-section,
 .freddie-mac-section {
     background-color: #1a1a1a; /* Same as header background */
     padding: 20px;
@@ -194,6 +196,43 @@ body {
     border-left: 5px solid #a020f0; /* Electric purple */
 }
 
+/* New: Economic Indicators Box Backgrounds */
+.rate-box.new-green-bg {
+    background-color: #004d00; /* A slightly darker green for differentiation */
+    border-left: 5px solid #00cc00;
+}
+.rate-box.new-blue-bg {
+    background-color: #003366; /* A darker blue */
+    border-left: 5px solid #1976d2;
+}
+.rate-box.new-orange-bg {
+    background-color: #663300; /* A darker orange */
+    border-left: 5px solid #f57c00;
+}
+.rate-box.new-purple-bg {
+    background-color: #4d004d; /* A darker purple */
+    border-left: 5px solid #7b1fa2;
+}
+
+
+/* Style for the monthly change text in daily rates section */
+.daily-change-rate {
+    font-size: 0.9em;
+    font-weight: bold;
+    margin-top: -5px; /* Adjust spacing */
+    margin-bottom: 5px;
+    /* This will be colored by .positive/.negative classes applied by JS */
+}
+
+/* Style for the monthly change text in economic indicators */
+.monthly-change-economic {
+    font-size: 0.9em; /* Make it slightly smaller than the main title */
+    font-weight: bold; /* Keep it bold */
+    margin-left: 5px; /* Small spacing from the title */
+    vertical-align: middle; /* Align with text */
+    /* This will be colored by .positive/.negative classes applied by JS */
+}
+
 /* --- Freddie Mac Section --- */
 .freddie-mac-section .update-time {
     font-size: 0.9em;
@@ -217,6 +256,9 @@ body {
         width: 100%;
         text-align: right;
     }
+    .rates-grid {
+        grid-template-columns: 1fr; /* Stack columns on small screens */
+    }
 }
 
 @media (max-width: 480px) {
@@ -226,6 +268,7 @@ body {
     .dashboard-header,
     .bond-ticker-section,
     .daily-rates-section,
+    .economic-indicators-section, /* Include new section here */
     .freddie-mac-section {
         padding: 15px;
     }
