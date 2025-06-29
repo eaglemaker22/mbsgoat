@@ -14,7 +14,7 @@ body {
 }
 
 /* --- Header Styling --- */
-.dashboard-header {
+.dashboard-header { /* This class is now used in index.html */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -39,31 +39,35 @@ body {
     margin-right: 0;
 }
 
-.header-item .label {
+.header-item .label { /* Now matches index.html */
     font-size: 0.9em;
     color: #bbb;
     margin-bottom: 5px;
 }
 
-.header-item .value {
+.header-item .value { /* Now matches index.html */
     font-size: 1.4em;
     font-weight: bold;
 }
 
 /* Specific Header Item Backgrounds/Borders */
-.ums-section {
+.ums-section { /* Now matches index.html */
     background-color: #330000; /* Dark Red */
     border-left: 5px solid #ff0000; /* Red bar */
 }
 
-.us10y-section {
+.us10y-section { /* Now matches index.html */
     background-color: #003300; /* Dark Green */
     border-left: 5px solid #00cc00; /* Green bar */
 }
 
-.fixed-30y-section {
+.fixed-30y-section { /* Now matches index.html */
     background-color: #003300; /* Dark Green */
     border-left: 5px solid #00cc00; /* Green bar */
+}
+
+.header-time-container { /* Added container for the time, if needed for layout */
+    margin-left: 15px;
 }
 
 .header-time {
@@ -73,7 +77,7 @@ body {
 }
 
 /* Change Indicators */
-.change {
+.change { /* Now matches index.html for header changes */
     font-size: 0.9em;
     font-weight: bold;
     margin-top: 5px;
@@ -100,8 +104,7 @@ body {
 
 .bond-ticker-section,
 .daily-rates-section,
-/* Add the new economic-indicators-section here */
-.economic-indicators-section,
+.economic-indicators-section, /* Ensure this is included */
 .freddie-mac-section {
     background-color: #1a1a1a; /* Same as header background */
     padding: 20px;
@@ -115,7 +118,7 @@ body {
     overflow-x: auto; /* Ensures table is scrollable on smaller screens */
 }
 
-.data-table {
+.data-table { /* This class is now applied in index.html */
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9em;
@@ -140,10 +143,11 @@ body {
 }
 
 /* Ensure change indicators in table are styled */
-.data-table td.negative {
+/* The previous change-cell in TD didn't have these classes */
+.data-table .change-cell.negative { /* Added .change-cell */
     color: #ff0000;
 }
-.data-table td.positive {
+.data-table .change-cell.positive { /* Added .change-cell */
     color: #00cc00;
 }
 
@@ -196,7 +200,7 @@ body {
     border-left: 5px solid #a020f0; /* Electric purple */
 }
 
-/* New: Economic Indicators Box Backgrounds */
+/* NEW: Economic Indicators Box Backgrounds */
 .rate-box.new-green-bg {
     background-color: #004d00; /* A slightly darker green for differentiation */
     border-left: 5px solid #00cc00;
@@ -215,7 +219,7 @@ body {
 }
 
 
-/* Style for the monthly change text in daily rates section */
+/* Style for the daily change text in daily rates section */
 .daily-change-rate {
     font-size: 0.9em;
     font-weight: bold;
@@ -232,6 +236,7 @@ body {
     vertical-align: middle; /* Align with text */
     /* This will be colored by .positive/.negative classes applied by JS */
 }
+
 
 /* --- Freddie Mac Section --- */
 .freddie-mac-section .update-time {
@@ -251,10 +256,11 @@ body {
         margin-right: 0;
         margin-bottom: 10px;
     }
-    .header-time {
-        margin-top: 10px;
+    .header-time-container {
         width: 100%;
+        margin-top: 10px;
         text-align: right;
+        margin-left: 0;
     }
     .rates-grid {
         grid-template-columns: 1fr; /* Stack columns on small screens */
