@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // --- Update Header Timestamp (if available from Top Dashboard Data) ---
         const timestampEl = document.querySelector(".header-time");
-        if (dataTop?.UMBS_5_5?.last_updated && timestampEl) {
+        if (dataTop?.UMBS_5_5?.last_updated && timestampEl) { // Note: This uses dataTop's timestamp
             const rawTime = dataTop.UMBS_5_5.last_updated;
             const dateObj = new Date(rawTime.replace(" ", "T"));
             const timeString = dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
 
-        // --- Fetch All Bond Data (for Shadow bonds) ---
+        // --- Fetch All Bond Data (for all bonds) ---
         const resAll = await fetch("/.netlify/functions/getAllBondData");
         if (!resAll.ok) {
             throw new Error(`HTTP error! status: ${resAll.status}`);
@@ -155,8 +155,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const dataAll = await resAll.json();
         console.log("All Bond Data:", dataAll);
 
-        // --- Common formatted update time for all shadow bonds ---
-        const bondUpdateTime = dataAll.last_updated; // e.g., "2025-06-24 14:55:04"
+        // --- Common formatted update time for all bonds in the table ---
+        // This timestamp comes from dataAll.last_updated, which is from mbs_products
+        const bondUpdateTime = dataAll.last_updated;
         let formattedBondUpdateTime = 'N/A';
 
         if (bondUpdateTime) {
@@ -173,6 +174,85 @@ document.addEventListener("DOMContentLoaded", async () => {
             } catch (e) {
                 console.warn("Could not parse bond update time for table rows:", e);
             }
+        }
+
+        // --- Update Header UMBS 5.5 ---
+        const headerUmbs55Data = dataAll.UMBS_5_5;
+        if (headerUmbs55Data) {
+            const umbs55Value = formatValue(headerUmbs55Data.current);
+            const umbs55Change = formatValue(headerUmbs55Data.change);
+            updateChangeIndicator('ums55Value', 'ums55Change', umbs55Value, umbs55Change);
+        } else {
+            console.warn("UMBS_5_5 data not found for header in getAllBondData response.");
+        }
+
+
+        // --- Update UMBS 5.5 Table Row ---
+        const umbs55Data = dataAll.UMBS_5_5;
+        if (umbs55Data) {
+            const rowData = {
+                change: formatValue(umbs55Data.change),
+                actual: formatValue(umbs55Data.current),
+                open: formatValue(umbs55Data.open),
+                priorDayClose: formatValue(umbs55Data.prevClose),
+                high: formatValue(umbs55Data.high),
+                low: formatValue(umbs55Data.low),
+                updated: formatValue(formattedBondUpdateTime)
+            };
+            updateBondTableRow('umbs55Row', rowData);
+        } else {
+            console.warn("UMBS_5_5 data not found in getAllBondData response.");
+        }
+
+        // --- Update UMBS 6.0 Table Row ---
+        const umbs60Data = dataAll.UMBS_6_0;
+        if (umbs60Data) {
+            const rowData = {
+                change: formatValue(umbs60Data.change),
+                actual: formatValue(umbs60Data.current),
+                open: formatValue(umbs60Data.open),
+                priorDayClose: formatValue(umbs60Data.prevClose),
+                high: formatValue(umbs60Data.high),
+                low: formatValue(umbs60Data.low),
+                updated: formatValue(formattedBondUpdateTime)
+            };
+            updateBondTableRow('umbs60Row', rowData);
+        } else {
+            console.warn("UMBS_6_0 data not found in getAllBondData response.");
+        }
+
+        // --- Update GNMA 5.5 Table Row ---
+        const gnma55Data = dataAll.GNMA_5_5;
+        if (gnma55Data) {
+            const rowData = {
+                change: formatValue(gnma55Data.change),
+                actual: formatValue(gnma55Data.current),
+                open: formatValue(gnma55Data.open),
+                priorDayClose: formatValue(gnma55Data.prevClose),
+                high: formatValue(gnma55Data.high),
+                low: formatValue(gnma55Data.low),
+                updated: formatValue(formattedBondUpdateTime)
+            };
+            updateBondTableRow('gnma55Row', rowData);
+        } else {
+            console.warn("GNMA_5_5 data not found in getAllBondData response.");
+        }
+
+        // --- Update GNMA 6.0 Table Row ---
+        const gnma60Data = dataAll.GNMA_6_0;
+        if (gnma60Data) {
+            const rowData = {
+                change: formatValue(gnma60Data.change),
+                actual: formatValue(gnma60Data.current),
+                open: formatValue(gnma60Data.open),
+                priorDayClose: formatValue(gnma60Data.prevClose),
+                high: formatValue(gnma60Data.high),
+                low: formatValue(gnma60Data.low),
+                updated: formatValue(formattedBondUpdateTime)
+            };
+            updateBondTableRow('gnma60Row', rowData);
+        } else {
+            console.warn("GNMA_6_0 data not found in getAllBondData response.");
         }
 
 
@@ -194,7 +274,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         // --- Update Shadow 6.0 ---
-        const umbs60ShadowData = dataAll.UMBS_6_0_Shadow; // Mapped to JSON key
+        const umbs60ShadowData = dataAll.UMBS_6_0_Shadow;
         if (umbs60ShadowData) {
             const rowData = {
                 change: formatValue(umbs60ShadowData.change),
@@ -205,13 +285,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 low: formatValue(umbs60ShadowData.low),
                 updated: formatValue(formattedBondUpdateTime)
             };
-            updateBondTableRow('shadow60Row', rowData); // Using new HTML ID
+            updateBondTableRow('shadow60Row', rowData);
         } else {
             console.warn("UMBS_6_0_Shadow data not found in getAllBondData response.");
         }
 
         // --- Update Shadow GMNA 5.5 ---
-        const gnma55ShadowData = dataAll.GNMA_5_5_Shadow; // Mapped to JSON key
+        const gnma55ShadowData = dataAll.GNMA_5_5_Shadow;
         if (gnma55ShadowData) {
             const rowData = {
                 change: formatValue(gnma55ShadowData.change),
@@ -222,13 +302,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 low: formatValue(gnma55ShadowData.low),
                 updated: formatValue(formattedBondUpdateTime)
             };
-            updateBondTableRow('shadowGMNA55Row', rowData); // Using new HTML ID
+            updateBondTableRow('shadowGMNA55Row', rowData);
         } else {
             console.warn("GNMA_5_5_Shadow data not found in getAllBondData response.");
         }
 
         // --- Update Shadow GMNA 6.0 ---
-        const gnma60ShadowData = dataAll.GNMA_6_0_Shadow; // Mapped to JSON key
+        const gnma60ShadowData = dataAll.GNMA_6_0_Shadow;
         if (gnma60ShadowData) {
             const rowData = {
                 change: formatValue(gnma60ShadowData.change),
@@ -239,7 +319,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 low: formatValue(gnma60ShadowData.low),
                 updated: formatValue(formattedBondUpdateTime)
             };
-            updateBondTableRow('shadowGMNA60Row', rowData); // Using new HTML ID
+            updateBondTableRow('shadowGMNA60Row', rowData);
         } else {
             console.warn("GNMA_6_0_Shadow data not found in getAllBondData response.");
         }
