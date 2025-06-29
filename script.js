@@ -112,9 +112,9 @@ function formatPercentage(val) {
     return formatted !== '--' ? `${formatted}%` : '--';
 }
 
-// --- Data Fetching Logic using Netlify Functions ---
-document.addEventListener("DOMContentLoaded", async () => {
-    console.log("Fetching data from Netlify Functions...");
+// --- Function for frequently updated Market Data (US10Y, Bond Tickers) ---
+async function fetchAndUpdateMarketData() {
+    console.log("Fetching market data..."); // Log each market data refresh
 
     try {
         // --- Fetch Top Dashboard Data (for US10Y) ---
@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             throw new Error(`HTTP error! status: ${resTop.status}`);
         }
         const dataTop = await resTop.json();
-        console.log("Top Dashboard Data:", dataTop);
+        // console.log("Top Dashboard Data:", dataTop); // Keep this for debugging if needed
 
         // --- US10Y Update ---
         if (dataTop?.US10Y) {
@@ -152,7 +152,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             throw new Error(`HTTP error! status: ${resAll.status}`);
         }
         const dataAll = await resAll.json();
-        console.log("All Bond Data:", dataAll);
+        // console.log("All Bond Data:", dataAll); // Keep this for debugging if needed
 
         // --- Common formatted update time for all bonds in the table ---
         const bondUpdateTime = dataAll.last_updated;
@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         hour: 'numeric',
                         minute: '2-digit',
                         hour12: true,
-                        timeZone: 'America/Los_Angeles'
+                        timeZone: 'America/Los_Angeles' // Assuming PST/MST for bond market times
                     });
                 }
             } catch (e) {
@@ -321,23 +321,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         } else {
             console.warn("GNMA_6_0_Shadow data not found in getAllBondData response.");
         }
+    } catch (err) {
+        console.error("Market data fetch error:", err);
+    }
+}
 
+// --- Function for Daily Rates (less frequent update) ---
+async function fetchAndUpdateDailyRates() {
+    console.log("Fetching daily rates data..."); // Log daily rates refresh
 
-        // --- Daily Rates Section ---
+    try {
         const resRates = await fetch("/.netlify/functions/getDailyRatesData");
         if (!resRates.ok) {
             throw new Error(`HTTP error! status: ${resRates.status}`);
         }
         const dailyRatesData = await resRates.json();
-        console.log("Daily Rates Data:", dailyRatesData);
+        // console.log("Daily Rates Data:", dailyRatesData); // Keep this for debugging if needed
 
         // Helper to update daily rate boxes
         function updateDailyRateBox(prefix, data) {
             // Update Current, Yesterday, Last Month, 1 Year Ago
-            updateTextElement(`${prefix}Current`, formatPercentage(data?.latest)); // Update ID to Current
-            updateTextElement(`${prefix}Yesterday`, formatPercentage(data?.yesterday)); // This will be '--' until you implement data capture
-            updateTextElement(`${prefix}LastMonth`, formatPercentage(data?.last_month)); // New ID
-            updateTextElement(`${prefix}YearAgo`, formatPercentage(data?.year_ago)); // New ID
+            updateTextElement(`${prefix}Current`, formatPercentage(data?.latest));
+            // 'data?.yesterday' will be '--' until you implement its capture in your scraper/Firestore
+            updateTextElement(`${prefix}Yesterday`, formatPercentage(data?.yesterday));
+            updateTextElement(`${prefix}LastMonth`, formatPercentage(data?.last_month));
+            updateTextElement(`${prefix}YearAgo`, formatPercentage(data?.year_ago));
 
             // Update Daily Change (Current vs Last Month)
             const dailyChangeElement = document.getElementById(`${prefix}DailyChange`);
@@ -363,7 +371,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const dateObj = new Date(data.latest_date + 'T00:00:00'); // Ensure date parsing
                 if (!isNaN(dateObj.getTime())) {
                     const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
-                    updateTimeElement.textContent = `As Of: ${formattedDate}`; // Change "Updated" to "As Of:"
+                    updateTimeElement.textContent = `As Of: ${formattedDate}`;
                 } else {
                     updateTimeElement.textContent = 'As Of: N/A';
                 }
@@ -379,10 +387,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateDailyRateBox('usda30y', dailyRatesData.usda30Y);
         updateDailyRateBox('fixed15y', dailyRatesData.fixed15Y);
 
-
     } catch (err) {
-        console.error("Dashboard data fetch error:", err);
-        // Display error messages on the dashboard if desired
-        // document.getElementById('errorDisplay').textContent = "Failed to load data.";
+        console.error("Daily Rates data fetch error:", err);
     }
+}
+
+
+// --- Event Listener and Interval Setup ---
+document.addEventListener("DOMContentLoaded", () => {
+    // Initial fetch for all data when the page loads
+    fetchAndUpdateMarketData();
+    fetchAndUpdateDailyRates(); // Daily rates are fetched once on load
+
+    // Set interval for market data to refresh every 60 seconds
+    setInterval(fetchAndUpdateMarketData, 60000); // 60000 milliseconds = 60 seconds
+
+    // No setInterval for daily rates, as they typically don't change intra-day.
+    // If a tab is open for multiple days, a refresh is needed for new daily rates.
 });
