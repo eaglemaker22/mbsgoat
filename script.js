@@ -15,7 +15,7 @@ function updateTextElement(elementId, value) {
 }
 
 /**
- * Updates a change indicator (value and color) for header items.
+ * Updates a change indicator (value and color) for header items or general use.
  * @param {string} valueElementId - ID for the main value span.
  * @param {string} changeElementId - ID for the change span.
  * @param {string} value - The main value (e.g., "4.425").
@@ -51,8 +51,6 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change) {
  * @param {string} rowId - The ID of the <tr> element (e.g., 'shadow55Row').
  * @param {Object} rowData - An object containing the data for the row's cells.
  * Expected keys: change, actual, open, priorDayClose, high, low, updated.
- *
- * NOTE: The keys here (`change`, `actual` etc.) must match the keys returned by your Netlify Function for this bond type.
  */
 function updateBondTableRow(rowId, rowData) {
     const row = document.getElementById(rowId);
@@ -61,16 +59,13 @@ function updateBondTableRow(rowId, rowData) {
         return;
     }
 
-    // Get the cells starting from the second one (index 1), as the first is the Instrument name
     const cells = row.children;
 
-    // Define the order of data and the corresponding cell index
-    // This mapping assumes the order of <td> elements in your HTML for this row
     const cellOrderMap = [
         { key: 'change', cellIndex: 1 },
         { key: 'actual', cellIndex: 2 },
         { key: 'open', cellIndex: 3 },
-        { key: 'priorDayClose', cellIndex: 4 }, // Maps to "Prior Day Close" header
+        { key: 'priorDayClose', cellIndex: 4 },
         { key: 'high', cellIndex: 5 },
         { key: 'low', cellIndex: 6 },
         { key: 'updated', cellIndex: 7 }
@@ -83,7 +78,6 @@ function updateBondTableRow(rowId, rowData) {
         if (cell && value !== undefined) {
             cell.textContent = value;
 
-            // Special handling for the 'change' column to apply colors
             if (mapping.key === 'change') {
                 cell.classList.remove('positive', 'negative');
                 const numericChange = parseFloat(value);
@@ -102,12 +96,12 @@ function updateBondTableRow(rowId, rowData) {
                 }
             }
         } else if (cell) {
-             cell.textContent = '--'; // Default for missing data
+             cell.textContent = '--';
         }
     });
 }
 
-// Helper to format missing data (re-added from your original script for consistency)
+// Helper to format missing data
 function formatValue(val) {
     return val !== null && val !== undefined && val !== "" ? val : "--";
 }
@@ -143,7 +137,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // --- Update Header Timestamp (if available from Top Dashboard Data) ---
         const timestampEl = document.querySelector(".header-time");
-        if (dataTop?.UMBS_5_5?.last_updated && timestampEl) { // Note: This uses dataTop's timestamp
+        if (dataTop?.UMBS_5_5?.last_updated && timestampEl) {
             const rawTime = dataTop.UMBS_5_5.last_updated;
             const dateObj = new Date(rawTime.replace(" ", "T"));
             const timeString = dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
@@ -161,7 +155,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("All Bond Data:", dataAll);
 
         // --- Common formatted update time for all bonds in the table ---
-        // This timestamp comes from dataAll.last_updated, which is from mbs_products
         const bondUpdateTime = dataAll.last_updated;
         let formattedBondUpdateTime = 'N/A';
 
@@ -340,14 +333,42 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Helper to update daily rate boxes
         function updateDailyRateBox(prefix, data) {
-            if (data) {
-                updateTextElement(`${prefix}Today`, formatPercentage(data.latest));
-                // We'll add Yesterday/Last Week/Year later
-            } else {
-                updateTextElement(`${prefix}Today`, '--');
-                // updateTextElement(`${prefix}Yesterday`, '--');
-                // updateTextElement(`${prefix}LastWeek`, '--');
-                // updateTextElement(`${prefix}LastYear`, '--');
+            // Update Current, Yesterday, Last Month, 1 Year Ago
+            updateTextElement(`${prefix}Current`, formatPercentage(data?.latest)); // Update ID to Current
+            updateTextElement(`${prefix}Yesterday`, formatPercentage(data?.yesterday)); // This will be '--' until you implement data capture
+            updateTextElement(`${prefix}LastMonth`, formatPercentage(data?.last_month)); // New ID
+            updateTextElement(`${prefix}YearAgo`, formatPercentage(data?.year_ago)); // New ID
+
+            // Update Daily Change (Current vs Last Month)
+            const dailyChangeElement = document.getElementById(`${prefix}DailyChange`);
+            if (dailyChangeElement) {
+                const changeValue = formatValue(data?.daily_change);
+                dailyChangeElement.textContent = changeValue !== '--' && parseFloat(changeValue) !== 0 ?
+                                                    (parseFloat(changeValue) > 0 ? `+${changeValue}%` : `${changeValue}%`) :
+                                                    ''; // Add % and sign, or empty if 0 or --
+                dailyChangeElement.classList.remove('positive', 'negative');
+                const numericChange = parseFloat(changeValue);
+                if (!isNaN(numericChange)) {
+                    if (numericChange > 0) {
+                        dailyChangeElement.classList.add('positive');
+                    } else if (numericChange < 0) {
+                        dailyChangeElement.classList.add('negative');
+                    }
+                }
+            }
+
+            // Update individual box timestamp
+            const updateTimeElement = document.getElementById(`${prefix}BoxUpdateTime`);
+            if (updateTimeElement && data?.latest_date) {
+                const dateObj = new Date(data.latest_date + 'T00:00:00'); // Ensure date parsing
+                if (!isNaN(dateObj.getTime())) {
+                    const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+                    updateTimeElement.textContent = `As Of: ${formattedDate}`; // Change "Updated" to "As Of:"
+                } else {
+                    updateTimeElement.textContent = 'As Of: N/A';
+                }
+            } else if (updateTimeElement) {
+                updateTimeElement.textContent = 'As Of: N/A';
             }
         }
 
@@ -356,23 +377,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateDailyRateBox('fha30y', dailyRatesData.fha30Y);
         updateDailyRateBox('jumbo30y', dailyRatesData.jumbo30Y);
         updateDailyRateBox('usda30y', dailyRatesData.usda30Y);
-        updateDailyRateBox('fixed15y', dailyRatesData.fixed15Y); // Using new ID
-
-        // Update Daily Rates section timestamp
-        const dailyRatesUpdateTimeEl = document.getElementById('dailyRatesUpdateTime');
-        if (dailyRatesData.last_updated && dailyRatesUpdateTimeEl) {
-            // Assuming last_updated is 'YYYY-MM-DD' from the Netlify function
-            const dateObj = new Date(dailyRatesData.last_updated + 'T00:00:00'); // Add time part to make it valid for Date object
-            if (!isNaN(dateObj.getTime())) {
-                const dateString = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
-                // We don't have time part for daily rates yet, just date
-                dailyRatesUpdateTimeEl.textContent = `Updated: ${dateString}`;
-            } else {
-                dailyRatesUpdateTimeEl.textContent = 'Updated: N/A';
-            }
-        } else if (dailyRatesUpdateTimeEl) {
-            dailyRatesUpdateTimeEl.textContent = 'Updated: N/A';
-        }
+        updateDailyRateBox('fixed15y', dailyRatesData.fixed15Y);
 
 
     } catch (err) {
