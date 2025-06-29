@@ -112,6 +112,11 @@ function formatValue(val) {
     return val !== null && val !== undefined && val !== "" ? val : "--";
 }
 
+// Helper to format percentage values (e.g., 6.474 to 6.474%)
+function formatPercentage(val) {
+    const formatted = formatValue(val);
+    return formatted !== '--' ? `${formatted}%` : '--';
+}
 
 // --- Data Fetching Logic using Netlify Functions ---
 document.addEventListener("DOMContentLoaded", async () => {
@@ -325,10 +330,49 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
 
-        // --- 30Y VA Section (Ignored for now as requested) ---
-        updateTextElement('va30yToday', '---');
-        updateTextElement('va30yYesterday', '---');
-        updateTextElement('va30yLastWeek', '---');
+        // --- Daily Rates Section ---
+        const resRates = await fetch("/.netlify/functions/getDailyRatesData");
+        if (!resRates.ok) {
+            throw new Error(`HTTP error! status: ${resRates.status}`);
+        }
+        const dailyRatesData = await resRates.json();
+        console.log("Daily Rates Data:", dailyRatesData);
+
+        // Helper to update daily rate boxes
+        function updateDailyRateBox(prefix, data) {
+            if (data) {
+                updateTextElement(`${prefix}Today`, formatPercentage(data.latest));
+                // We'll add Yesterday/Last Week/Year later
+            } else {
+                updateTextElement(`${prefix}Today`, '--');
+                // updateTextElement(`${prefix}Yesterday`, '--');
+                // updateTextElement(`${prefix}LastWeek`, '--');
+                // updateTextElement(`${prefix}LastYear`, '--');
+            }
+        }
+
+        updateDailyRateBox('fixed30y', dailyRatesData.fixed30Y);
+        updateDailyRateBox('va30y', dailyRatesData.va30Y);
+        updateDailyRateBox('fha30y', dailyRatesData.fha30Y);
+        updateDailyRateBox('jumbo30y', dailyRatesData.jumbo30Y);
+        updateDailyRateBox('usda30y', dailyRatesData.usda30Y);
+        updateDailyRateBox('fixed15y', dailyRatesData.fixed15Y); // Using new ID
+
+        // Update Daily Rates section timestamp
+        const dailyRatesUpdateTimeEl = document.getElementById('dailyRatesUpdateTime');
+        if (dailyRatesData.last_updated && dailyRatesUpdateTimeEl) {
+            // Assuming last_updated is 'YYYY-MM-DD' from the Netlify function
+            const dateObj = new Date(dailyRatesData.last_updated + 'T00:00:00'); // Add time part to make it valid for Date object
+            if (!isNaN(dateObj.getTime())) {
+                const dateString = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+                // We don't have time part for daily rates yet, just date
+                dailyRatesUpdateTimeEl.textContent = `Updated: ${dateString}`;
+            } else {
+                dailyRatesUpdateTimeEl.textContent = 'Updated: N/A';
+            }
+        } else if (dailyRatesUpdateTimeEl) {
+            dailyRatesUpdateTimeEl.textContent = 'Updated: N/A';
+        }
 
 
     } catch (err) {
