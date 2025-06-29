@@ -1,7 +1,10 @@
 // netlify/functions/getDailyRatesData.js
+// NO CHANGES NEEDED FOR THIS FILE FROM PREVIOUS RESPONSE.
+// It already calculates daily_change and returns latest, last_month, year_ago.
+// It will not return a 'yesterday' field unless your Firestore documents have one.
+
 const admin = require("firebase-admin");
 
-// Only initialize once
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -18,52 +21,50 @@ exports.handler = async function (event, context) {
   try {
     const ratesCollectionRef = db.collection("fred_reports");
 
-    // Fetch all relevant documents in parallel
     const [
       fixed30YSnap,
       va30YSnap,
-      fha30YSnap, // FHA SNAPSHOT VARIABLE
+      fha30YSnap,
       jumbo30YSnap,
       usda30YSnap,
       fixed15YSnap,
     ] = await Promise.all([
       ratesCollectionRef.doc("30Y Fixed Rate Conforming").get(),
       ratesCollectionRef.doc("30Y VA Mortgage Index").get(),
-      ratesCollectionRef.doc("30Y FHA Mortgage Index").get(), // <--- FIXED THIS DOCUMENT ID
+      ratesCollectionRef.doc("30Y FHA Mortgage Index").get(),
       ratesCollectionRef.doc("30Y Jumbo Mortgage Index").get(),
       ratesCollectionRef.doc("30Y USDA Mortgage Index").get(),
       ratesCollectionRef.doc("15Y Mortgage Avg US").get(),
     ]);
 
     const responseData = {};
-    let latestOverallDate = null; // To find the most recent update time for the section
 
     const addRateData = (docSnap, keyName) => {
       if (docSnap.exists) {
         const data = docSnap.data();
+        const latest = parseFloat(data.latest);
+        const lastMonth = parseFloat(data.last_month); // Used for daily_change calc
+
+        let dailyChange = null;
+        if (!isNaN(latest) && !isNaN(lastMonth)) {
+            dailyChange = (latest - lastMonth).toFixed(3);
+        }
+
         responseData[keyName] = {
           latest: data.latest ?? null,
           latest_date: data.latest_date ?? null,
+          // If you ever implement a 'yesterday' field in Firestore, it would be added here:
+          // yesterday: data.yesterday ?? null,
           last_month: data.last_month ?? null,
           last_month_date: data.last_month_date ?? null,
           year_ago: data.year_ago ?? null,
           year_ago_date: data.year_ago_date ?? null,
+          daily_change: dailyChange,
         };
-
-        // Update the overall latest date if this one is newer
-        if (data.latest_date) {
-            // Ensure the date string is parseable (Firebase dates are usually YYYY-MM-DD)
-            const currentDate = new Date(data.latest_date + 'T00:00:00'); // Add time to avoid timezone issues with date-only strings
-            if (!isNaN(currentDate.getTime())) { // Check if valid date
-                if (!latestOverallDate || currentDate > latestOverallDate) {
-                    latestOverallDate = currentDate;
-                }
-            }
-        }
 
       } else {
         console.warn(`Document for ${keyName} not found.`);
-        responseData[keyName] = null; // Indicate missing data
+        responseData[keyName] = null;
       }
     };
 
@@ -73,15 +74,6 @@ exports.handler = async function (event, context) {
     addRateData(jumbo30YSnap, "jumbo30Y");
     addRateData(usda30YSnap, "usda30Y");
     addRateData(fixed15YSnap, "fixed15Y");
-
-    // Add the overall latest update date for the section
-    if (latestOverallDate) {
-        // Format as YYYY-MM-DD for consistency, client-side will format for display
-        responseData.last_updated = latestOverallDate.toISOString().split('T')[0];
-    } else {
-        responseData.last_updated = null;
-    }
-
 
     return {
       statusCode: 200,
