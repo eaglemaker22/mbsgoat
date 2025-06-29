@@ -22,14 +22,14 @@ exports.handler = async function (event, context) {
     const [
       fixed30YSnap,
       va30YSnap,
-      fha30YSnap,
+      fha30YSnap, // FHA SNAPSHOT VARIABLE
       jumbo30YSnap,
       usda30YSnap,
       fixed15YSnap,
     ] = await Promise.all([
       ratesCollectionRef.doc("30Y Fixed Rate Conforming").get(),
       ratesCollectionRef.doc("30Y VA Mortgage Index").get(),
-      ratesCollectionRef.doc("FHA Mortgage Index").get(), // Assuming 'FHA Mortgage Index' is the correct doc ID
+      ratesCollectionRef.doc("30Y FHA Mortgage Index").get(), // <--- FIXED THIS DOCUMENT ID
       ratesCollectionRef.doc("30Y Jumbo Mortgage Index").get(),
       ratesCollectionRef.doc("30Y USDA Mortgage Index").get(),
       ratesCollectionRef.doc("15Y Mortgage Avg US").get(),
@@ -52,9 +52,12 @@ exports.handler = async function (event, context) {
 
         // Update the overall latest date if this one is newer
         if (data.latest_date) {
-            const currentDate = new Date(data.latest_date);
-            if (!latestOverallDate || currentDate > latestOverallDate) {
-                latestOverallDate = currentDate;
+            // Ensure the date string is parseable (Firebase dates are usually YYYY-MM-DD)
+            const currentDate = new Date(data.latest_date + 'T00:00:00'); // Add time to avoid timezone issues with date-only strings
+            if (!isNaN(currentDate.getTime())) { // Check if valid date
+                if (!latestOverallDate || currentDate > latestOverallDate) {
+                    latestOverallDate = currentDate;
+                }
             }
         }
 
@@ -73,7 +76,8 @@ exports.handler = async function (event, context) {
 
     // Add the overall latest update date for the section
     if (latestOverallDate) {
-        responseData.last_updated = latestOverallDate.toISOString().split('T')[0]; // Format YYYY-MM-DD
+        // Format as YYYY-MM-DD for consistency, client-side will format for display
+        responseData.last_updated = latestOverallDate.toISOString().split('T')[0];
     } else {
         responseData.last_updated = null;
     }
