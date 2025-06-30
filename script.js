@@ -156,7 +156,7 @@ function formatMonthlyChange(val, unit = '') {
 
 // --- Function for frequently updated Market Data (US10Y, Bond Tickers) ---
 async function fetchAndUpdateMarketData() {
-    console.log("Fetching market data..."); // Log each market data refresh
+    console.log("Fetching market data...");
 
     try {
         // --- Fetch Top Dashboard Data (for US10Y and Header UMBS) ---
@@ -170,7 +170,7 @@ async function fetchAndUpdateMarketData() {
         if (dataTop?.US10Y) {
             const us10yYield = parseFloat(dataTop.US10Y.yield);
             const us10yChange = parseFloat(dataTop.US10Y.change);
-            updateChangeIndicator('us10yValue', 'us10yChange', us10yYield.toFixed(3), us10yChange.toFixed(3)); // Ensure numbers are formatted
+            updateChangeIndicator('us10yValue', 'us10yChange', us10yYield.toFixed(3), us10yChange.toFixed(3));
         } else {
             console.warn("US10Y data not found in getTopDashboardData response.");
         }
@@ -185,23 +185,17 @@ async function fetchAndUpdateMarketData() {
         }
 
         // --- Update Header 30Y Fixed (using data from Daily Rates if available, or default to --) ---
-        // This is a bit tricky as 30Y Fixed for the header usually comes from a different source
-        // For now, let's update it from `dailyRatesData.fixed30Y` after it's fetched,
-        // or just set to default if `fetchAndUpdateDailyRates` hasn't run yet.
-        // For initial load, it will be '--'. It will be updated by fetchAndUpdateDailyRates.
-        // Or, if dataTop has this, use it. Assuming it does not have it for now.
-        updateTextElement('fixed30yCurrentHeader', '--'); // Set to default
-        updateTextElement('fixed30yDailyChangeHeader', '--'); // Set to default
+        // This will be updated by fetchAndUpdateDailyRates, so initial load can be '--'
+        updateTextElement('fixed30yCurrentHeader', '--');
+        updateTextElement('fixed30yDailyChangeHeader', '--');
 
 
         // --- Update Header Timestamp (if available from Top Dashboard Data) ---
         const timestampEl = document.querySelector(".header-time");
         if (dataTop?.UMBS_5_5?.last_updated && timestampEl) {
             const rawTime = dataTop.UMBS_5_5.last_updated;
-            // Assuming rawTime is "YYYY-MM-DD HH:MM:SS"
             const dateObj = new Date(rawTime.replace(" ", "T")); // Replaces space with 'T' for robust parsing
             if (!isNaN(dateObj.getTime())) {
-                // Format time for local timezone (Surprise, Arizona is MST)
                 const timeString = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/Phoenix' }); // MST (Arizona)
                 const dateString = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
                 timestampEl.textContent = `${timeString} ${dateString}`;
@@ -240,7 +234,6 @@ async function fetchAndUpdateMarketData() {
         }
 
         // --- Update Bond Ticker Table Rows ---
-        // (Ensuring all properties are converted to string for formatValue)
         updateBondTableRow('umbs55Row', {
             change: formatValue(dataAll.UMBS_5_5?.change), actual: formatValue(dataAll.UMBS_5_5?.current),
             open: formatValue(dataAll.UMBS_5_5?.open), priorDayClose: formatValue(dataAll.UMBS_5_5?.prevClose),
@@ -298,7 +291,7 @@ async function fetchAndUpdateMarketData() {
 
 // --- Function for Daily Rates (less frequent update) ---
 async function fetchAndUpdateDailyRates() {
-    console.log("Fetching daily rates data..."); // Log daily rates refresh
+    console.log("Fetching daily rates data...");
 
     try {
         const resRates = await fetch("/.netlify/functions/getDailyRatesData");
@@ -376,7 +369,7 @@ async function fetchAndUpdateDailyRates() {
     }
 }
 
-// --- New Function for Economic Indicators (less frequent update) ---
+// --- Function for Economic Indicators (less frequent update) ---
 async function fetchAndUpdateEconomicIndicators() {
     console.log("Fetching economic indicators data...");
 
@@ -390,7 +383,6 @@ async function fetchAndUpdateEconomicIndicators() {
         function updateEconomicIndicatorBox(prefix, indicatorData, unit = '', isPercentage = false) {
             if (!indicatorData) {
                 console.warn(`No data for ${prefix}`);
-                // Clear any existing content if data is missing
                 updateTextElement(`${prefix}Current`, '--');
                 updateTextElement(`${prefix}LastMonth`, '--');
                 updateTextElement(`${prefix}YearAgo`, '--');
@@ -413,8 +405,7 @@ async function fetchAndUpdateEconomicIndicators() {
             const monthlyChangeElement = document.getElementById(`${prefix}MonthlyChange`);
             if (monthlyChangeElement) {
                 const changeSpan = formatMonthlyChange(indicatorData.monthly_change, isPercentage ? '%' : '');
-                // Clear previous content and append the new span
-                monthlyChangeElement.innerHTML = ''; // Use innerHTML to clear, then appendChild
+                monthlyChangeElement.innerHTML = '';
                 monthlyChangeElement.appendChild(changeSpan);
             }
 
@@ -434,20 +425,58 @@ async function fetchAndUpdateEconomicIndicators() {
         }
 
         // --- Update each Economic Indicator Box ---
-        updateEconomicIndicatorBox('houst', data.HOUST, 'k'); // Total Housing Starts (thousands)
-        updateEconomicIndicatorBox('permit1', data.PERMIT1, 'k'); // Single-Family Permits (thousands)
-        // HOUST1F (Single-Family Housing Starts) was in your initial list but not in the mockup. Adding it here for completeness if you use it.
-        updateEconomicIndicatorBox('houst1f', data.HOUST1F, 'k'); // Single-Family Housing Starts (thousands)
-        updateEconomicIndicatorBox('rsxfs', data.RSXFS, 'M'); // Retail Sales (Millions), no percentage
-        updateEconomicIndicatorBox('umcsent', data.UMCSENT); // Consumer Sentiment (points)
-        updateEconomicIndicatorBox('csushpinsa', data.CSUSHPINSA); // Case-Shiller HPI (index value)
-        updateEconomicIndicatorBox('permit', data.PERMIT, 'k'); // Building Permits Total (thousands)
-        updateEconomicIndicatorBox('t10yie', data.T10YIE, '', true); // 10Y Breakeven (percentage)
-        updateEconomicIndicatorBox('t10y2y', data.T10Y2Y, '', true); // 10Y - 2Y Treasury (percentage points)
+        updateEconomicIndicatorBox('houst', data.HOUST, 'k');
+        updateEconomicIndicatorBox('permit1', data.PERMIT1, 'k');
+        updateEconomicIndicatorBox('houst1f', data.HOUST1F, 'k'); // Added HOUST1F from previous iteration
+        updateEconomicIndicatorBox('rsxfs', data.RSXFS, 'M');
+        updateEconomicIndicatorBox('umcsent', data.UMCSENT);
+        updateEconomicIndicatorBox('csushpinsa', data.CSUSHPINSA);
+        updateEconomicIndicatorBox('permit', data.PERMIT, 'k');
+        updateEconomicIndicatorBox('t10yie', data.T10YIE, '', true);
+        updateEconomicIndicatorBox('t10y2y', data.T10Y2Y, '', true);
 
 
     } catch (err) {
         console.error("Economic indicators data fetch error:", err);
+    }
+}
+
+// --- Function for Live Stock Data (NEW) ---
+async function fetchAndUpdateLiveStockData() {
+    console.log("Fetching live stock data...");
+    try {
+        const res = await fetch("/.netlify/functions/getLiveStockData");
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const stockData = await res.json();
+
+        // Update SPY
+        if (stockData.SPY) {
+            updateChangeIndicator('spyValue', 'spyChange', stockData.SPY.current, stockData.SPY.change);
+        } else {
+            updateTextElement('spyValue', '--');
+            updateTextElement('spyChange', '--');
+        }
+
+        // Update QQQ
+        if (stockData.QQQ) {
+            updateChangeIndicator('qqqValue', 'qqqChange', stockData.QQQ.current, stockData.QQQ.change);
+        } else {
+            updateTextElement('qqqValue', '--');
+            updateTextElement('qqqChange', '--');
+        }
+
+        // Update DIA
+        if (stockData.DIA) {
+            updateChangeIndicator('diaValue', 'diaChange', stockData.DIA.current, stockData.DIA.change);
+        } else {
+            updateTextElement('diaValue', '--');
+            updateTextElement('diaChange', '--');
+        }
+
+    } catch (err) {
+        console.error("Live stock data fetch error:", err);
     }
 }
 
@@ -457,10 +486,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initial fetch for all data when the page loads
     fetchAndUpdateMarketData();
     fetchAndUpdateDailyRates();
-    fetchAndUpdateEconomicIndicators(); // Fetch economic indicators on load
+    fetchAndUpdateEconomicIndicators();
+    fetchAndUpdateLiveStockData(); // NEW: Initial fetch for stock data
 
     // Set interval for market data to refresh every 60 seconds
-    setInterval(fetchAndUpdateMarketData, 60000); // 60000 milliseconds = 60 seconds
+    setInterval(fetchAndUpdateMarketData, 60000); // 60 seconds
+
+    // Set interval for live stock data (e.g., every 10 seconds for more "live" feel)
+    // Adjust this frequency based on your Finnhub plan's limits and desired dynamism.
+    setInterval(fetchAndUpdateLiveStockData, 10000); // NEW: 10 seconds
 
     // Daily rates and economic indicators typically don't change intra-day.
     // They will refresh on page load. If a tab is open for multiple days,
