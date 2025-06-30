@@ -1,55 +1,62 @@
 // netlify/functions/getLiveStockData.js
-const fetch = require('node-fetch'); // Make sure node-fetch is installed (npm install node-fetch)
+const fetch = require('node-fetch');
 
 exports.handler = async function (event, context) {
     const finnhubApiKey = process.env.FINNHUB_API_KEY;
 
     if (!finnhubApiKey) {
+        console.error('FINNHUB_API_KEY environment variable is not set.');
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Finnhub API key is not set.' }),
+            body: JSON.stringify({ error: 'Finnhub API key is not configured on the server.' }),
         };
     }
 
-    // Get the stock symbols from the query parameters or define them
-    // For simplicity, we'll hardcode them here initially, but you could pass them.
+    // Define the stock symbols to fetch.
     const symbols = ['SPY', 'QQQ', 'DIA']; // S&P 500 ETF, Nasdaq 100 ETF, Dow Jones ETF
 
     const data = {};
 
     try {
         for (const symbol of symbols) {
-            const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${finnhubApiKey}`);
-            
+            const finnhubApiUrl = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${finnhubApiKey}`;
+            const response = await fetch(finnhubApiUrl);
+
             if (!response.ok) {
-                console.error(`Finnhub API error for ${symbol}: ${response.statusText}`);
-                data[symbol] = null; // Mark as null if fetch fails for this symbol
-                continue; // Move to the next symbol
+                const errorText = await response.text();
+                console.error(`Finnhub API error for ${symbol}: Status ${response.status}, Message: ${errorText}`);
+                data[symbol] = null;
+                continue;
             }
-            
+
             const quote = await response.json();
-            
-            // Finnhub quote response:
-            // { c: current price, h: high, l: low, o: open, pc: previous close, t: timestamp }
-            if (quote && quote.c !== undefined && quote.pc !== undefined) {
+
+            // Finnhub quote response fields:
+            // c: current price
+            // h: high price of the day
+            // l: low price of the day
+            // o: open price of the day  <-- We need this one!
+            // pc: previous close price
+            // t: timestamp
+            if (quote && quote.c !== undefined && quote.o !== undefined) { // Check for 'c' and 'o'
                 const currentPrice = parseFloat(quote.c);
-                const previousClose = parseFloat(quote.pc);
-                const change = (currentPrice - previousClose);
-                const percentChange = (change / previousClose) * 100;
+                const openPrice = parseFloat(quote.o); // Get the open price
+
+                let changeSinceOpen = null;
+                if (!isNaN(currentPrice) && !isNaN(openPrice)) {
+                    changeSinceOpen = (currentPrice - openPrice);
+                }
 
                 data[symbol] = {
                     current: currentPrice.toFixed(2),
-                    change: change.toFixed(2),
-                    percentChange: percentChange.toFixed(2),
-                    // You can add more fields if needed:
-                    // open: quote.o.toFixed(2),
-                    // high: quote.h.toFixed(2),
-                    // low: quote.l.toFixed(2),
-                    // previousClose: quote.pc.toFixed(2),
-                    // timestamp: quote.t // Unix timestamp
+                    changeSinceOpen: changeSinceOpen !== null ? changeSinceOpen.toFixed(2) : null, // New field for change since open
+                    // You can keep or remove other fields if you don't need them for the frontend,
+                    // but it's safer to include them if the frontend might want them later.
+                    // previousClose: quote.pc !== undefined ? parseFloat(quote.pc).toFixed(2) : null,
+                    // open: openPrice.toFixed(2), // You might not need to send 'open' back if only the change is displayed
                 };
             } else {
-                 console.warn(`Incomplete data for ${symbol} from Finnhub:`, quote);
+                 console.warn(`Incomplete or malformed data for ${symbol} from Finnhub (missing current or open price):`, quote);
                  data[symbol] = null;
             }
         }
@@ -61,7 +68,7 @@ exports.handler = async function (event, context) {
         };
 
     } catch (error) {
-        console.error('Error fetching stock data:', error);
+        console.error('Error in getLiveStockData function:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: 'Failed to fetch stock data.', details: error.message }),
