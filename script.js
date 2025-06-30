@@ -332,4 +332,199 @@ async function fetchAndUpdateDailyRates() {
         function updateDailyRateBox(prefix, data) {
             // Update Current, Yesterday, Last Month, 1 Year Ago
             updateTextElement(`${prefix}Current`, formatPercentage(data?.latest));
-            updateTextElement(`${prefix}
+            updateTextElement(`${prefix}Yesterday`, formatPercentage(data?.yesterday));
+            updateTextElement(`${prefix}LastMonth`, formatPercentage(data?.last_month));
+            updateTextElement(`${prefix}YearAgo`, formatPercentage(data?.year_ago));
+
+            // Update Daily Change (Current vs Yesterday for daily rates)
+            const dailyChangeElement = document.getElementById(`${prefix}DailyChange`);
+            if (dailyChangeElement) {
+                const changeValue = formatValue(data?.daily_change);
+                // Ensure daily_change for rates is always treated as a number for formatting
+                const numericChange = parseFloat(changeValue);
+
+                dailyChangeElement.textContent = ''; // Clear previous content
+                dailyChangeElement.classList.remove('positive', 'negative');
+
+                if (!isNaN(numericChange) && numericChange !== 0) {
+                    let formattedChange = numericChange.toFixed(3); // Adjust precision as needed
+                    if (numericChange > 0) {
+                        formattedChange = `+${formattedChange}%`;
+                        dailyChangeElement.classList.add('positive');
+                    } else {
+                        formattedChange = `${formattedChange}%`;
+                        dailyChangeElement.classList.add('negative');
+                    }
+                    dailyChangeElement.textContent = formattedChange;
+                }
+            }
+
+            // Update individual box timestamp
+            const updateTimeElement = document.getElementById(`${prefix}BoxUpdateTime`);
+            if (updateTimeElement && data?.latest_date) {
+                const dateObj = new Date(data.latest_date + 'T00:00:00'); // Ensure date parsing
+                if (!isNaN(dateObj.getTime())) {
+                    const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+                    updateTimeElement.textContent = `As Of: ${formattedDate}`;
+                } else {
+                    updateTimeElement.textContent = 'As Of: N/A';
+                }
+            } else if (updateTimeElement) {
+                updateTimeElement.textContent = 'As Of: N/A';
+            }
+        }
+
+        updateDailyRateBox('fixed30y', dailyRatesData.fixed30Y);
+        updateDailyRateBox('va30y', dailyRatesData.va30Y);
+        updateDailyRateBox('fha30y', dailyRatesData.fha30Y);
+        updateDailyRateBox('jumbo30y', dailyRatesData.jumbo30Y);
+        updateDailyRateBox('usda30y', dailyRatesData.usda30y);
+        updateDailyRateBox('fixed15y', dailyRatesData.fixed15Y);
+
+        // Update 30Y Fixed in header with data from daily rates
+        const fixed30yData = dailyRatesData.fixed30Y;
+        if (fixed30yData) {
+            const currentRate = parseFloat(fixed30yData.latest);
+            const dailyChange = parseFloat(fixed30yData.daily_change);
+            if (!isNaN(currentRate) && !isNaN(dailyChange)) {
+                updateChangeIndicator('fixed30yCurrentHeader', 'fixed30yDailyChangeHeader', currentRate.toFixed(3), dailyChange.toFixed(3));
+            }
+        }
+
+
+    } catch (err) {
+        console.error("Daily Rates data fetch error:", err);
+    }
+}
+
+// --- Function for Economic Indicators (less frequent update) ---
+async function fetchAndUpdateEconomicIndicators() {
+    console.log("Fetching economic indicators data...");
+
+    try {
+        const res = await fetch("/.netlify/functions/getEconomicIndicatorsData");
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+
+        function updateEconomicIndicatorBox(prefix, indicatorData, unit = '', isPercentage = false) {
+            if (!indicatorData) {
+                console.warn(`No data for ${prefix}`);
+                updateTextElement(`${prefix}Current`, '--');
+                updateTextElement(`${prefix}LastMonth`, '--');
+                updateTextElement(`${prefix}YearAgo`, '--');
+                const monthlyChangeElement = document.getElementById(`${prefix}MonthlyChange`);
+                if (monthlyChangeElement) monthlyChangeElement.textContent = '';
+                updateTextElement(`${prefix}UpdateTime`, 'As Of: N/A');
+                return;
+            }
+
+            // Current, Last Month, 1 Year Ago Values
+            const currentVal = isPercentage ? formatPercentage(indicatorData.latest) : formatNumberWithCommas(indicatorData.latest, unit);
+            const lastMonthVal = isPercentage ? formatPercentage(indicatorData.last_month) : formatNumberWithCommas(indicatorData.last_month, unit);
+            const yearAgoVal = isPercentage ? formatPercentage(indicatorData.year_ago) : formatNumberWithCommas(indicatorData.year_ago, unit);
+
+            updateTextElement(`${prefix}Current`, currentVal);
+            updateTextElement(`${prefix}LastMonth`, lastMonthVal);
+            updateTextElement(`${prefix}YearAgo`, yearAgoVal);
+
+            // Monthly Change
+            const monthlyChangeElement = document.getElementById(`${prefix}MonthlyChange`);
+            if (monthlyChangeElement) {
+                const changeSpan = formatMonthlyChange(indicatorData.monthly_change, isPercentage ? '%' : '');
+                monthlyChangeElement.innerHTML = '';
+                monthlyChangeElement.appendChild(changeSpan);
+            }
+
+            // "As Of" Date
+            const updateTimeElement = document.getElementById(`${prefix}UpdateTime`);
+            if (updateTimeElement && indicatorData.latest_date) {
+                const dateObj = new Date(indicatorData.latest_date + 'T00:00:00');
+                if (!isNaN(dateObj.getTime())) {
+                    const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+                    updateTimeElement.textContent = `As Of: ${formattedDate}`;
+                } else {
+                    updateTimeElement.textContent = 'As Of: N/A';
+                }
+            } else if (updateTimeElement) {
+                updateTimeElement.textContent = 'As Of: N/A';
+            }
+        }
+
+        // --- Update each Economic Indicator Box ---
+        updateEconomicIndicatorBox('houst', data.HOUST, 'k');
+        updateEconomicIndicatorBox('permit1', data.PERMIT1, 'k');
+        updateEconomicIndicatorBox('houst1f', data.HOUST1F, 'k'); // Added HOUST1F from previous iteration
+        updateEconomicIndicatorBox('rsxfs', data.RSXFS, 'M');
+        updateEconomicIndicatorBox('umcsent', data.UMCSENT);
+        updateEconomicIndicatorBox('csushpinsa', data.CSUSHPINSA);
+        updateEconomicIndicatorBox('permit', data.PERMIT, 'k');
+        updateEconomicIndicatorBox('t10yie', data.T10YIE, '', true);
+        updateEconomicIndicatorBox('t10y2y', data.T10Y2Y, '', true);
+
+
+    } catch (err) {
+        console.error("Economic indicators data fetch error:", err);
+    }
+}
+
+// --- Function for Live Stock Data (UPDATED to use changeSinceOpen) ---
+async function fetchAndUpdateLiveStockData() {
+    console.log("Fetching live stock data...");
+    try {
+        const res = await fetch("/.netlify/functions/getLiveStockData");
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const stockData = await res.json();
+
+        // Update SPY (S&P 500)
+        if (stockData.SPY) {
+            updateChangeIndicator('spyValue', 'spyChange', stockData.SPY.current, stockData.SPY.changeSinceOpen);
+        } else {
+            updateTextElement('spyValue', '--');
+            updateTextElement('spyChange', '--');
+        }
+
+        // Update QQQ (NASDAQ)
+        if (stockData.QQQ) {
+            updateChangeIndicator('qqqValue', 'qqqChange', stockData.QQQ.current, stockData.QQQ.changeSinceOpen);
+        } else {
+            updateTextElement('qqqValue', '--');
+            updateTextElement('qqqChange', '--');
+        }
+
+        // Update DIA (DJIA)
+        if (stockData.DIA) {
+            updateChangeIndicator('diaValue', 'diaChange', stockData.DIA.current, stockData.DIA.changeSinceOpen);
+        } else {
+            updateTextElement('diaValue', '--');
+            updateTextElement('diaChange', '--');
+        }
+
+    } catch (err) {
+        console.error("Live stock data fetch error:", err);
+    }
+}
+
+
+// --- Event Listener and Interval Setup ---
+document.addEventListener("DOMContentLoaded", () => {
+    // Initial fetch for all data when the page loads
+    fetchAndUpdateMarketData();
+    fetchAndUpdateDailyRates();
+    fetchAndUpdateEconomicIndicators();
+    fetchAndUpdateLiveStockData(); // Initial fetch for stock data
+
+    // Set interval for market data to refresh every 60 seconds
+    setInterval(fetchAndUpdateMarketData, 60000); // 60 seconds
+
+    // Set interval for live stock data (e.g., every 10 seconds for more "live" feel)
+    // Adjust this frequency based on your Finnhub plan's limits and desired dynamism.
+    setInterval(fetchAndUpdateLiveStockData, 10000); // 10 seconds
+
+    // Daily rates and economic indicators typically don't change intra-day.
+    // They will refresh on page load. If a tab is open for multiple days,
+    // a page refresh (F5) would be needed for the newest daily/monthly rates.
+});
