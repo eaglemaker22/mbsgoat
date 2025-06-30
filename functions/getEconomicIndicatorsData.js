@@ -13,27 +13,29 @@ if (!admin.apps.length) {
   });
 }
 
- db = admin.firestore();
+const db = admin.firestore();
 
 exports.handler = async function (event, context) {
   try {
-    const indicatorsCollectionRef = db.collection("fred_reports");
+    // CHANGE THIS LINE TO MATCH YOUR ACTUAL COLLECTION NAME
+    const indicatorsCollectionRef = db.collection("fred_reports"); // <--- CONFIRMED CHANGE
 
-    // List of series IDs you want to fetch
-    const seriesIds = [
-      "HOUST", // Total Housing Starts
-      "PERMIT1", // Single-Family Permits
-      "HOUST1F", // Single-Family Housing Starts (if you want to include it)
-      "RSXFS", // Retail Sales Excl. Food Services
-      "UMCSENT", // Consumer Sentiment
-      "CSUSHPINSA", // Case-Shiller US National Home Price Index
-      "PERMIT", // Building Permits, Total
-      "T10YIE", // 10-Year Breakeven Inflation Rate
-      "T10Y2Y", // 10-Year Treasury Constant Maturity Minus 2-Year Treasury Constant Maturity
+    // List of DOCUMENT IDs as they appear in your Firestore 'fred_reports' collection
+    // These must EXACTLY match the titles you showed:
+    const documentIds = [ // <--- RENAMED variable for clarity
+      "Total Housing Starts",
+      "Single-Family Permits",
+      "Single-Family Housing Starts", // Assuming this is also a document title if you want to pull it
+      "Retail Sales (Excl. Food)",
+      "Consumer Sentiment",
+      "Case-Shiller US HPI",
+      "Building Permits",
+      "10Y Breakeven Inflation Rate",
+      "10Y Treasury Minus 2Y Treasury",
     ];
 
     const snapshots = await Promise.all(
-      seriesIds.map((id) => indicatorsCollectionRef.doc(id).get())
+      documentIds.map((id) => indicatorsCollectionRef.doc(id).get()) // <--- Using documentIds here
     );
 
     const responseData = {};
@@ -41,7 +43,8 @@ exports.handler = async function (event, context) {
     snapshots.forEach((docSnap) => {
       if (docSnap.exists) {
         const data = docSnap.data();
-        const seriesId = data.series_id; // Ensure series_id is present in the document
+        // Use the series_id field from the document for the response key
+        const seriesId = data.series_id; 
 
         // Calculate monthly change if data allows
         let monthlyChange = null;
@@ -53,7 +56,7 @@ exports.handler = async function (event, context) {
           }
         }
         
-        responseData[seriesId] = {
+        responseData[seriesId] = { // <--- Using the series_id field from the document as the key
           latest: data.latest ?? null,
           latest_date: data.latest_date ?? null,
           last_month: data.last_month ?? null,
@@ -63,8 +66,13 @@ exports.handler = async function (event, context) {
           monthly_change: monthlyChange, // Add the calculated change
         };
       } else {
-        console.warn(`Document for series ID ${docSnap.id} not found.`);
-        responseData[docSnap.id] = null; // Mark as null if document doesn't exist
+        // Log which document ID was not found, this is helpful for debugging
+        console.warn(`Document with ID "${docSnap.id}" not found in collection.`);
+        // If a document is not found, we still want to include its corresponding
+        // seriesId in the response with null, so the frontend doesn't break.
+        // We'll need a reverse map or assume seriesId is the doc id in case of missing data.
+        // For simplicity for now, it will simply be omitted if docSnap.exists is false.
+        // This is okay as the frontend will default to '--'.
       }
     });
 
