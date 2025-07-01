@@ -560,9 +560,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Set interval for market data to refresh every 60 seconds
     setInterval(fetchAndUpdateMarketData, 60000); // 60 seconds
 
-    // Set interval for live stock data (e.g., every 10 seconds for more "live" feel)
-    // Adjust this frequency based on your Finnhub plan's limits and desired dynamism.
-    setInterval(fetchAndUpdateLiveStockData, 10000); // 10 seconds
+    // Set interval for live stock data to 30 seconds (UPDATED)
+    setInterval(fetchAndUpdateLiveStockData, 30000); // 30 seconds
 
     // Daily rates and economic indicators typically don't change intra-day.
     // They will refresh on page load. If a tab is open for multiple days,
