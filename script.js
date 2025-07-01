@@ -27,27 +27,54 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change) {
     updateTextElement(valueElementId, formatValue(value)); // Update the main value
 
     const changeElement = document.getElementById(changeElementId);
+    const parentHeaderItem = changeElement ? changeElement.closest('.header-item') : null; // Get the parent header-item for background
+
     if (changeElement) {
         let formattedChange = formatValue(change);
 
-        // Remove existing color classes
+        // Remove existing color classes for text
         changeElement.classList.remove('positive', 'negative');
+        // Remove existing background classes for parent
+        if (parentHeaderItem) {
+            parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
+        }
 
         // Determine sign and apply class
+        let isPositive = false;
+        let isNegative = false;
+
         if (typeof change === 'number') {
             if (change > 0) {
                 formattedChange = `+${formattedChange}`;
-                changeElement.classList.add('positive');
+                isPositive = true;
             } else if (change < 0) {
-                changeElement.classList.add('negative');
+                isNegative = true;
             }
         } else if (typeof change === 'string') {
-            if (change.startsWith('+')) {
-                changeElement.classList.add('positive');
-            } else if (change.startsWith('-')) {
-                changeElement.classList.add('negative');
+            // Check if it's a valid number string that might contain +/-
+            const numericChange = parseFloat(change);
+            if (!isNaN(numericChange)) {
+                if (numericChange > 0) {
+                    formattedChange = `+${formattedChange}`;
+                    isPositive = true;
+                } else if (numericChange < 0) {
+                    isNegative = true;
+                }
             }
+            // If it's a string like '--', it won't be positive/negative
         }
+
+        if (isPositive) {
+            changeElement.classList.add('positive');
+            if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
+        } else if (isNegative) {
+            changeElement.classList.add('negative');
+            if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
+        } else {
+            // For zero change or '--'
+            if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
+        }
+
         changeElement.textContent = formattedChange; // Set text content
     }
 }
@@ -186,6 +213,7 @@ async function fetchAndUpdateMarketData() {
 
         // --- Update Header 30Y Fixed (using data from Daily Rates if available, or default to --) ---
         // This will be updated by fetchAndUpdateDailyRates, so initial load can be '--'
+        // Keeping these two lines so they are consistently initialized, then updated by the daily rates fetch.
         updateTextElement('fixed30yCurrentHeader', '--');
         updateTextElement('fixed30yDailyChangeHeader', '--');
 
@@ -308,7 +336,7 @@ async function fetchAndUpdateDailyRates() {
             updateTextElement(`${prefix}LastMonth`, formatPercentage(data?.last_month));
             updateTextElement(`${prefix}YearAgo`, formatPercentage(data?.year_ago));
 
-            // Update Daily Change (Current vs Yesterday for daily rates)
+            // Update Daily Change (Current vs Yesterday for rates)
             const dailyChangeElement = document.getElementById(`${prefix}DailyChange`);
             if (dailyChangeElement) {
                 const changeValue = formatValue(data?.daily_change);
@@ -441,7 +469,7 @@ async function fetchAndUpdateEconomicIndicators() {
     }
 }
 
-// --- Function for Live Stock Data (NEW) ---
+// --- Function for Live Stock Data (UPDATED for Percentage Change Only) ---
 async function fetchAndUpdateLiveStockData() {
     console.log("Fetching live stock data...");
     try {
@@ -451,29 +479,69 @@ async function fetchAndUpdateLiveStockData() {
         }
         const stockData = await res.json();
 
-        // Update SPY
-        if (stockData.SPY) {
-            updateChangeIndicator('spyValue', 'spyChange', stockData.SPY.current, stockData.SPY.change);
-        } else {
-            updateTextElement('spyValue', '--');
-            updateTextElement('spyChange', '--');
+        // Helper to update stock header with percentage change only
+        function updateStockPercentageDisplay(valueElementId, changeElementId, data) {
+            const valueEl = document.getElementById(valueElementId);
+            const changeEl = document.getElementById(changeElementId);
+            const parentHeaderItem = changeEl ? changeEl.closest('.header-item') : null;
+
+            if (valueEl && changeEl) {
+                // Clear the 'value' element as we are only showing percentage in 'change'
+                valueEl.textContent = '--'; // Or empty string: ''
+                valueEl.classList.remove('positive', 'negative'); // Remove any lingering color classes
+
+                // Clear previous content and classes from 'change' element
+                changeEl.textContent = '';
+                changeEl.classList.remove('positive', 'negative');
+
+                // Remove existing background classes for parent
+                if (parentHeaderItem) {
+                    parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
+                }
+
+                if (data && (typeof data.percentChange === 'string' || typeof data.percentChange === 'number')) {
+                    let percentChange = parseFloat(data.percentChange);
+                    if (!isNaN(percentChange)) {
+                        let formattedPercent = percentChange.toFixed(2); // Format to 2 decimal places
+
+                        if (percentChange > 0) {
+                            formattedPercent = `+${formattedPercent}%`;
+                            changeEl.classList.add('positive');
+                            if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
+                        } else if (percentChange < 0) {
+                            formattedPercent = `${formattedPercent}%`; // Negative sign is inherent
+                            changeEl.classList.add('negative');
+                            if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
+                        } else {
+                            formattedPercent = '0.00%'; // Explicitly show 0.00% for no change
+                            if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
+                        }
+                        changeEl.textContent = formattedPercent;
+                    } else {
+                        // Data exists but percentChange is invalid
+                        changeEl.textContent = '--';
+                        if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
+                    }
+                } else {
+                    // No data
+                    changeEl.textContent = '--';
+                    if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
+                }
+            } else {
+                console.warn(`Elements ${valueElementId} or ${changeElementId} not found for stock update.`);
+            }
         }
 
-        // Update QQQ
-        if (stockData.QQQ) {
-            updateChangeIndicator('qqqValue', 'qqqChange', stockData.QQQ.current, stockData.QQQ.change);
-        } else {
-            updateTextElement('qqqValue', '--');
-            updateTextElement('qqqChange', '--');
-        }
 
-        // Update DIA
-        if (stockData.DIA) {
-            updateChangeIndicator('diaValue', 'diaChange', stockData.DIA.current, stockData.DIA.change);
-        } else {
-            updateTextElement('diaValue', '--');
-            updateTextElement('diaChange', '--');
-        }
+        // Update SPY (SP500)
+        updateStockPercentageDisplay('spyValue', 'spyChange', stockData.SPY);
+
+        // Update QQQ (NSDQ)
+        updateStockPercentageDisplay('qqqValue', 'qqqChange', stockData.QQQ);
+
+        // Update DIA (Dow)
+        updateStockPercentageDisplay('diaValue', 'diaChange', stockData.DIA);
+
 
     } catch (err) {
         console.error("Live stock data fetch error:", err);
@@ -487,14 +555,14 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchAndUpdateMarketData();
     fetchAndUpdateDailyRates();
     fetchAndUpdateEconomicIndicators();
-    fetchAndUpdateLiveStockData(); // NEW: Initial fetch for stock data
+    fetchAndUpdateLiveStockData(); // Initial fetch for stock data
 
     // Set interval for market data to refresh every 60 seconds
     setInterval(fetchAndUpdateMarketData, 60000); // 60 seconds
 
     // Set interval for live stock data (e.g., every 10 seconds for more "live" feel)
     // Adjust this frequency based on your Finnhub plan's limits and desired dynamism.
-    setInterval(fetchAndUpdateLiveStockData, 10000); // NEW: 10 seconds
+    setInterval(fetchAndUpdateLiveStockData, 10000); // 10 seconds
 
     // Daily rates and economic indicators typically don't change intra-day.
     // They will refresh on page load. If a tab is open for multiple days,
