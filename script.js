@@ -27,54 +27,27 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change) {
     updateTextElement(valueElementId, formatValue(value)); // Update the main value
 
     const changeElement = document.getElementById(changeElementId);
-    const parentHeaderItem = changeElement ? changeElement.closest('.header-item') : null; // Get the parent header-item for background
-
     if (changeElement) {
         let formattedChange = formatValue(change);
 
-        // Remove existing color classes for text
+        // Remove existing color classes
         changeElement.classList.remove('positive', 'negative');
-        // Remove existing background classes for parent
-        if (parentHeaderItem) {
-            parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
-        }
 
         // Determine sign and apply class
-        let isPositive = false;
-        let isNegative = false;
-
         if (typeof change === 'number') {
             if (change > 0) {
                 formattedChange = `+${formattedChange}`;
-                isPositive = true;
+                changeElement.classList.add('positive');
             } else if (change < 0) {
-                isNegative = true;
+                changeElement.classList.add('negative');
             }
         } else if (typeof change === 'string') {
-            // Check if it's a valid number string that might contain +/-
-            const numericChange = parseFloat(change);
-            if (!isNaN(numericChange)) {
-                if (numericChange > 0) {
-                    formattedChange = `+${formattedChange}`;
-                    isPositive = true;
-                } else if (numericChange < 0) {
-                    isNegative = true;
-                }
+            if (change.startsWith('+')) {
+                changeElement.classList.add('positive');
+            } else if (change.startsWith('-')) {
+                changeElement.classList.add('negative');
             }
-            // If it's a string like '--', it won't be positive/negative
         }
-
-        if (isPositive) {
-            changeElement.classList.add('positive');
-            if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
-        } else if (isNegative) {
-            changeElement.classList.add('negative');
-            if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
-        } else {
-            // For zero change or '--'
-            if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
-        }
-
         changeElement.textContent = formattedChange; // Set text content
     }
 }
@@ -213,7 +186,6 @@ async function fetchAndUpdateMarketData() {
 
         // --- Update Header 30Y Fixed (using data from Daily Rates if available, or default to --) ---
         // This will be updated by fetchAndUpdateDailyRates, so initial load can be '--'
-        // Keeping these two lines so they are consistently initialized, then updated by the daily rates fetch.
         updateTextElement('fixed30yCurrentHeader', '--');
         updateTextElement('fixed30yDailyChangeHeader', '--');
 
@@ -469,7 +441,7 @@ async function fetchAndUpdateEconomicIndicators() {
     }
 }
 
-// --- Function for Live Stock Data (UPDATED to use changeSinceOpen) ---
+// --- Function for Live Stock Data (NEW) ---
 async function fetchAndUpdateLiveStockData() {
     console.log("Fetching live stock data...");
     try {
@@ -479,25 +451,25 @@ async function fetchAndUpdateLiveStockData() {
         }
         const stockData = await res.json();
 
-        // Update SPY (S&P 500)
+        // Update SPY
         if (stockData.SPY) {
-            updateChangeIndicator('spyValue', 'spyChange', stockData.SPY.current, stockData.SPY.changeSinceOpen);
+            updateChangeIndicator('spyValue', 'spyChange', stockData.SPY.current, stockData.SPY.change);
         } else {
             updateTextElement('spyValue', '--');
             updateTextElement('spyChange', '--');
         }
 
-        // Update QQQ (NASDAQ)
+        // Update QQQ
         if (stockData.QQQ) {
-            updateChangeIndicator('qqqValue', 'qqqChange', stockData.QQQ.current, stockData.QQQ.changeSinceOpen);
+            updateChangeIndicator('qqqValue', 'qqqChange', stockData.QQQ.current, stockData.QQQ.change);
         } else {
             updateTextElement('qqqValue', '--');
             updateTextElement('qqqChange', '--');
         }
 
-        // Update DIA (DJIA)
+        // Update DIA
         if (stockData.DIA) {
-            updateChangeIndicator('diaValue', 'diaChange', stockData.DIA.current, stockData.DIA.changeSinceOpen);
+            updateChangeIndicator('diaValue', 'diaChange', stockData.DIA.current, stockData.DIA.change);
         } else {
             updateTextElement('diaValue', '--');
             updateTextElement('diaChange', '--');
@@ -515,14 +487,14 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchAndUpdateMarketData();
     fetchAndUpdateDailyRates();
     fetchAndUpdateEconomicIndicators();
-    fetchAndUpdateLiveStockData(); // Initial fetch for stock data
+    fetchAndUpdateLiveStockData(); // NEW: Initial fetch for stock data
 
     // Set interval for market data to refresh every 60 seconds
     setInterval(fetchAndUpdateMarketData, 60000); // 60 seconds
 
     // Set interval for live stock data (e.g., every 10 seconds for more "live" feel)
     // Adjust this frequency based on your Finnhub plan's limits and desired dynamism.
-    setInterval(fetchAndUpdateLiveStockData, 10000); // 10 seconds
+    setInterval(fetchAndUpdateLiveStockData, 10000); // NEW: 10 seconds
 
     // Daily rates and economic indicators typically don't change intra-day.
     // They will refresh on page load. If a tab is open for multiple days,
