@@ -1,90 +1,80 @@
 // netlify/functions/getDailyRatesData.js
-// NO CHANGES NEEDED FOR THIS FILE FROM PREVIOUS RESPONSE.
-// It already calculates daily_change and returns latest, last_month, year_ago.
-// It will not return a 'yesterday' field unless your Firestore documents have one.
+const admin = require('firebase-admin');
 
-const admin = require("firebase-admin");
-
+// Initialize Firebase Admin only if it hasn't been initialized
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      project_id: process.env.FIREBASE_PROJECT_ID,
-      client_email: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-    }),
-  });
+    try {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: process.env.FIREBASE_DATABASE_URL
+        });
+    } catch (e) {
+        console.error("Firebase initialization error:", e);
+        // This will cause the function to fail on initialization
+    }
 }
 
-const db = admin.firestore();
+const db = admin.database();
 
 exports.handler = async function (event, context) {
-  try {
-    const ratesCollectionRef = db.collection("fred_reports");
+    try {
+        const ratesRef = db.ref('LockMVP/fred_reports'); // Adjust this path if 'fred_reports' is not directly under LockMVP
 
-    const [
-      fixed30YSnap,
-      va30YSnap,
-      fha30YSnap,
-      jumbo30YSnap,
-      usda30YSnap,
-      fixed15YSnap,
-    ] = await Promise.all([
-      ratesCollectionRef.doc("30Y Fixed Rate Conforming").get(),
-      ratesCollectionRef.doc("30Y VA Mortgage Index").get(),
-      ratesCollectionRef.doc("30Y FHA Mortgage Index").get(),
-      ratesCollectionRef.doc("30Y Jumbo Mortgage Index").get(),
-      ratesCollectionRef.doc("30Y USDA Mortgage Index").get(),
-      ratesCollectionRef.doc("15Y Mortgage Avg US").get(),
-    ]);
+        const snapshot = await ratesRef.once('value');
+        const fredReports = snapshot.val();
 
-    const responseData = {};
+        // Helper function to safely extract data and calculate daily_change
+        function extractRateData(path) {
+            const data = fredReports[path];
+            if (!data) {
+                console.warn(`No data found for path: ${path}`);
+                return null;
+            }
 
-    const addRateData = (docSnap, keyName) => {
-      if (docSnap.exists) {
-        const data = docSnap.data();
-        const latest = parseFloat(data.latest);
-        const lastMonth = parseFloat(data.last_month); // Used for daily_change calc
+            const latest = parseFloat(data.latest);
+            const yesterday = parseFloat(data.yesterday); // Assuming 'yesterday' key exists
 
-        let dailyChange = null;
-        if (!isNaN(latest) && !isNaN(lastMonth)) {
-            dailyChange = (latest - lastMonth).toFixed(3);
+            let daily_change = null;
+            if (!isNaN(latest) && !isNaN(yesterday)) {
+                daily_change = (latest - yesterday).toFixed(3);
+            } else {
+                console.warn(`Invalid numeric data for daily_change in path: ${path}`);
+            }
+
+            return {
+                latest: latest.toFixed(3),
+                latest_date: data.latest_date || null,
+                yesterday: yesterday.toFixed(3),
+                last_month: parseFloat(data.last_month).toFixed(3),
+                year_ago: parseFloat(data.year_ago).toFixed(3),
+                daily_change: daily_change
+            };
         }
 
-        responseData[keyName] = {
-          latest: data.latest ?? null,
-          latest_date: data.latest_date ?? null,
-          // If you ever implement a 'yesterday' field in Firestore, it would be added here:
-          // yesterday: data.yesterday ?? null,
-          last_month: data.last_month ?? null,
-          last_month_date: data.last_month_date ?? null,
-          year_ago: data.year_ago ?? null,
-          year_ago_date: data.year_ago_date ?? null,
-          daily_change: dailyChange,
+        const dailyRates = {
+            fixed30Y: extractRateData('30Y Fixed Mortgage Index'),
+            va30Y: extractRateData('30Y VA Mortgage Index'),
+            fha30Y: extractRateData('30Y FHA Mortgage Index'),
+            jumbo30Y: extractRateData('30Y Jumbo Mortgage Index'),
+            // UPDATED: Explicitly target "30Y USDA Mortgage Index" for USDA
+            usda30y: extractRateData('30Y USDA Mortgage Index'),
+            fixed15Y: extractRateData('15Y Fixed Mortgage Index'),
         };
 
-      } else {
-        console.warn(`Document for ${keyName} not found.`);
-        responseData[keyName] = null;
-      }
-    };
+        return {
+            statusCode: 200,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(dailyRates),
+        };
 
-    addRateData(fixed30YSnap, "fixed30Y");
-    addRateData(va30YSnap, "va30Y");
-    addRateData(fha30YSnap, "fha30Y");
-    addRateData(jumbo30YSnap, "jumbo30Y");
-    addRateData(usda30YSnap, "usda30Y");
-    addRateData(fixed15YSnap, "fixed15Y");
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify(responseData),
-    };
-
-  } catch (error) {
-    console.error("Error in getDailyRatesData:", error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
-    };
-  }
+    } catch (error) {
+        console.error("Error fetching daily rates data from Firebase:", error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: "Failed to fetch daily rates data", details: error.message }),
+        };
+    }
 };
