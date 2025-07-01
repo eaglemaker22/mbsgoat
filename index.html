@@ -27,17 +27,17 @@
             </div>
 
             <div class="header-item stock-section">
-                <span class="label">S&P 500</span>
+                <span class="label">SPY</span>
                 <span class="value" id="spyValue">--</span>
                 <span class="change" id="spyChange">--</span>
             </div>
             <div class="header-item stock-section">
-                <span class="label">NASDAQ</span>
+                <span class="label">QQQ</span>
                 <span class="value" id="qqqValue">--</span>
                 <span class="change" id="qqqChange">--</span>
             </div>
             <div class="header-item stock-section">
-                <span class="label">DJIA</span>
+                <span class="label">DIA</span>
                 <span class="value" id="diaValue">--</span>
                 <span class="change" id="diaChange">--</span>
             </div>
@@ -249,4 +249,46 @@
                 </div>
 
                 <div class="rate-box new-blue-bg">
-                    <h3>Consumer
+                    <h3>Consumer Sentiment <span class="monthly-change-economic" id="umcsentMonthlyChange"></span></h3>
+                    <p>Current: <span id="umcsentCurrent">--</span></p>
+                    <p>Last Month: <span id="umcsentLastMonth">--</span></p>
+                    <p>1 Year Ago: <span id="umcsentYearAgo">--</span></p>
+                    <p class="update-time" id="umcsentUpdateTime">As Of: N/A</p>
+                </div>
+
+                <div class="rate-box new-orange-bg">
+                    <h3>Case-Shiller US HPI <span class="monthly-change-economic" id="csushpinsaMonthlyChange"></span></h3>
+                    <p>Current: <span id="csushpinsaCurrent">--</span></p>
+                    <p>Last Month: <span id="csushpinsaLastMonth">--</span></p>
+                    <p>1 Year Ago: <span id="csushpinsaYearAgo">--</span></p>
+                    <p class="update-time" id="csushpinsaUpdateTime">As Of: N/A</p>
+                </div>
+
+                <div class="rate-box new-purple-bg">
+                    <h3>10Y Breakeven Inflation Rate <span class="monthly-change-economic" id="t10yieMonthlyChange"></span></h3>
+                    <p>Current: <span id="t10yieCurrent">--</span></p>
+                    <p>Last Month: <span id="t10yieLastMonth">--</span></p>
+                    <p>1 Year Ago: <span id="t10yieYearAgo">--</span></p>
+                    <p class="update-time" id="t10yieUpdateTime">As Of: N/A</p>
+                </div>
+
+                 <div class="rate-box new-purple-bg">
+                    <h3>10Y Treasury Minus 2Y Treasury <span class="monthly-change-economic" id="t10y2yMonthlyChange"></span></h3>
+                    <p>Current: <span id="t10y2yCurrent">--</span></p>
+                    <p>Last Month: <span id="t10y2yLastMonth">--</span></p>
+                    <p>1 Year Ago: <span id="t10y2yYearAgo">--</span></p>
+                    <p class="update-time" id="t10y2yUpdateTime">As Of: N/A</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="freddie-mac-section">
+            <h2 class="section-title">FREDDIE MAC AVG RATE</h2>
+            <p class="update-time">Updated: 10:00AM 6/11/2025</p>
+            </section>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
