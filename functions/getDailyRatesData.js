@@ -25,7 +25,7 @@ exports.handler = async function (event, context) {
       usda30YSnap,
       fixed15YSnap,
     ] = await Promise.all([
-      ratesCollectionRef.doc("30Y Fixed Mortgage Index").get(),
+      ratesCollectionRef.doc("30Y Fixed Rate Conforming").get(),
       ratesCollectionRef.doc("30Y VA Mortgage Index").get(),
       ratesCollectionRef.doc("30Y FHA Mortgage Index").get(),
       ratesCollectionRef.doc("30Y Jumbo Mortgage Index").get(),
