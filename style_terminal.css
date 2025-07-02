@@ -1,0 +1,134 @@
+/* Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Base body styling */
+body {
+  font-family: 'IBM Plex Mono', monospace;
+  background-color: #000; /* True black background */
+  color: #eee; /* Light text color */
+  padding: 20px;
+  line-height: 1.5;
+}
+
+/* Container */
+.terminal-container {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Section styling */
+.terminal-section {
+  margin-bottom: 40px;
+}
+
+/* Section headings */
+.terminal-section h2 {
+  color: #ffcc00; /* Yellow headers */
+  font-size: 1.2em;
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Timestamp */
+.timestamp {
+  font-size: 0.9em;
+  color: #888;
+}
+
+/* Snapshot styling */
+.snapshot-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.pair {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 200px;
+}
+
+.item {
+  color: #eee;
+  font-size: 1em;
+}
+
+/* Equities row */
+.equities-row {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.equity {
+  font-size: 1em;
+}
+
+/* Tables */
+.terminal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+
+.terminal-table th,
+.terminal-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #333;
+}
+
+.terminal-table th {
+  color: #ffcc00; /* Yellow headers */
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.terminal-table td {
+  color: #eee;
+}
+
+/* Colors for changes */
+.change {
+  font-weight: 700;
+}
+
+.change.positive {
+  color: #00cc00; /* Bright green for positive changes */
+}
+
+.change.negative {
+  color: #ff3333; /* Bright red for negative changes */
+}
+
+/* Equities % change colors */
+.equities-row .change.positive {
+  color: #00cc00;
+}
+
+.equities-row .change.negative {
+  color: #ff3333;
+}
+
+/* Make tables horizontally scrollable on small screens */
+@media (max-width: 768px) {
+  .terminal-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .snapshot-row,
+  .equities-row {
+    flex-direction: column;
+  }
+}
