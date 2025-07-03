@@ -134,6 +134,38 @@ body {
   color: #00FF66;
   font-weight: 600;
 }
+.snapshot-row {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #333;
+  padding: 8px 0;
+}
+
+.snapshot-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.snapshot-column .item {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.label {
+  flex: 1;
+  min-width: 70px;
+}
+
+.value, .change {
+  flex: 0;
+  min-width: 50px;
+  text-align: right;
+}
+
 
 .change.negative,
 .value.negative {
