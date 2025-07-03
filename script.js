@@ -481,56 +481,38 @@ async function fetchAndUpdateLiveStockData() {
 
         // Helper to update stock header with percentage change only
         function updateStockPercentageDisplay(valueElementId, changeElementId, data) {
-            const valueEl = document.getElementById(valueElementId);
-            const changeEl = document.getElementById(changeElementId);
-            const parentHeaderItem = changeEl ? changeEl.closest('.header-item') : null;
+          const changeEl = document.getElementById(changeElementId);
 
-            if (valueEl && changeEl) {
-                // Clear the 'value' element as we are only showing percentage in 'change'
-                valueEl.textContent = '--'; // Or empty string: ''
-                valueEl.classList.remove('positive', 'negative'); // Remove any lingering color classes
+          if (changeEl) {
+                // Clear previous content and classes
+            changeEl.textContent = '';
+            changeEl.classList.remove('positive', 'negative');
 
-                // Clear previous content and classes from 'change' element
-                changeEl.textContent = '';
-                changeEl.classList.remove('positive', 'negative');
-
-                // Remove existing background classes for parent
-                if (parentHeaderItem) {
-                    parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
-                }
-
-                if (data && (typeof data.percentChange === 'string' || typeof data.percentChange === 'number')) {
-                    let percentChange = parseFloat(data.percentChange);
-                    if (!isNaN(percentChange)) {
-                        let formattedPercent = percentChange.toFixed(2); // Format to 2 decimal places
-
-                        if (percentChange > 0) {
-                            formattedPercent = `+${formattedPercent}%`;
-                            changeEl.classList.add('positive');
-                            if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
-                        } else if (percentChange < 0) {
-                            formattedPercent = `${formattedPercent}%`; // Negative sign is inherent
-                            changeEl.classList.add('negative');
-                            if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
-                        } else {
-                            formattedPercent = '0.00%'; // Explicitly show 0.00% for no change
-                            if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
-                        }
-                        changeEl.textContent = formattedPercent;
-                    } else {
-                        // Data exists but percentChange is invalid
-                        changeEl.textContent = '--';
-                        if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
-                    }
-                } else {
-                    // No data
-                    changeEl.textContent = '--';
-                    if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
-                }
-            } else {
-                console.warn(`Elements ${valueElementId} or ${changeElementId} not found for stock update.`);
-            }
+    if (data && typeof data.percentChange !== 'undefined') {
+      const percent = parseFloat(data.percentChange);
+      if (!isNaN(percent)) {
+        let formatted = percent.toFixed(2);
+        if (percent > 0) {
+          formatted = `+${formatted}%`;
+          changeEl.classList.add('positive');
+        } else if (percent < 0) {
+          formatted = `${formatted}%`;
+          changeEl.classList.add('negative');
+        } else {
+          formatted = '0.00%';
         }
+        changeEl.textContent = formatted;
+      } else {
+        changeEl.textContent = '--';
+      }
+    } else {
+      changeEl.textContent = '--';
+    }
+  } else {
+    console.warn(`Element ${changeElementId} not found for stock update.`);
+  }
+}
+
 
 
         // Update SPY (SP500)
