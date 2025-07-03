@@ -203,13 +203,30 @@ async function fetchAndUpdateMarketData() {
         }
 
         // --- Update Header UMBS 5.5 ---
-        if (dataTop?.UMBS_5_5) {
-            const umbs55Value = parseFloat(dataTop.UMBS_5_5.current);
-            const umbs55Change = parseFloat(dataTop.UMBS_5_5.change);
-            updateChangeIndicator('ums55Value', 'ums55Change', umbs55Value.toFixed(3), umbs55Change.toFixed(3));
-        } else {
-            console.warn("UMBS_5_5 data not found for header in getTopDashboardData response.");
-        }
+        // --- Update Header UMBS 5.5 ---
+if (dataTop?.UMBS_5_5) {
+    const umbs55Value = parseFloat(dataTop.UMBS_5_5.current);
+    const umbs55Change = parseFloat(dataTop.UMBS_5_5.change);
+    updateChangeIndicator('umbs55Value', 'umbs55Change',
+        isNaN(umbs55Value) ? "--" : umbs55Value.toFixed(3),
+        isNaN(umbs55Change) ? "--" : umbs55Change.toFixed(3)
+    );
+} else {
+    console.warn("UMBS_5_5 data not found for header in getTopDashboardData response.");
+}
+
+// --- Update Header GNMA 5.5 ---
+if (dataTop?.GNMA_5_5) {
+    const gnma55Value = parseFloat(dataTop.GNMA_5_5.current);
+    const gnma55Change = parseFloat(dataTop.GNMA_5_5.change);
+    updateChangeIndicator('gnma55Value', 'gnma55Change',
+        isNaN(gnma55Value) ? "--" : gnma55Value.toFixed(3),
+        isNaN(gnma55Change) ? "--" : gnma55Change.toFixed(3)
+    );
+} else {
+    console.warn("GNMA_5_5 data not found for header in getTopDashboardData response.");
+}
+
 
         // --- Update Header 30Y Fixed (using data from Daily Rates if available, or default to --) ---
         // This will be updated by fetchAndUpdateDailyRates, so initial load can be '--'
