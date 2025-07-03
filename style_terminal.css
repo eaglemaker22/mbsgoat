@@ -188,3 +188,38 @@ body {
 .terminal-footer a:hover {
   color: #fff;
 }
+
+/* Header subtitles in snapshot headings */
+.snapshot-row-headers {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.snapshot-row-headers .header-item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 0.85em;
+}
+
+.snapshot-row-headers .header-sub {
+  color: #888; /* Gray subtitles */
+  min-width: 3em;
+}
+
+.snapshot-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+.snapshot-column .item {
+  font-size: 0.9em;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  line-height: 1.2;
+}
