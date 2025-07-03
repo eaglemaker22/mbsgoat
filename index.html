@@ -22,40 +22,34 @@
 
     <!-- MARKET SNAPSHOT -->
     <section class="terminal-section snapshot-section">
-      <h2>
-        MARKET SNAPSHOT
-      </h2>
-
+      <h2>MARKET SNAPSHOT</h2>
       <div class="snapshot-headings">
         <div class="column-heading">MBS</div>
         <div class="column-heading">TREASURIES</div>
         <div class="column-heading">MORTGAGE RATES</div>
         <div class="column-heading">EQUITIES</div>
       </div>
-
       <div class="snapshot-row">
         <!-- MBS Column -->
         <div class="snapshot-column">
           <div class="item">UMBS 5.5 <span class="value">--</span> <span class="change">--</span></div>
           <div class="item">GNMA 5.5 <span class="value">--</span> <span class="change">--</span></div>
         </div>
-
         <!-- Treasuries Column -->
         <div class="snapshot-column">
           <div class="item">10Y <span class="value">--</span> <span class="change">--</span></div>
           <div class="item">30Y <span class="value">--</span> <span class="change">--</span></div>
         </div>
-
         <!-- Mortgage Rates Column -->
         <div class="snapshot-column">
           <div class="item">30Y Fixed <span class="value">--</span></div>
           <div class="item">15Y Fixed <span class="value">--</span></div>
         </div>
-
         <!-- Equities Column -->
         <div class="snapshot-column">
-          <div class="item">DOW <span class="change">--</span></div>
-          <div class="item">S&P500 <span class="change">--</span></div>
+          <div class="item">DOW <span id="diaChange">--</span></div>
+          <div class="item">S&P500 <span id="spyChange">--</span></div>
+          <div class="item">NSDQ <span id="qqqChange">--</span></div>
         </div>
       </div>
     </section>
@@ -83,10 +77,6 @@
           <tr><td>GNMA 6.0</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
           <tr><td>US10Y</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
           <tr><td>US30Y</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>UMBS 5.5 Shadow</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>UMBS 6.0 Shadow</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>GNMA 5.5 Shadow</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>GNMA 6.0 Shadow</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
         </tbody>
       </table>
     </section>
@@ -138,31 +128,11 @@
           <tr><td>Building Permits</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
           <tr><td>Retail Sales</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
           <tr><td>Consumer Sentiment</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>Case-Shiller US HPI</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>10Y Breakeven Inflation</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>10Y - 2Y Treasury Spread</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
         </tbody>
       </table>
     </section>
 
-<!-- EQUITIES -->
-<section class="terminal-section">
-  <h2>EQUITIES – % CHANGE</h2>
-  <div class="equities-row">
-    <div class="equity">
-      DOW <span id="diaChange">--</span>
-    </div>
-    <div class="equity">
-      S&P500 <span id="spyChange">--</span>
-    </div>
-    <div class="equity">
-      NSDQ <span id="qqqChange">--</span>
-    </div>
-  </div>
-</section>
-
-
-    <!-- ECONOMIC EVENTS -->
+    <!-- ECONOMIC EVENT CALENDAR -->
     <section class="terminal-section">
       <h2>ECONOMIC EVENT CALENDAR</h2>
       <table class="terminal-table">
