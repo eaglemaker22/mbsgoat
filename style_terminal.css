@@ -68,7 +68,6 @@ body {
   padding-bottom: 4px;
 }
 
-
 /* Snapshot Headings */
 .snapshot-headings {
   display: flex;
@@ -100,10 +99,12 @@ body {
   flex: 1;
 }
 
+/* Updated spacing so labels and values are close together */
 .snapshot-column .item {
   font-size: 0.9em;
   display: flex;
-  justify-content: space-between;
+  gap: 6px;       /* Small space between label and value */
+  align-items: center;
   line-height: 1.2;
 }
 
