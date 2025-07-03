@@ -20,139 +20,30 @@
       </div>
     </div>
 
-    <!-- MARKET SNAPSHOT -->
-    <section class="terminal-section snapshot-section">
-      <h2>MARKET SNAPSHOT</h2>
-      <div class="snapshot-headings">
-        <div class="column-heading">MBS</div>
-        <div class="column-heading">TREASURIES</div>
-        <div class="column-heading">MORTGAGE RATES</div>
-        <div class="column-heading">EQUITIES</div>
-      </div>
-      <div class="snapshot-row">
-        <!-- MBS Column -->
-        <div class="snapshot-column">
-          <div class="item">UMBS 5.5 <span class="value">--</span> <span class="change">--</span></div>
-          <div class="item">GNMA 5.5 <span class="value">--</span> <span class="change">--</span></div>
+    <!-- EQUITIES (this section was working) -->
+    <section class="terminal-section">
+      <h2>EQUITIES – % CHANGE</h2>
+      <div class="equities-row">
+        <div class="equity">
+          DOW 
+          <span id="diaChange">--</span>
         </div>
-        <!-- Treasuries Column -->
-        <div class="snapshot-column">
-          <div class="item">10Y <span class="value">--</span> <span class="change">--</span></div>
-          <div class="item">30Y <span class="value">--</span> <span class="change">--</span></div>
+        <div class="equity">
+          S&P500 
+          <span id="spyChange">--</span>
         </div>
-        <!-- Mortgage Rates Column -->
-        <div class="snapshot-column">
-          <div class="item">30Y Fixed <span class="value">--</span></div>
-          <div class="item">15Y Fixed <span class="value">--</span></div>
-        </div>
-        <!-- Equities Column -->
-        <div class="snapshot-column">
-          <div class="item">DOW <span id="diaChange">--</span></div>
-          <div class="item">S&P500 <span id="spyChange">--</span></div>
-          <div class="item">NSDQ <span id="qqqChange">--</span></div>
+        <div class="equity">
+          NSDQ 
+          <span id="qqqChange">--</span>
         </div>
       </div>
     </section>
 
-    <!-- BONDS & TREASURIES -->
-    <section class="terminal-section">
-      <h2>BONDS & TREASURIES</h2>
-      <table class="terminal-table">
-        <thead>
-          <tr>
-            <th>Instrument</th>
-            <th>Current</th>
-            <th>Change</th>
-            <th>Open</th>
-            <th>High</th>
-            <th>Low</th>
-            <th>Prior Close</th>
-            <th>Updated</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>UMBS 5.5</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>UMBS 6.0</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>GNMA 5.5</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>GNMA 6.0</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>US10Y</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>US30Y</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- DAILY MORTGAGE RATES -->
-    <section class="terminal-section">
-      <h2>DAILY MORTGAGE RATES</h2>
-      <table class="terminal-table">
-        <thead>
-          <tr>
-            <th>Product</th>
-            <th>Current</th>
-            <th>Yesterday</th>
-            <th>Last Month</th>
-            <th>1 Year Ago</th>
-            <th>Change vs 1M</th>
-            <th>Change vs 1Y</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>30Y Fixed</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>30Y VA</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>30Y FHA</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>30Y Jumbo</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>30Y USDA</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>15Y Fixed</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ECONOMIC DATA -->
-    <section class="terminal-section">
-      <h2>ECONOMIC DATA HIGHLIGHTS</h2>
-      <table class="terminal-table">
-        <thead>
-          <tr>
-            <th>Report</th>
-            <th>Latest</th>
-            <th>As Of</th>
-            <th>Last Month</th>
-            <th>1 Year Ago</th>
-            <th>Next Release</th>
-            <th>Coverage Period</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>Total Housing Starts</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>Single-Family Permits</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>Building Permits</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>Retail Sales</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-          <tr><td>Consumer Sentiment</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ECONOMIC EVENT CALENDAR -->
-    <section class="terminal-section">
-      <h2>ECONOMIC EVENT CALENDAR</h2>
-      <table class="terminal-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Event</th>
-            <th>Consensus</th>
-            <th>Prior</th>
-            <th>Coverage Period</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
-        </tbody>
-      </table>
-    </section>
+    <!-- You can re-add other sections below -->
+    <!-- BONDS, RATES, ECONOMIC DATA, etc. -->
 
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
