@@ -12,7 +12,7 @@
 
     <!-- HEADER -->
     <div class="terminal-header">
-      <div class="title">MBSGOAT Terminal</div>
+      <div class="title">MBSGOAT </div>
       <div class="status">
         <span class="username">Chris</span>
         <span class="cursor">█</span>
@@ -22,96 +22,75 @@
 
     <!-- MARKET SNAPSHOT -->
     <section class="terminal-section snapshot-section">
-      <h2>MARKET SNAPSHOT</h2>
-      <div class="snapshot-headings snapshot-row">
-        <!-- MBS Heading -->
-        <div class="snapshot-column">
-          <span class="label">MBS</span>
-          <span class="header-sub">Price</span>
-          <span class="header-sub">Today</span>
-        </div>
-        <!-- Treasuries Heading -->
-        <div class="snapshot-column">
-          <span class="label">Treasuries</span>
-          <span class="header-sub">Yield</span>
-          <span class="header-sub">Today</span>
-        </div>
-        <!-- Mortgage Rates Heading -->
-        <div class="snapshot-column">
-          <span class="label">Mortgage Rates</span>
-          <span class="header-sub">Today</span>
-        </div>
-        <!-- Equities Heading -->
-        <div class="snapshot-column">
-          <span class="label">Equities</span>
-          <span class="header-sub">Today</span>
-        </div>
+  <h2>MARKET SNAPSHOT</h2>
+  <div class="snapshot-headings">
+    <div class="column-heading">MBS</div>
+    <div class="column-heading">Treasuries</div>
+    <div class="column-heading">Mortgage Rates</div>
+    <div class="column-heading">Equities</div>
+  </div>
+  <div class="snapshot-row">
+    <!-- MBS -->
+    <div class="snapshot-column">
+      <div class="item">
+        <span class="label">UMBS 5.5</span>
+        <span class="value" id="umbs55Value">--</span>
+        <span class="change" id="umbs55Change">--</span>
       </div>
-
-      <div class="snapshot-row">
-        <!-- MBS Column -->
-        <div class="snapshot-column">
-          <div class="item">
-            <span>UMBS 5.5</span>
-            <span class="data" id="umbs55Value">--</span>
-            <span class="data" id="umbs55Change">--</span>
-          </div>
-          <div class="item">
-            <span>GNMA 5.5</span>
-            <span class="data" id="gnma55Value">--</span>
-            <span class="data" id="gnma55Change">--</span>
-          </div>
-        </div>
-
-        <!-- Treasuries Column -->
-        <div class="snapshot-column">
-          <div class="item">
-            <span>10Y</span>
-            <span class="data" id="us10yValue">--</span>
-            <span class="data" id="us10yChange">--</span>
-          </div>
-          <div class="item">
-            <span>30Y</span>
-            <span class="data" id="us30yValue">--</span>
-            <span class="data" id="us30yChange">--</span>
-          </div>
-        </div>
-
-        <!-- Mortgage Rates Column -->
-        <div class="snapshot-column">
-          <div class="item">
-            <span>30Y Fixed</span>
-            <span class="data" id="fixed30yValue">--</span>
-          </div>
-          <div class="item">
-            <span>15Y Fixed</span>
-            <span class="data" id="fixed15yValue">--</span>
-          </div>
-        </div>
-
-        <!-- Equities Column -->
-        <div class="snapshot-column">
-          <div class="item">
-            <span>DOW</span>
-            <span class="data" id="diaChange">--</span>
-          </div>
-          <div class="item">
-            <span>S&P500</span>
-            <span class="data" id="spyChange">--</span>
-          </div>
-          <div class="item">
-            <span>NSDQ</span>
-            <span class="data" id="qqqChange">--</span>
-          </div>
-        </div>
+      <div class="item">
+        <span class="label">GNMA 5.5</span>
+        <span class="value" id="gnma55Value">--</span>
+        <span class="change" id="gnma55Change">--</span>
       </div>
+    </div>
 
-      <!-- Bottom Red Line + Timestamp -->
-      <div class="snapshot-footer">
-        <div class="footer-line"></div>
-        <div class="timestamp" id="lastUpdated">Last updated: --</div>
+    <!-- Treasuries -->
+    <div class="snapshot-column">
+      <div class="item">
+        <span class="label">10Y</span>
+        <span class="value" id="us10yValue">--</span>
+        <span class="change" id="us10yChange">--</span>
       </div>
-    </section>
+      <div class="item">
+        <span class="label">30Y</span>
+        <span class="value" id="us30yValue">--</span>
+        <span class="change" id="us30yChange">--</span>
+      </div>
+    </div>
+
+    <!-- Mortgage Rates -->
+    <div class="snapshot-column">
+      <div class="item">
+        <span class="label">30Y Fixed</span>
+        <span class="value" id="fixed30yValue">--</span>
+      </div>
+      <div class="item">
+        <span class="label">15Y Fixed</span>
+        <span class="value" id="fixed15yValue">--</span>
+      </div>
+    </div>
+
+    <!-- Equities -->
+    <div class="snapshot-column">
+      <div class="item">
+        <span class="label">DOW</span>
+        <span class="change" id="diaChange">--</span>
+      </div>
+      <div class="item">
+        <span class="label">S&P500</span>
+        <span class="change" id="spyChange">--</span>
+      </div>
+      <div class="item">
+        <span class="label">NSDQ</span>
+        <span class="change" id="qqqChange">--</span>
+      </div>
+    </div>
+  </div>
+  <div class="snapshot-footer">
+    <span id="lastUpdated" class="timestamp">Last updated: --</span>
+  </div>
+</section>
+
 
     <!-- BONDS & TREASURIES -->
     <section class="terminal-section">
