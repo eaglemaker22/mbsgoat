@@ -24,7 +24,7 @@ body {
 }
 
 .terminal-header .title {
-  color: #00FF66; /* Mainframe green */
+  color: #00FF66;
   font-weight: bold;
   font-size: 1.2em;
 }
@@ -37,24 +37,21 @@ body {
 }
 
 .terminal-header .username {
-  color: #3399FF; /* Blue username */
+  color: #3399FF;
   font-weight: 600;
 }
 
 .terminal-header .access {
-  color: #00FF66; /* Green Access Granted */
+  color: #00FF66;
 }
 
 .terminal-header .cursor {
-  color: #FFF; /* White blinking cursor */
+  color: #FFF;
   animation: blink 1s step-start infinite;
 }
 
-/* Blinking cursor animation */
 @keyframes blink {
-  50% {
-    opacity: 0;
-  }
+  50% { opacity: 0; }
 }
 
 /* Section Titles */
@@ -64,23 +61,8 @@ body {
   font-size: 1em;
   margin-bottom: 8px;
   text-transform: uppercase;
-  border-bottom: 1px solid #FF0000; /* RED underline */
+  border-bottom: 1px solid #FF0000;
   padding-bottom: 4px;
-}
-
-/* Snapshot Headings */
-.snapshot-headings {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
-.snapshot-headings .column-heading {
-  color: #FFD700;
-  font-size: 0.9em;
-  font-weight: 600;
-  flex: 1;
-  text-align: left;
 }
 
 /* Snapshot Rows */
@@ -89,7 +71,15 @@ body {
   justify-content: space-between;
   border-bottom: 1px solid #333;
   padding-bottom: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+}
+
+.snapshot-row-headers {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #333;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
 }
 
 .snapshot-column {
@@ -97,22 +87,40 @@ body {
   flex-direction: column;
   gap: 3px;
   flex: 1;
+  min-width: 180px;
 }
 
-/* Updated spacing so labels and values are close together */
-.snapshot-column .item {
-  font-size: 0.9em;
+.snapshot-column .header-item {
   display: flex;
-  gap: 6px;       /* Small space between label and value */
-  align-items: center;
-  line-height: 1.2;
+  gap: 2.5em;
+  font-weight: bold;
+  color: #FFD700;
 }
 
-/* Timestamps */
-.timestamp {
-  color: #bbb;
-  font-weight: normal;
+.snapshot-column .header-item .label {
+  min-width: 4em;
+}
+
+.snapshot-column .header-item .header-sub {
+  min-width: 4em;
+}
+
+.snapshot-column .item {
+  display: flex;
+  gap: 2.5em;
   font-size: 0.9em;
+  align-items: center;
+}
+
+/* Data alignment */
+.snapshot-column .item span:first-child {
+  min-width: 4em;
+}
+
+/* Data cells */
+.snapshot-column .item .data {
+  min-width: 4em;
+  text-align: right;
 }
 
 /* Tables */
@@ -125,7 +133,7 @@ body {
 
 .terminal-table th,
 .terminal-table td {
-  padding: 4px 6px; /* Dense spacing */
+  padding: 4px 6px;
   text-align: left;
   border-bottom: 1px solid #333;
 }
@@ -140,25 +148,18 @@ body {
   background-color: #111;
 }
 
-/* Positive / Negative Colors */
-.value,
-.change {
-  margin-left: 4px;
-}
-
-.change.positive,
-.value.positive {
+/* Colors */
+.positive {
   color: #00FF66;
-  font-weight: 600;
+  font-weight: bold;
 }
 
-.change.negative,
-.value.negative {
-  color: #FF5555;
-  font-weight: 600;
+.negative {
+  color: #FF3333;
+  font-weight: bold;
 }
 
-/* Equities Section */
+/* Equities Section (if you have any additional formatting) */
 .equities-row {
   display: flex;
   gap: 20px;
@@ -186,14 +187,4 @@ body {
 
 .terminal-footer a:hover {
   color: #fff;
-}
-
-.positive {
-  color: #00FF66; /* bright green */
-  font-weight: bold;
-}
-
-.negative {
-  color: #FF3333; /* bright red */
-  font-weight: bold;
 }
