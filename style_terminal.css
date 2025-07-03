@@ -188,3 +188,17 @@ body {
 .terminal-footer a:hover {
   color: #fff;
 }
+/* Make sub-headings white */
+.snapshot-column .header-item .header-sub {
+  color: #fff;
+}
+
+/* Ensure all data cells align consistently */
+.snapshot-column .item span {
+  min-width: 4.5em;
+}
+
+.snapshot-column .item .data {
+  min-width: 5em;
+  text-align: right;
+}
