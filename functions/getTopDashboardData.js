@@ -43,6 +43,12 @@ exports.handler = async function (event, context) {
           change: mbs.UMBS_5_5_Daily_Change,
           open: mbs.UMBS_5_5_Open,
           last_updated: mbs.last_updated?.replace(" ", "T") || null,
+        },     
+        GNMA_5_5: {
+          current: mbs.GNMA_5_5_Current,
+          change: mbs.GNMA_5_5_Daily_Change,
+          open: mbs.GNMA_5_5_Open,
+          last_updated: mbs.last_updated?.replace(" ", "T") || null,
         },
         UMBS_5_5_Shadow: {
           current: shadow.UMBS_5_5_Shadow_Current,
