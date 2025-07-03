@@ -1,0 +1,188 @@
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'IBM Plex Mono', monospace;
+  background-color: #000;
+  color: #f0f0f0;
+  line-height: 1.4;
+  padding: 20px;
+}
+
+/* Top Header Branding */
+.terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #333;
+}
+
+.terminal-header .title {
+  color: #00FF66; /* Mainframe green */
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.terminal-header .status {
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.terminal-header .username {
+  color: #3399FF; /* Blue username */
+  font-weight: 600;
+}
+
+.terminal-header .access {
+  color: #00FF66; /* Green Access Granted */
+}
+
+.terminal-header .cursor {
+  color: #FFF; /* White blinking cursor */
+  animation: blink 1s step-start infinite;
+}
+
+/* Blinking cursor animation */
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Section Titles */
+.terminal-section h2 {
+  color: #FFD700;
+  font-weight: 700;
+  font-size: 1em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #FF0000; /* RED underline */
+  padding-bottom: 4px;
+}
+
+
+/* Snapshot Headings */
+.snapshot-headings {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.snapshot-headings .column-heading {
+  color: #FFD700;
+  font-size: 0.9em;
+  font-weight: 600;
+  flex: 1;
+  text-align: left;
+}
+
+/* Snapshot Rows */
+.snapshot-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+.snapshot-column {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.snapshot-column .item {
+  font-size: 0.9em;
+  display: flex;
+  justify-content: space-between;
+  line-height: 1.2;
+}
+
+/* Timestamps */
+.timestamp {
+  color: #bbb;
+  font-weight: normal;
+  font-size: 0.9em;
+}
+
+/* Tables */
+.terminal-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 0.85em;
+}
+
+.terminal-table th,
+.terminal-table td {
+  padding: 4px 6px; /* Dense spacing */
+  text-align: left;
+  border-bottom: 1px solid #333;
+}
+
+.terminal-table th {
+  color: #FFD700;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.terminal-table tbody tr:hover {
+  background-color: #111;
+}
+
+/* Positive / Negative Colors */
+.value,
+.change {
+  margin-left: 4px;
+}
+
+.change.positive,
+.value.positive {
+  color: #00FF66;
+  font-weight: 600;
+}
+
+.change.negative,
+.value.negative {
+  color: #FF5555;
+  font-weight: 600;
+}
+
+/* Equities Section */
+.equities-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.equity {
+  font-size: 0.95em;
+}
+
+/* Footer Nav (Optional) */
+.terminal-footer {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.terminal-footer a {
+  color: #888;
+  font-size: 0.85em;
+  text-decoration: none;
+}
+
+.terminal-footer a:hover {
+  color: #fff;
+}
