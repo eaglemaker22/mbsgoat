@@ -26,76 +26,54 @@
 
       <!-- GRID HEADER -->
       <div class="snapshot-grid snapshot-grid-header">
-        <!-- MBS -->
         <span>MBS</span>
         <span>Price</span>
         <span>Today</span>
-
-        <!-- Treasuries -->
         <span>Treasuries</span>
         <span>Yield</span>
         <span>Today</span>
-
-        <!-- Mortgage Rates -->
         <span>Mortgage Rates</span>
         <span>Today</span>
         <span>Yesterday</span>
-
-        <!-- Equities -->
         <span>Equities</span>
         <span>Today</span>
       </div>
 
-      <!-- ROW 1: UMBS 5.5, 10Y, 30Y Fixed, DOW -->
+      <!-- ROW 1 -->
       <div class="snapshot-grid">
         <span>UMBS 5.5</span>
         <span id="umbs55Value">--</span>
         <span id="umbs55Change">--</span>
-
         <span>10Y</span>
         <span id="us10yValue">--</span>
         <span id="us10yChange">--</span>
-
         <span>30Y Fixed</span>
         <span id="fixed30yValue">--</span>
         <span id="fixed30yYesterday">--</span>
-
         <span>DOW</span>
         <span id="diaChange">--</span>
       </div>
 
-      <!-- ROW 2: GNMA 5.5, 30Y, 15Y Fixed, S&P500 -->
+      <!-- ROW 2 -->
       <div class="snapshot-grid">
         <span>GNMA 5.5</span>
         <span id="gnma55Value">--</span>
         <span id="gnma55Change">--</span>
-
         <span>30Y</span>
         <span id="us30yValue">--</span>
         <span id="us30yChange">--</span>
-
         <span>15Y Fixed</span>
         <span id="fixed15yValue">--</span>
         <span id="fixed15yYesterday">--</span>
-
         <span>S&P500</span>
         <span id="spyChange">--</span>
       </div>
 
-      <!-- ROW 3: Empty MBS/Treasuries/Mortgage, NASDAQ -->
+      <!-- ROW 3 -->
       <div class="snapshot-grid">
-        <span></span>
-        <span></span>
-        <span></span>
-
-        <span></span>
-        <span></span>
-        <span></span>
-
-        <span></span>
-        <span></span>
-        <span></span>
-
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
         <span>NSDQ</span>
         <span id="qqqChange">--</span>
       </div>
@@ -139,64 +117,50 @@
             <th>Yesterday</th>
             <th>Last Month</th>
             <th>1 Year Ago</th>
-            <th>Change vs 1M</th>
-            <th>Change vs 1Y</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>30Y Fixed</td>
-            <td><span id="fixed30yValue">--</span></td>
+            <td><span id="fixed30yCurrent">--</span></td>
             <td><span id="fixed30yYesterday">--</span></td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
+            <td><span id="fixed30yLastMonth">--</span></td>
+            <td><span id="fixed30yYearAgo">--</span></td>
           </tr>
           <tr>
             <td>30Y VA</td>
-            <td><span id="va30yValue">--</span></td>
+            <td><span id="va30yCurrent">--</span></td>
             <td><span id="va30yYesterday">--</span></td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
+            <td><span id="va30yLastMonth">--</span></td>
+            <td><span id="va30yYearAgo">--</span></td>
           </tr>
           <tr>
             <td>30Y FHA</td>
-            <td><span id="fha30yValue">--</span></td>
+            <td><span id="fha30yCurrent">--</span></td>
             <td><span id="fha30yYesterday">--</span></td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
+            <td><span id="fha30yLastMonth">--</span></td>
+            <td><span id="fha30yYearAgo">--</span></td>
           </tr>
           <tr>
             <td>30Y Jumbo</td>
-            <td><span id="jumbo30yValue">--</span></td>
+            <td><span id="jumbo30yCurrent">--</span></td>
             <td><span id="jumbo30yYesterday">--</span></td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
+            <td><span id="jumbo30yLastMonth">--</span></td>
+            <td><span id="jumbo30yYearAgo">--</span></td>
           </tr>
           <tr>
             <td>30Y USDA</td>
-            <td><span id="usda30yValue">--</span></td>
+            <td><span id="usda30yCurrent">--</span></td>
             <td><span id="usda30yYesterday">--</span></td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
+            <td><span id="usda30yLastMonth">--</span></td>
+            <td><span id="usda30yYearAgo">--</span></td>
           </tr>
           <tr>
             <td>15Y Fixed</td>
-            <td><span id="fixed15yValue">--</span></td>
+            <td><span id="fixed15yCurrent">--</span></td>
             <td><span id="fixed15yYesterday">--</span></td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
-            <td>--</td>
+            <td><span id="fixed15yLastMonth">--</span></td>
+            <td><span id="fixed15yYearAgo">--</span></td>
           </tr>
         </tbody>
       </table>
