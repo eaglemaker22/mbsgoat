@@ -74,13 +74,13 @@ async function fetchAndUpdateMarketData() {
         isNaN(c) ? "--" : c.toFixed(3)
       );
     }
-    
+
     if (dataTop?.US30Y) {
-    const y30 = parseFloat(dataTop.US30Y.yield);
-    const c30 = parseFloat(dataTop.US30Y.change);
-    updateChangeIndicator('us30yValue', 'us30yChange',
-      isNaN(y30) ? "--" : y30.toFixed(3),
-      isNaN(c30) ? "--" : c30.toFixed(3)
+      const y30 = parseFloat(dataTop.US30Y.yield);
+      const c30 = parseFloat(dataTop.US30Y.change);
+      updateChangeIndicator('us30yValue', 'us30yChange',
+        isNaN(y30) ? "--" : y30.toFixed(3),
+        isNaN(c30) ? "--" : c30.toFixed(3)
       );
     }
 
@@ -120,7 +120,6 @@ async function fetchAndUpdateDailyRates() {
 
       updateTextElement(`${prefix}Current`, formatPercentage(rateData.latest));
 
-      // For 30Y Fixed and 15Y Fixed, use unique IDs for Yesterday
       if (prefix === "fixed30y") {
         updateTextElement("fixed30yYesterdayTable", formatPercentage(rateData.yesterday));
       } else if (prefix === "fixed15y") {
@@ -211,11 +210,50 @@ async function fetchAndUpdateLiveStockData() {
   }
 }
 
+// --- Function for Economic Indicators ---
+async function fetchAndUpdateEconomicIndicators() {
+  console.log("Fetching economic indicators data...");
+  try {
+    const res = await fetch("/.netlify/functions/getEconomicIndicatorsData");
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
+
+    console.log("Economic Indicators Data:", data);
+
+    const mapping = {
+      "HOUST": "Total Housing Starts",
+      "PERMIT1": "Single-Family Permits",
+      "PERMITS": "Building Permits",
+      "RSAFS": "Retail Sales",
+      "UMCSENT": "Consumer Sentiment",
+    };
+
+    Object.entries(mapping).forEach(([seriesId, labelText]) => {
+      const row = Array.from(document.querySelectorAll(".terminal-section:nth-of-type(5) tbody tr"))
+        .find(tr => tr.querySelector("td")?.textContent?.trim() === labelText);
+
+      if (row && data[seriesId]) {
+        const d = data[seriesId];
+        const cells = row.querySelectorAll("td");
+        cells[1].textContent = formatValue(d.latest);
+        cells[2].textContent = formatValue(d.latest_date);
+        cells[3].textContent = formatValue(d.last_month);
+        cells[4].textContent = formatValue(d.year_ago);
+        cells[5].textContent = "--"; // Next release
+        cells[6].textContent = "--"; // Coverage period
+      }
+    });
+  } catch (err) {
+    console.error("Economic Indicators fetch error:", err);
+  }
+}
+
 // --- Initialize & Refresh ---
 document.addEventListener("DOMContentLoaded", () => {
   fetchAndUpdateMarketData();
   fetchAndUpdateDailyRates();
   fetchAndUpdateLiveStockData();
+  fetchAndUpdateEconomicIndicators();
 
   setInterval(fetchAndUpdateMarketData, 60000);
   setInterval(fetchAndUpdateLiveStockData, 30000);
