@@ -52,8 +52,7 @@ exports.handler = async function (event, context) {
         responseData[keyName] = {
           latest: data.latest ?? null,
           latest_date: data.latest_date ?? null,
-          // 'yesterday' is not in your Firestore, so it will remain null/undefined from backend
-          // The frontend will display '--' for it if the field is expected.
+          yesterday: data.yesterday ?? null,
           last_month: data.last_month ?? null,
           last_month_date: data.last_month_date ?? null,
           year_ago: data.year_ago ?? null,
