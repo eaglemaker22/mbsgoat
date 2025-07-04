@@ -106,23 +106,47 @@ async function fetchAndUpdateDailyRates() {
     if (!resRates.ok) throw new Error(`HTTP error! status: ${resRates.status}`);
     const data = await resRates.json();
 
-    // Helper to update a full row
     function updateRateRow(prefix, rateData) {
       if (!rateData) return;
 
       updateTextElement(`${prefix}Current`, formatPercentage(rateData.latest));
-      updateTextElement(`${prefix}Yesterday`, formatPercentage(rateData.yesterday));
+
+      // For 30Y Fixed and 15Y Fixed, use unique IDs for Yesterday
+      if (prefix === "fixed30y") {
+        updateTextElement("fixed30yYesterdayTable", formatPercentage(rateData.yesterday));
+      } else if (prefix === "fixed15y") {
+        updateTextElement("fixed15yYesterdayTable", formatPercentage(rateData.yesterday));
+      } else {
+        updateTextElement(`${prefix}Yesterday`, formatPercentage(rateData.yesterday));
+      }
+
       updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
       updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago));
+
+      let changeVs1M = null;
+      let changeVs1Y = null;
+      const latest = parseFloat(rateData.latest);
+      const lastMonth = parseFloat(rateData.last_month);
+      const yearAgo = parseFloat(rateData.year_ago);
+
+      if (!isNaN(latest) && !isNaN(lastMonth)) {
+        changeVs1M = (latest - lastMonth).toFixed(3);
+      }
+      if (!isNaN(latest) && !isNaN(yearAgo)) {
+        changeVs1Y = (latest - yearAgo).toFixed(3);
+      }
+
+      updateTextElement(`${prefix}ChangeVs1M`, changeVs1M !== null ? `${changeVs1M}%` : "--");
+      updateTextElement(`${prefix}ChangeVs1Y`, changeVs1Y !== null ? `${changeVs1Y}%` : "--");
     }
 
-    // Update snapshot in top bar
+    // Top snapshot
     updateTextElement("fixed30yValue", formatPercentage(data?.fixed30Y?.latest));
     updateTextElement("fixed30yYesterday", formatPercentage(data?.fixed30Y?.yesterday));
     updateTextElement("fixed15yValue", formatPercentage(data?.fixed15Y?.latest));
     updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15Y?.yesterday));
 
-    // Update main table
+    // Table rows
     updateRateRow("fixed30y", data.fixed30Y);
     updateRateRow("va30y", data.va30Y);
     updateRateRow("fha30y", data.fha30Y);
