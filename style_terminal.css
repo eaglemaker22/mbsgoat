@@ -65,21 +65,49 @@ body {
   padding-bottom: 4px;
 }
 
-/* Snapshot Rows */
-.snapshot-row {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid #333;
-  padding-bottom: 8px;
-  margin-bottom: 10px;
-}
-
+/* Headings Row */
 .snapshot-row-headers {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns:
+    6em /* MBS Label */
+    5em /* MBS Price */
+    5em /* MBS Today */
+    5em /* MBS Yesterday */
+    6em /* Treasuries Label */
+    5em /* Treasury Yield */
+    5em /* Treasury Today */
+    8em /* Mortgage Label */
+    5em /* Mortgage Today */
+    6em /* Equities Label */
+    5em /* Equities Today */;
+  gap: 0.5em;
+  font-weight: bold;
+  color: #FFD700;
   border-bottom: 1px solid #333;
   padding-bottom: 4px;
   margin-bottom: 4px;
+}
+
+/* Data Row */
+.snapshot-row {
+  display: grid;
+  grid-template-columns:
+    6em /* MBS Label */
+    5em /* MBS Price */
+    5em /* MBS Today */
+    5em /* MBS Yesterday */
+    6em /* Treasuries Label */
+    5em /* Treasury Yield */
+    5em /* Treasury Today */
+    8em /* Mortgage Label */
+    5em /* Mortgage Today */
+    6em /* Equities Label */
+    5em /* Equities Today */;
+  gap: 0.5em;
+  align-items: center;
+  border-bottom: 1px solid #333;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .snapshot-column {
