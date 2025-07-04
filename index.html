@@ -22,97 +22,80 @@
 
     <!-- MARKET SNAPSHOT -->
     <section class="terminal-section snapshot-section">
-  <h2>MARKET SNAPSHOT</h2>
-  <div class="snapshot-row-headers">
-    <!-- MBS Heading -->
-    <div class="snapshot-column">
-      <div class="header-item">
-        <span class="label">MBS</span>
-        <span class="header-sub">Price</span>
-        <span class="header-sub">Today</span>
+      <h2>MARKET SNAPSHOT</h2>
+
+      <!-- GRID HEADER -->
+      <div class="snapshot-grid snapshot-grid-header">
+        <span>MBS</span>
+        <span>Price</span>
+        <span>Today</span>
+        <span>Yesterday</span>
+        <span>Treasuries</span>
+        <span>Yield</span>
+        <span>Today</span>
+        <span>Yesterday</span>
+        <span>Mortgage Rates</span>
+        <span>Today</span>
+        <span>Yesterday</span>
+        <span>Equities</span>
+        <span>Today</span>
+        <span>Yesterday</span>
       </div>
-    </div>
-    <!-- Treasuries Heading -->
-    <div class="snapshot-column">
-      <div class="header-item">
-        <span class="label">Treasuries</span>
-        <span class="header-sub">Yield</span>
-        <span class="header-sub">Today</span>
-      </div>
-    </div>
-    <!-- Mortgage Rates Heading -->
-    <div class="snapshot-column">
-      <div class="header-item">
-        <span class="label">Mortgage Rates</span>
-        <span class="header-sub">Today</span>
-      </div>
-    </div>
-    <!-- Equities Heading -->
-    <div class="snapshot-column">
-      <div class="header-item">
-        <span class="label">Equities</span>
-        <span class="header-sub">Today</span>
-      </div>
-    </div>
-  </div>
-  <div class="snapshot-row">
-    <!-- MBS Column -->
-    <div class="snapshot-column">
-      <div class="item">
+
+      <!-- UMBS 5.5 ROW -->
+      <div class="snapshot-grid">
         <span>UMBS 5.5</span>
-        <span class="data" id="umbs55Value">--</span>
-        <span class="data" id="umbs55Change">--</span>
-      </div>
-      <div class="item">
-        <span>GNMA 5.5</span>
-        <span class="data" id="gnma55Value">--</span>
-        <span class="data" id="gnma55Change">--</span>
-      </div>
-    </div>
-
-    <!-- Treasuries Column -->
-    <div class="snapshot-column">
-      <div class="item">
+        <span id="umbs55Value">--</span>
+        <span id="umbs55Change">--</span>
+        <span>--</span>
         <span>10Y</span>
-        <span class="data" id="us10yValue">--</span>
-        <span class="data" id="us10yChange">--</span>
-      </div>
-      <div class="item">
-        <span>30Y</span>
-        <span class="data" id="us30yValue">--</span>
-        <span class="data" id="us30yChange">--</span>
-      </div>
-    </div>
-
-    <!-- Mortgage Rates Column -->
-    <div class="snapshot-column">
-      <div class="item">
+        <span id="us10yValue">--</span>
+        <span id="us10yChange">--</span>
+        <span>--</span>
         <span>30Y Fixed</span>
-        <span class="data" id="fixed30yValue">--</span>
-      </div>
-      <div class="item">
-        <span>15Y Fixed</span>
-        <span class="data" id="fixed15yValue">--</span>
-      </div>
-    </div>
-
-    <!-- Equities Column -->
-    <div class="snapshot-column">
-      <div class="item">
+        <span id="fixed30yValue">--</span>
+        <span>--</span>
         <span>DOW</span>
-        <span class="data" id="diaChange">--</span>
+        <span id="diaChange">--</span>
+        <span>--</span>
       </div>
-      <div class="item">
+
+      <!-- GNMA 5.5 ROW -->
+      <div class="snapshot-grid">
+        <span>GNMA 5.5</span>
+        <span id="gnma55Value">--</span>
+        <span id="gnma55Change">--</span>
+        <span>--</span>
+        <span>30Y</span>
+        <span id="us30yValue">--</span>
+        <span id="us30yChange">--</span>
+        <span>--</span>
+        <span>15Y Fixed</span>
+        <span id="fixed15yValue">--</span>
+        <span>--</span>
         <span>S&P500</span>
-        <span class="data" id="spyChange">--</span>
+        <span id="spyChange">--</span>
+        <span>--</span>
       </div>
-      <div class="item">
+
+      <!-- NASDAQ ROW (Equities Only) -->
+      <div class="snapshot-grid">
         <span>NSDQ</span>
-        <span class="data" id="qqqChange">--</span>
+        <span>--</span>
+        <span>--</span>
+        <span>--</span>
+        <span>--</span>
+        <span>--</span>
+        <span>--</span>
+        <span>--</span>
+        <span>--</span>
+        <span>--</span>
+        <span>--</span>
+        <span>NSDQ</span>
+        <span id="qqqChange">--</span>
+        <span>--</span>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
     <!-- BONDS & TREASURIES -->
     <section class="terminal-section">
