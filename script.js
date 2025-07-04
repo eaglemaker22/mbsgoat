@@ -106,32 +106,13 @@ async function fetchAndUpdateDailyRates() {
     if (!resRates.ok) throw new Error(`HTTP error! status: ${resRates.status}`);
     const data = await resRates.json();
 
-    // Helper function to update a row in the Daily Mortgage Rates table
-    function updateDailyRateRow(prefix, rateData) {
-      if (!rateData) {
-        updateTextElement(`${prefix}Current`, "--");
-        updateTextElement(`${prefix}Yesterday`, "--");
-        updateTextElement(`${prefix}LastMonth`, "--");
-        updateTextElement(`${prefix}YearAgo`, "--");
-        return;
-      }
-
-      updateTextElement(`${prefix}Current`, formatPercentage(rateData.latest));
-      updateTextElement(`${prefix}Yesterday`, formatPercentage(rateData.yesterday));
-      updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
-      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago));
-    }
-
-    updateDailyRateRow('fixed30y', data.fixed30Y);
-    updateDailyRateRow('va30y', data.va30Y);
-    updateDailyRateRow('fha30y', data.fha30Y);
-    updateDailyRateRow('jumbo30y', data.jumbo30Y);
-    updateDailyRateRow('usda30y', data.usda30y);
-    updateDailyRateRow('fixed15y', data.fixed15Y);
-
-    // Also update the snapshot (header) numbers
+    // 30Y Fixed
     updateTextElement('fixed30yValue', formatPercentage(data?.fixed30Y?.latest));
+    updateTextElement('fixed30yYesterday', formatPercentage(data?.fixed30Y?.yesterday));
+
+    // 15Y Fixed
     updateTextElement('fixed15yValue', formatPercentage(data?.fixed15Y?.latest));
+    updateTextElement('fixed15yYesterday', formatPercentage(data?.fixed15Y?.yesterday));
 
   } catch (err) {
     console.error("Daily Rates fetch error:", err);
