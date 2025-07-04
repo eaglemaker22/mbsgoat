@@ -76,11 +76,11 @@ async function fetchAndUpdateMarketData() {
     }
     
     if (dataTop?.US30Y) {
-    const y30 = parseFloat(dataTop.US30Y.yield);
-    const c30 = parseFloat(dataTop.US30Y.change);
-    updateChangeIndicator('us30yValue', 'us30yChange',
-      isNaN(y30) ? "--" : y30.toFixed(3),
-      isNaN(c30) ? "--" : c30.toFixed(3)
+      const y30 = parseFloat(dataTop.US30Y.yield);
+      const c30 = parseFloat(dataTop.US30Y.change);
+      updateChangeIndicator('us30yValue', 'us30yChange',
+        isNaN(y30) ? "--" : y30.toFixed(3),
+        isNaN(c30) ? "--" : c30.toFixed(3)
       );
     }
 
@@ -120,7 +120,6 @@ async function fetchAndUpdateDailyRates() {
 
       updateTextElement(`${prefix}Current`, formatPercentage(rateData.latest));
 
-      // For 30Y Fixed and 15Y Fixed, use unique IDs for Yesterday
       if (prefix === "fixed30y") {
         updateTextElement("fixed30yYesterdayTable", formatPercentage(rateData.yesterday));
       } else if (prefix === "fixed15y") {
@@ -131,36 +130,18 @@ async function fetchAndUpdateDailyRates() {
 
       updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
       updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago));
-
-      let changeVs1M = null;
-      let changeVs1Y = null;
-      const latest = parseFloat(rateData.latest);
-      const lastMonth = parseFloat(rateData.last_month);
-      const yearAgo = parseFloat(rateData.year_ago);
-
-      if (!isNaN(latest) && !isNaN(lastMonth)) {
-        changeVs1M = (latest - lastMonth).toFixed(3);
-      }
-      if (!isNaN(latest) && !isNaN(yearAgo)) {
-        changeVs1Y = (latest - yearAgo).toFixed(3);
-      }
-
-      updateTextElement(`${prefix}ChangeVs1M`, changeVs1M !== null ? `${changeVs1M}%` : "--");
-      updateTextElement(`${prefix}ChangeVs1Y`, changeVs1Y !== null ? `${changeVs1Y}%` : "--");
     }
 
-    // Top snapshot
     updateTextElement("fixed30yValue", formatPercentage(data?.fixed30Y?.latest));
     updateTextElement("fixed30yYesterday", formatPercentage(data?.fixed30Y?.yesterday));
     updateTextElement("fixed15yValue", formatPercentage(data?.fixed15Y?.latest));
     updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15Y?.yesterday));
 
-    // Table rows
     updateRateRow("fixed30y", data.fixed30Y);
     updateRateRow("va30y", data.va30Y);
     updateRateRow("fha30y", data.fha30Y);
     updateRateRow("jumbo30y", data.jumbo30Y);
-    updateRateRow("usda30y", data.usda30y);
+    updateRateRow("usda30y", data.usda30Y);
     updateRateRow("fixed15y", data.fixed15Y);
 
   } catch (err) {
@@ -211,11 +192,51 @@ async function fetchAndUpdateLiveStockData() {
   }
 }
 
+// --- Function for Economic Indicators ---
+async function fetchAndUpdateEconomicIndicators() {
+  console.log("Fetching economic indicators...");
+  try {
+    const res = await fetch("/.netlify/functions/getEconomicIndicatorsData");
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
+    console.log("✅ Economic Indicators Response:", data);
+
+    function format(val) {
+      return val !== undefined && val !== null && val !== "" ? val : "--";
+    }
+
+    const mapping = {
+      "HOUST": "housingStarts",
+      "PERMIT1": "permits",
+      "HOUST1F": "singleFamilyStarts",
+      "RSAFS": "retailSales",
+      "UMCSENT": "consumerSentiment",
+      "CSUSHPISA": "caseShiller",
+      "PERMIT": "buildingPermits",
+      "T10YIE": "breakevenInflation",
+      "T10Y2Y": "tenTwoSpread"
+    };
+
+    for (const [seriesId, prefix] of Object.entries(mapping)) {
+      const record = data[seriesId];
+      if (!record) continue;
+
+      updateTextElement(`${prefix}Latest`, format(record.latest));
+      updateTextElement(`${prefix}LastMonth`, format(record.last_month));
+      updateTextElement(`${prefix}YearAgo`, format(record.year_ago));
+      updateTextElement(`${prefix}Change`, record.monthly_change !== null ? `${record.monthly_change}` : "--");
+    }
+  } catch (err) {
+    console.error("Economic indicators fetch error:", err);
+  }
+}
+
 // --- Initialize & Refresh ---
 document.addEventListener("DOMContentLoaded", () => {
   fetchAndUpdateMarketData();
   fetchAndUpdateDailyRates();
   fetchAndUpdateLiveStockData();
+  fetchAndUpdateEconomicIndicators();
 
   setInterval(fetchAndUpdateMarketData, 60000);
   setInterval(fetchAndUpdateLiveStockData, 30000);
