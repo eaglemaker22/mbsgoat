@@ -1,13 +1,18 @@
 const admin = require("firebase-admin");
 
-// If you already initialize admin in another function, you can reuse the app instead of initializing again.
+// Only initialize once
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.applicationDefault()
+    credential: admin.credential.cert({
+      project_id: process.env.FIREBASE_PROJECT_ID,
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    }),
   });
 }
 
 const db = admin.firestore();
+
 
 exports.handler = async (event, context) => {
   try {
