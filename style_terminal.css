@@ -26,11 +26,11 @@ body {
 .terminal-header .title {
   color: #00FF66;
   font-weight: bold;
-  font-size: 1.4em; /* 16% bigger */
+  font-size: 1.6em; /* 16% bigger */
 }
 
 .terminal-header .status {
-  font-size: 1.1em; /* 20% bigger */
+  font-size: 1.3em; /* 20% bigger */
   display: flex;
   align-items: center;
   gap: 5px;
