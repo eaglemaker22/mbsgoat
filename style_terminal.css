@@ -70,16 +70,16 @@ body {
 .snapshot-grid-header {
   display: grid;
   grid-template-columns:
-    9em /* MBS Label */
+    6em /* MBS Label */
     4em /* MBS Price */
-    4em /* MBS Today */
-    12em /* Treasuries Label */
+    13em /* MBS Today */
+  62em /* Treasuries Label */
     4em /* Treasury Yield */
-    4em /* Treasury Today */
-    12em /* Mortgage Label */
+    13em /* Treasury Today */
+    6em /* Mortgage Label */
     4em /* Mortgage Today */
-    4em /* Mortgage Yesterday */
-    12em /* Equities Label */
+    13em /* Mortgage Yesterday */
+    4em /* Equities Label */
     4em /* Equities Today */;
   align-items: center;
   border-bottom: 1px solid #333;
