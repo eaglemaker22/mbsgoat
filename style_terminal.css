@@ -99,6 +99,7 @@ body {
 .snapshot-grid-header span:nth-child(9), /* Mortgage Yesterday */
 .snapshot-grid-header span:nth-child(11) /* Equities Today */ {
   color: #fff;
+  font-size: 0.9em;
 }
 
 /* Tables */
