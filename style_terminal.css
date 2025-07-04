@@ -93,6 +93,7 @@ body {
 }
 .snapshot-grid-header span:nth-child(2), /* Price */
 .snapshot-grid-header span:nth-child(3), /* Today after Price */
+.snapshot-grid-header span:nth-child(5), /* Treasury Yield */
 .snapshot-grid-header span:nth-child(6), /* Treasury Today */
 .snapshot-grid-header span:nth-child(8), /* Mortgage Today */
 .snapshot-grid-header span:nth-child(9), /* Mortgage Yesterday */
