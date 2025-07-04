@@ -74,6 +74,15 @@ async function fetchAndUpdateMarketData() {
         isNaN(c) ? "--" : c.toFixed(3)
       );
     }
+    
+    if (dataTop?.US30Y) {
+    const y30 = parseFloat(dataTop.US30Y.yield);
+    const c30 = parseFloat(dataTop.US30Y.change);
+    updateChangeIndicator('us30yValue', 'us30yChange',
+      isNaN(y30) ? "--" : y30.toFixed(3),
+      isNaN(c30) ? "--" : c30.toFixed(3)
+      );
+    }
 
     if (dataTop?.UMBS_5_5) {
       const v = parseFloat(dataTop.UMBS_5_5.current);
