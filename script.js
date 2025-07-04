@@ -1,4 +1,4 @@
-// --- Helper Functions to Update DOM Elements ---
+// --- Helper Functions ---
 function updateTextElement(elementId, value) {
   const element = document.getElementById(elementId);
   if (element) {
@@ -58,62 +58,61 @@ function formatPercentage(val) {
   return formatted !== '--' ? `${formatted}%` : '--';
 }
 
-// --- Function for Market Data ---
+// --- Market Data ---
 async function fetchAndUpdateMarketData() {
   console.log("Fetching market data...");
   try {
-    const resTop = await fetch("/.netlify/functions/getTopDashboardData");
-    if (!resTop.ok) throw new Error(`HTTP error! status: ${resTop.status}`);
-    const dataTop = await resTop.json();
+    const res = await fetch("/.netlify/functions/getTopDashboardData");
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
 
-    if (dataTop?.US10Y) {
-      const y = parseFloat(dataTop.US10Y.yield);
-      const c = parseFloat(dataTop.US10Y.change);
+    if (data?.US10Y) {
+      const y = parseFloat(data.US10Y.yield);
+      const c = parseFloat(data.US10Y.change);
       updateChangeIndicator('us10yValue', 'us10yChange',
         isNaN(y) ? "--" : y.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3)
       );
     }
 
-    if (dataTop?.US30Y) {
-      const y30 = parseFloat(dataTop.US30Y.yield);
-      const c30 = parseFloat(dataTop.US30Y.change);
+    if (data?.US30Y) {
+      const y = parseFloat(data.US30Y.yield);
+      const c = parseFloat(data.US30Y.change);
       updateChangeIndicator('us30yValue', 'us30yChange',
-        isNaN(y30) ? "--" : y30.toFixed(3),
-        isNaN(c30) ? "--" : c30.toFixed(3)
+        isNaN(y) ? "--" : y.toFixed(3),
+        isNaN(c) ? "--" : c.toFixed(3)
       );
     }
 
-    if (dataTop?.UMBS_5_5) {
-      const v = parseFloat(dataTop.UMBS_5_5.current);
-      const c = parseFloat(dataTop.UMBS_5_5.change);
+    if (data?.UMBS_5_5) {
+      const v = parseFloat(data.UMBS_5_5.current);
+      const c = parseFloat(data.UMBS_5_5.change);
       updateChangeIndicator('umbs55Value', 'umbs55Change',
         isNaN(v) ? "--" : v.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3)
       );
     }
 
-    if (dataTop?.GNMA_5_5) {
-      const v = parseFloat(dataTop.GNMA_5_5.current);
-      const c = parseFloat(dataTop.GNMA_5_5.change);
+    if (data?.GNMA_5_5) {
+      const v = parseFloat(data.GNMA_5_5.current);
+      const c = parseFloat(data.GNMA_5_5.change);
       updateChangeIndicator('gnma55Value', 'gnma55Change',
         isNaN(v) ? "--" : v.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3)
       );
     }
-
   } catch (err) {
     console.error("Market data fetch error:", err);
   }
 }
 
-// --- Function for Daily Rates ---
+// --- Daily Rates ---
 async function fetchAndUpdateDailyRates() {
-  console.log("Fetching daily rates data...");
+  console.log("Fetching daily rates...");
   try {
-    const resRates = await fetch("/.netlify/functions/getDailyRatesData");
-    if (!resRates.ok) throw new Error(`HTTP error! status: ${resRates.status}`);
-    const data = await resRates.json();
+    const res = await fetch("/.netlify/functions/getDailyRatesData");
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
 
     function updateRateRow(prefix, rateData) {
       if (!rateData) return;
@@ -161,31 +160,30 @@ async function fetchAndUpdateDailyRates() {
     updateRateRow("jumbo30y", data.jumbo30Y);
     updateRateRow("usda30y", data.usda30y);
     updateRateRow("fixed15y", data.fixed15Y);
-
   } catch (err) {
     console.error("Daily Rates fetch error:", err);
   }
 }
 
-// --- Function for Live Stocks ---
+// --- Live Stocks ---
 async function fetchAndUpdateLiveStockData() {
   console.log("Fetching live stock data...");
   try {
     const res = await fetch("/.netlify/functions/getLiveStockData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const stockData = await res.json();
+    const data = await res.json();
 
-    function updateStockChange(id, data) {
+    function updateStockChange(id, item) {
       const el = document.getElementById(id);
       if (!el) return;
 
       el.textContent = '';
       el.classList.remove('positive', 'negative');
 
-      if (data && data.percentChange !== undefined) {
-        const n = parseFloat(data.percentChange);
+      if (item && item.percentChange !== undefined) {
+        const n = parseFloat(item.percentChange);
         if (!isNaN(n)) {
-          let t = n.toFixed(2);
+          const t = n.toFixed(2);
           if (n > 0) {
             el.textContent = `+${t}%`;
             el.classList.add('positive');
@@ -201,47 +199,41 @@ async function fetchAndUpdateLiveStockData() {
       }
     }
 
-    updateStockChange('spyChange', stockData.SPY);
-    updateStockChange('qqqChange', stockData.QQQ);
-    updateStockChange('diaChange', stockData.DIA);
-
+    updateStockChange('spyChange', data.SPY);
+    updateStockChange('qqqChange', data.QQQ);
+    updateStockChange('diaChange', data.DIA);
   } catch (err) {
     console.error("Stock data fetch error:", err);
   }
 }
 
-// --- Function for Economic Indicators ---
+// --- Economic Indicators ---
 async function fetchAndUpdateEconomicIndicators() {
-  console.log("Fetching economic indicators data...");
+  console.log("Fetching economic indicators...");
   try {
     const res = await fetch("/.netlify/functions/getEconomicIndicatorsData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
 
-    console.log("Economic Indicators Data:", data);
-
-    const mapping = {
-      "HOUST": "Total Housing Starts",
-      "PERMIT1": "Single-Family Permits",
-      "PERMITS": "Building Permits",
-      "RSAFS": "Retail Sales",
-      "UMCSENT": "Consumer Sentiment",
+    const rows = {
+      HOUST: "houst",
+      PERMIT1: "permit1",
+      HOUST1F: "houst1f",
+      RSXFS: "rsxfs",
+      UMCSENT: "umcsent",
+      CSUSHPINSA: "csushpinsa",
+      PERMIT: "permit",
+      T10YIE: "t10yie",
+      T10Y2Y: "t10y2y"
     };
 
-    Object.entries(mapping).forEach(([seriesId, labelText]) => {
-      const row = Array.from(document.querySelectorAll(".terminal-section:nth-of-type(5) tbody tr"))
-        .find(tr => tr.querySelector("td")?.textContent?.trim() === labelText);
-
-      if (row && data[seriesId]) {
-        const d = data[seriesId];
-        const cells = row.querySelectorAll("td");
-        cells[1].textContent = formatValue(d.latest);
-        cells[2].textContent = formatValue(d.latest_date);
-        cells[3].textContent = formatValue(d.last_month);
-        cells[4].textContent = formatValue(d.year_ago);
-        cells[5].textContent = "--"; // Next release
-        cells[6].textContent = "--"; // Coverage period
-      }
+    Object.entries(rows).forEach(([seriesId, prefix]) => {
+      const d = data[seriesId];
+      if (!d) return;
+      updateTextElement(`${prefix}Latest`, formatValue(d.latest));
+      updateTextElement(`${prefix}Date`, formatValue(d.latest_date));
+      updateTextElement(`${prefix}LastMonth`, formatValue(d.last_month));
+      updateTextElement(`${prefix}YearAgo`, formatValue(d.year_ago));
     });
   } catch (err) {
     console.error("Economic Indicators fetch error:", err);
