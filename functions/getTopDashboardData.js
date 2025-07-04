@@ -34,6 +34,7 @@ exports.handler = async function (event, context) {
     const shadow = shadowDoc.data();
     const treasuries10 = us10yDoc.data();
     const treasuries30 = us30yDoc.data();
+    console.log("🔥 MBS Document Data:", mbs);
 
     return {
   statusCode: 200,
