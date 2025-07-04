@@ -106,13 +106,46 @@ async function fetchAndUpdateDailyRates() {
     if (!resRates.ok) throw new Error(`HTTP error! status: ${resRates.status}`);
     const data = await resRates.json();
 
-    // 30Y Fixed
-    updateTextElement('fixed30yValue', formatPercentage(data?.fixed30Y?.latest));
-    updateTextElement('fixed30yYesterday', formatPercentage(data?.fixed30Y?.yesterday));
+    // Helper to update all cells for a product
+    function updateRateRow(prefix, rateData) {
+      if (!rateData) return;
 
-    // 15Y Fixed
-    updateTextElement('fixed15yValue', formatPercentage(data?.fixed15Y?.latest));
-    updateTextElement('fixed15yYesterday', formatPercentage(data?.fixed15Y?.yesterday));
+      updateTextElement(`${prefix}Current`, formatPercentage(rateData.latest));
+      updateTextElement(`${prefix}Yesterday`, formatPercentage(rateData.yesterday));
+      updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
+      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago));
+
+      // Calculate Change vs 1M and 1Y
+      let changeVs1M = null;
+      let changeVs1Y = null;
+      const latest = parseFloat(rateData.latest);
+      const lastMonth = parseFloat(rateData.last_month);
+      const yearAgo = parseFloat(rateData.year_ago);
+
+      if (!isNaN(latest) && !isNaN(lastMonth)) {
+        changeVs1M = (latest - lastMonth).toFixed(3);
+      }
+      if (!isNaN(latest) && !isNaN(yearAgo)) {
+        changeVs1Y = (latest - yearAgo).toFixed(3);
+      }
+
+      updateTextElement(`${prefix}ChangeVs1M`, changeVs1M !== null ? `${changeVs1M}%` : "--");
+      updateTextElement(`${prefix}ChangeVs1Y`, changeVs1Y !== null ? `${changeVs1Y}%` : "--");
+    }
+
+    // Top header snapshot
+    updateTextElement("fixed30yValue", formatPercentage(data?.fixed30Y?.latest));
+    updateTextElement("fixed30yYesterday", formatPercentage(data?.fixed30Y?.yesterday));
+    updateTextElement("fixed15yValue", formatPercentage(data?.fixed15Y?.latest));
+    updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15Y?.yesterday));
+
+    // Full table
+    updateRateRow("fixed30y", data.fixed30Y);
+    updateRateRow("va30y", data.va30Y);
+    updateRateRow("fha30y", data.fha30Y);
+    updateRateRow("jumbo30y", data.jumbo30Y);
+    updateRateRow("usda30y", data.usda30y);
+    updateRateRow("fixed15y", data.fixed15Y);
 
   } catch (err) {
     console.error("Daily Rates fetch error:", err);
