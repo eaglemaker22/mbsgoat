@@ -1,5 +1,4 @@
 // --- Helper Functions to Update DOM Elements ---
-
 function updateTextElement(elementId, value) {
   const element = document.getElementById(elementId);
   if (element) {
@@ -67,7 +66,6 @@ async function fetchAndUpdateMarketData() {
     if (!resTop.ok) throw new Error(`HTTP error! status: ${resTop.status}`);
     const dataTop = await resTop.json();
 
-    // US10Y
     if (dataTop?.US10Y) {
       const y = parseFloat(dataTop.US10Y.yield);
       const c = parseFloat(dataTop.US10Y.change);
@@ -77,7 +75,6 @@ async function fetchAndUpdateMarketData() {
       );
     }
 
-    // UMBS 5.5
     if (dataTop?.UMBS_5_5) {
       const v = parseFloat(dataTop.UMBS_5_5.current);
       const c = parseFloat(dataTop.UMBS_5_5.change);
@@ -87,7 +84,6 @@ async function fetchAndUpdateMarketData() {
       );
     }
 
-    // GNMA 5.5
     if (dataTop?.GNMA_5_5) {
       const v = parseFloat(dataTop.GNMA_5_5.current);
       const c = parseFloat(dataTop.GNMA_5_5.change);
@@ -110,26 +106,32 @@ async function fetchAndUpdateDailyRates() {
     if (!resRates.ok) throw new Error(`HTTP error! status: ${resRates.status}`);
     const data = await resRates.json();
 
-    // Only update current % snapshot for now
+    // Helper function to update a row in the Daily Mortgage Rates table
+    function updateDailyRateRow(prefix, rateData) {
+      if (!rateData) {
+        updateTextElement(`${prefix}Current`, "--");
+        updateTextElement(`${prefix}Yesterday`, "--");
+        updateTextElement(`${prefix}LastMonth`, "--");
+        updateTextElement(`${prefix}YearAgo`, "--");
+        return;
+      }
+
+      updateTextElement(`${prefix}Current`, formatPercentage(rateData.latest));
+      updateTextElement(`${prefix}Yesterday`, formatPercentage(rateData.yesterday));
+      updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
+      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago));
+    }
+
+    updateDailyRateRow('fixed30y', data.fixed30Y);
+    updateDailyRateRow('va30y', data.va30Y);
+    updateDailyRateRow('fha30y', data.fha30Y);
+    updateDailyRateRow('jumbo30y', data.jumbo30Y);
+    updateDailyRateRow('usda30y', data.usda30y);
+    updateDailyRateRow('fixed15y', data.fixed15Y);
+
+    // Also update the snapshot (header) numbers
     updateTextElement('fixed30yValue', formatPercentage(data?.fixed30Y?.latest));
     updateTextElement('fixed15yValue', formatPercentage(data?.fixed15Y?.latest));
-
-    // --- If you want to add Daily Change in the future, uncomment this:
-    /*
-    const fixed30y = data.fixed30Y;
-    if (fixed30y) {
-      const current = parseFloat(fixed30y.latest);
-      const dailyChange = parseFloat(fixed30y.daily_change);
-      if (!isNaN(current) && !isNaN(dailyChange)) {
-        updateChangeIndicator(
-          'fixed30yValue',
-          'fixed30yChange',
-          current.toFixed(3),
-          dailyChange.toFixed(3)
-        );
-      }
-    }
-    */
 
   } catch (err) {
     console.error("Daily Rates fetch error:", err);
