@@ -65,49 +65,38 @@ body {
   padding-bottom: 4px;
 }
 
-/* Headings Row */
-.snapshot-row-headers {
+/* Snapshot Grid */
+.snapshot-grid {
   display: grid;
   grid-template-columns:
-    6em /* MBS Label */
-    5em /* MBS Price */
-    5em /* MBS Today */
-    5em /* MBS Yesterday */
-    6em /* Treasuries Label */
-    5em /* Treasury Yield */
-    5em /* Treasury Today */
-    8em /* Mortgage Label */
-    5em /* Mortgage Today */
-    6em /* Equities Label */
-    5em /* Equities Today */;
+    8em /* MBS Label */
+    6em /* MBS Price */
+    6em /* MBS Today */
+    6em /* MBS Yesterday */
+    8em /* Treasuries Label */
+    6em /* Treasury Yield */
+    6em /* Treasury Today */
+    6em /* Treasury Yesterday */
+    10em /* Mortgage Label */
+    6em /* Mortgage Today */
+    6em /* Mortgage Yesterday */
+    8em /* Equities Label */
+    6em /* Equities Today */
+    6em /* Equities Yesterday */;
   gap: 0.5em;
+  align-items: center;
+  border-bottom: 1px solid #333;
+  padding: 4px 0;
+  font-size: 0.9em;
+}
+
+/* Header styling for the snapshot grid */
+.snapshot-grid-header {
   font-weight: bold;
   color: #FFD700;
   border-bottom: 1px solid #333;
   padding-bottom: 4px;
   margin-bottom: 4px;
-}
-
-/* Data Row */
-.snapshot-row {
-  display: grid;
-  grid-template-columns:
-    6em /* MBS Label */
-    5em /* MBS Price */
-    5em /* MBS Today */
-    5em /* MBS Yesterday */
-    6em /* Treasuries Label */
-    5em /* Treasury Yield */
-    5em /* Treasury Today */
-    8em /* Mortgage Label */
-    5em /* Mortgage Today */
-    6em /* Equities Label */
-    5em /* Equities Today */;
-  gap: 0.5em;
-  align-items: center;
-  border-bottom: 1px solid #333;
-  padding-bottom: 4px;
-  margin-bottom: 8px;
 }
 
 /* Tables */
@@ -174,18 +163,4 @@ body {
 
 .terminal-footer a:hover {
   color: #fff;
-}
-/* Make sub-headings white */
-.snapshot-column .header-item .header-sub {
-  color: #fff;
-}
-
-/* Ensure all data cells align consistently */
-.snapshot-column .item span {
-  min-width: 4.5em;
-}
-
-.snapshot-column .item .data {
-  min-width: 5em;
-  text-align: right;
 }
