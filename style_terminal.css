@@ -110,47 +110,6 @@ body {
   margin-bottom: 8px;
 }
 
-.snapshot-column {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 1;
-  min-width: 180px;
-}
-
-.snapshot-column .header-item {
-  display: flex;
-  gap: 2.5em;
-  font-weight: bold;
-  color: #FFD700;
-}
-
-.snapshot-column .header-item .label {
-  min-width: 4em;
-}
-
-.snapshot-column .header-item .header-sub {
-  min-width: 4em;
-}
-
-.snapshot-column .item {
-  display: flex;
-  gap: 2.5em;
-  font-size: 0.9em;
-  align-items: center;
-}
-
-/* Data alignment */
-.snapshot-column .item span:first-child {
-  min-width: 4em;
-}
-
-/* Data cells */
-.snapshot-column .item .data {
-  min-width: 4em;
-  text-align: right;
-}
-
 /* Tables */
 .terminal-table {
   width: 100%;
