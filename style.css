@@ -24,33 +24,32 @@ body {
 }
 
 .terminal-header .title {
-  color: #00FF66; /* Mainframe green */
+  color: #00FF66;
   font-weight: bold;
-  font-size: 1.2em;
+  font-size: 1.4em; /* slightly larger title */
 }
 
 .terminal-header .status {
-  font-size: 0.9em;
+  font-size: 1.1em;
   display: flex;
   align-items: center;
   gap: 5px;
 }
 
 .terminal-header .username {
-  color: #3399FF; /* Blue username */
+  color: #3399FF;
   font-weight: 600;
 }
 
 .terminal-header .access {
-  color: #00FF66; /* Green Access Granted */
+  color: #00FF66;
 }
 
 .terminal-header .cursor {
-  color: #FFF; /* White blinking cursor */
+  color: #FFF;
   animation: blink 1s step-start infinite;
 }
 
-/* Blinking cursor animation */
 @keyframes blink {
   50% {
     opacity: 0;
@@ -64,54 +63,45 @@ body {
   font-size: 1em;
   margin-bottom: 8px;
   text-transform: uppercase;
-  border-bottom: 1px solid #FF0000; /* RED underline */
+  border-bottom: 1px solid #FF0000;
   padding-bottom: 4px;
 }
 
-
-/* Snapshot Headings */
-.snapshot-headings {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
-.snapshot-headings .column-heading {
-  color: #FFD700;
-  font-size: 0.9em;
-  font-weight: 600;
-  flex: 1;
-  text-align: left;
-}
-
-/* Snapshot Rows */
-.snapshot-row {
-  display: flex;
-  justify-content: space-between;
+/* Snapshot Grid */
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(11, auto);
+  gap: 1em;
+  align-items: center;
   border-bottom: 1px solid #333;
-  padding-bottom: 8px;
-  margin-bottom: 20px;
+  padding: 6px 0;
 }
 
-.snapshot-column {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 1;
+.snapshot-grid-header {
+  border-bottom: 2px solid #555;
 }
 
-.snapshot-column .item {
+/* Headers */
+.snapshot-grid-header span {
+  color: #fff;
+  font-size: 0.8em; /* smaller white subheaders */
+}
+
+/* Special: make Yield white specifically */
+.snapshot-grid-header span:nth-child(5) {
+  color: #fff;
+}
+
+/* Data rows */
+.snapshot-grid span {
   font-size: 0.9em;
-  display: flex;
-  justify-content: space-between;
-  line-height: 1.2;
 }
 
-/* Timestamps */
-.timestamp {
-  color: #bbb;
-  font-weight: normal;
-  font-size: 0.9em;
+/* Ticker labels (small grey) */
+.ticker-label {
+  font-size: 0.75em;
+  color: #888;
+  margin-left: 0.2em;
 }
 
 /* Tables */
@@ -124,7 +114,7 @@ body {
 
 .terminal-table th,
 .terminal-table td {
-  padding: 4px 6px; /* Dense spacing */
+  padding: 4px 6px;
   text-align: left;
   border-bottom: 1px solid #333;
 }
@@ -157,7 +147,7 @@ body {
   font-weight: 600;
 }
 
-/* Equities Section */
+/* Equities Section (if you need it separately) */
 .equities-row {
   display: flex;
   gap: 20px;
