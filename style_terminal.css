@@ -70,17 +70,17 @@ body {
 .snapshot-grid-header {
   display: grid;
   grid-template-columns:
-    7em /* MBS Label */
-    6em /* MBS Price */
-    6em /* MBS Today */
-    6em /* Treasuries Label */
-    6em /* Treasury Yield */
-    6em /* Treasury Today */
-    10em /* Mortgage Label */
-    6em /* Mortgage Today */
-    6em /* Mortgage Yesterday */
-    6em /* Equities Label */
-    6em /* Equities Today */;
+    9em /* MBS Label */
+    4em /* MBS Price */
+    4em /* MBS Today */
+    12em /* Treasuries Label */
+    4em /* Treasury Yield */
+    4em /* Treasury Today */
+    12em /* Mortgage Label */
+    4em /* Mortgage Today */
+    4em /* Mortgage Yesterday */
+    12em /* Equities Label */
+    4em /* Equities Today */;
   align-items: center;
   border-bottom: 1px solid #333;
   padding: 4px 0;
@@ -158,3 +158,17 @@ body {
 .snapshot-section {
   margin-bottom: 30px;
 }
+/* Snapshot Grid Headers */
+.snapshot-grid-header span {
+  font-size: 1em;          /* Yellow labels bigger */
+  color: #FFD700;
+  font-weight: 700;
+}
+
+/* Sub-labels in white smaller */
+.snapshot-grid-header span.sub-label {
+  font-size: 0.85em;       /* White labels smaller */
+  color: #fff;
+  font-weight: normal;
+}
+
