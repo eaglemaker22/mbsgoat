@@ -36,35 +36,36 @@ exports.handler = async function (event, context) {
     const treasuries30 = us30yDoc.data();
 
     return {
-      statusCode: 200,
-      body: JSON.stringify({
-        UMBS_5_5: {
-          current: mbs.UMBS_5_5_Current ?? null,
-          change: mbs.UMBS_5_5_Daily_Change ?? null,
-          last_updated: mbs.last_updated?.replace(" ", "T") ?? null,
-        },
-        GNMA_5_5: {
-          current: mbs.GNMA_5_5_Current ?? null,
-          change: mbs.GNMA_5_5_Daily_Change ?? null,
-          last_updated: mbs.last_updated?.replace(" ", "T") ?? null,
-        },
-        UMBS_5_5_Shadow: {
-          current: shadow.UMBS_5_5_Shadow_Current ?? null,
-          change: shadow.UMBS_5_5_Shadow_Daily_Change ?? null,
-          last_updated: shadow.last_updated?.replace(" ", "T") ?? null,
-        },
-        US10Y: {
-          yield: treasuries10.US10Y_Current ?? null,
-          change: treasuries10.US10Y_Daily_Change ?? null,
-          last_updated: treasuries10.last_updated?.replace(" ", "T") ?? null,
-        },
-        US30Y: {
-          yield: treasuries30.US30Y_Current ?? null,
-          change: treasuries30.US30Y_Daily_Change ?? null,
-          last_updated: treasuries30.last_updated?.replace(" ", "T") ?? null,
-        },
-      }),
-    };
+  statusCode: 200,
+  body: JSON.stringify({
+    UMBS_5_5: {
+      current: mbs.UMBS_5_5_Current ?? null,
+      change: mbs.UMBS_5_5_Daily_Change ?? null,
+      last_updated: mbs.last_updated?.replace(" ", "T") ?? null,
+    },
+    GNMA_5_5: {
+      current: mbs.GNMA_5_5_Current ?? null,
+      change: mbs.GNMA_5_5_Daily_Change ?? null,
+      last_updated: mbs.last_updated?.replace(" ", "T") ?? null,
+    },
+    UMBS_5_5_Shadow: {
+      current: shadow.UMBS_5_5_Shadow_Current ?? null,
+      change: shadow.UMBS_5_5_Shadow_Daily_Change ?? null,
+      last_updated: shadow.last_updated?.replace(" ", "T") ?? null,
+    },
+    US10Y: {
+      yield: treasuries10.US10Y_Current ?? null,
+      change: treasuries10.US10Y_Daily_Change ?? null,
+      last_updated: treasuries10.last_updated?.replace(" ", "T") ?? null,
+    },
+    US30Y: {
+      yield: treasuries30.US30Y_Current ?? null,
+      change: treasuries30.US30Y_Daily_Change ?? null,
+      last_updated: treasuries30.last_updated?.replace(" ", "T") ?? null,
+    },
+  }),
+};
+
   } catch (err) {
     console.error("❌ Top Dashboard Data Error:", err);
     return {
