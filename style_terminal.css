@@ -73,13 +73,13 @@ body {
     6em /* MBS Label */
     4em /* MBS Price */
     13em /* MBS Today */
-  6em /* Treasuries Label */
+  7em /* Treasuries Label */
     4em /* Treasury Yield */
     13em /* Treasury Today */
-    6em /* Mortgage Label */
+    8em /* Mortgage Label */
     4em /* Mortgage Today */
     13em /* Mortgage Yesterday */
-    4em /* Equities Label */
+    7em /* Equities Label */
     4em /* Equities Today */;
   align-items: center;
   border-bottom: 1px solid #333;
@@ -167,7 +167,7 @@ body {
 
 /* Sub-labels in white smaller */
 .snapshot-grid-header span.sub-label {
-  font-size: 0.85em;       /* White labels smaller */
+  font-size: 0.6em;       /* White labels smaller */
   color: #fff;
   font-weight: normal;
 }
