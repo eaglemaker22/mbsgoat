@@ -26,11 +26,11 @@ body {
 .terminal-header .title {
   color: #00FF66;
   font-weight: bold;
-  font-size: 1.2em;
+  font-size: 1.4em; /* 16% bigger */
 }
 
 .terminal-header .status {
-  font-size: 0.9em;
+  font-size: 1.1em; /* 20% bigger */
   display: flex;
   align-items: center;
   gap: 5px;
@@ -65,38 +65,39 @@ body {
   padding-bottom: 4px;
 }
 
-/* Snapshot Grid */
-.snapshot-grid {
+/* Snapshot Grid Layout */
+.snapshot-grid,
+.snapshot-grid-header {
   display: grid;
   grid-template-columns:
-    8em /* MBS Label */
+    7em /* MBS Label */
     6em /* MBS Price */
     6em /* MBS Today */
-    6em /* MBS Yesterday */
-    8em /* Treasuries Label */
+    6em /* Treasuries Label */
     6em /* Treasury Yield */
     6em /* Treasury Today */
-    6em /* Treasury Yesterday */
     10em /* Mortgage Label */
     6em /* Mortgage Today */
     6em /* Mortgage Yesterday */
-    8em /* Equities Label */
-    6em /* Equities Today */
-    6em /* Equities Yesterday */;
-  gap: 0.5em;
+    6em /* Equities Label */
+    6em /* Equities Today */;
   align-items: center;
   border-bottom: 1px solid #333;
   padding: 4px 0;
-  font-size: 0.9em;
+  column-gap: 1.2em; /* Extra space between columns */
 }
 
-/* Header styling for the snapshot grid */
-.snapshot-grid-header {
-  font-weight: bold;
+/* Make specific header labels white */
+.snapshot-grid-header span {
   color: #FFD700;
-  border-bottom: 1px solid #333;
-  padding-bottom: 4px;
-  margin-bottom: 4px;
+}
+.snapshot-grid-header span:nth-child(2), /* Price */
+.snapshot-grid-header span:nth-child(3), /* Today after Price */
+.snapshot-grid-header span:nth-child(6), /* Treasury Today */
+.snapshot-grid-header span:nth-child(8), /* Mortgage Today */
+.snapshot-grid-header span:nth-child(9), /* Mortgage Yesterday */
+.snapshot-grid-header span:nth-child(11) /* Equities Today */ {
+  color: #fff;
 }
 
 /* Tables */
@@ -135,19 +136,7 @@ body {
   font-weight: bold;
 }
 
-/* Equities Section (if you have any additional formatting) */
-.equities-row {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-.equity {
-  font-size: 0.95em;
-}
-
-/* Footer Nav (Optional) */
+/* Footer Nav */
 .terminal-footer {
   display: flex;
   justify-content: center;
@@ -163,4 +152,9 @@ body {
 
 .terminal-footer a:hover {
   color: #fff;
+}
+
+/* More space after Market Snapshot */
+.snapshot-section {
+  margin-bottom: 30px;
 }
