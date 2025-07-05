@@ -215,28 +215,25 @@ async function fetchAndUpdateEconomicIndicators() {
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
 
-    const mapping = {
-      "HOUST": "Total Housing Starts",
-      "PERMIT1": "Single-Family Permits",
-      "PERMIT": "Building Permits",
-      "RSXFS": "Retail Sales",
-      "UMCSENT": "Consumer Sentiment"
+    const rows = {
+      HOUST: "houst",
+      PERMIT1: "permit1",
+      HOUST1F: "houst1f",
+      RSXFS: "rsxfs",
+      UMCSENT: "umcsent",
+      CSUSHPINSA: "csushpinsa",
+      PERMIT: "permit",
+      T10YIE: "t10yie",
+      T10Y2Y: "t10y2y"
     };
 
-    Object.entries(mapping).forEach(([seriesId, reportName]) => {
-      const row = Array.from(document.querySelectorAll(".terminal-section:nth-of-type(5) tbody tr"))
-        .find(tr => tr.querySelector("td")?.textContent?.trim() === reportName);
-
-      if (row && data[seriesId]) {
-        const d = data[seriesId];
-        const cells = row.querySelectorAll("td");
-        cells[1].textContent = formatValue(d.latest);
-        cells[2].textContent = formatValue(d.latest_date);
-        cells[3].textContent = formatValue(d.last_month);
-        cells[4].textContent = formatValue(d.year_ago);
-        cells[5].textContent = formatValue(d.next_release);     // NEW
-        cells[6].textContent = formatValue(d.coverage_period);  // NEW
-      }
+    Object.entries(rows).forEach(([seriesId, prefix]) => {
+      const d = data[seriesId];
+      if (!d) return;
+      updateTextElement(`${prefix}Latest`, formatValue(d.latest));
+      updateTextElement(`${prefix}Date`, formatValue(d.latest_date));
+      updateTextElement(`${prefix}LastMonth`, formatValue(d.last_month));
+      updateTextElement(`${prefix}YearAgo`, formatValue(d.year_ago));
     });
   } catch (err) {
     console.error("Economic Indicators fetch error:", err);
