@@ -234,6 +234,9 @@ async function fetchAndUpdateEconomicIndicators() {
       updateTextElement(`${prefix}Date`, formatValue(d.latest_date));
       updateTextElement(`${prefix}LastMonth`, formatValue(d.last_month));
       updateTextElement(`${prefix}YearAgo`, formatValue(d.year_ago));
+      // NEW FIELDS:
+      updateTextElement(`${prefix}NextRelease`, formatValue(d.next_release));
+      updateTextElement(`${prefix}CoveragePeriod`, formatValue(d.coverage_period));
     });
   } catch (err) {
     console.error("Economic Indicators fetch error:", err);
