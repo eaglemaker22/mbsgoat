@@ -4,7 +4,7 @@ function updateTextElement(elementId, value) {
   if (element) {
     element.textContent = value;
   } else {
-    console.warn(`Element with ID '${elementId}' not found.`);
+    // console.warn(`Element with ID '${elementId}' not found.`); // Keep this for development if you suspect HTML ID issues
   }
 }
 
@@ -13,12 +13,13 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change) {
 
   const changeElement = document.getElementById(changeElementId);
   // parentHeaderItem is specific to the Market Snapshot section's styling
+  // This logic correctly distinguishes between snapshot and table elements.
   const parentHeaderItem = changeElement ? changeElement.closest('.header-item') : null;
 
   if (changeElement) {
     let formattedChange = formatValue(change);
     changeElement.classList.remove('positive', 'negative');
-    if (parentHeaderItem) { // Only apply if in the snapshot section
+    if (parentHeaderItem) { // Only apply if in the snapshot section (has .header-item parent)
       parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
     }
 
@@ -63,7 +64,7 @@ function formatPercentage(val) {
   return formatted !== '--' ? `${formatted}%` : '--';
 }
 
-// --- Market Data --- (Existing, no changes)
+// --- Market Data --- (Existing, no changes needed for this section's logic)
 async function fetchAndUpdateMarketData() {
   console.log("Fetching market data...");
   try {
@@ -91,8 +92,7 @@ async function fetchAndUpdateMarketData() {
 
     if (data?.UMBS_5_5) {
       const v = parseFloat(data.UMBS_5_5.current);
-      const c = parseFloat(data.UMBS_5_5.change);
-      // This is for the Snapshot section, not the table, so IDs are different
+      const c = parseFloat(data.UMBS_5_5.change); // This 'change' comes from Firestore `Daily_Change`
       updateChangeIndicator('umbs55Value', 'umbs55Change',
         isNaN(v) ? "--" : v.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3)
@@ -101,8 +101,7 @@ async function fetchAndUpdateMarketData() {
 
     if (data?.GNMA_5_5) {
       const v = parseFloat(data.GNMA_5_5.current);
-      const c = parseFloat(data.GNMA_5_5.change);
-      // This is for the Snapshot section, not the table, so IDs are different
+      const c = parseFloat(data.GNMA_5_5.change); // This 'change' comes from Firestore `Daily_Change`
       updateChangeIndicator('gnma55Value', 'gnma55Change',
         isNaN(v) ? "--" : v.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3)
@@ -113,7 +112,7 @@ async function fetchAndUpdateMarketData() {
   }
 }
 
-// --- Daily Rates --- (Existing, no changes)
+// --- Daily Rates --- (UPDATED for 15Y Fixed Yesterday)
 async function fetchAndUpdateDailyRates() {
   console.log("Fetching daily rates...");
   try {
@@ -126,9 +125,12 @@ async function fetchAndUpdateDailyRates() {
 
       updateTextElement(`${prefix}Current`, formatPercentage(rateData.latest));
 
+      // Specific handling for fixed30y and fixed15y for 'Yesterday'
       if (prefix === "fixed30y") {
         updateTextElement("fixed30yYesterdayTable", formatPercentage(rateData.yesterday));
-      } else { // Removed 'else if (prefix === "fixed15y")' as 'Yesterday' is the common ID now
+      } else if (prefix === "fixed15y") { // <-- RE-ADDED THIS SPECIFIC CHECK
+        updateTextElement("fixed15yYesterdayTable", formatPercentage(rateData.yesterday));
+      } else { // Generic for other rates like VA, FHA, Jumbo, USDA
         updateTextElement(`${prefix}Yesterday`, formatPercentage(rateData.yesterday));
       }
 
@@ -247,7 +249,7 @@ async function fetchAndUpdateEconomicIndicators() {
   }
 }
 
-// --- Bonds & Treasuries (CORRECTED to match HTML IDs) ---
+// --- Bonds & Treasuries (UPDATED for 'Updated' column and debugging logs) ---
 async function fetchAndUpdateBondData() {
   console.log("Fetching bond and treasury data for table...");
   try {
@@ -255,20 +257,23 @@ async function fetchAndUpdateBondData() {
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
 
-    // Update Global Last Updated Timestamp above the table
+    let formattedTimestampForTable = '--';
     if (data.last_updated) {
+      // Assuming the timestamp "2025-07-07 14:20:03" is UTC if not specified, append 'Z' for robustness.
       const timestamp = new Date(data.last_updated.replace(' ', 'T') + 'Z');
-      const formattedTimestamp = timestamp.toLocaleString('en-US', {
+
+      // Format to user's local time (e.g., "07/07/2025, 07:20:03 AM MST")
+      formattedTimestampForTable = timestamp.toLocaleString('en-US', {
         month: '2-digit',
         day: '2-digit',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
-        hour12: true,
-        timeZoneName: 'short'
+        hour12: true, // Use 12-hour clock with AM/PM
+        timeZoneName: 'short' // Include timezone abbreviation
       });
-      updateTextElement('bondLastUpdated', `Last Updated: ${formattedTimestamp}`);
+      updateTextElement('bondLastUpdated', `Last Updated: ${formattedTimestampForTable}`);
     } else {
       updateTextElement('bondLastUpdated', `Last Updated: --`);
     }
@@ -282,10 +287,14 @@ async function fetchAndUpdateBondData() {
       const instrumentData = data[instrumentKey];
       if (instrumentData) {
         // Construct the unique prefix for table IDs, matching the HTML's camelCase:
-        // Converts "UMBS_5_5" to "umbs55Table"
-        // Converts "UMBS_5_5_Shadow" to "umbs55shadowTable"
         const baseId = instrumentKey.toLowerCase().replace(/_/g, '');
-        const tableIdPrefix = `${baseId}Table`; // This now matches your HTML IDs exactly
+        const tableIdPrefix = `${baseId}Table`;
+
+        // Debugging logs: Check what data is actually received for each field
+        console.log(`--- Data for ${instrumentKey} ---`);
+        console.log(`Current: ${instrumentData.current}, Change: ${instrumentData.change}, Open: ${instrumentData.open}`);
+        console.log(`High: ${instrumentData.high}, Low: ${instrumentData.low}, PrevClose: ${instrumentData.prevClose}`);
+        console.log(`--- End ${instrumentKey} Data ---`);
 
         // Update values using the CORRECT unique IDs
         updateChangeIndicator(`${tableIdPrefix}Current`, `${tableIdPrefix}Change`,
@@ -296,8 +305,9 @@ async function fetchAndUpdateBondData() {
         updateTextElement(`${tableIdPrefix}Low`, formatValue(instrumentData.low));
         updateTextElement(`${tableIdPrefix}PrevClose`, formatValue(instrumentData.prevClose));
 
-        // The 'Updated' column in HTML remains '--' as your JSON doesn't provide per-instrument timestamps.
-        updateTextElement(`${tableIdPrefix}Updated`, '--'); // Explicitly set to --
+        // Use the global last_updated for each row's 'Updated' column
+        updateTextElement(`${tableIdPrefix}Updated`, formattedTimestampForTable);
+
       } else {
         console.warn(`Data for ${instrumentKey} not found in bond data. Setting defaults.`);
         const baseId = instrumentKey.toLowerCase().replace(/_/g, '');
@@ -347,4 +357,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(fetchAndUpdateMarketData, 60000); // Market Snapshot: Every 60 seconds
   setInterval(fetchAndUpdateLiveStockData, 30000); // Live Stocks: Every 30 seconds
   setInterval(fetchAndUpdateBondData, 60000); // Bonds & Treasuries Table: Refresh every 60 seconds
+  // Daily Rates and Economic Indicators are not currently on a setInterval, you can add them if needed.
 });
