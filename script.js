@@ -1,50 +1,62 @@
-// --- Helper Functions (No changes needed here) ---
+// --- Helper Functions ---
 function updateTextElement(elementId, value) {
   const element = document.getElementById(elementId);
   if (element) {
     element.textContent = value;
   } else {
-    // console.warn(`Element with ID '${elementId}' not found.`); // Keep this for development if you suspect HTML ID issues
+    // console.warn(`Element with ID '${elementId}' not found.`);
   }
 }
 
-function updateChangeIndicator(valueElementId, changeElementId, value, change) {
+// MODIFIED: Added isInverted parameter for color logic
+function updateChangeIndicator(valueElementId, changeElementId, value, change, isInverted = false) {
   updateTextElement(valueElementId, formatValue(value));
 
   const changeElement = document.getElementById(changeElementId);
-  // parentHeaderItem is specific to the Market Snapshot section's styling
-  // This logic correctly distinguishes between snapshot and table elements.
   const parentHeaderItem = changeElement ? changeElement.closest('.header-item') : null;
 
   if (changeElement) {
     let formattedChange = formatValue(change);
     changeElement.classList.remove('positive', 'negative');
-    if (parentHeaderItem) { // Only apply if in the snapshot section (has .header-item parent)
+    if (parentHeaderItem) {
       parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
     }
 
-    let isPositive = false;
-    let isNegative = false;
+    let isPositiveChange = false;
+    let isNegativeChange = false;
 
     const numericChange = parseFloat(change);
     if (!isNaN(numericChange)) {
       if (numericChange > 0) {
         formattedChange = `+${numericChange}`;
-        isPositive = true;
+        isPositiveChange = true;
       } else if (numericChange < 0) {
         formattedChange = `${numericChange}`;
-        isNegative = true;
+        isNegativeChange = true;
       }
     }
 
-    if (isPositive) {
-      changeElement.classList.add('positive');
-      if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
-    } else if (isNegative) {
-      changeElement.classList.add('negative');
-      if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
-    } else {
-      if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
+    // Apply colors based on isInverted flag
+    if (isInverted) { // For Treasuries
+      if (isPositiveChange) {
+        changeElement.classList.add('negative'); // Red for positive change
+        if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
+      } else if (isNegativeChange) {
+        changeElement.classList.add('positive'); // Green for negative change
+        if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
+      } else {
+        if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
+      }
+    } else { // For MBS/Equities (default behavior)
+      if (isPositiveChange) {
+        changeElement.classList.add('positive');
+        if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
+      } else if (isNegativeChange) {
+        changeElement.classList.add('negative');
+        if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
+      } else {
+        if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
+      }
     }
 
     changeElement.textContent = formattedChange;
@@ -54,7 +66,7 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change) {
 function formatValue(val) {
   const num = parseFloat(val);
   if (!isNaN(num)) {
-    return num.toFixed(3); // Consistent 3 decimal places for numbers
+    return num.toFixed(3);
   }
   return val !== null && val !== undefined && val !== "" ? val : "--";
 }
@@ -64,7 +76,7 @@ function formatPercentage(val) {
   return formatted !== '--' ? `${formatted}%` : '--';
 }
 
-// --- Market Data --- (Existing, no changes needed for this section's logic)
+// --- Market Data --- (UPDATED for Treasury color inversion)
 async function fetchAndUpdateMarketData() {
   console.log("Fetching market data...");
   try {
@@ -75,18 +87,22 @@ async function fetchAndUpdateMarketData() {
     if (data?.US10Y) {
       const y = parseFloat(data.US10Y.yield);
       const c = parseFloat(data.US10Y.change);
+      // Pass true for isInverted for Treasuries
       updateChangeIndicator('us10yValue', 'us10yChange',
         isNaN(y) ? "--" : y.toFixed(3),
-        isNaN(c) ? "--" : c.toFixed(3)
+        isNaN(c) ? "--" : c.toFixed(3),
+        true // Invert colors for 10Y Treasury
       );
     }
 
     if (data?.US30Y) {
       const y = parseFloat(data.US30Y.yield);
       const c = parseFloat(data.US30Y.change);
+      // Pass true for isInverted for Treasuries
       updateChangeIndicator('us30yValue', 'us30yChange',
         isNaN(y) ? "--" : y.toFixed(3),
-        isNaN(c) ? "--" : c.toFixed(3)
+        isNaN(c) ? "--" : c.toFixed(3),
+        true // Invert colors for 30Y Treasury
       );
     }
 
@@ -172,7 +188,7 @@ async function fetchAndUpdateDailyRates() {
   }
 }
 
-// --- Live Stocks --- (Existing, no changes)
+// --- Live Stocks --- (No changes)
 async function fetchAndUpdateLiveStockData() {
   console.log("Fetching live stock data...");
   try {
@@ -214,7 +230,7 @@ async function fetchAndUpdateLiveStockData() {
   }
 }
 
-// --- Economic Indicators --- (Existing, no changes)
+// --- Economic Indicators --- (No changes)
 async function fetchAndUpdateEconomicIndicators() {
   console.log("Fetching economic indicators...");
   try {
@@ -249,7 +265,7 @@ async function fetchAndUpdateEconomicIndicators() {
   }
 }
 
-// --- Bonds & Treasuries (UPDATED for 'Updated' column and debugging logs) ---
+// --- Bonds & Treasuries (UPDATED for 'Updated' column time format and debugging) ---
 async function fetchAndUpdateBondData() {
   console.log("Fetching bond and treasury data for table...");
   try {
@@ -259,10 +275,12 @@ async function fetchAndUpdateBondData() {
 
     let formattedTimestampForTable = '--';
     if (data.last_updated) {
-      // Assuming the timestamp "2025-07-07 14:20:03" is UTC if not specified, append 'Z' for robustness.
-      const timestamp = new Date(data.last_updated.replace(' ', 'T') + 'Z');
+      // Parse the timestamp string directly without assuming UTC ('Z').
+      // This treats "2025-07-07 14:20:03" as a local time,
+      // which will then be converted correctly by toLocaleString.
+      const timestamp = new Date(data.last_updated.replace(' ', 'T'));
 
-      // Format to user's local time (e.g., "07/07/2025, 07:20:03 AM MST")
+      // Format to Pacific Time, 12-hour format with AM/PM
       formattedTimestampForTable = timestamp.toLocaleString('en-US', {
         month: '2-digit',
         day: '2-digit',
@@ -271,6 +289,7 @@ async function fetchAndUpdateBondData() {
         minute: '2-digit',
         second: '2-digit',
         hour12: true, // Use 12-hour clock with AM/PM
+        timeZone: 'America/Los_Angeles', // Explicitly set to Pacific Time
         timeZoneName: 'short' // Include timezone abbreviation
       });
       updateTextElement('bondLastUpdated', `Last Updated: ${formattedTimestampForTable}`);
@@ -286,7 +305,6 @@ async function fetchAndUpdateBondData() {
     bondInstruments.forEach(instrumentKey => {
       const instrumentData = data[instrumentKey];
       if (instrumentData) {
-        // Construct the unique prefix for table IDs, matching the HTML's camelCase:
         const baseId = instrumentKey.toLowerCase().replace(/_/g, '');
         const tableIdPrefix = `${baseId}Table`;
 
@@ -296,7 +314,6 @@ async function fetchAndUpdateBondData() {
         console.log(`High: ${instrumentData.high}, Low: ${instrumentData.low}, PrevClose: ${instrumentData.prevClose}`);
         console.log(`--- End ${instrumentKey} Data ---`);
 
-        // Update values using the CORRECT unique IDs
         updateChangeIndicator(`${tableIdPrefix}Current`, `${tableIdPrefix}Change`,
                               instrumentData.current, instrumentData.change);
 
@@ -305,7 +322,7 @@ async function fetchAndUpdateBondData() {
         updateTextElement(`${tableIdPrefix}Low`, formatValue(instrumentData.low));
         updateTextElement(`${tableIdPrefix}PrevClose`, formatValue(instrumentData.prevClose));
 
-        // Use the global last_updated for each row's 'Updated' column
+        // Use the global formattedTimestampForTable for each row's 'Updated' column
         updateTextElement(`${tableIdPrefix}Updated`, formattedTimestampForTable);
 
       } else {
@@ -325,7 +342,6 @@ async function fetchAndUpdateBondData() {
   } catch (err) {
     console.error("Bond data fetch error:", err);
     updateTextElement('bondLastUpdated', `Last Updated: Error`);
-    // On error, set all table values to '--'
     const bondInstruments = [
         "UMBS_5_5", "UMBS_6_0", "GNMA_5_5", "GNMA_6_0",
         "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", "GNMA_5_5_Shadow", "GNMA_6_0_Shadow"
@@ -346,16 +362,13 @@ async function fetchAndUpdateBondData() {
 
 // --- Initialize & Refresh ---
 document.addEventListener("DOMContentLoaded", () => {
-  // Initial fetches when the page loads
   fetchAndUpdateMarketData();
   fetchAndUpdateDailyRates();
   fetchAndUpdateLiveStockData();
   fetchAndUpdateEconomicIndicators();
-  fetchAndUpdateBondData(); // Initial call for bonds & treasuries data
+  fetchAndUpdateBondData();
 
-  // Set up refresh intervals
-  setInterval(fetchAndUpdateMarketData, 60000); // Market Snapshot: Every 60 seconds
-  setInterval(fetchAndUpdateLiveStockData, 30000); // Live Stocks: Every 30 seconds
-  setInterval(fetchAndUpdateBondData, 60000); // Bonds & Treasuries Table: Refresh every 60 seconds
-  // Daily Rates and Economic Indicators are not currently on a setInterval, you can add them if needed.
+  setInterval(fetchAndUpdateMarketData, 60000);
+  setInterval(fetchAndUpdateLiveStockData, 30000);
+  setInterval(fetchAndUpdateBondData, 60000);
 });
