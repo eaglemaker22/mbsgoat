@@ -128,9 +128,7 @@ async function fetchAndUpdateDailyRates() {
 
       if (prefix === "fixed30y") {
         updateTextElement("fixed30yYesterdayTable", formatPercentage(rateData.yesterday));
-      } else if (prefix === "fixed15y") {
-        updateTextElement("fixed15yYesterdayTable", formatPercentage(rateData.yesterday));
-      } else {
+      } else { // Removed 'else if (prefix === "fixed15y")' as 'Yesterday' is the common ID now
         updateTextElement(`${prefix}Yesterday`, formatPercentage(rateData.yesterday));
       }
 
@@ -249,7 +247,7 @@ async function fetchAndUpdateEconomicIndicators() {
   }
 }
 
-// --- Bonds & Treasuries (UPDATED to use unique HTML IDs) ---
+// --- Bonds & Treasuries (CORRECTED to match HTML IDs) ---
 async function fetchAndUpdateBondData() {
   console.log("Fetching bond and treasury data for table...");
   try {
@@ -259,11 +257,7 @@ async function fetchAndUpdateBondData() {
 
     // Update Global Last Updated Timestamp above the table
     if (data.last_updated) {
-      // Assuming the timestamp "2025-07-07 14:20:03" is UTC, we append 'Z' for proper parsing.
-      // If your Firebase timestamp is in a specific timezone, you might need 'YYYY-MM-DDTHH:MM:SS-OFFSET'
       const timestamp = new Date(data.last_updated.replace(' ', 'T') + 'Z');
-
-      // Format to user's local time (e.g., "07/07/2025, 07:20:03 AM GMT-7")
       const formattedTimestamp = timestamp.toLocaleString('en-US', {
         month: '2-digit',
         day: '2-digit',
@@ -271,8 +265,8 @@ async function fetchAndUpdateBondData() {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
-        hour12: true, // Use 12-hour clock with AM/PM
-        timeZoneName: 'short' // Include timezone abbreviation
+        hour12: true,
+        timeZoneName: 'short'
       });
       updateTextElement('bondLastUpdated', `Last Updated: ${formattedTimestamp}`);
     } else {
@@ -287,31 +281,34 @@ async function fetchAndUpdateBondData() {
     bondInstruments.forEach(instrumentKey => {
       const instrumentData = data[instrumentKey];
       if (instrumentData) {
-        // Construct the unique prefix for table IDs: e.g., "umbs55table" or "umbs55shadowtable"
-        const prefix = instrumentKey.toLowerCase().replace(/_/g, '') + 'table';
+        // Construct the unique prefix for table IDs, matching the HTML's camelCase:
+        // Converts "UMBS_5_5" to "umbs55Table"
+        // Converts "UMBS_5_5_Shadow" to "umbs55shadowTable"
+        const baseId = instrumentKey.toLowerCase().replace(/_/g, '');
+        const tableIdPrefix = `${baseId}Table`; // This now matches your HTML IDs exactly
 
-        // Update values using the new unique IDs
-        updateChangeIndicator(`${prefix}Current`, `${prefix}Change`,
+        // Update values using the CORRECT unique IDs
+        updateChangeIndicator(`${tableIdPrefix}Current`, `${tableIdPrefix}Change`,
                               instrumentData.current, instrumentData.change);
 
-        updateTextElement(`${prefix}Open`, formatValue(instrumentData.open));
-        updateTextElement(`${prefix}High`, formatValue(instrumentData.high));
-        updateTextElement(`${prefix}Low`, formatValue(instrumentData.low));
-        updateTextElement(`${prefix}PrevClose`, formatValue(instrumentData.prevClose));
+        updateTextElement(`${tableIdPrefix}Open`, formatValue(instrumentData.open));
+        updateTextElement(`${tableIdPrefix}High`, formatValue(instrumentData.high));
+        updateTextElement(`${tableIdPrefix}Low`, formatValue(instrumentData.low));
+        updateTextElement(`${tableIdPrefix}PrevClose`, formatValue(instrumentData.prevClose));
 
         // The 'Updated' column in HTML remains '--' as your JSON doesn't provide per-instrument timestamps.
-        // updateTextElement(`${prefix}Updated`, formatValue(instrumentData.someIndividualTimestamp));
-        // For now, it will default to '--' based on how your HTML is structured.
+        updateTextElement(`${tableIdPrefix}Updated`, '--'); // Explicitly set to --
       } else {
         console.warn(`Data for ${instrumentKey} not found in bond data. Setting defaults.`);
-        const prefix = instrumentKey.toLowerCase().replace(/_/g, '') + 'table';
-        updateTextElement(`${prefix}Current`, '--');
-        updateTextElement(`${prefix}Change`, '--');
-        updateTextElement(`${prefix}Open`, '--');
-        updateTextElement(`${prefix}High`, '--');
-        updateTextElement(`${prefix}Low`, '--');
-        updateTextElement(`${prefix}PrevClose`, '--');
-        updateTextElement(`${prefix}Updated`, '--'); // Ensure this is also reset
+        const baseId = instrumentKey.toLowerCase().replace(/_/g, '');
+        const tableIdPrefix = `${baseId}Table`;
+        updateTextElement(`${tableIdPrefix}Current`, '--');
+        updateTextElement(`${tableIdPrefix}Change`, '--');
+        updateTextElement(`${tableIdPrefix}Open`, '--');
+        updateTextElement(`${tableIdPrefix}High`, '--');
+        updateTextElement(`${tableIdPrefix}Low`, '--');
+        updateTextElement(`${tableIdPrefix}PrevClose`, '--');
+        updateTextElement(`${tableIdPrefix}Updated`, '--');
       }
     });
 
@@ -324,14 +321,15 @@ async function fetchAndUpdateBondData() {
         "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", "GNMA_5_5_Shadow", "GNMA_6_0_Shadow"
     ];
     bondInstruments.forEach(instrumentKey => {
-        const prefix = instrumentKey.toLowerCase().replace(/_/g, '') + 'table';
-        updateTextElement(`${prefix}Current`, '--');
-        updateTextElement(`${prefix}Change`, '--');
-        updateTextElement(`${prefix}Open`, '--');
-        updateTextElement(`${prefix}High`, '--');
-        updateTextElement(`${prefix}Low`, '--');
-        updateTextElement(`${prefix}PrevClose`, '--');
-        updateTextElement(`${prefix}Updated`, '--');
+        const baseId = instrumentKey.toLowerCase().replace(/_/g, '');
+        const tableIdPrefix = `${baseId}Table`;
+        updateTextElement(`${tableIdPrefix}Current`, '--');
+        updateTextElement(`${tableIdPrefix}Change`, '--');
+        updateTextElement(`${tableIdPrefix}Open`, '--');
+        updateTextElement(`${tableIdPrefix}High`, '--');
+        updateTextElement(`${tableIdPrefix}Low`, '--');
+        updateTextElement(`${tableIdPrefix}PrevClose`, '--');
+        updateTextElement(`${tableIdPrefix}Updated`, '--');
     });
   }
 }
@@ -349,5 +347,4 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(fetchAndUpdateMarketData, 60000); // Market Snapshot: Every 60 seconds
   setInterval(fetchAndUpdateLiveStockData, 30000); // Live Stocks: Every 30 seconds
   setInterval(fetchAndUpdateBondData, 60000); // Bonds & Treasuries Table: Refresh every 60 seconds
-  // Daily Rates and Economic Indicators are not currently on a setInterval, you can add them if needed.
 });
