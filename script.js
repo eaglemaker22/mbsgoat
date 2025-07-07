@@ -58,44 +58,51 @@ function formatPercentage(val) {
   return formatted !== '--' ? `${formatted}%` : '--';
 }
 
-function updateBondRow(rowIndex, bondData) {
-  const table = document.querySelector(".terminal-table tbody");
-  const row = table ? table.rows[rowIndex] : null;
-  if (!row || !bondData) return;
-
-  const fields = [
-    bondData.current,
-    bondData.change,
-    bondData.open,
-    bondData.high,
-    bondData.low,
-    bondData.prevClose,
-    bondData.last_updated
-  ];
-
-  for (let i = 1; i <= fields.length; i++) {
-    row.cells[i].textContent = formatValue(fields[i - 1]);
-  }
-}
-
-// --- Bond Table (Separate from top bar) ---
-async function fetchAndUpdateBondTableData() {
-  console.log("Fetching bond table data...");
+// --- Market Data ---
+async function fetchAndUpdateMarketData() {
+  console.log("Fetching market data...");
   try {
-    const res = await fetch("/.netlify/functions/getAllBondData");
+    const res = await fetch("/.netlify/functions/getTopDashboardData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
 
-    updateBondRow(0, data?.UMBS_5_5);
-    updateBondRow(1, data?.UMBS_6_0);
-    updateBondRow(2, data?.GNMA_5_5);
-    updateBondRow(3, data?.GNMA_6_0);
-    updateBondRow(4, data?.UMBS_5_5_Shadow);
-    updateBondRow(5, data?.UMBS_6_0_Shadow);
-    updateBondRow(6, data?.GNMA_5_5_Shadow);
-    updateBondRow(7, data?.GNMA_6_0_Shadow);
+    if (data?.US10Y) {
+      const y = parseFloat(data.US10Y.yield);
+      const c = parseFloat(data.US10Y.change);
+      updateChangeIndicator('us10yValue', 'us10yChange',
+        isNaN(y) ? "--" : y.toFixed(3),
+        isNaN(c) ? "--" : c.toFixed(3)
+      );
+    }
+
+    if (data?.US30Y) {
+      const y = parseFloat(data.US30Y.yield);
+      const c = parseFloat(data.US30Y.change);
+      updateChangeIndicator('us30yValue', 'us30yChange',
+        isNaN(y) ? "--" : y.toFixed(3),
+        isNaN(c) ? "--" : c.toFixed(3)
+      );
+    }
+
+    if (data?.UMBS_5_5) {
+      const v = parseFloat(data.UMBS_5_5.current);
+      const c = parseFloat(data.UMBS_5_5.change);
+      updateChangeIndicator('umbs55Value', 'umbs55Change',
+        isNaN(v) ? "--" : v.toFixed(3),
+        isNaN(c) ? "--" : c.toFixed(3)
+      );
+    }
+
+    if (data?.GNMA_5_5) {
+      const v = parseFloat(data.GNMA_5_5.current);
+      const c = parseFloat(data.GNMA_5_5.change);
+      updateChangeIndicator('gnma55Value', 'gnma55Change',
+        isNaN(v) ? "--" : v.toFixed(3),
+        isNaN(c) ? "--" : c.toFixed(3)
+      );
+    }
   } catch (err) {
-    console.error("Bond table fetch error:", err);
+    console.error("Market data fetch error:", err);
   }
 }
 
@@ -140,11 +147,13 @@ async function fetchAndUpdateDailyRates() {
       updateTextElement(`${prefix}ChangeVs1Y`, changeVs1Y !== null ? `${changeVs1Y}%` : "--");
     }
 
+    // Top snapshot
     updateTextElement("fixed30yValue", formatPercentage(data?.fixed30Y?.latest));
     updateTextElement("fixed30yYesterday", formatPercentage(data?.fixed30Y?.yesterday));
     updateTextElement("fixed15yValue", formatPercentage(data?.fixed15Y?.latest));
     updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15Y?.yesterday));
 
+    // Table rows
     updateRateRow("fixed30y", data.fixed30Y);
     updateRateRow("va30y", data.va30Y);
     updateRateRow("fha30y", data.fha30Y);
@@ -225,6 +234,7 @@ async function fetchAndUpdateEconomicIndicators() {
       updateTextElement(`${prefix}Date`, formatValue(d.latest_date));
       updateTextElement(`${prefix}LastMonth`, formatValue(d.last_month));
       updateTextElement(`${prefix}YearAgo`, formatValue(d.year_ago));
+      // NEW FIELDS:
       updateTextElement(`${prefix}NextRelease`, formatValue(d.next_release));
       updateTextElement(`${prefix}CoveragePeriod`, formatValue(d.coverage_period));
     });
@@ -235,13 +245,11 @@ async function fetchAndUpdateEconomicIndicators() {
 
 // --- Initialize & Refresh ---
 document.addEventListener("DOMContentLoaded", () => {
-  fetchAndUpdateMarketData(); // for top bar
-  fetchAndUpdateBondTableData(); // for Bonds & Treasuries table only
+  fetchAndUpdateMarketData();
   fetchAndUpdateDailyRates();
   fetchAndUpdateLiveStockData();
   fetchAndUpdateEconomicIndicators();
 
   setInterval(fetchAndUpdateMarketData, 60000);
-  setInterval(fetchAndUpdateBondTableData, 60000);
   setInterval(fetchAndUpdateLiveStockData, 30000);
 });
