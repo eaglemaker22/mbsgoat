@@ -9,10 +9,10 @@ function updateTextElement(elementId, value) {
 }
 
 function updateChangeIndicator(valueElementId, changeElementId, value, change) {
-  updateTextElement(valueElementId, formatValue(value));
+  updateTextElement(valueElementId, formatValue(value)); // Update the value display
 
   const changeElement = document.getElementById(changeElementId);
-  const parentHeaderItem = changeElement ? changeElement.closest('.header-item') : null;
+  const parentHeaderItem = changeElement ? changeElement.closest('.header-item') : null; // This might be for the snapshot section only, but kept for consistency
 
   if (changeElement) {
     let formattedChange = formatValue(change);
@@ -50,6 +50,15 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change) {
 }
 
 function formatValue(val) {
+  // Check if the value is a number and has decimal places, then format to 3 decimals.
+  // Otherwise, return as is or '--' if null/undefined/empty.
+  const num = parseFloat(val);
+  if (!isNaN(num)) {
+    // Check if it's an integer or a float, and apply toFixed only if it's a float
+    // or if it's a number that you always want to show with 3 decimal places.
+    // Given the examples, 3 decimal places for bond prices/changes seems appropriate.
+    return num.toFixed(3);
+  }
   return val !== null && val !== undefined && val !== "" ? val : "--";
 }
 
@@ -58,7 +67,7 @@ function formatPercentage(val) {
   return formatted !== '--' ? `${formatted}%` : '--';
 }
 
-// --- Market Data ---
+// --- Market Data --- (existing from your file)
 async function fetchAndUpdateMarketData() {
   console.log("Fetching market data...");
   try {
@@ -106,7 +115,7 @@ async function fetchAndUpdateMarketData() {
   }
 }
 
-// --- Daily Rates ---
+// --- Daily Rates --- (existing from your file)
 async function fetchAndUpdateDailyRates() {
   console.log("Fetching daily rates...");
   try {
@@ -165,7 +174,7 @@ async function fetchAndUpdateDailyRates() {
   }
 }
 
-// --- Live Stocks ---
+// --- Live Stocks --- (existing from your file)
 async function fetchAndUpdateLiveStockData() {
   console.log("Fetching live stock data...");
   try {
@@ -207,7 +216,7 @@ async function fetchAndUpdateLiveStockData() {
   }
 }
 
-// --- Economic Indicators ---
+// --- Economic Indicators --- (existing from your file)
 async function fetchAndUpdateEconomicIndicators() {
   console.log("Fetching economic indicators...");
   try {
@@ -243,13 +252,106 @@ async function fetchAndUpdateEconomicIndicators() {
   }
 }
 
+// --- NEW: Bonds & Treasuries ---
+async function fetchAndUpdateBondData() {
+  console.log("Fetching bond and treasury data...");
+  try {
+    const res = await fetch("/.netlify/functions/getAllBondData");
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
+
+    // Update Last Updated Timestamp
+    if (data.last_updated) {
+      // Convert "YYYY-MM-DD HH:MM:SS" to a Date object.
+      // Assuming the timestamp from Firebase is in UTC, add 'Z' for correct parsing.
+      const timestamp = new Date(data.last_updated.replace(' ', 'T') + 'Z');
+
+      // Format to user's local time (e.g., "07/07/2025, 07:20:03 AM GMT-7")
+      const formattedTimestamp = timestamp.toLocaleString('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true, // Use 12-hour clock with AM/PM
+        timeZoneName: 'short' // Include timezone abbreviation
+      });
+      updateTextElement('bondLastUpdated', `Last Updated: ${formattedTimestamp}`);
+    } else {
+      updateTextElement('bondLastUpdated', `Last Updated: --`);
+    }
+
+    const bondInstruments = [
+      "UMBS_5_5", "UMBS_6_0", "GNMA_5_5", "GNMA_6_0",
+      "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", "GNMA_5_5_Shadow", "GNMA_6_0_Shadow"
+    ];
+
+    bondInstruments.forEach(instrumentKey => {
+      const instrumentData = data[instrumentKey];
+      if (instrumentData) {
+        // Convert instrumentKey like "UMBS_5_5_Shadow" to "umbs55shadow" for HTML IDs
+        const prefix = instrumentKey.toLowerCase().replace(/_/g, '');
+
+        // Use updateChangeIndicator for current and change values to get styling
+        updateChangeIndicator(`${prefix}Current`, `${prefix}Change`,
+                              instrumentData.current, instrumentData.change);
+
+        // Update other fields using updateTextElement
+        updateTextElement(`${prefix}Open`, formatValue(instrumentData.open));
+        updateTextElement(`${prefix}High`, formatValue(instrumentData.high));
+        updateTextElement(`${prefix}Low`, formatValue(instrumentData.low));
+        updateTextElement(`${prefix}PrevClose`, formatValue(instrumentData.prevClose));
+        // The HTML table has a column for 'Updated', but your current JSON doesn't have an individual updated timestamp per bond.
+        // If you need this, you'll have to add it to your Firebase data and the Netlify function.
+        // For now, it will remain '--' unless you reuse the global last_updated here, but that might be misleading.
+        // updateTextElement(`${prefix}Updated`, data.last_updated ? formatTime(data.last_updated) : '--'); // Example if you want global timestamp here
+      } else {
+        console.warn(`Data for ${instrumentKey} not found in bond data.`);
+        // Set all related fields to '--' if data is missing for an instrument
+        const prefix = instrumentKey.toLowerCase().replace(/_/g, '');
+        updateTextElement(`${prefix}Current`, '--');
+        updateTextElement(`${prefix}Change`, '--');
+        updateTextElement(`${prefix}Open`, '--');
+        updateTextElement(`${prefix}High`, '--');
+        updateTextElement(`${prefix}Low`, '--');
+        updateTextElement(`${prefix}PrevClose`, '--');
+        // updateTextElement(`${prefix}Updated`, '--');
+      }
+    });
+
+  } catch (err) {
+    console.error("Bond data fetch error:", err);
+    updateTextElement('bondLastUpdated', `Last Updated: Error`);
+    // Optionally clear or set '--' for all table values on error
+    const bondInstruments = [
+        "UMBS_5_5", "UMBS_6_0", "GNMA_5_5", "GNMA_6_0",
+        "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", "GNMA_5_5_Shadow", "GNMA_6_0_Shadow"
+    ];
+    bondInstruments.forEach(instrumentKey => {
+        const prefix = instrumentKey.toLowerCase().replace(/_/g, '');
+        updateTextElement(`${prefix}Current`, '--');
+        updateTextElement(`${prefix}Change`, '--');
+        updateTextElement(`${prefix}Open`, '--');
+        updateTextElement(`${prefix}High`, '--');
+        updateTextElement(`${prefix}Low`, '--');
+        updateTextElement(`${prefix}PrevClose`, '--');
+        // updateTextElement(`${prefix}Updated`, '--');
+    });
+  }
+}
+
 // --- Initialize & Refresh ---
 document.addEventListener("DOMContentLoaded", () => {
+  // Initial fetches when the page loads
   fetchAndUpdateMarketData();
   fetchAndUpdateDailyRates();
   fetchAndUpdateLiveStockData();
   fetchAndUpdateEconomicIndicators();
+  fetchAndUpdateBondData(); // Initial call for bonds & treasuries data
 
-  setInterval(fetchAndUpdateMarketData, 60000);
-  setInterval(fetchAndUpdateLiveStockData, 30000);
+  // Set up refresh intervals
+  setInterval(fetchAndUpdateMarketData, 60000); // Every 60 seconds
+  setInterval(fetchAndUpdateLiveStockData, 30000); // Every 30 seconds
+  setInterval(fetchAndUpdateBondData, 60000); // Refresh bonds & treasuries every 60 seconds
 });
