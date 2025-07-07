@@ -58,6 +58,26 @@ function formatPercentage(val) {
   return formatted !== '--' ? `${formatted}%` : '--';
 }
 
+function updateBondRow(rowIndex, bondData) {
+  const table = document.querySelector(".terminal-table tbody");
+  const row = table ? table.rows[rowIndex] : null;
+  if (!row || !bondData) return;
+
+  const fields = [
+    bondData.current,
+    bondData.change,
+    bondData.open,
+    bondData.high,
+    bondData.low,
+    bondData.close,
+    bondData.last_updated
+  ];
+
+  for (let i = 1; i <= fields.length; i++) {
+    row.cells[i].textContent = formatValue(fields[i - 1]);
+  }
+}
+
 // --- Market Data ---
 async function fetchAndUpdateMarketData() {
   console.log("Fetching market data...");
@@ -101,6 +121,15 @@ async function fetchAndUpdateMarketData() {
         isNaN(c) ? "--" : c.toFixed(3)
       );
     }
+
+    // New: Populate Bonds & Treasuries table rows
+    updateBondRow(0, data?.UMBS_5_5);
+    updateBondRow(1, data?.UMBS_6_0);
+    updateBondRow(2, data?.GNMA_5_5);
+    updateBondRow(3, data?.GNMA_6_0);
+    updateBondRow(4, data?.US10Y);
+    updateBondRow(5, data?.US30Y);
+
   } catch (err) {
     console.error("Market data fetch error:", err);
   }
@@ -147,13 +176,11 @@ async function fetchAndUpdateDailyRates() {
       updateTextElement(`${prefix}ChangeVs1Y`, changeVs1Y !== null ? `${changeVs1Y}%` : "--");
     }
 
-    // Top snapshot
     updateTextElement("fixed30yValue", formatPercentage(data?.fixed30Y?.latest));
     updateTextElement("fixed30yYesterday", formatPercentage(data?.fixed30Y?.yesterday));
     updateTextElement("fixed15yValue", formatPercentage(data?.fixed15Y?.latest));
     updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15Y?.yesterday));
 
-    // Table rows
     updateRateRow("fixed30y", data.fixed30Y);
     updateRateRow("va30y", data.va30Y);
     updateRateRow("fha30y", data.fha30Y);
@@ -234,7 +261,6 @@ async function fetchAndUpdateEconomicIndicators() {
       updateTextElement(`${prefix}Date`, formatValue(d.latest_date));
       updateTextElement(`${prefix}LastMonth`, formatValue(d.last_month));
       updateTextElement(`${prefix}YearAgo`, formatValue(d.year_ago));
-      // NEW FIELDS:
       updateTextElement(`${prefix}NextRelease`, formatValue(d.next_release));
       updateTextElement(`${prefix}CoveragePeriod`, formatValue(d.coverage_period));
     });
