@@ -24,7 +24,8 @@ try {
     console.log("Firebase initialized successfully.");
 } catch (error) {
     console.error("Firebase initialization error:", error);
-    // Exit the function gracefully if initialization fails
+    // If Firebase initialization fails, set up a handler that returns a 500 error
+    // immediately to prevent further execution issues.
     module.exports.handler = async (event, context) => {
         return {
             statusCode: 500,
@@ -44,34 +45,19 @@ function formatValue(value) {
     return String(value);
 }
 
-
+// REVERTED extractBondFields to its simpler form to match prior working output.
+// This means High/Low for shadow bonds will likely be null again,
+// but it should restore other values if present in Firestore.
 function extractBondFields(data, prefix) {
-    // This function now correctly handles both flat data (e.g., UMBS_5_5_Current)
-    // and correctly prioritizes _TodayHigh/_TodayLow for High/Low fields
-    const change = data[`${prefix}_Daily_Change`] || data[`${prefix}_change`] || null;
-    const current = data[`${prefix}_Current`] || data[`${prefix}_current`] || null;
-    const prevClose = data[`${prefix}_PriorDayClose`] || data[`${prefix}_prevClose`] || null;
-    const open = data[`${prefix}_Open`] || data[`${prefix}_open`] || null;
-    
-    // CRITICAL FIX: Prioritize _TodayHigh and _TodayLow (from your latest scrape)
-    // but fallback to _High and _Low if those are still used for other instruments.
-    const high = data[`${prefix}_TodayHigh`] || data[`${prefix}_High`] || null;
-    const low = data[`${prefix}_TodayLow`] || data[`${prefix}_Low`] || null;
-    
-    const close = data[`${prefix}_Close`] || null; // Add the _Close field
-    const geminiChange = data[`${prefix}_Gemini_Change`] || null; // Add Gemini_Change
-    const status = data[`${prefix}_Status`] || null; // Add Status
-
     return {
-        change: formatValue(change),
-        current: formatValue(current),
-        prevClose: formatValue(prevClose),
-        open: formatValue(open),
-        high: formatValue(high),
-        low: formatValue(low),
-        close: formatValue(close),
-        geminiChange: formatValue(geminiChange),
-        status: status // Status is already string, no need to formatValue
+        change: data[`${prefix}_Daily_Change`] || data[`${prefix}_change`] || null,
+        current: data[`${prefix}_Current`] || data[`${prefix}_current`] || null,
+        prevClose: data[`${prefix}_PriorDayClose`] || data[`${prefix}_prevClose`] || null,
+        open: data[`${prefix}_Open`] || data[`${prefix}_open`] || null,
+        high: data[`${prefix}_High`] || null, // Reverted to expect _High
+        low: data[`${prefix}_Low`] || null,   // Reverted to expect _Low
+        // Other fields like _Close, _Gemini_Change, _Status are not included here
+        // to match the structure of the "prior working" JSON output.
     };
 }
 
@@ -92,11 +78,11 @@ exports.handler = async (event, context) => {
         const docRefUS30Y = db.collection('market_data').document('us30y_current');
         const docRefMBSProducts = db.collection('market_data').document('mbs_products'); 
 
-        // Fetch all documents concurrently
+        // Fetch all documents concurrently using Promise.all
         const [
             docShadowSnapshot,
             docUS10YSnapshot,
-            docUS30YSnapshot, // This is the correct snapshot variable name
+            docUS30YSnapshot, // Correct snapshot variable name
             docMBSProductsSnapshot
         ] = await Promise.all([
             docRefShadow.get(),
@@ -112,7 +98,8 @@ exports.handler = async (event, context) => {
         const us30yData = docUS30YSnapshot.exists ? docUS30YSnapshot.data() : {}; 
         const mbsProductsData = docMBSProductsSnapshot.exists ? docMBSProductsSnapshot.data() : {};
 
-        // Log raw data fetched from Firestore for debugging
+        // Log raw data fetched from Firestore for debugging.
+        // These logs are crucial to see if any documents are coming back empty.
         console.log("--- Raw Shadow Data Fetched from Firestore ---");
         console.log(JSON.stringify(shadowData, null, 2));
 
@@ -127,19 +114,16 @@ exports.handler = async (event, context) => {
 
 
         // Extract and process data for each bond type using the helper function
-        // These rely on the 'mbs_products' document (populated by umbs_55_scraper.py)
         const umbs55 = extractBondFields(mbsProductsData, 'UMBS_5_5');
         const umbs60 = extractBondFields(mbsProductsData, 'UMBS_6_0');
         const gnma55 = extractBondFields(mbsProductsData, 'GNMA_5_5');
         const gnma60 = extractBondFields(mbsProductsData, 'GNMA_6_0');
 
-        // These rely on the 'shadow_bonds' document (populated by shadow_scraper.py)
         const umbs55Shadow = extractBondFields(shadowData, 'UMBS_5_5_Shadow');
         const umbs60Shadow = extractBondFields(shadowData, 'UMBS_6_0_Shadow');
         const gnma55Shadow = extractBondFields(shadowData, 'GNMA_5_5_Shadow');
         const gnma60Shadow = extractBondFields(shadowData, 'GNMA_6_0_Shadow');
 
-        // These rely on 'us10y_current' and 'us30y_current' documents (populated by shadow_scraper.py)
         const us10y = extractBondFields(us10yData, 'US10Y');
         const us30y = extractBondFields(us30yData, 'US30Y');
 
@@ -155,7 +139,7 @@ exports.handler = async (event, context) => {
         console.log(JSON.stringify(umbs55, null, 2));
 
 
-        // Construct the final JSON response
+        // Construct the final JSON response, matching the prior "working" structure
         return {
             statusCode: 200,
             headers: {
