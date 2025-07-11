@@ -32,10 +32,10 @@ exports.handler = async function (event, context) {
     const us10yData = us10ySnap.exists ? us10ySnap.data() : {};
     const us30yData = us30ySnap.exists ? us30ySnap.data() : {};
 
-    // --- DEBUGGING LOGS (Uncomment these to see data in Netlify logs) ---
-    // console.log("--- Raw Shadow Data Fetched from Firestore ---");
-    // console.log(JSON.stringify(shadowData, null, 2));
-    // console.log("----------------------------------------------");
+    // --- DEBUGGING LOGS: These are now ACTIVE and will print to Netlify logs ---
+    console.log("--- Raw Shadow Data Fetched from Firestore ---");
+    console.log(JSON.stringify(shadowData, null, 2));
+    console.log("----------------------------------------------");
 
     function extractBondFields(data, prefix) {
       // CORRECTED: Changed '_TodayHigh' to '_High' and '_TodayLow' to '_Low'
@@ -48,10 +48,10 @@ exports.handler = async function (event, context) {
         high: data[`${prefix}_High`] || null,   // CORRECTED HERE
         low: data[`${prefix}_Low`] || null,     // CORRECTED HERE
       };
-      // --- DEBUGGING LOG (Uncomment this to see extracted data per bond) ---
-      // console.log(`--- Extracted Data for ${prefix} ---`);
-      // console.log(extracted);
-      // console.log("------------------------------------");
+      // --- DEBUGGING LOG: This is now ACTIVE and will print for each bond processed ---
+      console.log(`--- Extracted Data for ${prefix} ---`);
+      console.log(extracted);
+      console.log("------------------------------------");
       return extracted;
     }
 
