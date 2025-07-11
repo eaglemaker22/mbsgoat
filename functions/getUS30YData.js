@@ -14,7 +14,8 @@ const db = admin.firestore();
 
 exports.handler = async function (event, context) {
   try {
-    const doc = await db.collection("bonds_for_umbs").doc("market_data").get();
+    const doc = await db.collection("market_data").doc("us30y_current").get();
+
     if (!doc.exists) {
       return { statusCode: 404, body: JSON.stringify({ error: "Document not found" }) };
     }
@@ -22,9 +23,9 @@ exports.handler = async function (event, context) {
     const data = doc.data();
 
     const response = {
-      US30Y_Current: data.US30Y ?? null,
-      US30Y_Daily_Change: null, // No daily change value exists yet
-      last_updated: data.timestamp ?? null
+      US30Y_Current: data.yield ?? null,
+      US30Y_Daily_Change: data.change ?? null,
+      last_updated: data.last_updated ?? null
     };
 
     return {
