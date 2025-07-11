@@ -1,7 +1,5 @@
-// netlify/functions/getUS10YData.js
 const admin = require('firebase-admin');
 
-// Securely initialize Firebase with Netlify environment variables
 const serviceAccount = {
   project_id: process.env.FIREBASE_PROJECT_ID,
   client_email: process.env.FIREBASE_CLIENT_EMAIL,
@@ -23,7 +21,7 @@ const db = admin.firestore();
 
 exports.handler = async function (event, context) {
   try {
-    const doc = await db.collection("bonds_for_umbs").doc("market_data").get();
+    const doc = await db.collection("market_data").doc("us10y_current").get();
 
     if (!doc.exists) {
       return {
@@ -35,9 +33,9 @@ exports.handler = async function (event, context) {
     const data = doc.data();
 
     const response = {
-      US10Y_Current: data.US10Y ?? null,
-      US10Y_Daily_Change: null, // Optionally calculate later
-      last_updated: data.timestamp ?? null,
+      US10Y_Current: data.yield ?? null,
+      US10Y_Daily_Change: data.change ?? null,
+      last_updated: data.last_updated ?? null,
     };
 
     return {
