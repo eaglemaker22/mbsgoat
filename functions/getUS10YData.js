@@ -16,7 +16,10 @@ exports.handler = async function (event, context) {
   try {
     const doc = await db.collection("market_data").doc("us10y_current").get();
     if (!doc.exists) {
-      return { statusCode: 404, body: JSON.stringify({ error: "Document not found" }) };
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: "Document not found" }),
+      };
     }
 
     const data = doc.data();
@@ -29,4 +32,18 @@ exports.handler = async function (event, context) {
       US10Y_TodayLow: data.US10Y_TodayLow ?? null,
       US10Y_PriorDayClose: data.US10Y_PriorDayClose ?? null,
       US10Y_Close: data.US10Y_Close ?? null,
-      last_updated: data_
+      last_updated: data.last_updated ?? null,
+    };
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify(response),
+    };
+  } catch (error) {
+    console.error("❌ getUS10YData.js failed:", error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Internal Server Error" }),
+    };
+  }
+};
