@@ -33,8 +33,8 @@ exports.handler = async function (event, context) {
     const data = doc.data();
 
     const response = {
-      US10Y_Current: data.yield ?? null,
-      US10Y_Daily_Change: data.change ?? null,
+      US10Y_Current: data.US10Y_Current ?? null,
+      US10Y_Daily_Change: data.US10Y_Daily_Change ?? null,
       last_updated: data.last_updated ?? null,
     };
 
