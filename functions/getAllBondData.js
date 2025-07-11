@@ -46,21 +46,21 @@ function formatValue(value) {
 
 
 function extractBondFields(data, prefix) {
-    // Use || for fallbacks if field names vary (e.g., Daily_Change vs change)
-    // Adapting to your current Firestore data field names
+    // This function now correctly handles both flat data (e.g., UMBS_5_5_Current)
+    // and correctly prioritizes _TodayHigh/_TodayLow for High/Low fields
     const change = data[`${prefix}_Daily_Change`] || data[`${prefix}_change`] || null;
     const current = data[`${prefix}_Current`] || data[`${prefix}_current`] || null;
     const prevClose = data[`${prefix}_PriorDayClose`] || data[`${prefix}_prevClose`] || null;
     const open = data[`${prefix}_Open`] || data[`${prefix}_open`] || null;
-    // *** CRITICAL CHANGE: Look for _TodayHigh and _TodayLow first ***
+    
+    // CRITICAL FIX: Prioritize _TodayHigh and _TodayLow (from your latest scrape)
+    // but fallback to _High and _Low if those are still used for other instruments.
     const high = data[`${prefix}_TodayHigh`] || data[`${prefix}_High`] || null;
     const low = data[`${prefix}_TodayLow`] || data[`${prefix}_Low`] || null;
-    const close = data[`${prefix}_Close`] || null; // Adding the _Close field based on your scrape output
-
-    // Including other new fields from your Firestore data
-    const geminiChange = data[`${prefix}_Gemini_Change`] || null;
-    const status = data[`${prefix}_Status`] || null;
-
+    
+    const close = data[`${prefix}_Close`] || null; // Add the _Close field
+    const geminiChange = data[`${prefix}_Gemini_Change`] || null; // Add Gemini_Change
+    const status = data[`${prefix}_Status`] || null; // Add Status
 
     return {
         change: formatValue(change),
@@ -69,7 +69,6 @@ function extractBondFields(data, prefix) {
         open: formatValue(open),
         high: formatValue(high),
         low: formatValue(low),
-        // Include new fields from the user's Firestore output
         close: formatValue(close),
         geminiChange: formatValue(geminiChange),
         status: status // Status is already string, no need to formatValue
@@ -87,16 +86,17 @@ exports.handler = async (event, context) => {
     }
 
     try {
+        // Define references to all relevant Firestore documents
         const docRefShadow = db.collection('market_data').document('shadow_bonds');
         const docRefUS10Y = db.collection('market_data').document('us10y_current');
         const docRefUS30Y = db.collection('market_data').document('us30y_current');
-        // Assuming this document exists and contains UMBS_5_5, GNMA_5_5 etc.
-        const docRefMBSProducts = db.collection('market_data').document('mbs_products');
+        const docRefMBSProducts = db.collection('market_data').document('mbs_products'); 
 
+        // Fetch all documents concurrently
         const [
             docShadowSnapshot,
             docUS10YSnapshot,
-            docUS30YSnapshot,
+            docUS30YSnapshot, // This is the correct snapshot variable name
             docMBSProductsSnapshot
         ] = await Promise.all([
             docRefShadow.get(),
@@ -105,11 +105,14 @@ exports.handler = async (event, context) => {
             docRefMBSProducts.get()
         ]);
 
+        // Get data from snapshots; if a document doesn't exist, use an empty object
         const shadowData = docShadowSnapshot.exists ? docShadowSnapshot.data() : {};
         const us10yData = docUS10YSnapshot.exists ? docUS10YSnapshot.data() : {};
-        const us30yData = docUS30YSnapshot.exists ? doc30YSnapshot.data() : {}; // Corrected typo here to us30yData
+        // *** CRITICAL FIX: Corrected typo from doc30YSnapshot to docUS30YSnapshot ***
+        const us30yData = docUS30YSnapshot.exists ? docUS30YSnapshot.data() : {}; 
         const mbsProductsData = docMBSProductsSnapshot.exists ? docMBSProductsSnapshot.data() : {};
 
+        // Log raw data fetched from Firestore for debugging
         console.log("--- Raw Shadow Data Fetched from Firestore ---");
         console.log(JSON.stringify(shadowData, null, 2));
 
@@ -123,37 +126,46 @@ exports.handler = async (event, context) => {
         console.log(JSON.stringify(mbsProductsData, null, 2));
 
 
-        // Extract and process data for each bond type
+        // Extract and process data for each bond type using the helper function
+        // These rely on the 'mbs_products' document (populated by umbs_55_scraper.py)
         const umbs55 = extractBondFields(mbsProductsData, 'UMBS_5_5');
         const umbs60 = extractBondFields(mbsProductsData, 'UMBS_6_0');
         const gnma55 = extractBondFields(mbsProductsData, 'GNMA_5_5');
         const gnma60 = extractBondFields(mbsProductsData, 'GNMA_6_0');
 
+        // These rely on the 'shadow_bonds' document (populated by shadow_scraper.py)
         const umbs55Shadow = extractBondFields(shadowData, 'UMBS_5_5_Shadow');
         const umbs60Shadow = extractBondFields(shadowData, 'UMBS_6_0_Shadow');
         const gnma55Shadow = extractBondFields(shadowData, 'GNMA_5_5_Shadow');
         const gnma60Shadow = extractBondFields(shadowData, 'GNMA_6_0_Shadow');
 
+        // These rely on 'us10y_current' and 'us30y_current' documents (populated by shadow_scraper.py)
         const us10y = extractBondFields(us10yData, 'US10Y');
         const us30y = extractBondFields(us30yData, 'US30Y');
 
 
-        // Log extracted data for debugging
+        // Log extracted data before sending the response
         console.log("--- Extracted Data for UMBS_5_5_Shadow ---");
         console.log(JSON.stringify(umbs55Shadow, null, 2));
         console.log("--- Extracted Data for US10Y ---");
         console.log(JSON.stringify(us10y, null, 2));
+        console.log("--- Extracted Data for US30Y ---");
+        console.log(JSON.stringify(us30y, null, 2));
+        console.log("--- Extracted Data for UMBS_5_5 (non-shadow) ---");
+        console.log(JSON.stringify(umbs55, null, 2));
 
 
+        // Construct the final JSON response
         return {
             statusCode: 200,
             headers: {
                 "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Origin": "*", // Adjust for specific origins in production
                 "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
                 "Access-Control-Allow-Headers": "Content-Type"
             },
             body: JSON.stringify({
+                // Get last_updated from any available document, or null if none
                 last_updated: shadowData.last_updated || us10yData.last_updated || us30yData.last_updated || mbsProductsData.last_updated || null,
                 UMBS_5_5: umbs55,
                 UMBS_6_0: umbs60,
@@ -165,7 +177,7 @@ exports.handler = async (event, context) => {
                 GNMA_6_0_Shadow: gnma60Shadow,
                 US10Y: us10y,
                 US30Y: us30y,
-                trading_day_date: shadowData.trading_day_date || null
+                trading_day_date: shadowData.trading_day_date || null // Get trading_day_date from shadow bonds
             }),
         };
     } catch (error) {
