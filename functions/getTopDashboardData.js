@@ -1,7 +1,6 @@
 // netlify/functions/getTopDashboardData.js
 const admin = require("firebase-admin");
 
-// Only initialize once
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -32,8 +31,8 @@ exports.handler = async function (event, context) {
 
     const mbs = mbsDoc.data();
     const shadow = shadowDoc.data();
-    const us10y = us10yDoc.data();
-    const us30y = us30yDoc.data();
+    const treasuries10 = us10yDoc.data();
+    const treasuries30 = us30yDoc.data();
 
     return {
       statusCode: 200,
@@ -41,42 +40,52 @@ exports.handler = async function (event, context) {
         UMBS_5_5: {
           current: mbs.UMBS_5_5_Current ?? null,
           change: mbs.UMBS_5_5_Daily_Change ?? null,
+          last_updated: mbs.last_updated?.replace(" ", "T") ?? null,
         },
         UMBS_6_0: {
           current: mbs.UMBS_6_0_Current ?? null,
           change: mbs.UMBS_6_0_Daily_Change ?? null,
+          last_updated: mbs.last_updated?.replace(" ", "T") ?? null,
         },
         GNMA_5_5: {
           current: mbs.GNMA_5_5_Current ?? null,
           change: mbs.GNMA_5_5_Daily_Change ?? null,
+          last_updated: mbs.last_updated?.replace(" ", "T") ?? null,
         },
         GNMA_6_0: {
           current: mbs.GNMA_6_0_Current ?? null,
           change: mbs.GNMA_6_0_Daily_Change ?? null,
+          last_updated: mbs.last_updated?.replace(" ", "T") ?? null,
         },
         UMBS_5_5_Shadow: {
           current: shadow.UMBS_5_5_Shadow_Current ?? null,
           change: shadow.UMBS_5_5_Shadow_Daily_Change ?? null,
+          last_updated: shadow.last_updated?.replace(" ", "T") ?? null,
         },
         UMBS_6_0_Shadow: {
           current: shadow.UMBS_6_0_Shadow_Current ?? null,
           change: shadow.UMBS_6_0_Shadow_Daily_Change ?? null,
+          last_updated: shadow.last_updated?.replace(" ", "T") ?? null,
         },
         GNMA_5_5_Shadow: {
           current: shadow.GNMA_5_5_Shadow_Current ?? null,
           change: shadow.GNMA_5_5_Shadow_Daily_Change ?? null,
+          last_updated: shadow.last_updated?.replace(" ", "T") ?? null,
         },
         GNMA_6_0_Shadow: {
           current: shadow.GNMA_6_0_Shadow_Current ?? null,
           change: shadow.GNMA_6_0_Shadow_Daily_Change ?? null,
+          last_updated: shadow.last_updated?.replace(" ", "T") ?? null,
         },
         US10Y: {
-          yield: us10y.US10Y_Current ?? null,
-          change: us10y.US10Y_Daily_Change ?? null,
+          yield: treasuries10.US10Y_Current ?? null,
+          change: treasuries10.US10Y_Daily_Change ?? null,
+          last_updated: treasuries10.last_updated?.replace(" ", "T") ?? null,
         },
         US30Y: {
-          yield: us30y.US30Y_Current ?? null,
-          change: us30y.US30Y_Daily_Change ?? null,
+          yield: treasuries30.US30Y_Current ?? null,
+          change: treasuries30.US30Y_Daily_Change ?? null,
+          last_updated: treasuries30.last_updated?.replace(" ", "T") ?? null,
         },
       }),
     };
