@@ -84,6 +84,9 @@ async function fetchAndUpdateMarketData() {
       const y = parseFloat(data.US10Y.yield);
       const c = parseFloat(data.US10Y.change);
       updateChangeIndicator('us10yValue', 'us10yChange', isNaN(y) ? "--" : y.toFixed(3), isNaN(c) ? "--" : c.toFixed(3), true);
+      updateTextElement('us10yTableCurrent', formatValue(data.US10Y.yield));
+      updateTextElement('us10yTableChange', formatValue(data.US10Y.change));
+      updateTextElement('us10yTableUpdated', data.US10Y.last_updated ?? '--');
     }
 
     if (data?.US30Y) {
