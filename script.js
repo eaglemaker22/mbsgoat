@@ -76,6 +76,26 @@ function formatPercentage(val) {
   return formatted !== '--' ? `${formatted}%` : '--';
 }
 
+// NEW: Helper function for formatting dates
+function formatDate(dateString) {
+  if (!dateString || dateString === "N/A" || dateString === "--") {
+    return "--";
+  }
+  // Assuming dateString is in YYYY-MM-DD format
+  try {
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      // Reformat to MM/DD/YYYY if desired, or just return as is
+      return `${parts[1]}/${parts[2]}/${parts[0]}`;
+    }
+    return dateString; // Return as is if not in expected format
+  } catch (e) {
+    console.error("Error formatting date:", e, dateString);
+    return "--";
+  }
+}
+
+
 // --- Market Data --- (UPDATED for Treasury color inversion)
 async function fetchAndUpdateMarketData() {
   console.log("Fetching market data...");
@@ -141,10 +161,11 @@ async function fetchAndUpdateDailyRates() {
 
       updateTextElement(`${prefix}Current`, formatPercentage(rateData.latest));
 
-      // Specific handling for fixed30y and fixed15y for 'Yesterday'
+      // Use rateData.yesterday for all, as the Netlify function should provide it consistently
+      // The HTML IDs are already set up to match this pattern or specific table IDs
       if (prefix === "fixed30y") {
         updateTextElement("fixed30yYesterdayTable", formatPercentage(rateData.yesterday));
-      } else if (prefix === "fixed15y") { // <-- RE-ADDED THIS SPECIFIC CHECK
+      } else if (prefix === "fixed15y") {
         updateTextElement("fixed15yYesterdayTable", formatPercentage(rateData.yesterday));
       } else { // Generic for other rates like VA, FHA, Jumbo, USDA
         updateTextElement(`${prefix}Yesterday`, formatPercentage(rateData.yesterday));
@@ -230,7 +251,7 @@ async function fetchAndUpdateLiveStockData() {
   }
 }
 
-// --- Economic Indicators --- (No changes)
+// --- Economic Indicators --- (MODIFIED for date formatting)
 async function fetchAndUpdateEconomicIndicators() {
   console.log("Fetching economic indicators...");
   try {
@@ -254,11 +275,12 @@ async function fetchAndUpdateEconomicIndicators() {
       const d = data[seriesId];
       if (!d) return;
       updateTextElement(`${prefix}Latest`, formatValue(d.latest));
-      updateTextElement(`${prefix}Date`, formatValue(d.latest_date));
+      // MODIFIED: Use new formatDate helper for date fields
+      updateTextElement(`${prefix}Date`, formatDate(d.latest_date));
       updateTextElement(`${prefix}LastMonth`, formatValue(d.last_month));
       updateTextElement(`${prefix}YearAgo`, formatValue(d.year_ago));
-      updateTextElement(`${prefix}NextRelease`, formatValue(d.next_release));
-      updateTextElement(`${prefix}CoveragePeriod`, formatValue(d.coverage_period));
+      updateTextElement(`${prefix}NextRelease`, formatValue(d.next_release)); // Still expecting N/A or --
+      updateTextElement(`${prefix}CoveragePeriod`, formatValue(d.coverage_period)); // Still expecting N/A or --
     });
   } catch (err) {
     console.error("Economic Indicators fetch error:", err);
