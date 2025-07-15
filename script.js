@@ -2,15 +2,6 @@
 function updateTextElement(elementId, value) {
   const element = document.getElementById(elementId);
   if (element) {
-    // Check if the value is actually changing before applying highlight
-    if (element.textContent !== String(value)) { // Convert value to string for comparison
-      // Remove the class first to reset the animation
-      element.classList.remove('highlight-on-update');
-      // Trigger reflow to restart the animation
-      void element.offsetWidth; // This forces a reflow
-      // Add the class back
-      element.classList.add('highlight-on-update');
-    }
     element.textContent = value;
     console.log(`DEBUG (updateTextElement): Updated element '${elementId}' with value: '${value}'`);
   } else {
@@ -38,7 +29,7 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change, i
     const numericChange = parseFloat(change);
     if (!isNaN(numericChange)) {
       if (numericChange > 0) {
-        formattedChange = `+${numericChange}`;\
+        formattedChange = `+${numericChange}`;
         isPositiveChange = true;
       } else if (numericChange < 0) {
         formattedChange = `${numericChange}`;
@@ -69,12 +60,6 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change, i
       }
     }
 
-    // Apply highlight only if the change value itself is different
-    if (changeElement.textContent !== formattedChange) {
-      changeElement.classList.remove('highlight-on-update');
-      void changeElement.offsetWidth; // Trigger reflow
-      changeElement.classList.add('highlight-on-update');
-    }
     changeElement.textContent = formattedChange;
     console.log(`DEBUG (updateChangeIndicator): Updated change element '${changeElementId}' with value: '${formattedChange}'`);
   } else {
@@ -229,8 +214,8 @@ async function fetchAndUpdateDailyRates() {
     // Top snapshot
     updateTextElement("fixed30yValue", formatPercentage(data?.fixed30Y?.latest));
     updateTextElement("fixed30yYesterday", formatPercentage(data?.fixed30Y?.yesterday));
-    updateTextElement("fixed15yValue", formatPercentage(data?.fixed15y?.latest));
-    updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15y?.yesterday));
+    updateTextElement("fixed15yValue", formatPercentage(data?.fixed15y?.latest)); // MODIFIED: Changed to data?.fixed15y?.latest
+    updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15y?.yesterday)); // MODIFIED: Changed to data?.fixed15y?.yesterday
 
     // Table rows
     updateRateRow("fixed30y", data.fixed30Y);
