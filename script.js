@@ -3,8 +3,9 @@ function updateTextElement(elementId, value) {
   const element = document.getElementById(elementId);
   if (element) {
     element.textContent = value;
+    console.log(`DEBUG (updateTextElement): Updated element '${elementId}' with value: '${value}'`);
   } else {
-    // console.warn(`Element with ID '${elementId}' not found.`);
+    console.warn(`DEBUG (updateTextElement): Element with ID '${elementId}' NOT FOUND!`);
   }
 }
 
@@ -19,7 +20,7 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change, i
     let formattedChange = formatValue(change);
     changeElement.classList.remove('positive', 'negative');
     if (parentHeaderItem) {
-      parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
+      parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg'); // Reset all background classes
     }
 
     let isPositiveChange = false;
@@ -60,6 +61,9 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change, i
     }
 
     changeElement.textContent = formattedChange;
+    console.log(`DEBUG (updateChangeIndicator): Updated change element '${changeElementId}' with value: '${formattedChange}'`);
+  } else {
+    console.warn(`DEBUG (updateChangeIndicator): Change element with ID '${changeElementId}' NOT FOUND!`);
   }
 }
 
@@ -76,19 +80,21 @@ function formatPercentage(val) {
   return formatted !== '--' ? `${formatted}%` : '--';
 }
 
-// NEW: Helper function for formatting dates
+// Helper function for formatting dates
 function formatDate(dateString) {
+  console.log(`DEBUG (formatDate): Received dateString: '${dateString}' (type: ${typeof dateString})`);
   if (!dateString || dateString === "N/A" || dateString === "--") {
     return "--";
   }
-  // Assuming dateString is in YYYY-MM-DD format
   try {
-    const parts = dateString.split('-');
+    const parts = String(dateString).split('-'); // Ensure it's a string before splitting
     if (parts.length === 3) {
-      // Reformat to MM/DD/YYYY if desired, or just return as is
-      return `${parts[1]}/${parts[2]}/${parts[0]}`;
+      const formatted = `${parts[1]}/${parts[2]}/${parts[0]}`;
+      console.log(`DEBUG (formatDate): Formatted to: '${formatted}'`);
+      return formatted;
     }
-    return dateString; // Return as is if not in expected format
+    console.log(`DEBUG (formatDate): Returning original dateString (not YYYY-MM-DD format): '${dateString}'`);
+    return dateString;
   } catch (e) {
     console.error("Error formatting date:", e, dateString);
     return "--";
@@ -96,7 +102,7 @@ function formatDate(dateString) {
 }
 
 
-// --- Market Data --- (UPDATED for Treasury color inversion)
+// --- Market Data ---
 async function fetchAndUpdateMarketData() {
   console.log("Fetching market data...");
   try {
@@ -107,28 +113,26 @@ async function fetchAndUpdateMarketData() {
     if (data?.US10Y) {
       const y = parseFloat(data.US10Y.yield);
       const c = parseFloat(data.US10Y.change);
-      // Pass true for isInverted for Treasuries
       updateChangeIndicator('us10yValue', 'us10yChange',
         isNaN(y) ? "--" : y.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3),
-        true // Invert colors for 10Y Treasury
+        true
       );
     }
 
     if (data?.US30Y) {
       const y = parseFloat(data.US30Y.yield);
       const c = parseFloat(data.US30Y.change);
-      // Pass true for isInverted for Treasuries
       updateChangeIndicator('us30yValue', 'us30yChange',
         isNaN(y) ? "--" : y.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3),
-        true // Invert colors for 30Y Treasury
+        true
       );
     }
 
     if (data?.UMBS_5_5) {
       const v = parseFloat(data.UMBS_5_5.current);
-      const c = parseFloat(data.UMBS_5_5.change); // This 'change' comes from Firestore `Daily_Change`
+      const c = parseFloat(data.UMBS_5_5.change);
       updateChangeIndicator('umbs55Value', 'umbs55Change',
         isNaN(v) ? "--" : v.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3)
@@ -137,7 +141,7 @@ async function fetchAndUpdateMarketData() {
 
     if (data?.GNMA_5_5) {
       const v = parseFloat(data.GNMA_5_5.current);
-      const c = parseFloat(data.GNMA_5_5.change); // This 'change' comes from Firestore `Daily_Change`
+      const c = parseFloat(data.GNMA_5_5.change);
       updateChangeIndicator('gnma55Value', 'gnma55Change',
         isNaN(v) ? "--" : v.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3)
@@ -148,27 +152,43 @@ async function fetchAndUpdateMarketData() {
   }
 }
 
-// --- Daily Rates --- (UPDATED for 15Y Fixed Yesterday)
+// --- Daily Rates ---
 async function fetchAndUpdateDailyRates() {
   console.log("Fetching daily rates...");
   try {
     const res = await fetch("/.netlify/functions/getDailyRatesData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
+    console.log("DEBUG (fetchAndUpdateDailyRates): Received data from Netlify function:", data);
 
     function updateRateRow(prefix, rateData) {
-      if (!rateData) return;
+      console.log(`DEBUG (updateRateRow): Processing ${prefix}. rateData:`, rateData);
+
+      if (!rateData) {
+        console.warn(`DEBUG (updateRateRow): rateData is null/undefined for ${prefix}. Setting all to '--'.`);
+        updateTextElement(`${prefix}Current`, '--');
+        updateTextElement(`${prefix}Yesterday`, '--');
+        updateTextElement(`${prefix}LastMonth`, '--');
+        updateTextElement(`${prefix}YearAgo`, '--');
+        updateTextElement(`${prefix}ChangeVs1M`, '--');
+        updateTextElement(`${prefix}ChangeVs1Y`, '--');
+        return;
+      }
 
       updateTextElement(`${prefix}Current`, formatPercentage(rateData.latest));
+      console.log(`DEBUG (updateRateRow): Attempting to update ${prefix}Current with value: ${rateData.latest}`);
+
 
       // Use rateData.yesterday for all, as the Netlify function should provide it consistently
-      // The HTML IDs are already set up to match this pattern or specific table IDs
       if (prefix === "fixed30y") {
         updateTextElement("fixed30yYesterdayTable", formatPercentage(rateData.yesterday));
+        console.log(`DEBUG (updateRateRow): Attempting to update fixed30yYesterdayTable with value: ${rateData.yesterday}`);
       } else if (prefix === "fixed15y") {
         updateTextElement("fixed15yYesterdayTable", formatPercentage(rateData.yesterday));
+        console.log(`DEBUG (updateRateRow): Attempting to update fixed15yYesterdayTable with value: ${rateData.yesterday}`);
       } else { // Generic for other rates like VA, FHA, Jumbo, USDA
         updateTextElement(`${prefix}Yesterday`, formatPercentage(rateData.yesterday));
+        console.log(`DEBUG (updateRateRow): Attempting to update ${prefix}Yesterday with value: ${rateData.yesterday}`);
       }
 
       updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
@@ -194,8 +214,8 @@ async function fetchAndUpdateDailyRates() {
     // Top snapshot
     updateTextElement("fixed30yValue", formatPercentage(data?.fixed30Y?.latest));
     updateTextElement("fixed30yYesterday", formatPercentage(data?.fixed30Y?.yesterday));
-    updateTextElement("fixed15yValue", formatPercentage(data?.fixed15Y?.latest));
-    updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15Y?.yesterday));
+    updateTextElement("fixed15yValue", formatPercentage(data?.fixed15y?.latest)); // MODIFIED: Changed to data?.fixed15y?.latest
+    updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15y?.yesterday)); // MODIFIED: Changed to data?.fixed15y?.yesterday
 
     // Table rows
     updateRateRow("fixed30y", data.fixed30Y);
@@ -204,12 +224,28 @@ async function fetchAndUpdateDailyRates() {
     updateRateRow("jumbo30y", data.jumbo30y);
     updateRateRow("usda30y", data.usda30y);
     updateRateRow("fixed15y", data.fixed15y);
+
+    // NEW DEBUG SECTION: Display Jumbo and 15Y Fixed Current at the bottom
+    console.log("DEBUG (Daily Rates): Attempting to update DEBUG RATES section.");
+    if (data?.jumbo30y?.latest) {
+      updateTextElement("debugJumbo30Y", formatPercentage(data.jumbo30y.latest));
+      console.log(`DEBUG (Daily Rates): Updated debugJumbo30Y with: ${data.jumbo30y.latest}`);
+    } else {
+      console.warn("DEBUG (Daily Rates): data.jumbo30y.latest is not available for debug section.");
+    }
+    if (data?.fixed15y?.latest) {
+      updateTextElement("debugFixed15Y", formatPercentage(data.fixed15y.latest));
+      console.log(`DEBUG (Daily Rates): Updated debugFixed15Y with: ${data.fixed15y.latest}`);
+    } else {
+      console.warn("DEBUG (Daily Rates): data.fixed15y.latest is not available for debug section.");
+    }
+
   } catch (err) {
     console.error("Daily Rates fetch error:", err);
   }
 }
 
-// --- Live Stocks --- (No changes)
+// --- Live Stocks ---
 async function fetchAndUpdateLiveStockData() {
   console.log("Fetching live stock data...");
   try {
@@ -251,13 +287,14 @@ async function fetchAndUpdateLiveStockData() {
   }
 }
 
-// --- Economic Indicators --- (MODIFIED for date formatting)
+// --- Economic Indicators ---
 async function fetchAndUpdateEconomicIndicators() {
   console.log("Fetching economic indicators...");
   try {
     const res = await fetch("/.netlify/functions/getEconomicIndicatorsData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
+    console.log("DEBUG (fetchAndUpdateEconomicIndicators): Received data from Netlify function:", data);
 
     const rows = {
       HOUST: "houst",
@@ -273,21 +310,24 @@ async function fetchAndUpdateEconomicIndicators() {
 
     Object.entries(rows).forEach(([seriesId, prefix]) => {
       const d = data[seriesId];
-      if (!d) return;
+      console.log(`DEBUG (Economic Indicators): Processing ${seriesId}. Data:`, d);
+      if (!d) {
+        console.warn(`DEBUG (Economic Indicators): Data is null/undefined for ${seriesId}. Skipping row update.`);
+        return;
+      }
       updateTextElement(`${prefix}Latest`, formatValue(d.latest));
-      // MODIFIED: Use new formatDate helper for date fields
       updateTextElement(`${prefix}Date`, formatDate(d.latest_date));
       updateTextElement(`${prefix}LastMonth`, formatValue(d.last_month));
       updateTextElement(`${prefix}YearAgo`, formatValue(d.year_ago));
-      updateTextElement(`${prefix}NextRelease`, formatValue(d.next_release)); // Still expecting N/A or --
-      updateTextElement(`${prefix}CoveragePeriod`, formatValue(d.coverage_period)); // Still expecting N/A or --
+      updateTextElement(`${prefix}NextRelease`, formatValue(d.next_release));
+      updateTextElement(`${prefix}CoveragePeriod`, formatValue(d.coverage_period));
     });
   } catch (err) {
     console.error("Economic Indicators fetch error:", err);
   }
 }
 
-// --- Bonds & Treasuries (UPDATED for 'Updated' column time format, debugging, and US10Y/US30Y) ---
+// --- Bonds & Treasuries ---
 async function fetchAndUpdateBondData() {
     console.log("Fetching bond and treasury data for table...");
     try {
@@ -314,10 +354,8 @@ async function fetchAndUpdateBondData() {
             updateTextElement('bondLastUpdated', `Last Updated: --`);
         }
 
-        // MODIFIED: Added US10Y and US30Y to this list
         const bondInstruments = [
-            "US10Y", // New: Add US10Y
-            "US30Y", // New: Add US30Y
+            "US10Y", "US30Y",
             "UMBS_5_5", "UMBS_6_0", "GNMA_5_5", "GNMA_6_0",
             "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", "GNMA_5_5_Shadow", "GNMA_6_0_Shadow"
         ];
@@ -327,17 +365,14 @@ async function fetchAndUpdateBondData() {
             const baseId = instrumentKey.toLowerCase().replace(/_/g, '');
             const tableIdPrefix = `${baseId}Table`;
 
-            // Determine if the instrument is a Treasury (US10Y or US30Y) for inverted color logic
             const isInvertedColors = (instrumentKey === "US10Y" || instrumentKey === "US30Y");
 
             if (instrumentData) {
-                // Debugging logs: Check what data is actually received for each field
                 console.log(`--- Data for ${instrumentKey} ---`);
                 console.log(`Current: ${instrumentData.current}, Change: ${instrumentData.change}, Open: ${instrumentData.open}`);
                 console.log(`High: ${instrumentData.high}, Low: ${instrumentData.low}, PrevClose: ${instrumentData.prevClose}`);
                 console.log(`--- End ${instrumentKey} Data ---`);
 
-                // Pass isInvertedColors flag to updateChangeIndicator
                 updateChangeIndicator(`${tableIdPrefix}Current`, `${tableIdPrefix}Change`,
                                       instrumentData.current, instrumentData.change, isInvertedColors);
 
@@ -345,8 +380,6 @@ async function fetchAndUpdateBondData() {
                 updateTextElement(`${tableIdPrefix}High`, formatValue(instrumentData.high));
                 updateTextElement(`${tableIdPrefix}Low`, formatValue(instrumentData.low));
                 updateTextElement(`${tableIdPrefix}PrevClose`, formatValue(instrumentData.prevClose));
-
-                // Use the global formattedTimestampForTable for each row's 'Updated' column
                 updateTextElement(`${tableIdPrefix}Updated`, formattedTimestampForTable);
 
             } else {
@@ -364,9 +397,8 @@ async function fetchAndUpdateBondData() {
     } catch (err) {
         console.error("Bond data fetch error:", err);
         updateTextElement('bondLastUpdated', `Last Updated: Error`);
-        // Ensure all rows are reset to default on error
         const bondInstruments = [
-            "US10Y", "US30Y", // Include them in error handling as well
+            "US10Y", "US30Y",
             "UMBS_5_5", "UMBS_6_0", "GNMA_5_5", "GNMA_6_0",
             "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", "GNMA_5_5_Shadow", "GNMA_6_0_Shadow"
         ];
