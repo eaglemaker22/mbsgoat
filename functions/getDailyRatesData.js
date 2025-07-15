@@ -78,9 +78,9 @@ exports.handler = async function (event, context) {
     addRateData(fixed30YSnap, "fixed30Y");
     addRateData(va30YSnap, "va30Y");
     addRateData(fha30YSnap, "fha30Y");
-    addRateData(jumbo30YSnap, "jumbo30Y");
+    addRateData(jumbo30YSnap, "jumbo30y");
     addRateData(usda30YSnap, "usda30y");
-    addRateData(fixed15YSnap, "fixed15Y");
+    addRateData(fixed15YSnap, "fixed15y");
 
     console.log("Netlify Function: getDailyRatesData - Response Data:", JSON.stringify(responseData)); // Log final response
 
