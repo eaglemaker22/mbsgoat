@@ -2,18 +2,29 @@
 function updateTextElement(elementId, value) {
   const element = document.getElementById(elementId);
   if (element) {
+    // Check if the value is actually changing before applying highlight
+    if (element.textContent !== String(value)) { // Convert value to string for comparison
+      // Remove the class first to reset the animation
+      element.classList.remove('highlight-on-update');
+      // Trigger reflow to restart the animation
+      void element.offsetWidth; // This forces a reflow
+      // Add the class back
+      element.classList.add('highlight-on-update');
+    }
     element.textContent = value;
-    console.log(`DEBUG (updateTextElement): Updated element '${elementId}' with value: '${value}'`);
+    // console.log(`DEBUG (updateTextElement): Updated element '${elementId}' with value: '${value}'`); // Commented for less console noise
   } else {
-    console.warn(`DEBUG (updateTextElement): Element with ID '${elementId}' NOT FOUND!`);
+    // console.warn(`Element with ID '${elementId}' NOT FOUND!`); // Commented for less console noise
   }
 }
 
-// MODIFIED: Added isInverted parameter for color logic
+// MODIFIED: Added isInverted parameter for color logic, and highlight logic
 function updateChangeIndicator(valueElementId, changeElementId, value, change, isInverted = false) {
-  updateTextElement(valueElementId, formatValue(value));
+  updateTextElement(valueElementId, formatValue(value)); // This will apply highlight to the value
 
   const changeElement = document.getElementById(changeElementId);
+  // Note: .closest('.header-item') might not be relevant for all elements,
+  // but keeping it for compatibility with existing HTML structure.
   const parentHeaderItem = changeElement ? changeElement.closest('.header-item') : null;
 
   if (changeElement) {
@@ -38,17 +49,17 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change, i
     }
 
     // Apply colors based on isInverted flag
-    if (isInverted) { // For Treasuries
+    if (isInverted) { // For Treasuries (and now Rates, where higher yield/rate is 'negative' for bond prices/borrowers)
       if (isPositiveChange) {
-        changeElement.classList.add('negative'); // Red for positive change
+        changeElement.classList.add('negative'); // Red for positive change (higher yield/rate)
         if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
       } else if (isNegativeChange) {
-        changeElement.classList.add('positive'); // Green for negative change
+        changeElement.classList.add('positive'); // Green for negative change (lower yield/rate)
         if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
       } else {
         if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
       }
-    } else { // For MBS/Equities (default behavior)
+    } else { // For MBS/Equities (default behavior: positive change is 'positive')
       if (isPositiveChange) {
         changeElement.classList.add('positive');
         if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
@@ -60,10 +71,16 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change, i
       }
     }
 
+    // Apply highlight only if the change value itself is different
+    if (changeElement.textContent !== formattedChange) {
+      changeElement.classList.remove('highlight-on-update');
+      void changeElement.offsetWidth; // Trigger reflow
+      changeElement.classList.add('highlight-on-update');
+    }
     changeElement.textContent = formattedChange;
-    console.log(`DEBUG (updateChangeIndicator): Updated change element '${changeElementId}' with value: '${formattedChange}'`);
+    // console.log(`DEBUG (updateChangeIndicator): Updated change element '${changeElementId}' with value: '${formattedChange}'`); // Commented for less console noise
   } else {
-    console.warn(`DEBUG (updateChangeIndicator): Change element with ID '${changeElementId}' NOT FOUND!`);
+    // console.warn(`DEBUG (updateChangeIndicator): Change element with ID '${changeElementId}' NOT FOUND!`); // Commented for less console noise
   }
 }
 
@@ -82,7 +99,7 @@ function formatPercentage(val) {
 
 // Helper function for formatting dates
 function formatDate(dateString) {
-  console.log(`DEBUG (formatDate): Received dateString: '${dateString}' (type: ${typeof dateString})`);
+  // console.log(`DEBUG (formatDate): Received dateString: '${dateString}' (type: ${typeof dateString})`); // Commented for less console noise
   if (!dateString || dateString === "N/A" || dateString === "--") {
     return "--";
   }
@@ -90,10 +107,10 @@ function formatDate(dateString) {
     const parts = String(dateString).split('-'); // Ensure it's a string before splitting
     if (parts.length === 3) {
       const formatted = `${parts[1]}/${parts[2]}/${parts[0]}`;
-      console.log(`DEBUG (formatDate): Formatted to: '${formatted}'`);
+      // console.log(`DEBUG (formatDate): Formatted to: '${formatted}'`); // Commented for less console noise
       return formatted;
     }
-    console.log(`DEBUG (formatDate): Returning original dateString (not YYYY-MM-DD format): '${dateString}'`);
+    // console.log(`DEBUG (formatDate): Returning original dateString (not YYYY-MM-DD format): '${dateString}'`); // Commented for less console noise
     return dateString;
   } catch (e) {
     console.error("Error formatting date:", e, dateString);
@@ -104,7 +121,7 @@ function formatDate(dateString) {
 
 // --- Market Data ---
 async function fetchAndUpdateMarketData() {
-  console.log("Fetching market data...");
+  // console.log("Fetching market data..."); // Commented for less console noise
   try {
     const res = await fetch("/.netlify/functions/getTopDashboardData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -154,45 +171,44 @@ async function fetchAndUpdateMarketData() {
 
 // --- Daily Rates ---
 async function fetchAndUpdateDailyRates() {
-  console.log("Fetching daily rates...");
+  // console.log("Fetching daily rates..."); // Commented for less console noise
   try {
     const res = await fetch("/.netlify/functions/getDailyRatesData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
-    console.log("DEBUG (fetchAndUpdateDailyRates): Received data from Netlify function:", data);
+    // console.log("DEBUG (fetchAndUpdateDailyRates): Received data from Netlify function:", data); // Commented for less console noise
 
     function updateRateRow(prefix, rateData) {
-      console.log(`DEBUG (updateRateRow): Processing ${prefix}. rateData:`, rateData);
+      // console.log(`DEBUG (updateRateRow): Processing ${prefix}. rateData:`, rateData); // Commented for less console noise
 
       if (!rateData) {
-        console.warn(`DEBUG (updateRateRow): rateData is null/undefined for ${prefix}. Setting all to '--'.`);
+        // console.warn(`DEBUG (updateRateRow): rateData is null/undefined for ${prefix}. Setting all to '--'.`); // Commented for less console noise
         updateTextElement(`${prefix}Current`, '--');
-        updateTextElement(`${prefix}Yesterday`, '--');
+        updateTextElement(`${prefix}YesterdayTable`, '--'); // Assuming this ID exists for tables
         updateTextElement(`${prefix}LastMonth`, '--');
         updateTextElement(`${prefix}YearAgo`, '--');
         updateTextElement(`${prefix}ChangeVs1M`, '--');
         updateTextElement(`${prefix}ChangeVs1Y`, '--');
+        updateTextElement(`${prefix}DailyChange`, '--'); // Reset daily change as well
         return;
       }
 
       updateTextElement(`${prefix}Current`, formatPercentage(rateData.latest));
-      console.log(`DEBUG (updateRateRow): Attempting to update ${prefix}Current with value: ${rateData.latest}`);
+      // console.log(`DEBUG (updateRateRow): Attempting to update ${prefix}Current with value: ${rateData.latest}`); // Commented for less console noise
 
 
       // Use rateData.yesterday for all, as the Netlify function should provide it consistently
+      // The HTML IDs are already set up to match this pattern or specific table IDs
       if (prefix === "fixed30y") {
         updateTextElement("fixed30yYesterdayTable", formatPercentage(rateData.yesterday));
-        console.log(`DEBUG (updateRateRow): Attempting to update fixed30yYesterdayTable with value: ${rateData.yesterday}`);
       } else if (prefix === "fixed15y") {
         updateTextElement("fixed15yYesterdayTable", formatPercentage(rateData.yesterday));
-        console.log(`DEBUG (updateRateRow): Attempting to update fixed15yYesterdayTable with value: ${rateData.yesterday}`);
       } else { // Generic for other rates like VA, FHA, Jumbo, USDA
         updateTextElement(`${prefix}Yesterday`, formatPercentage(rateData.yesterday));
-        console.log(`DEBUG (updateRateRow): Attempting to update ${prefix}Yesterday with value: ${rateData.yesterday}`);
       }
 
       updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
-      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago));
+      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago);
 
       let changeVs1M = null;
       let changeVs1Y = null;
@@ -209,13 +225,25 @@ async function fetchAndUpdateDailyRates() {
 
       updateTextElement(`${prefix}ChangeVs1M`, changeVs1M !== null ? `${changeVs1M}%` : "--");
       updateTextElement(`${prefix}ChangeVs1Y`, changeVs1Y !== null ? `${changeVs1Y}%` : "--");
+
+      // NEW: Update Daily Change and apply colors
+      if (rateData.daily_change !== undefined && rateData.daily_change !== null) {
+        const dailyChangeNumeric = parseFloat(rateData.daily_change);
+        const dailyChangeElementId = `${prefix}DailyChange`;
+        
+        // Apply colors: red for higher (positive change), green for lower (negative change)
+        updateChangeIndicator(dailyChangeElementId, dailyChangeElementId, // Pass same ID for value and change
+                              dailyChangeNumeric, dailyChangeNumeric, true); // isInverted = true for rates
+      } else {
+        updateTextElement(`${prefix}DailyChange`, '--');
+      }
     }
 
     // Top snapshot
     updateTextElement("fixed30yValue", formatPercentage(data?.fixed30Y?.latest));
     updateTextElement("fixed30yYesterday", formatPercentage(data?.fixed30Y?.yesterday));
-    updateTextElement("fixed15yValue", formatPercentage(data?.fixed15y?.latest)); // MODIFIED: Changed to data?.fixed15y?.latest
-    updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15y?.yesterday)); // MODIFIED: Changed to data?.fixed15y?.yesterday
+    updateTextElement("fixed15yValue", formatPercentage(data?.fixed15y?.latest));
+    updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15y?.yesterday));
 
     // Table rows
     updateRateRow("fixed30y", data.fixed30Y);
@@ -225,21 +253,6 @@ async function fetchAndUpdateDailyRates() {
     updateRateRow("usda30y", data.usda30y);
     updateRateRow("fixed15y", data.fixed15y);
 
-    // NEW DEBUG SECTION: Display Jumbo and 15Y Fixed Current at the bottom
-    console.log("DEBUG (Daily Rates): Attempting to update DEBUG RATES section.");
-    if (data?.jumbo30y?.latest) {
-      updateTextElement("debugJumbo30Y", formatPercentage(data.jumbo30y.latest));
-      console.log(`DEBUG (Daily Rates): Updated debugJumbo30Y with: ${data.jumbo30y.latest}`);
-    } else {
-      console.warn("DEBUG (Daily Rates): data.jumbo30y.latest is not available for debug section.");
-    }
-    if (data?.fixed15y?.latest) {
-      updateTextElement("debugFixed15Y", formatPercentage(data.fixed15y.latest));
-      console.log(`DEBUG (Daily Rates): Updated debugFixed15Y with: ${data.fixed15y.latest}`);
-    } else {
-      console.warn("DEBUG (Daily Rates): data.fixed15y.latest is not available for debug section.");
-    }
-
   } catch (err) {
     console.error("Daily Rates fetch error:", err);
   }
@@ -247,7 +260,7 @@ async function fetchAndUpdateDailyRates() {
 
 // --- Live Stocks ---
 async function fetchAndUpdateLiveStockData() {
-  console.log("Fetching live stock data...");
+  // console.log("Fetching live stock data..."); // Commented for less console noise
   try {
     const res = await fetch("/.netlify/functions/getLiveStockData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -257,26 +270,31 @@ async function fetchAndUpdateLiveStockData() {
       const el = document.getElementById(id);
       if (!el) return;
 
-      el.textContent = '';
-      el.classList.remove('positive', 'negative');
+      let formattedChange = '--';
+      el.classList.remove('positive', 'negative', 'highlight-on-update'); // Remove highlight too
 
       if (item && item.percentChange !== undefined) {
         const n = parseFloat(item.percentChange);
         if (!isNaN(n)) {
-          const t = n.toFixed(2);
+          formattedChange = n.toFixed(2);
           if (n > 0) {
-            el.textContent = `+${t}%`;
+            formattedChange = `+${formattedChange}%`;
             el.classList.add('positive');
           } else if (n < 0) {
-            el.textContent = `${t}%`;
+            formattedChange = `${formattedChange}%`;
             el.classList.add('negative');
           } else {
-            el.textContent = '0.00%';
+            formattedChange = '0.00%';
           }
         }
-      } else {
-        el.textContent = '--';
       }
+
+      if (el.textContent !== formattedChange) { // Apply highlight only if content changes
+        el.classList.remove('highlight-on-update');
+        void el.offsetWidth; // Trigger reflow
+        el.classList.add('highlight-on-update');
+      }
+      el.textContent = formattedChange;
     }
 
     updateStockChange('spyChange', data.SPY);
@@ -289,12 +307,12 @@ async function fetchAndUpdateLiveStockData() {
 
 // --- Economic Indicators ---
 async function fetchAndUpdateEconomicIndicators() {
-  console.log("Fetching economic indicators...");
+  // console.log("Fetching economic indicators..."); // Commented for less console noise
   try {
     const res = await fetch("/.netlify/functions/getEconomicIndicatorsData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
-    console.log("DEBUG (fetchAndUpdateEconomicIndicators): Received data from Netlify function:", data);
+    // console.log("DEBUG (fetchAndUpdateEconomicIndicators): Received data from Netlify function:", data); // Commented for less console noise
 
     const rows = {
       HOUST: "houst",
@@ -310,11 +328,7 @@ async function fetchAndUpdateEconomicIndicators() {
 
     Object.entries(rows).forEach(([seriesId, prefix]) => {
       const d = data[seriesId];
-      console.log(`DEBUG (Economic Indicators): Processing ${seriesId}. Data:`, d);
-      if (!d) {
-        console.warn(`DEBUG (Economic Indicators): Data is null/undefined for ${seriesId}. Skipping row update.`);
-        return;
-      }
+      if (!d) return;
       updateTextElement(`${prefix}Latest`, formatValue(d.latest));
       updateTextElement(`${prefix}Date`, formatDate(d.latest_date));
       updateTextElement(`${prefix}LastMonth`, formatValue(d.last_month));
@@ -329,7 +343,7 @@ async function fetchAndUpdateEconomicIndicators() {
 
 // --- Bonds & Treasuries ---
 async function fetchAndUpdateBondData() {
-    console.log("Fetching bond and treasury data for table...");
+    // console.log("Fetching bond and treasury data for table..."); // Commented for less console noise
     try {
         const res = await fetch("/.netlify/functions/getAllBondData");
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -346,7 +360,7 @@ async function fetchAndUpdateBondData() {
                 minute: '2-digit',
                 second: '2-digit',
                 hour12: true,
-                timeZone: 'America/Los_Angeles',
+                timeZone: 'America/Los_Angeles', // Ensure this matches your data's timezone or desired display timezone
                 timeZoneName: 'short'
             });
             updateTextElement('bondLastUpdated', `Last Updated: ${formattedTimestampForTable}`);
@@ -368,10 +382,10 @@ async function fetchAndUpdateBondData() {
             const isInvertedColors = (instrumentKey === "US10Y" || instrumentKey === "US30Y");
 
             if (instrumentData) {
-                console.log(`--- Data for ${instrumentKey} ---`);
-                console.log(`Current: ${instrumentData.current}, Change: ${instrumentData.change}, Open: ${instrumentData.open}`);
-                console.log(`High: ${instrumentData.high}, Low: ${instrumentData.low}, PrevClose: ${instrumentData.prevClose}`);
-                console.log(`--- End ${instrumentKey} Data ---`);
+                // console.log(`--- Data for ${instrumentKey} ---`); // Commented for less console noise
+                // console.log(`Current: ${instrumentData.current}, Change: ${instrumentData.change}, Open: ${instrumentData.open}`); // Commented for less console noise
+                // console.log(`High: ${instrumentData.high}, Low: ${instrumentData.low}, PrevClose: ${instrumentData.prevClose}`); // Commented for less console noise
+                // console.log(`--- End ${instrumentKey} Data ---`); // Commented for less console noise
 
                 updateChangeIndicator(`${tableIdPrefix}Current`, `${tableIdPrefix}Change`,
                                       instrumentData.current, instrumentData.change, isInvertedColors);
@@ -383,7 +397,7 @@ async function fetchAndUpdateBondData() {
                 updateTextElement(`${tableIdPrefix}Updated`, formattedTimestampForTable);
 
             } else {
-                console.warn(`Data for ${instrumentKey} not found in bond data. Setting defaults.`);
+                // console.warn(`Data for ${instrumentKey} not found in bond data. Setting defaults.`); // Commented for less console noise
                 updateTextElement(`${tableIdPrefix}Current`, '--');
                 updateTextElement(`${tableIdPrefix}Change`, '--');
                 updateTextElement(`${tableIdPrefix}Open`, '--');
@@ -424,7 +438,13 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchAndUpdateEconomicIndicators();
   fetchAndUpdateBondData();
 
-  setInterval(fetchAndUpdateMarketData, 60000);
-  setInterval(fetchAndUpdateLiveStockData, 30000);
-  setInterval(fetchAndUpdateBondData, 60000);
+  // Increased refresh rate for market and bond data
+  setInterval(fetchAndUpdateMarketData, 30000); // Every 30 seconds
+  setInterval(fetchAndUpdateLiveStockData, 30000); // Every 30 seconds
+  setInterval(fetchAndUpdateBondData, 30000); // Every 30 seconds
+  // Economic indicators and daily rates typically don't change as frequently,
+  // so keeping them at default or slightly longer intervals might be efficient.
+  // For now, let's keep daily rates at 60s, economic indicators at 5 minutes (300000ms)
+  setInterval(fetchAndUpdateDailyRates, 60000); // Every 60 seconds
+  setInterval(fetchAndUpdateEconomicIndicators, 300000); // Every 5 minutes
 });
