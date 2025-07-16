@@ -18,7 +18,7 @@ exports.handler = async function (event, context) {
     const ratesCollectionRef = db.collection("fred_reports");
 
     // Log the start of fetching
-    console.log("Netlify Function: getDailyRatesData - Starting data fetch from Firestore.");
+    // console.log("Netlify Function: getDailyRatesData - Starting data fetch from Firestore."); // Commented for less console noise
 
     const [
       fixed30YSnap,
@@ -39,40 +39,41 @@ exports.handler = async function (event, context) {
     const responseData = {};
 
     const addRateData = (docSnap, keyName) => {
-      console.log(`--- Processing ${keyName} ---`); // Debug log for each rate
+      // console.log(`--- Processing ${keyName} ---`); // Commented for less console noise
       if (docSnap.exists) {
         const data = docSnap.data();
-        console.log(`Document for ${keyName} exists. Data:`, JSON.stringify(data)); // Log full data
+        // console.log(`Document for ${keyName} exists. Data:`, JSON.stringify(data)); // Commented for less console noise
         
         const latest = parseFloat(data.latest);
-        const lastMonth = parseFloat(data.last_month); 
-
+        const yesterday = parseFloat(data.yesterday); // Get yesterday's value
+        
         let dailyChange = null;
-        if (!isNaN(latest) && !isNaN(lastMonth)) {
-            dailyChange = (latest - lastMonth).toFixed(3);
+        if (!isNaN(latest) && !isNaN(yesterday)) { // Calculate change based on latest vs. yesterday
+            dailyChange = (latest - yesterday).toFixed(3);
         } else {
-            console.warn(`Invalid 'latest' or 'last_month' for ${keyName}. Latest: ${data.latest}, LastMonth: ${data.last_month}`);
+            // console.warn(`Invalid 'latest' or 'yesterday' for ${keyName}. Latest: ${data.latest}, Yesterday: ${data.yesterday}`); // Commented for less console noise
         }
 
         // Ensure 'yesterday' field is explicitly logged
-        console.log(`  ${keyName} - yesterday: ${data.yesterday} (type: ${typeof data.yesterday})`);
+        // console.log(`  ${keyName} - yesterday: ${data.yesterday} (type: ${typeof data.yesterday})`); // Commented for less console noise
 
         responseData[keyName] = {
           latest: data.latest ?? null,
           latest_date: data.latest_date ?? null,
-          yesterday: data.yesterday ?? null, // This should now pick up the string/float from Firestore
+          yesterday: data.yesterday ?? null,
+          yesterday_date: data.yesterday_date ?? null, // Ensure yesterday_date is included
           last_month: data.last_month ?? null,
           last_month_date: data.last_month_date ?? null,
           year_ago: data.year_ago ?? null,
           year_ago_date: data.year_ago_date ?? null,
-          daily_change: dailyChange,
+          daily_change: dailyChange, // NEW: Include daily_change
         };
 
       } else {
-        console.warn(`Document for ${keyName} not found in Firestore.`); // More specific warning
+        // console.warn(`Document for ${keyName} not found in Firestore.`); // Commented for less console noise
         responseData[keyName] = null;
       }
-      console.log(`--- End Processing ${keyName} ---`);
+      // console.log(`--- End Processing ${keyName} ---`); // Commented for less console noise
     };
 
     addRateData(fixed30YSnap, "fixed30Y");
@@ -82,12 +83,13 @@ exports.handler = async function (event, context) {
     addRateData(usda30YSnap, "usda30y");
     addRateData(fixed15YSnap, "fixed15y");
 
-    console.log("Netlify Function: getDailyRatesData - Response Data:", JSON.stringify(responseData)); // Log final response
+    // console.log("Netlify Function: getDailyRatesData - Response Data:", JSON.stringify(responseData)); // Commented for less console noise
 
     return {
       statusCode: 200,
       headers: {
         "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*", // IMPORTANT: For production, change '*' to your specific domain for security
       },
       body: JSON.stringify(responseData),
     };
