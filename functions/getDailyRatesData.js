@@ -65,7 +65,7 @@ exports.handler = async function (event, context) {
           last_month_date: data.last_month_date ?? null,
           year_ago: data.year_ago ?? null,
           year_ago_date: data.year_ago_date ?? null,
-          daily_change: dailyChange, // NEW: Include daily_change
+          daily_change: dailyChange, // Include daily_change
         };
 
       } else {
@@ -75,12 +75,13 @@ exports.handler = async function (event, context) {
       console.log(`--- End Processing ${keyName} ---`);
     };
 
+    // Ensure consistent casing for keys returned to frontend (matching script.js expectations)
     addRateData(fixed30YSnap, "fixed30Y");
     addRateData(va30YSnap, "va30Y");
     addRateData(fha30YSnap, "fha30Y");
-    addRateData(jumbo30YSnap, "jumbo30Y");
-    addRateData(usda30YSnap, "usda30y");
-    addRateData(fixed15YSnap, "fixed15Y");
+    addRateData(jumbo30YSnap, "jumbo30Y"); // Ensuring uppercase Y for consistency
+    addRateData(usda30YSnap, "usda30Y");   // Ensuring uppercase Y for consistency
+    addRateData(fixed15YSnap, "fixed15Y"); // Ensuring uppercase Y for consistency
 
     console.log("Netlify Function: getDailyRatesData - Response Data:", JSON.stringify(responseData));
 
