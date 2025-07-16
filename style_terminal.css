@@ -72,13 +72,13 @@ body {
   grid-template-columns:
     6em /* MBS Label */
     4em /* MBS Price */
-    13em /* MBS Today */
+    11em /* MBS Today */
   6em /* Treasuries Label */
     4em /* Treasury Yield */
-    11em /* Treasury Today */
+    9em /* Treasury Today */
     8em /* Mortgage Label */
     4em /* Mortgage Today */
-    13em /* Mortgage Yesterday */
+    11em /* Mortgage Yesterday */
     7em /* Equities Label */
     4em /* Equities Today */;
   align-items: center;
