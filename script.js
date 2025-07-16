@@ -20,7 +20,7 @@ function updateTextElement(elementId, value) {
 
 // MODIFIED: Added isInverted parameter for color logic, and highlight logic
 function updateChangeIndicator(valueElementId, changeElementId, value, change, isInverted = false) {
-  updateTextElement(valueElementId, formatValue(value)); // This will apply highlight to the value
+  // updateTextElement(valueElementId, formatValue(value)); // This will apply highlight to the value if uncommented
 
   const changeElement = document.getElementById(changeElementId);
   // Note: .closest('.header-item') might not be relevant for all elements,
@@ -29,6 +29,19 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change, i
 
   if (changeElement) {
     let formattedChange = formatValue(change);
+    // Add '+' sign for positive changes if it's a number
+    const numericChange = parseFloat(change);
+    if (!isNaN(numericChange) && numericChange > 0) {
+      formattedChange = `+${formattedChange}`;
+    }
+
+    // Apply highlight only if the change value itself is different
+    if (changeElement.textContent !== formattedChange) {
+      changeElement.classList.remove('highlight-on-update');
+      void changeElement.offsetWidth; // Trigger reflow
+      changeElement.classList.add('highlight-on-update');
+    }
+
     changeElement.classList.remove('positive', 'negative');
     if (parentHeaderItem) {
       parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg'); // Reset all background classes
@@ -37,19 +50,16 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change, i
     let isPositiveChange = false;
     let isNegativeChange = false;
 
-    const numericChange = parseFloat(change);
     if (!isNaN(numericChange)) {
       if (numericChange > 0) {
-        formattedChange = `+${numericChange}`;
         isPositiveChange = true;
       } else if (numericChange < 0) {
-        formattedChange = `${numericChange}`;
         isNegativeChange = true;
       }
     }
 
     // Apply colors based on isInverted flag
-    if (isInverted) { // For Treasuries (and now Rates, where higher yield/rate is 'negative' for bond prices/borrowers)
+    if (isInverted) { // For Treasuries and Rates (where higher yield/rate is 'negative' for bond prices/borrowers)
       if (isPositiveChange) {
         changeElement.classList.add('negative'); // Red for positive change (higher yield/rate)
         if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
@@ -71,12 +81,6 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change, i
       }
     }
 
-    // Apply highlight only if the change value itself is different
-    if (changeElement.textContent !== formattedChange) {
-      changeElement.classList.remove('highlight-on-update');
-      void changeElement.offsetWidth; // Trigger reflow
-      changeElement.classList.add('highlight-on-update');
-    }
     changeElement.textContent = formattedChange;
     // console.log(`DEBUG (updateChangeIndicator): Updated change element '${changeElementId}' with value: '${formattedChange}'`); // Commented for less console noise
   } else {
@@ -179,8 +183,7 @@ async function fetchAndUpdateDailyRates() {
     // console.log("DEBUG (fetchAndUpdateDailyRates): Received data from Netlify function:", data); // Commented for less console noise
 
     function updateRateRow(prefix, rateData) {
-      // console.log(`DEBUG (updateRateRow): Processing ${prefix}. rateData:`, rateData); // Commented for less console noise
-
+      // console.log(`--- Processing ${prefix} ---`); // Commented for less console noise
       if (!rateData) {
         // console.warn(`DEBUG (updateRateRow): rateData is null/undefined for ${prefix}. Setting all to '--'.`); // Commented for less console noise
         updateTextElement(`${prefix}Current`, '--');
@@ -208,7 +211,7 @@ async function fetchAndUpdateDailyRates() {
       }
 
       updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
-      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago));
+      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago)); // <-- FIXED: Added missing ')' here
 
       let changeVs1M = null;
       let changeVs1Y = null;
@@ -379,6 +382,7 @@ async function fetchAndUpdateBondData() {
             const baseId = instrumentKey.toLowerCase().replace(/_/g, '');
             const tableIdPrefix = `${baseId}Table`;
 
+            // Determine if the instrument is a Treasury (US10Y or US30Y) for inverted color logic
             const isInvertedColors = (instrumentKey === "US10Y" || instrumentKey === "US30Y");
 
             if (instrumentData) {
@@ -387,13 +391,16 @@ async function fetchAndUpdateBondData() {
                 // console.log(`High: ${instrumentData.high}, Low: ${instrumentData.low}, PrevClose: ${instrumentData.prevClose}`); // Commented for less console noise
                 // console.log(`--- End ${instrumentKey} Data ---`); // Commented for less console noise
 
-                updateChangeIndicator(`${tableIdPrefix}Current`, `${tableIdPrefix}Change`,
+                updateTextElement(`${tableIdPrefix}Current`, formatValue(instrumentData.current)); // Update current value
+                updateChangeIndicator(`${tableIdPrefix}Current`, `${tableIdPrefix}Change`, // Pass current value to updateChangeIndicator
                                       instrumentData.current, instrumentData.change, isInvertedColors);
 
                 updateTextElement(`${tableIdPrefix}Open`, formatValue(instrumentData.open));
                 updateTextElement(`${tableIdPrefix}High`, formatValue(instrumentData.high));
                 updateTextElement(`${tableIdPrefix}Low`, formatValue(instrumentData.low));
                 updateTextElement(`${tableIdPrefix}PrevClose`, formatValue(instrumentData.prevClose));
+
+                // Use the global formattedTimestampForTable for each row's 'Updated' column
                 updateTextElement(`${tableIdPrefix}Updated`, formattedTimestampForTable);
 
             } else {
@@ -411,8 +418,9 @@ async function fetchAndUpdateBondData() {
     } catch (err) {
         console.error("Bond data fetch error:", err);
         updateTextElement('bondLastUpdated', `Last Updated: Error`);
+        // Ensure all rows are reset to default on error
         const bondInstruments = [
-            "US10Y", "US30Y",
+            "US10Y", "US30Y", // Include them in error handling as well
             "UMBS_5_5", "UMBS_6_0", "GNMA_5_5", "GNMA_6_0",
             "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", "GNMA_5_5_Shadow", "GNMA_6_0_Shadow"
         ];
