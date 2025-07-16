@@ -208,7 +208,7 @@ async function fetchAndUpdateDailyRates() {
       }
 
       updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
-      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago)); // Corrected missing ')'
+      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago)); 
 
       let changeVs1M = null;
       let changeVs1Y = null;
