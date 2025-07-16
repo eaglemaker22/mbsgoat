@@ -18,7 +18,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   padding-bottom: 5px;
   border-bottom: 1px solid #333;
 }
@@ -70,21 +70,21 @@ body {
 .snapshot-grid-header {
   display: grid;
   grid-template-columns:
-    6em /* MBS Label */
+    5em /* MBS Label */
     4em /* MBS Price */
     11em /* MBS Today */
-  6em /* Treasuries Label */
+  5em /* Treasuries Label */
     4em /* Treasury Yield */
-    9em /* Treasury Today */
-    8em /* Mortgage Label */
+    8em /* Treasury Today */
+    7em /* Mortgage Label */
     4em /* Mortgage Today */
-    11em /* Mortgage Yesterday */
-    7em /* Equities Label */
+    9em /* Mortgage Yesterday */
+    6em /* Equities Label */
     4em /* Equities Today */;
   align-items: center;
   border-bottom: 1px solid #333;
   padding: 4px 0;
-  column-gap: 1.2em; /* Extra space between columns */
+  column-gap: 1em; /* Extra space between columns */
 }
 
 /* Make specific header labels white */
