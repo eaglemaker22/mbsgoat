@@ -30,7 +30,7 @@
         <span>Today</span>
         <span>Rates</span>
         <span>Today</span>
-        <span>Daily Change</span> <!-- NEW COLUMN HEADER -->
+        <span>Change</span> <!-- CHANGED FROM Daily Change -->
         <span>Yesterday</span>
         <span>Equities</span>
         <span>Today</span>
@@ -45,7 +45,7 @@
         <span id="us10yChange">--</span>
         <span>30Y Fixed</span>
         <span id="fixed30yValue">--</span>
-        <span id="fixed30yDailyChange">--</span> <!-- NEW SPAN FOR DAILY CHANGE -->
+        <span id="fixed30yDailyChange">--</span> <!-- ID REMAINS fixed30yDailyChange -->
         <span id="fixed30yYesterday">--</span>
         <span>Dow <small class="ticker-label">(DIA)</small></span>
         <span id="diaChange">--</span>
@@ -60,17 +60,17 @@
         <span id="us30yChange">--</span>
         <span>15Y Fixed</span>
         <span id="fixed15yValue">--</span>
-        <span id="fixed15yDailyChange">--</span> <!-- NEW SPAN FOR DAILY CHANGE -->
+        <span id="fixed15yDailyChange">--</span> <!-- ID REMAINS fixed15yDailyChange -->
         <span id="fixed15yYesterday">--</span>
         <span>S&P500 <small class="ticker-label">(SPY)</small></span>
         <span id="spyChange">--</span>
       </div>
 
       <div class="snapshot-grid">
-        <span></span><span></span><span></span>
-        <span></span><span></span><span></span>
-        <span></span><span></span><span></span>
-        <span></span><span></span><span></span>
+        <span></span><span></span><span></span> <!-- Empty placeholders for MBS section -->
+        <span></span><span></span><span></span> <!-- Empty placeholders for Treasuries section -->
+        <span></span><span></span><span></span> <!-- Empty placeholders for Rates section -->
+        <span></span> <!-- Empty placeholder for Yesterday (Rates) -->
         <span>NSDQ <small class="ticker-label">(QQQ)</small></span>
         <span id="qqqChange">--</span>
       </div>
@@ -166,7 +166,7 @@
           <tr>
             <td>GNMA 6.0 Shadow</td>
             <td id="gnma60shadowTableCurrent">--</td>
-            <td id="gnma60TableChange">--</td>
+            <td id="gnma60shadowTableChange">--</td> <!-- CORRECTED ID: gnma60shadowTableChange -->
             <td id="gnma60TableOpen">--</td>
             <td id="gnma60TableHigh">--</td>
             <td id="gnma60TableLow">--</td>
@@ -204,7 +204,7 @@
           <tr>
             <th>Product</th>
             <th>Current</th>
-            <th>Daily Change</th> <!-- NEW COLUMN HEADER -->
+            <th>Change</th> <!-- CHANGED FROM Daily Change -->
             <th>Yesterday</th>
             <th>Last Month</th>
             <th>1 Year Ago</th>
@@ -214,7 +214,7 @@
           <tr>
             <td>30Y Fixed</td>
             <td><span id="fixed30yCurrent">--</span></td>
-            <td><span id="fixed30yDailyChange">--</span></td> <!-- NEW SPAN FOR DAILY CHANGE -->
+            <td><span id="fixed30yDailyChange">--</span></td>
             <td><span id="fixed30yYesterdayTable">--</span></td>
             <td><span id="fixed30yLastMonth">--</span></td>
             <td><span id="fixed30yYearAgo">--</span></td>
@@ -222,7 +222,7 @@
           <tr>
             <td>30Y VA</td>
             <td><span id="va30yCurrent">--</span></td>
-            <td><span id="va30yDailyChange">--</span></td> <!-- NEW SPAN FOR DAILY CHANGE -->
+            <td><span id="va30yDailyChange">--</span></td>
             <td><span id="va30yYesterday">--</span></td>
             <td><span id="va30yLastMonth">--</span></td>
             <td><span id="va30yYearAgo">--</span></td>
@@ -230,7 +230,7 @@
           <tr>
             <td>30Y FHA</td>
             <td><span id="fha30yCurrent">--</span></td>
-            <td><span id="fha30yDailyChange">--</span></td> <!-- NEW SPAN FOR DAILY CHANGE -->
+            <td><span id="fha30yDailyChange">--</span></td>
             <td><span id="fha30yYesterday">--</span></td>
             <td><span id="fha30yLastMonth">--</span></td>
             <td><span id="fha30yYearAgo">--</span></td>
@@ -238,7 +238,7 @@
           <tr>
             <td>30Y Jumbo</td>
             <td><span id="jumbo30yCurrent">--</span></td>
-            <td><span id="jumbo30yDailyChange">--</span></td> <!-- NEW SPAN FOR DAILY CHANGE -->
+            <td><span id="jumbo30yDailyChange">--</span></td>
             <td><span id="jumbo30yYesterday">--</span></td>
             <td><span id="jumbo30yLastMonth">--</span></td>
             <td><span id="jumbo30yYearAgo">--</span></td>
@@ -246,7 +246,7 @@
           <tr>
             <td>30Y USDA</td>
             <td><span id="usda30yCurrent">--</span></td>
-            <td><span id="usda30yDailyChange">--</span></td> <!-- NEW SPAN FOR DAILY CHANGE -->
+            <td><span id="usda30yDailyChange">--</span></td>
             <td><span id="usda30yYesterday">--</span></td>
             <td><span id="usda30yLastMonth">--</span></td>
             <td><span id="usda30yYearAgo">--</span></td>
@@ -254,7 +254,7 @@
           <tr>
             <td>15Y Fixed</td>
             <td><span id="fixed15yCurrent">--</span></td>
-            <td><span id="fixed15yDailyChange">--</span></td> <!-- NEW SPAN FOR DAILY CHANGE -->
+            <td><span id="fixed15yDailyChange">--</span></td>
             <td><span id="fixed15yYesterdayTable">--</span></td>
             <td><span id="fixed15yLastMonth">--</span></td>
             <td><span id="fixed15yYearAgo">--</span></td>
