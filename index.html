@@ -30,7 +30,6 @@
         <span>Today</span>
         <span>Rates</span>
         <span>Today</span>
-        <span>Change</span>
         <span>Yesterday</span>
         <span>Equities</span>
         <span>Today</span>
@@ -45,7 +44,6 @@
         <span id="us10yChange">--</span>
         <span>30Y Fixed</span>
         <span id="fixed30yValue">--</span>
-        <span id="fixed30yDailyChange">--</span>
         <span id="fixed30yYesterday">--</span>
         <span>Dow <small class="ticker-label">(DIA)</small></span>
         <span id="diaChange">--</span>
@@ -60,27 +58,17 @@
         <span id="us30yChange">--</span>
         <span>15Y Fixed</span>
         <span id="fixed15yValue">--</span>
-        <span id="fixed15yDailyChange">--</span>
         <span id="fixed15yYesterday">--</span>
         <span>S&P500 <small class="ticker-label">(SPY)</small></span>
         <span id="spyChange">--</span>
       </div>
 
-      <!-- This row is specifically for NSDQ and needs to align correctly -->
-      <!-- Ensure there are exactly 10 empty spans before NSDQ to push it to the correct columns -->
       <div class="snapshot-grid">
-        <span></span> <!-- Column 1: Empty placeholder -->
-        <span></span> <!-- Column 2: Empty placeholder -->
-        <span></span> <!-- Column 3: Empty placeholder -->
-        <span></span> <!-- Column 4: Empty placeholder -->
-        <span></span> <!-- Column 5: Empty placeholder -->
-        <span></span> <!-- Column 6: Empty placeholder -->
-        <span></span> <!-- Column 7: Empty placeholder -->
-        <span></span> <!-- Column 8: Empty placeholder -->
-        <span></span> <!-- Column 9: Empty placeholder -->
-        <span></span> <!-- Column 10: Empty placeholder -->
-        <span>NSDQ <small class="ticker-label">(QQQ)</small></span> <!-- Column 11: Equities Label -->
-        <span id="qqqChange">--</span> <!-- Column 12: Equities Today -->
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span>NSDQ <small class="ticker-label">(QQQ)</small></span>
+        <span id="qqqChange">--</span>
       </div>
     </section>
 
@@ -212,7 +200,6 @@
           <tr>
             <th>Product</th>
             <th>Current</th>
-            <th>Change</th>
             <th>Yesterday</th>
             <th>Last Month</th>
             <th>1 Year Ago</th>
@@ -222,7 +209,6 @@
           <tr>
             <td>30Y Fixed</td>
             <td><span id="fixed30yCurrent">--</span></td>
-            <td><span id="fixed30yDailyChange">--</span></td>
             <td><span id="fixed30yYesterdayTable">--</span></td>
             <td><span id="fixed30yLastMonth">--</span></td>
             <td><span id="fixed30yYearAgo">--</span></td>
@@ -230,7 +216,6 @@
           <tr>
             <td>30Y VA</td>
             <td><span id="va30yCurrent">--</span></td>
-            <td><span id="va30yDailyChange">--</span></td>
             <td><span id="va30yYesterday">--</span></td>
             <td><span id="va30yLastMonth">--</span></td>
             <td><span id="va30yYearAgo">--</span></td>
@@ -238,23 +223,20 @@
           <tr>
             <td>30Y FHA</td>
             <td><span id="fha30yCurrent">--</span></td>
-            <td><span id="fha30yDailyChange">--</span></td>
             <td><span id="fha30yYesterday">--</span></td>
-            <td><span id="fha30yLastMonth">--</td>
+            <td><span id="fha30yLastMonth">--</span></td>
             <td><span id="fha30yYearAgo">--</span></td>
           </tr>
           <tr>
             <td>30Y Jumbo</td>
             <td><span id="jumbo30yCurrent">--</span></td>
-            <td><span id="jumbo30yDailyChange">--</span></td>
             <td><span id="jumbo30yYesterday">--</span></td>
             <td><span id="jumbo30yLastMonth">--</span></td>
-            <td><span id="jumbo30yYearAgo">--</td>
+            <td><span id="jumbo30yYearAgo">--</span></td>
           </tr>
           <tr>
             <td>30Y USDA</td>
             <td><span id="usda30yCurrent">--</span></td>
-            <td><span id="usda30yDailyChange">--</span></td>
             <td><span id="usda30yYesterday">--</span></td>
             <td><span id="usda30yLastMonth">--</span></td>
             <td><span id="usda30yYearAgo">--</span></td>
@@ -262,7 +244,6 @@
           <tr>
             <td>15Y Fixed</td>
             <td><span id="fixed15yCurrent">--</span></td>
-            <td><span id="fixed15yDailyChange">--</span></td>
             <td><span id="fixed15yYesterdayTable">--</span></td>
             <td><span id="fixed15yLastMonth">--</span></td>
             <td><span id="fixed15yYearAgo">--</span></td>
@@ -388,17 +369,6 @@
           <tr><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td></tr>
         </tbody>
       </table>
-    </section>
-
-    <!-- NEW SECTION FOR DEBUGGING JUMBO AND 15Y FIXED RATES -->
-    <section class="terminal-section">
-      <h2>DEBUG RATES</h2>
-      <div class="debug-grid">
-        <span>30Y Jumbo Current:</span> <span id="debugJumbo30Y">--</span>
-      </div>
-      <div class="debug-grid">
-        <span>15Y Fixed Current:</span> <span id="debugFixed15Y">--</span>
-      </div>
     </section>
 
   </div>
