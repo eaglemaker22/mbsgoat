@@ -6,11 +6,12 @@
 }
 
 body {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Roboto Mono', monospace; /* Changed font to Roboto Mono */
   background-color: #000;
   color: #f0f0f0;
-  line-height: 1.4;
+  line-height: 1.5; /* Slightly increased line height for readability */
   padding: 20px;
+  font-size: 1.05em; /* Slightly increased base font size */
 }
 
 /* Top Header Branding */
@@ -107,7 +108,7 @@ body {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
-  font-size: 0.85em;
+  font-size: 0.85em; /* This will be slightly larger due to body font-size increase */
 }
 
 .terminal-table th,
@@ -172,4 +173,14 @@ body {
   font-size: 0.4em;       /* White labels smaller */
   color: #fff;
   font-weight: normal;
+}
+
+/* Highlight Animation */
+@keyframes highlight-fade {
+    from { background-color: rgba(255, 255, 0, 0.5); }
+    to { background-color: transparent; }
+}
+
+.highlight-on-update {
+    animation: highlight-fade 1s ease-out;
 }
