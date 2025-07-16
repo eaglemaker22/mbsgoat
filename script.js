@@ -18,21 +18,28 @@ function updateTextElement(elementId, value) {
   }
 }
 
-// MODIFIED: Added isInverted parameter for color logic, and highlight logic
+// MODIFIED: Corrected logic for value update and color application
 function updateChangeIndicator(valueElementId, changeElementId, value, change, isInverted = false) {
-  // updateTextElement(valueElementId, formatValue(value)); // This will apply highlight to the value if uncommented
+  // NEW: Ensure the main value is updated and triggers highlight
+  updateTextElement(valueElementId, formatValue(value));
 
   const changeElement = document.getElementById(changeElementId);
-  // Note: .closest('.header-item') might not be relevant for all elements,
-  // but keeping it for compatibility with existing HTML structure.
   const parentHeaderItem = changeElement ? changeElement.closest('.header-item') : null;
 
   if (changeElement) {
     let formattedChange = formatValue(change);
-    // Add '+' sign for positive changes if it's a number
     const numericChange = parseFloat(change);
-    if (!isNaN(numericChange) && numericChange > 0) {
-      formattedChange = `+${formattedChange}`;
+
+    // Determine positive/negative flags BEFORE applying classes
+    let isPositiveChange = false;
+    let isNegativeChange = false;
+    if (!isNaN(numericChange)) {
+      if (numericChange > 0) {
+        formattedChange = `+${formattedChange}`; // Add '+' only if positive
+        isPositiveChange = true;
+      } else if (numericChange < 0) {
+        isNegativeChange = true;
+      }
     }
 
     // Apply highlight only if the change value itself is different
@@ -42,34 +49,24 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change, i
       changeElement.classList.add('highlight-on-update');
     }
 
+    // Remove existing color classes first
     changeElement.classList.remove('positive', 'negative');
     if (parentHeaderItem) {
       parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg'); // Reset all background classes
     }
 
-    let isPositiveChange = false;
-    let isNegativeChange = false;
-
-    if (!isNaN(numericChange)) {
-      if (numericChange > 0) {
-        isPositiveChange = true;
-      } else if (numericChange < 0) {
-        isNegativeChange = true;
-      }
-    }
-
-    // Apply colors based on isInverted flag
-    if (isInverted) { // For Treasuries and Rates (where higher yield/rate is 'negative' for bond prices/borrowers)
+    // Apply new color classes based on flags and isInverted
+    if (isInverted) { // For Treasuries and Rates (higher yield/rate is 'negative')
       if (isPositiveChange) {
-        changeElement.classList.add('negative'); // Red for positive change (higher yield/rate)
+        changeElement.classList.add('negative'); // Red for positive change
         if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
       } else if (isNegativeChange) {
-        changeElement.classList.add('positive'); // Green for negative change (lower yield/rate)
+        changeElement.classList.add('positive'); // Green for negative change
         if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
       } else {
         if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
       }
-    } else { // For MBS/Equities (default behavior: positive change is 'positive')
+    } else { // For MBS/Equities (default: positive change is 'positive')
       if (isPositiveChange) {
         changeElement.classList.add('positive');
         if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
@@ -153,7 +150,7 @@ async function fetchAndUpdateMarketData() {
 
     if (data?.UMBS_5_5) {
       const v = parseFloat(data.UMBS_5_5.current);
-      const c = parseFloat(data.UMBS_5_5.change);
+      const c = parseFloat(data.UMBS_5_5.change); // This 'change' comes from Firestore `Daily_Change`
       updateChangeIndicator('umbs55Value', 'umbs55Change',
         isNaN(v) ? "--" : v.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3)
@@ -162,7 +159,7 @@ async function fetchAndUpdateMarketData() {
 
     if (data?.GNMA_5_5) {
       const v = parseFloat(data.GNMA_5_5.current);
-      const c = parseFloat(data.GNMA_5_5.change);
+      const c = parseFloat(data.GNMA_5_5.change); // This 'change' comes from Firestore `Daily_Change`
       updateChangeIndicator('gnma55Value', 'gnma55Change',
         isNaN(v) ? "--" : v.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3)
@@ -173,7 +170,7 @@ async function fetchAndUpdateMarketData() {
   }
 }
 
-// --- Daily Rates ---
+// --- Daily Rates --- (UPDATED to fix Yesterday and coloring in top snapshot)
 async function fetchAndUpdateDailyRates() {
   // console.log("Fetching daily rates..."); // Commented for less console noise
   try {
@@ -242,24 +239,33 @@ async function fetchAndUpdateDailyRates() {
       }
     }
 
-    // Top snapshot - MODIFIED TO USE updateChangeIndicator FOR COLORS
-    // This part now applies the coloring to the 'Today' rate in the top snapshot
+    // Top snapshot - MODIFIED TO FIX MISSING YESTERDAY DATA AND ENSURE COLORING
+    // Fixed30Y
     if (data?.fixed30Y) {
         const latest30Y = parseFloat(data.fixed30Y.latest);
         const dailyChange30Y = parseFloat(data.fixed30Y.daily_change);
+        const yesterday30Y = parseFloat(data.fixed30Y.yesterday); // Get yesterday's value
+        
         updateChangeIndicator("fixed30yValue", "fixed30yValue", // Apply color to the value itself
                               latest30Y, dailyChange30Y, true); // isInverted = true for rates
+        updateTextElement("fixed30yYesterday", formatPercentage(yesterday30Y)); // Update Yesterday value
     } else {
         updateTextElement("fixed30yValue", "--");
+        updateTextElement("fixed30yYesterday", "--");
     }
 
-    if (data?.fixed15y) {
+    // Fixed15Y
+    if (data?.fixed15y) { // Note: using 'fixed15y' as per your Netlify function output
         const latest15Y = parseFloat(data.fixed15y.latest);
         const dailyChange15Y = parseFloat(data.fixed15y.daily_change);
+        const yesterday15Y = parseFloat(data.fixed15y.yesterday); // Get yesterday's value
+
         updateChangeIndicator("fixed15yValue", "fixed15yValue", // Apply color to the value itself
                               latest15Y, dailyChange15Y, true); // isInverted = true for rates
+        updateTextElement("fixed15yYesterday", formatPercentage(yesterday15Y)); // Update Yesterday value
     } else {
         updateTextElement("fixed15yValue", "--");
+        updateTextElement("fixed15yYesterday", "--");
     }
 
     // Table rows
@@ -275,7 +281,7 @@ async function fetchAndUpdateDailyRates() {
   }
 }
 
-// --- Live Stocks ---
+// --- Live Stocks --- (No changes needed for this specific issue)
 async function fetchAndUpdateLiveStockData() {
   // console.log("Fetching live stock data..."); // Commented for less console noise
   try {
@@ -293,12 +299,12 @@ async function fetchAndUpdateLiveStockData() {
       if (item && item.percentChange !== undefined) {
         const n = parseFloat(item.percentChange);
         if (!isNaN(n)) {
-          formattedChange = n.toFixed(2);
+          const t = n.toFixed(2);
           if (n > 0) {
-            formattedChange = `+${formattedChange}%`;
+            formattedChange = `+${t}%`;
             el.classList.add('positive');
           } else if (n < 0) {
-            formattedChange = `${formattedChange}%`;
+            formattedChange = `${t}%`;
             el.classList.add('negative');
           } else {
             formattedChange = '0.00%';
@@ -322,7 +328,7 @@ async function fetchAndUpdateLiveStockData() {
   }
 }
 
-// --- Economic Indicators ---
+// --- Economic Indicators --- (No changes needed for this specific issue)
 async function fetchAndUpdateEconomicIndicators() {
   // console.log("Fetching economic indicators..."); // Commented for less console noise
   try {
@@ -358,7 +364,7 @@ async function fetchAndUpdateEconomicIndicators() {
   }
 }
 
-// --- Bonds & Treasuries ---
+// --- Bonds & Treasuries --- (No changes needed for this specific issue)
 async function fetchAndUpdateBondData() {
     // console.log("Fetching bond and treasury data for table..."); // Commented for less console noise
     try {
@@ -460,13 +466,9 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchAndUpdateEconomicIndicators();
   fetchAndUpdateBondData();
 
-  // Increased refresh rate for market and bond data
-  setInterval(fetchAndUpdateMarketData, 30000); // Every 30 seconds
-  setInterval(fetchAndUpdateLiveStockData, 30000); // Every 30 seconds
-  setInterval(fetchAndUpdateBondData, 30000); // Every 30 seconds
-  // Economic indicators and daily rates typically don't change as frequently,
-  // so keeping them at default or slightly longer intervals might be efficient.
-  // For now, let's keep daily rates at 60s, economic indicators at 5 minutes (300000ms)
-  setInterval(fetchAndUpdateDailyRates, 60000); // Every 60 seconds
-  setInterval(fetchAndUpdateEconomicIndicators, 300000); // Every 5 minutes
+  setInterval(fetchAndUpdateMarketData, 30000); // Reverted to 30s
+  setInterval(fetchAndUpdateLiveStockData, 30000);
+  setInterval(fetchAndUpdateBondData, 30000); // Reverted to 30s
+  setInterval(fetchAndUpdateDailyRates, 60000);
+  setInterval(fetchAndUpdateEconomicIndicators, 300000);
 });
