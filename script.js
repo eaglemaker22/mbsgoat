@@ -255,10 +255,29 @@ async function fetchAndUpdateDailyRates() {
     }
 
     // Top snapshot - Ensure consistent casing for data access
-    updateTextElement("fixed30yValue", formatPercentage(data?.fixed30Y?.latest));
-    updateTextElement("fixed30yYesterday", formatPercentage(data?.fixed30Y?.yesterday));
-    updateTextElement("fixed15yValue", formatPercentage(data?.fixed15Y?.latest)); // Corrected to fixed15Y
-    updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15Y?.yesterday)); // Corrected to fixed15Y
+    // MODIFIED: Re-added updateChangeIndicator for top snapshot rates
+    if (data?.fixed30Y) {
+        const latest30Y = parseFloat(data.fixed30Y.latest);
+        const dailyChange30Y = parseFloat(data.fixed30Y.daily_change);
+        updateChangeIndicator("fixed30yValue", "fixed30yValue", // Apply color to the value itself
+                              latest30Y, dailyChange30Y, true); // isInverted = true for rates
+        updateTextElement("fixed30yYesterday", formatPercentage(data.fixed30Y.yesterday)); // Update Yesterday value
+    } else {
+        updateTextElement("fixed30yValue", "--");
+        updateTextElement("fixed30yYesterday", "--");
+    }
+
+    if (data?.fixed15Y) { // Note: using 'fixed15Y' as per your Netlify function output
+        const latest15Y = parseFloat(data.fixed15Y.latest);
+        const dailyChange15Y = parseFloat(data.fixed15Y.daily_change);
+        updateChangeIndicator("fixed15yValue", "fixed15yValue", // Apply color to the value itself
+                              latest15Y, dailyChange15Y, true); // isInverted = true for rates
+        updateTextElement("fixed15yYesterday", formatPercentage(data.fixed15Y.yesterday)); // Update Yesterday value
+    } else {
+        updateTextElement("fixed15yValue", "--");
+        updateTextElement("fixed15yYesterday", "--");
+    }
+
 
     // Table rows - Ensure consistent casing for data access
     updateRateRow("fixed30y", data.fixed30Y);
