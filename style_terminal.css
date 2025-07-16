@@ -73,12 +73,12 @@ body {
     6em /* MBS Label */
     4em /* MBS Price */
     13em /* MBS Today */
-  7em /* Treasuries Label */
+  6em /* Treasuries Label */
     4em /* Treasury Yield */
-    13em /* Treasury Today */
+    11em /* Treasury Today */
     8em /* Mortgage Label */
     4em /* Mortgage Today */
-    15em /* Mortgage Yesterday */
+    13em /* Mortgage Yesterday */
     7em /* Equities Label */
     4em /* Equities Today */;
   align-items: center;
