@@ -9,9 +9,9 @@ body {
   font-family: 'Roboto Mono', monospace; /* Changed font to Roboto Mono */
   background-color: #000;
   color: #f0f0f0;
-  line-height: 1.5; /* Slightly increased line height for readability */
+  line-height: 1.6; /* Slightly increased line height for better readability */
   padding: 20px;
-  font-size: 1.05em; /* Slightly increased base font size */
+  font-size: 1.1em; /* Increased base font size for overall clarity */
 }
 
 /* Top Header Branding */
@@ -27,11 +27,11 @@ body {
 .terminal-header .title {
   color: #00FF66;
   font-weight: lighter;
-  font-size: 1.6em; /* 16% bigger */
+  font-size: 1.8em; /* Made title slightly larger */
 }
 
 .terminal-header .status {
-  font-size: 1.1em; /* 20% bigger */
+  font-size: 1.2em; /* Made status text slightly larger */
   display: flex;
   align-items: center;
   gap: 5px;
@@ -59,7 +59,7 @@ body {
 .terminal-section h2 {
   color: #FFD700;
   font-weight: 700;
-  font-size: 1em;
+  font-size: 1.1em; /* Slightly increased section title font size */
   margin-bottom: 8px;
   text-transform: uppercase;
   border-bottom: 1px solid #FF0000;
@@ -91,6 +91,7 @@ body {
 /* Make specific header labels white */
 .snapshot-grid-header span {
   color: #FFD700;
+  font-size: 1.05em; /* Ensuring header labels are clear */
 }
 .snapshot-grid-header span:nth-child(2), /* Price */
 .snapshot-grid-header span:nth-child(3), /* Today after Price */
@@ -100,7 +101,7 @@ body {
 .snapshot-grid-header span:nth-child(9), /* Mortgage Yesterday */
 .snapshot-grid-header span:nth-child(11) /* Equities Today */ {
   color: #fff;
-  font-size: 0.9em;
+  font-size: 1em; /* Slightly increased sub-labels */
 }
 
 /* Tables */
@@ -108,12 +109,12 @@ body {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
-  font-size: 0.85em; /* This will be slightly larger due to body font-size increase */
+  font-size: 0.9em; /* Increased table base font size */
 }
 
 .terminal-table th,
 .terminal-table td {
-  padding: 4px 6px;
+  padding: 5px 8px; /* Slightly increased padding for better spacing */
   text-align: left;
   border-bottom: 1px solid #333;
 }
