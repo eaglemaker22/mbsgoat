@@ -211,7 +211,7 @@ async function fetchAndUpdateDailyRates() {
       }
 
       updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
-      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago)); // <-- FIXED: Added missing ')' here
+      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago)); // Corrected missing ')'
 
       let changeVs1M = null;
       let changeVs1Y = null;
@@ -229,12 +229,12 @@ async function fetchAndUpdateDailyRates() {
       updateTextElement(`${prefix}ChangeVs1M`, changeVs1M !== null ? `${changeVs1M}%` : "--");
       updateTextElement(`${prefix}ChangeVs1Y`, changeVs1Y !== null ? `${changeVs1Y}%` : "--");
 
-      // NEW: Update Daily Change and apply colors
+      // NEW: Update Daily Change and apply colors (if DailyChange ID exists in HTML table)
       if (rateData.daily_change !== undefined && rateData.daily_change !== null) {
         const dailyChangeNumeric = parseFloat(rateData.daily_change);
-        const dailyChangeElementId = `${prefix}DailyChange`;
+        const dailyChangeElementId = `${prefix}DailyChange`; // This ID is for the table's 'Change' column
         
-        // Apply colors: red for higher (positive change), green for lower (negative change)
+        // Apply colors to the DailyChange element: red for higher (positive change), green for lower (negative change)
         updateChangeIndicator(dailyChangeElementId, dailyChangeElementId, // Pass same ID for value and change
                               dailyChangeNumeric, dailyChangeNumeric, true); // isInverted = true for rates
       } else {
@@ -242,11 +242,25 @@ async function fetchAndUpdateDailyRates() {
       }
     }
 
-    // Top snapshot
-    updateTextElement("fixed30yValue", formatPercentage(data?.fixed30Y?.latest));
-    updateTextElement("fixed30yYesterday", formatPercentage(data?.fixed30Y?.yesterday));
-    updateTextElement("fixed15yValue", formatPercentage(data?.fixed15y?.latest));
-    updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15y?.yesterday));
+    // Top snapshot - MODIFIED TO USE updateChangeIndicator FOR COLORS
+    // This part now applies the coloring to the 'Today' rate in the top snapshot
+    if (data?.fixed30Y) {
+        const latest30Y = parseFloat(data.fixed30Y.latest);
+        const dailyChange30Y = parseFloat(data.fixed30Y.daily_change);
+        updateChangeIndicator("fixed30yValue", "fixed30yValue", // Apply color to the value itself
+                              latest30Y, dailyChange30Y, true); // isInverted = true for rates
+    } else {
+        updateTextElement("fixed30yValue", "--");
+    }
+
+    if (data?.fixed15y) {
+        const latest15Y = parseFloat(data.fixed15y.latest);
+        const dailyChange15Y = parseFloat(data.fixed15y.daily_change);
+        updateChangeIndicator("fixed15yValue", "fixed15yValue", // Apply color to the value itself
+                              latest15Y, dailyChange15Y, true); // isInverted = true for rates
+    } else {
+        updateTextElement("fixed15yValue", "--");
+    }
 
     // Table rows
     updateRateRow("fixed30y", data.fixed30Y);
