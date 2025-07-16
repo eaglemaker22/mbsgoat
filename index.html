@@ -30,7 +30,7 @@
         <span>Today</span>
         <span>Rates</span>
         <span>Today</span>
-        <span>Change</span> <!-- CHANGED FROM Daily Change -->
+        <span>Change</span>
         <span>Yesterday</span>
         <span>Equities</span>
         <span>Today</span>
@@ -45,7 +45,7 @@
         <span id="us10yChange">--</span>
         <span>30Y Fixed</span>
         <span id="fixed30yValue">--</span>
-        <span id="fixed30yDailyChange">--</span> <!-- ID REMAINS fixed30yDailyChange -->
+        <span id="fixed30yDailyChange">--</span>
         <span id="fixed30yYesterday">--</span>
         <span>Dow <small class="ticker-label">(DIA)</small></span>
         <span id="diaChange">--</span>
@@ -60,19 +60,20 @@
         <span id="us30yChange">--</span>
         <span>15Y Fixed</span>
         <span id="fixed15yValue">--</span>
-        <span id="fixed15yDailyChange">--</span> <!-- ID REMAINS fixed15yDailyChange -->
+        <span id="fixed15yDailyChange">--</span>
         <span id="fixed15yYesterday">--</span>
         <span>S&P500 <small class="ticker-label">(SPY)</small></span>
         <span id="spyChange">--</span>
       </div>
 
+      <!-- This is the row that needs adjustment for NSDQ -->
       <div class="snapshot-grid">
-        <span></span><span></span><span></span> <!-- Empty placeholders for MBS section -->
-        <span></span><span></span><span></span> <!-- Empty placeholders for Treasuries section -->
-        <span></span><span></span><span></span> <!-- Empty placeholders for Rates section -->
-        <span></span> <!-- Empty placeholder for Yesterday (Rates) -->
-        <span>NSDQ <small class="ticker-label">(QQQ)</small></span>
-        <span id="qqqChange">--</span>
+        <span></span><span></span><span></span> <!-- Empty placeholders for MBS section (3 columns) -->
+        <span></span><span></span><span></span> <!-- Empty placeholders for Treasuries section (3 columns) -->
+        <span></span><span></span><span></span> <!-- Empty placeholders for Rates section (3 columns) -->
+        <span></span> <!-- Empty placeholder for Rates Yesterday (1 column) -->
+        <span>NSDQ <small class="ticker-label">(QQQ)</small></span> <!-- Equities Label (1 column) -->
+        <span id="qqqChange">--</span> <!-- Equities Today (1 column) -->
       </div>
     </section>
 
@@ -204,7 +205,7 @@
           <tr>
             <th>Product</th>
             <th>Current</th>
-            <th>Change</th> <!-- CHANGED FROM Daily Change -->
+            <th>Change</th>
             <th>Yesterday</th>
             <th>Last Month</th>
             <th>1 Year Ago</th>
