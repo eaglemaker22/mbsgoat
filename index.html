@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MBSGOAT Terminal</title>
-  <link rel="stylesheet" href="style_terminal.css" />
+  <link rel="stylesheet" href="style_terminal_final.css" /> <!-- UPDATED: Link to new CSS file -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -39,7 +39,7 @@
         <span>UMBS 5.5</span>
         <span id="umbs55Value">--</span>
         <span id="umbs55Change">--</span>
-        <span>10Y Treasury</span> <!-- MODIFIED: Added Treasury -->
+        <span>US10Y</span> <!-- MODIFIED: Changed to US10Y -->
         <span id="us10yValue">--</span>
         <span id="us10yChange">--</span>
         <span>30Y Fixed</span>
@@ -53,7 +53,7 @@
         <span>GNMA 5.5</span>
         <span id="gnma55Value">--</span>
         <span id="gnma55Change">--</span>
-        <span>30Y Treasury</span> <!-- MODIFIED: Added Treasury -->
+        <span>US30Y</span> <!-- MODIFIED: Changed to US30Y -->
         <span id="us30yValue">--</span>
         <span id="us30yChange">--</span>
         <span>15Y Fixed</span>
@@ -161,12 +161,12 @@
           </tr>
           <tr>
             <td>GNMA 6.0 Shadow</td>
-            <td id="gnma60shadowTableCurrent">--</td>
-            <td id="gnma60TableChange">--</td>
-            <td id="gnma60TableOpen">--</td>
-            <td id="gnma60TableHigh">--</td>
-            <td id="gnma60TableLow">--</td>
-            <td id="gnma60TablePrevClose">--</td>
+            <td id="gnma60shadowTableCurrent">--</td> <!-- MODIFIED: Changed ID to gnma60shadowTableCurrent -->
+            <td id="gnma60shadowTableChange">--</td> <!-- MODIFIED: Changed ID to gnma60shadowTableChange -->
+            <td id="gnma60shadowTableOpen">--</td> <!-- MODIFIED: Changed ID to gnma60shadowTableOpen -->
+            <td id="gnma60shadowTableHigh">--</td> <!-- MODIFIED: Changed ID to gnma60shadowTableHigh -->
+            <td id="gnma60shadowTableLow">--</td> <!-- MODIFIED: Changed ID to gnma60shadowTableLow -->
+            <td id="gnma60shadowTablePrevClose">--</td> <!-- MODIFIED: Changed ID to gnma60shadowTablePrevClose -->
             <!-- REMOVED: <td id="gnma60TableUpdated">--</td> -->
           </tr>
           <tr>
@@ -201,7 +201,7 @@
             <th>Product</th>
             <th>Current</th>
             <th>Yesterday</th>
-            <th>Change</th> <!-- NEW: Added Change column header -->
+            <th>Change</th>
             <th>Last Month</th>
             <th>1 Year Ago</th>
           </tr>
@@ -211,7 +211,7 @@
             <td>30Y Fixed</td>
             <td><span id="fixed30yCurrent">--</span></td>
             <td><span id="fixed30yYesterdayTable">--</span></td>
-            <td><span id="fixed30yDailyChange">--</span></td> <!-- NEW: Added ID for Daily Change -->
+            <td><span id="fixed30yDailyChange">--</span></td>
             <td><span id="fixed30yLastMonth">--</span></td>
             <td><span id="fixed30yYearAgo">--</span></td>
           </tr>
@@ -219,7 +219,7 @@
             <td>30Y VA</td>
             <td><span id="va30yCurrent">--</span></td>
             <td><span id="va30yYesterday">--</span></td>
-            <td><span id="va30yDailyChange">--</span></td> <!-- NEW: Added ID for Daily Change -->
+            <td><span id="va30yDailyChange">--</span></td>
             <td><span id="va30yLastMonth">--</span></td>
             <td><span id="va30yYearAgo">--</span></td>
           </tr>
@@ -227,7 +227,7 @@
             <td>30Y FHA</td>
             <td><span id="fha30yCurrent">--</span></td>
             <td><span id="fha30yYesterday">--</span></td>
-            <td><span id="fha30yDailyChange">--</span></td> <!-- NEW: Added ID for Daily Change -->
+            <td><span id="fha30yDailyChange">--</span></td>
             <td><span id="fha30yLastMonth">--</span></td>
             <td><span id="fha30yYearAgo">--</span></td>
           </tr>
@@ -235,7 +235,7 @@
             <td>30Y Jumbo</td>
             <td><span id="jumbo30yCurrent">--</span></td>
             <td><span id="jumbo30yYesterday">--</span></td>
-            <td><span id="jumbo30yDailyChange">--</span></td> <!-- NEW: Added ID for Daily Change -->
+            <td><span id="jumbo30yDailyChange">--</span></td>
             <td><span id="jumbo30yLastMonth">--</span></td>
             <td><span id="jumbo30yYearAgo">--</span></td>
           </tr>
@@ -243,7 +243,7 @@
             <td>30Y USDA</td>
             <td><span id="usda30yCurrent">--</span></td>
             <td><span id="usda30yYesterday">--</span></td>
-            <td><span id="usda30yDailyChange">--</span></td> <!-- NEW: Added ID for Daily Change -->
+            <td><span id="usda30yDailyChange">--</span></td>
             <td><span id="usda30yLastMonth">--</td>
             <td><span id="usda30yYearAgo">--</span></td>
           </tr>
@@ -251,7 +251,7 @@
             <td>15Y Fixed</td>
             <td><span id="fixed15yCurrent">--</span></td>
             <td><span id="fixed15yYesterdayTable">--</span></td>
-            <td><span id="fixed15yDailyChange">--</span></td> <!-- NEW: Added ID for Daily Change -->
+            <td><span id="fixed15yDailyChange">--</span></td>
             <td><span id="fixed15yLastMonth">--</span></td>
             <td><span id="fixed15yYearAgo">--</span></td>
           </tr>
