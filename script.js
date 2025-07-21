@@ -4,12 +4,17 @@ function updateTextElement(elementId, value) {
   if (element) {
     // Check if the value is actually changing before applying highlight
     if (element.textContent !== String(value)) { // Convert value to string for comparison
-      // Remove the class first to reset the animation
-      element.classList.remove('highlight-on-update');
+      // Remove all highlight classes first to reset any animation
+      element.classList.remove('highlight-on-update', 'border-flash-on-update');
       // Trigger reflow to restart the animation
       void element.offsetWidth; // This forces a reflow
-      // Add the class back
-      element.classList.add('highlight-on-update');
+
+      // Apply specific highlight based on element ID
+      if (elementId.endsWith('TableUpdated')) {
+        element.classList.add('border-flash-on-update'); // Apply border flash for 'Updated' column
+      } else {
+        element.classList.add('highlight-on-update'); // Apply background flash for other elements
+      }
     }
     element.textContent = value;
     console.log(`DEBUG (updateTextElement): Updated element '${elementId}' with value: '${value}'`);
@@ -70,10 +75,13 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change, i
     }
 
     // Apply highlight only if the change value itself is different
+    // This will now use the generic updateTextElement logic for highlighting,
+    // which will apply background highlight.
+    // The specific 'Updated' column will get its border highlight via updateTextElement.
     if (changeElement.textContent !== formattedChange) {
-      changeElement.classList.remove('highlight-on-update');
+      changeElement.classList.remove('highlight-on-update', 'border-flash-on-update'); // Remove both
       void changeElement.offsetWidth; // Trigger reflow
-      changeElement.classList.add('highlight-on-update');
+      changeElement.classList.add('highlight-on-update'); // Default to background highlight for change values
     }
     changeElement.textContent = formattedChange;
     console.log(`DEBUG (updateChangeIndicator): Updated change element '${changeElementId}' with value: '${formattedChange}'`);
@@ -147,7 +155,7 @@ async function fetchAndUpdateMarketData() {
 
     if (data?.UMBS_5_5) {
       const v = parseFloat(data.UMBS_5_5.current);
-      const c = parseFloat(data.UMBS_5_5.change);
+      const c = parseFloat(data.UMBS_5_5.change); // This 'change' comes from Firestore `Daily_Change`
       updateChangeIndicator('umbs55Value', 'umbs55Change',
         isNaN(v) ? "--" : v.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3)
@@ -156,7 +164,7 @@ async function fetchAndUpdateMarketData() {
 
     if (data?.GNMA_5_5) {
       const v = parseFloat(data.GNMA_5_5.current);
-      const c = parseFloat(data.GNMA_5_5.change);
+      const c = parseFloat(data.GNMA_5_5.change); // This 'change' comes from Firestore `Daily_Change`
       updateChangeIndicator('gnma55Value', 'gnma55Change',
         isNaN(v) ? "--" : v.toFixed(3),
         isNaN(c) ? "--" : c.toFixed(3)
@@ -182,11 +190,12 @@ async function fetchAndUpdateDailyRates() {
       if (!rateData) {
         console.warn(`DEBUG (updateRateRow): rateData is null/undefined for ${prefix}. Setting all to '--'.`);
         updateTextElement(`${prefix}Current`, '--');
-        updateTextElement(`${prefix}Yesterday`, '--');
+        updateTextElement(`${prefix}YesterdayTable`, '--'); // Assuming this ID exists for tables
         updateTextElement(`${prefix}LastMonth`, '--');
         updateTextElement(`${prefix}YearAgo`, '--');
         updateTextElement(`${prefix}ChangeVs1M`, '--');
         updateTextElement(`${prefix}ChangeVs1Y`, '--');
+        updateTextElement(`${prefix}DailyChange`, '--'); // Reset daily change as well
         return;
       }
 
@@ -224,6 +233,18 @@ async function fetchAndUpdateDailyRates() {
 
       updateTextElement(`${prefix}ChangeVs1M`, changeVs1M !== null ? `${changeVs1M}%` : "--");
       updateTextElement(`${prefix}ChangeVs1Y`, changeVs1Y !== null ? `${changeVs1Y}%` : "--");
+
+      // NEW: Update Daily Change and apply colors
+      if (rateData.daily_change !== undefined && rateData.daily_change !== null) {
+        const dailyChangeNumeric = parseFloat(rateData.daily_change);
+        const dailyChangeElementId = `${prefix}DailyChange`;
+        
+        // Apply colors: red for higher (positive change), green for lower (negative change)
+        updateChangeIndicator(dailyChangeElementId, dailyChangeElementId, // Pass same ID for value and change
+                              dailyChangeNumeric, dailyChangeNumeric, true); // isInverted = true for rates
+      } else {
+        updateTextElement(`${prefix}DailyChange`, '--');
+      }
     }
 
     // Top snapshot
@@ -236,9 +257,9 @@ async function fetchAndUpdateDailyRates() {
     updateRateRow("fixed30y", data.fixed30Y);
     updateRateRow("va30y", data.va30Y);
     updateRateRow("fha30y", data.fha30Y);
-    updateRateRow("jumbo30y", data.jumbo30Y);
-    updateRateRow("usda30y", data.usda30Y);
-    updateRateRow("fixed15y", data.fixed15Y);
+    updateRateRow("jumbo30y", data.jumbo30y);
+    updateRateRow("usda30y", data.usda30y);
+    updateRateRow("fixed15y", data.fixed15y);
 
     // NEW DEBUG SECTION: Display Jumbo and 15Y Fixed Current at the bottom
     console.log("DEBUG (Daily Rates): Attempting to update DEBUG RATES section.");
@@ -272,26 +293,31 @@ async function fetchAndUpdateLiveStockData() {
       const el = document.getElementById(id);
       if (!el) return;
 
-      el.textContent = '';
-      el.classList.remove('positive', 'negative');
+      let formattedChange = '--';
+      el.classList.remove('positive', 'negative', 'highlight-on-update'); // Remove highlight too
 
       if (item && item.percentChange !== undefined) {
         const n = parseFloat(item.percentChange);
         if (!isNaN(n)) {
-          const t = n.toFixed(2);
+          formattedChange = n.toFixed(2);
           if (n > 0) {
-            el.textContent = `+${t}%`;
+            formattedChange = `+${formattedChange}%`;
             el.classList.add('positive');
           } else if (n < 0) {
-            el.textContent = `${t}%`;
+            formattedChange = `${formattedChange}%`;
             el.classList.add('negative');
           } else {
-            el.textContent = '0.00%';
+            formattedChange = '0.00%';
           }
         }
-      } else {
-        el.textContent = '--';
       }
+
+      if (el.textContent !== formattedChange) { // Apply highlight only if content changes
+        el.classList.remove('highlight-on-update');
+        void el.offsetWidth; // Trigger reflow
+        el.classList.add('highlight-on-update');
+      }
+      el.textContent = formattedChange;
     }
 
     updateStockChange('spyChange', data.SPY);
@@ -325,11 +351,7 @@ async function fetchAndUpdateEconomicIndicators() {
 
     Object.entries(rows).forEach(([seriesId, prefix]) => {
       const d = data[seriesId];
-      console.log(`DEBUG (Economic Indicators): Processing ${seriesId}. Data:`, d);
-      if (!d) {
-        console.warn(`DEBUG (Economic Indicators): Data is null/undefined for ${seriesId}. Skipping row update.`);
-        return;
-      }
+      if (!d) return;
       updateTextElement(`${prefix}Latest`, formatValue(d.latest));
       updateTextElement(`${prefix}Date`, formatDate(d.latest_date));
       updateTextElement(`${prefix}LastMonth`, formatValue(d.last_month));
@@ -350,8 +372,6 @@ async function fetchAndUpdateBondData() {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
 
-        // The overall 'Last Updated' for the section can still use the shadow bonds timestamp
-        // or be removed if no longer desired. User's request was for individual rows.
         let overallFormattedTimestamp = '--';
         if (data.last_updated) { // This data.last_updated comes from shadowData.last_updated in the Netlify function
             const timestamp = new Date(data.last_updated.replace(' ', 'T'));
