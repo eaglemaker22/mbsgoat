@@ -132,14 +132,18 @@ function formatValue(value) {
 }
 
 function formatTimestamp(timestamp) {
+  console.log(`DEBUG (formatTimestamp): Received timestamp: '${timestamp}'`); // NEW: Log what's received
   if (!timestamp) {
+    console.log(`DEBUG (formatTimestamp): Timestamp is empty/null, returning '--'`);
     return '--';
   }
   try {
     // Assuming timestamp is in "YYYY-MM-DD HH:MM:SS" format
     const [datePart, timePart] = timestamp.split(' ');
     const [hours, minutes, seconds] = timePart.split(':');
-    return `${hours}:${minutes}:${seconds}`;
+    const formatted = `${hours}:${minutes}:${seconds}`;
+    console.log(`DEBUG (formatTimestamp): Formatted timestamp: '${formatted}'`); // NEW: Log formatted output
+    return formatted;
   } catch (e) {
     console.error("Error formatting timestamp:", timestamp, e);
     return '--';
@@ -459,12 +463,14 @@ async function fetchAndUpdateBondData() {
 
         bondInstruments.forEach(instrumentKey => {
             let baseId = instrumentKey.toLowerCase().replace(/_/g, '');
-            // Explicitly handle shadow bonds for robustness, though replace should cover it
+            // This special case is redundant but harmless, keeping it for now.
+            // It ensures 'gnma60shadow' is correctly mapped, though the general replace should handle it.
             if (instrumentKey === "GNMA_6_0_Shadow") {
                 baseId = "gnma60shadow";
-            } else if (instrumentKey === "GNMA_5_5_Shadow") {
+            } else if (instrumentKey === "GNMA_5_5_Shadow") { // Added for explicit mapping
                 baseId = "gnma55shadow";
             }
+
 
             const instrumentData = bondData[instrumentKey];
             const tableIdPrefix = `${baseId}Table`;
@@ -479,7 +485,9 @@ async function fetchAndUpdateBondData() {
                 updateTextElement(`${tableIdPrefix}High`, formatValue(instrumentData.high));
                 updateTextElement(`${tableIdPrefix}Low`, formatValue(instrumentData.low));
                 updateTextElement(`${tableIdPrefix}PrevClose`, formatValue(instrumentData.prevClose));
-                // This line ensures the individual instrument's timestamp is used
+
+                // NEW: Log the timestamp value *before* passing it to updateTextElement
+                console.log(`DEBUG (fetchAndUpdateBondData): Timestamp for ${instrumentKey} (${tableIdPrefix}Updated): '${instrumentData.last_updated}'`);
                 updateTextElement(`${tableIdPrefix}Updated`, formatTimestamp(instrumentData.last_updated));
             } else {
                 console.warn(`DEBUG (fetchAndUpdateBondData): Data missing or null for instrument: ${instrumentKey}. Setting to '--'.`); // Debug missing data
