@@ -264,7 +264,7 @@ async function fetchAndUpdateDailyRates() {
       updateTextElement(`${prefix}ChangeVs1Y`, changeVs1Y !== null ? `${changeVs1Y}%` : "--");
     }
 
-    // Top snapshot - Ensure consistent casing for data access (using lowercase 'y' as per your working script)
+    // Top snapshot - Ensure consistent casing for data access
     if (data?.fixed30Y) {
         const latest30Y = parseFloat(data.fixed30Y.latest);
         const dailyChange30Y = parseFloat(data.fixed30Y.daily_change);
@@ -276,39 +276,39 @@ async function fetchAndUpdateDailyRates() {
         updateTextElement("fixed30yYesterday", "--");
     }
 
-    if (data?.fixed15y) { // CORRECTED: Using lowercase 'y' for fixed15y
-        const latest15Y = parseFloat(data.fixed15y.latest);
-        const dailyChange15Y = parseFloat(data.fixed15y.daily_change);
+    if (data?.fixed15Y) { // CORRECTED: Using uppercase 'Y' for fixed15Y
+        const latest15Y = parseFloat(data.fixed15Y.latest);
+        const dailyChange15Y = parseFloat(data.fixed15Y.daily_change);
         updateChangeIndicator("fixed15yValue", "fixed15yValue", // Apply color to the value itself
                               latest15Y, dailyChange15Y, true); // isInverted = true for rates
-        updateTextElement("fixed15yYesterday", formatPercentage(data.fixed15y.yesterday)); // Update Yesterday value
+        updateTextElement("fixed15yYesterday", formatPercentage(data.fixed15Y.yesterday)); // Update Yesterday value
     } else {
         updateTextElement("fixed15yValue", "--");
         updateTextElement("fixed15yYesterday", "--");
     }
 
 
-    // Table rows - Ensure consistent casing for data access (using lowercase 'y' as per your working script)
+    // Table rows - Ensure consistent casing for data access
     updateRateRow("fixed30y", data.fixed30Y);
     updateRateRow("va30y", data.va30Y);
     updateRateRow("fha30y", data.fha30Y);
-    updateRateRow("jumbo30y", data.jumbo30y); // CORRECTED: Using lowercase 'y' for jumbo30y
-    updateRateRow("usda30y", data.usda30y);   // CORRECTED: Using lowercase 'y' for usda30y
-    updateRateRow("fixed15y", data.fixed15y); // CORRECTED: Using lowercase 'y' for fixed15y
+    updateRateRow("jumbo30y", data.jumbo30Y); // CORRECTED: Using uppercase 'Y' for jumbo30Y
+    updateRateRow("usda30y", data.usda30Y);   // CORRECTED: Using uppercase 'Y' for usda30Y
+    updateRateRow("fixed15y", data.fixed15Y); // CORRECTED: Using uppercase 'Y' for fixed15Y
 
-    // DEBUG SECTION: Display Jumbo and 15Y Fixed Current at the bottom (using lowercase 'y' as per your working script)
+    // DEBUG SECTION: Display Jumbo and 15Y Fixed Current at the bottom
     console.log("DEBUG (Daily Rates): Attempting to update DEBUG RATES section.");
-    if (data?.jumbo30y?.latest) { // CORRECTED: Using lowercase 'y' for jumbo30y
-      updateTextElement("debugJumbo30Y", formatPercentage(data.jumbo30y.latest));
-      console.log(`DEBUG (Daily Rates): Updated debugJumbo30Y with: ${data.jumbo30y.latest}`);
+    if (data?.jumbo30Y?.latest) { // CORRECTED: Using uppercase 'Y' for jumbo30Y
+      updateTextElement("debugJumbo30Y", formatPercentage(data.jumbo30Y.latest));
+      console.log(`DEBUG (Daily Rates): Updated debugJumbo30Y with: ${data.jumbo30Y.latest}`);
     } else {
-      console.warn("DEBUG (Daily Rates): data.jumbo30y.latest is not available for debug section.");
+      console.warn("DEBUG (Daily Rates): data.jumbo30Y.latest is not available for debug section.");
     }
-    if (data?.fixed15y?.latest) { // CORRECTED: Using lowercase 'y' for fixed15y
-      updateTextElement("debugFixed15Y", formatPercentage(data.fixed15y.latest));
-      console.log(`DEBUG (Daily Rates): Updated debugFixed15Y with: ${data.fixed15y.latest}`);
+    if (data?.fixed15Y?.latest) { // CORRECTED: Using uppercase 'Y' for fixed15Y
+      updateTextElement("debugFixed15Y", formatPercentage(data.fixed15Y.latest));
+      console.log(`DEBUG (Daily Rates): Updated debugFixed15Y with: ${data.fixed15Y.latest}`);
     } else {
-      console.warn("DEBUG (Daily Rates): data.fixed15y.latest is not available for debug section.");
+      console.warn("DEBUG (Daily Rates): data.fixed15Y.latest is not available for debug section.");
     }
 
   } catch (err) {
