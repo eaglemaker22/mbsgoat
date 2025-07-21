@@ -541,6 +541,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(fetchAndUpdateMarketData, 30000); // Every 30 seconds
   setInterval(fetchAndUpdateLiveStockData, 30000); // Every 30 seconds
   setInterval(fetchAndUpdateBondData, 30000); // Every 30 seconds
-  setInterval(fetchAndUpdateDailyRates, 60000); // Every 60 seconds
-  setInterval(fetchAndUpdateEconomicIndicators, 300000); // Every 5 minutes
+  setInterval(fetchAndUpdateDailyRates, 1800000); // Every 60 seconds
+  setInterval(fetchAndUpdateEconomicIndicators, 900000); // Every 5 minutes
 });
