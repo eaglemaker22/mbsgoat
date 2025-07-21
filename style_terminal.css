@@ -178,7 +178,7 @@ body {
 
 /* UPDATED: Highlight Animation (Background Flash) - Blue and Longer */
 @keyframes highlight-fade {
-    from { background-color: rgba(0, 0, 255, 0.8); } /* Blue flash */
+    from { background-color: rgba(51, 153, 255, 0.8); } /* Blue flash from #3399FF */
     to { background-color: transparent; } /* Fades to transparent */
 }
 
