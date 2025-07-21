@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MBSGOAT Terminal</title>
-  <link rel="stylesheet" href="style_terminal_final.css" /> <!-- UPDATED: Link to new CSS file -->
+  <link rel="stylesheet" href="style_terminal.css" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -39,7 +39,7 @@
         <span>UMBS 5.5</span>
         <span id="umbs55Value">--</span>
         <span id="umbs55Change">--</span>
-        <span>US10Y</span> <!-- MODIFIED: Changed to US10Y -->
+        <span>10Y</span>
         <span id="us10yValue">--</span>
         <span id="us10yChange">--</span>
         <span>30Y Fixed</span>
@@ -53,7 +53,7 @@
         <span>GNMA 5.5</span>
         <span id="gnma55Value">--</span>
         <span id="gnma55Change">--</span>
-        <span>US30Y</span> <!-- MODIFIED: Changed to US30Y -->
+        <span>30Y</span>
         <span id="us30yValue">--</span>
         <span id="us30yChange">--</span>
         <span>15Y Fixed</span>
@@ -74,7 +74,7 @@
 
     <section class="terminal-section">
       <h2>BONDS & TREASURIES</h2>
-      <!-- REMOVED: <p id="bondLastUpdated" style="font-size: 0.8em; margin-bottom: 10px; color: #00ff00;">Last Updated: --</p> -->
+      <!-- Removed: <p id="bondLastUpdated" style="font-size: 0.8em; margin-bottom: 10px; color: #00ff00;">Last Updated: --</p> -->
       <table class="terminal-table">
         <thead>
           <tr>
@@ -85,7 +85,7 @@
             <th>High</th>
             <th>Low</th>
             <th>Prior Close</th>
-            <!-- REMOVED: <th>Updated</th> -->
+            <th>Updated</th>
           </tr>
         </thead>
         <tbody>
@@ -97,7 +97,7 @@
             <td id="umbs55TableHigh">--</td>
             <td id="umbs55TableLow">--</td>
             <td id="umbs55TablePrevClose">--</td>
-            <!-- REMOVED: <td id="umbs55TableUpdated">--</td> -->
+            <td id="umbs55TableUpdated">--</td>
           </tr>
           <tr>
             <td>UMBS 6.0</td>
@@ -107,7 +107,7 @@
             <td id="umbs60TableHigh">--</td>
             <td id="umbs60TableLow">--</td>
             <td id="umbs60TablePrevClose">--</td>
-            <!-- REMOVED: <td id="umbs60TableUpdated">--</td> -->
+            <td id="umbs60TableUpdated">--</td>
           </tr>
           <tr>
             <td>GNMA 5.5</td>
@@ -117,7 +117,7 @@
             <td id="gnma55TableHigh">--</td>
             <td id="gnma55TableLow">--</td>
             <td id="gnma55TablePrevClose">--</td>
-            <!-- REMOVED: <td id="gnma55TableUpdated">--</td> -->
+            <td id="gnma55TableUpdated">--</td>
           </tr>
           <tr>
             <td>GNMA 6.0</td>
@@ -127,7 +127,7 @@
             <td id="gnma60TableHigh">--</td>
             <td id="gnma60TableLow">--</td>
             <td id="gnma60TablePrevClose">--</td>
-            <!-- REMOVED: <td id="gnma60TableUpdated">--</td> -->
+            <td id="gnma60TableUpdated">--</td>
           </tr>
           <tr>
             <td>UMBS 5.5 Shadow</td>
@@ -137,7 +137,7 @@
             <td id="umbs55shadowTableHigh">--</td>
             <td id="umbs55shadowTableLow">--</td>
             <td id="umbs55shadowTablePrevClose">--</td>
-            <!-- REMOVED: <td id="umbs55shadowTableUpdated">--</td> -->
+            <td id="umbs55shadowTableUpdated">--</td>
           </tr>
           <tr>
             <td>UMBS 6.0 Shadow</td>
@@ -147,7 +147,7 @@
             <td id="umbs60shadowTableHigh">--</td>
             <td id="umbs60shadowTableLow">--</td>
             <td id="umbs60shadowTablePrevClose">--</td>
-            <!-- REMOVED: <td id="umbs60shadowTableUpdated">--</td> -->
+            <td id="umbs60shadowTableUpdated">--</td>
           </tr>
           <tr>
             <td>GNMA 5.5 Shadow</td>
@@ -157,37 +157,37 @@
             <td id="gnma55shadowTableHigh">--</td>
             <td id="gnma55shadowTableLow">--</td>
             <td id="gnma55shadowTablePrevClose">--</td>
-            <!-- REMOVED: <td id="gnma55shadowTableUpdated">--</td> -->
+            <td id="gnma55shadowTableUpdated">--</td>
           </tr>
           <tr>
             <td>GNMA 6.0 Shadow</td>
-            <td id="gnma60shadowTableCurrent">--</td> <!-- MODIFIED: Changed ID to gnma60shadowTableCurrent -->
-            <td id="gnma60shadowTableChange">--</td> <!-- MODIFIED: Changed ID to gnma60shadowTableChange -->
-            <td id="gnma60shadowTableOpen">--</td> <!-- MODIFIED: Changed ID to gnma60shadowTableOpen -->
-            <td id="gnma60shadowTableHigh">--</td> <!-- MODIFIED: Changed ID to gnma60shadowTableHigh -->
-            <td id="gnma60shadowTableLow">--</td> <!-- MODIFIED: Changed ID to gnma60shadowTableLow -->
-            <td id="gnma60shadowTablePrevClose">--</td> <!-- MODIFIED: Changed ID to gnma60shadowTablePrevClose -->
-            <!-- REMOVED: <td id="gnma60TableUpdated">--</td> -->
+            <td id="gnma60shadowTableCurrent">--</td>
+            <td id="gnma60shadowTableChange">--</td>
+            <td id="gnma60shadowTableOpen">--</td>
+            <td id="gnma60shadowTableHigh">--</td>
+            <td id="gnma60shadowTableLow">--</td>
+            <td id="gnma60shadowTablePrevClose">--</td>
+            <td id="gnma60shadowTableUpdated">--</td>
           </tr>
           <tr>
-            <td>US10Y</td>
+            <td>US10Y Treasury</td>
             <td id="us10yTableCurrent">--</td>
             <td id="us10yTableChange">--</td>
             <td id="us10yTableOpen">--</td>
             <td id="us10yTableHigh">--</td>
             <td id="us10yTableLow">--</td>
             <td id="us10yTablePrevClose">--</td>
-            <!-- REMOVED: <td id="us10yTableUpdated">--</td> -->
+            <td id="us10yTableUpdated">--</td>
           </tr>
           <tr>
-            <td>US30Y</td>
+            <td>US30Y Treasury</td>
             <td id="us30yTableCurrent">--</td>
             <td id="us30yTableChange">--</td>
             <td id="us30yTableOpen">--</td>
             <td id="us30yTableHigh">--</td>
             <td id="us30yTableLow">--</td>
             <td id="us30yTablePrevClose">--</td>
-            <!-- REMOVED: <td id="us30yTableUpdated">--</td> -->
+            <td id="us30yTableUpdated">--</td>
           </tr>
         </tbody>
       </table>
@@ -201,7 +201,7 @@
             <th>Product</th>
             <th>Current</th>
             <th>Yesterday</th>
-            <th>Change</th>
+            <!-- Removed: <th>Change</th> -->
             <th>Last Month</th>
             <th>1 Year Ago</th>
           </tr>
@@ -211,7 +211,7 @@
             <td>30Y Fixed</td>
             <td><span id="fixed30yCurrent">--</span></td>
             <td><span id="fixed30yYesterdayTable">--</span></td>
-            <td><span id="fixed30yDailyChange">--</span></td>
+            <!-- Removed: <td><span id="fixed30yDailyChange">--</span></td> -->
             <td><span id="fixed30yLastMonth">--</span></td>
             <td><span id="fixed30yYearAgo">--</span></td>
           </tr>
@@ -219,7 +219,7 @@
             <td>30Y VA</td>
             <td><span id="va30yCurrent">--</span></td>
             <td><span id="va30yYesterday">--</span></td>
-            <td><span id="va30yDailyChange">--</span></td>
+            <!-- Removed: <td><span id="va30yDailyChange">--</span></td> -->
             <td><span id="va30yLastMonth">--</span></td>
             <td><span id="va30yYearAgo">--</span></td>
           </tr>
@@ -227,7 +227,7 @@
             <td>30Y FHA</td>
             <td><span id="fha30yCurrent">--</span></td>
             <td><span id="fha30yYesterday">--</span></td>
-            <td><span id="fha30yDailyChange">--</span></td>
+            <!-- Removed: <td><span id="fha30yDailyChange">--</span></td> -->
             <td><span id="fha30yLastMonth">--</span></td>
             <td><span id="fha30yYearAgo">--</span></td>
           </tr>
@@ -235,23 +235,23 @@
             <td>30Y Jumbo</td>
             <td><span id="jumbo30yCurrent">--</span></td>
             <td><span id="jumbo30yYesterday">--</span></td>
-            <td><span id="jumbo30yDailyChange">--</span></td>
+            <!-- Removed: <td><span id="jumbo30yDailyChange">--</span></td> -->
             <td><span id="jumbo30yLastMonth">--</span></td>
-            <td><span id="jumbo30yYearAgo">--</span></td>
+            <td><span id="jumbo30yYearAgo">--</td>
           </tr>
           <tr>
             <td>30Y USDA</td>
             <td><span id="usda30yCurrent">--</span></td>
             <td><span id="usda30yYesterday">--</span></td>
-            <td><span id="usda30yDailyChange">--</span></td>
-            <td><span id="usda30yLastMonth">--</td>
+            <!-- Removed: <td><span id="usda30yDailyChange">--</span></td> -->
+            <td><span id="usda30yLastMonth">--</span></td>
             <td><span id="usda30yYearAgo">--</span></td>
           </tr>
           <tr>
             <td>15Y Fixed</td>
             <td><span id="fixed15yCurrent">--</span></td>
             <td><span id="fixed15yYesterdayTable">--</span></td>
-            <td><span id="fixed15yDailyChange">--</span></td>
+            <!-- Removed: <td><span id="fixed15yDailyChange">--</span></td> -->
             <td><span id="fixed15yLastMonth">--</span></td>
             <td><span id="fixed15yYearAgo">--</span></td>
           </tr>
