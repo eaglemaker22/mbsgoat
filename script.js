@@ -1,679 +1,481 @@
 // --- Helper Functions ---
-
-/**
- * Updates the text content of an HTML element and applies a highlight animation.
- * @param {string} elementId - The ID of the HTML element to update.
- * @param {string|number} value - The new value to set as the text content.
- */
 function updateTextElement(elementId, value) {
   const element = document.getElementById(elementId);
   if (element) {
     // Check if the value is actually changing before applying highlight
     if (element.textContent !== String(value)) { // Convert value to string for comparison
-      // Remove the class first to reset the animation
-      element.classList.remove('highlight-on-update');
+      // Remove all highlight classes first to reset any animation
+      element.classList.remove('highlight-on-update', 'border-flash-on-update');
       // Trigger reflow to restart the animation
       void element.offsetWidth; // This forces a reflow
-      // Add the class back
+
+      // Apply the unified highlight animation
       element.classList.add('highlight-on-update');
     }
     element.textContent = value;
-    console.log(`DEBUG (updateTextElement): Updated element '${elementId}' with value: '${value}'`);
+    console.log(`DEBUG (updateTextElement): Updated element '${elementId}' with value: '${value}'`); // Re-enabled DEBUG log
   } else {
-    console.warn(`DEBUG (updateTextElement): Element with ID '${elementId}' NOT FOUND!`);
+    console.warn(`DEBUG (updateTextElement): Element with ID '${elementId}' NOT FOUND!`); // Re-enabled DEBUG warn
   }
 }
 
-/**
- * Updates a value element's text and applies color to it and its parent based on a change value.
- * This is typically used for the main display values in the snapshot sections (e.g., Yields, Rates).
- * @param {string} valueElementId - The ID of the HTML element displaying the main value.
- * @param {string|number} value - The main value to display.
- * @param {string|number} change - The change value used to determine the color.
- * @param {boolean} [isInverted=false] - If true, positive change is red, negative is green.
- */
-function updateValueAndColor(valueElementId, value, change, isInverted = false) {
+// MODIFIED: Added isInverted parameter for color logic, and highlight logic
+function updateChangeIndicator(valueElementId, changeElementId, value, change, isInverted = false) {
+  updateTextElement(valueElementId, formatValue(value)); // This will apply highlight to the value
+
+  const changeElement = document.getElementById(changeElementId);
+  // Note: .closest('.header-item') might not be relevant for all elements,
+  // but keeping it for compatibility with existing HTML structure.
+  const parentHeaderItem = changeElement ? changeElement.closest('.header-item') : null;
+
+  if (changeElement) {
+    let formattedChange = formatValue(change);
+    const numericChange = parseFloat(change);
+
+    // Remove existing color classes
+    changeElement.classList.remove('positive', 'negative');
+    if (parentHeaderItem) {
+      parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
+    }
+
+    // Determine color based on change and isInverted flag
+    if (!isNaN(numericChange) && numericChange !== 0) {
+      const isPositive = numericChange > 0;
+      const applyPositive = isInverted ? !isPositive : isPositive;
+      const applyNegative = isInverted ? isPositive : !isPositive;
+
+      if (applyPositive) {
+        changeElement.classList.add('positive');
+        if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
+        formattedChange = `+${formattedChange}`;
+      } else if (applyNegative) {
+        changeElement.classList.add('negative');
+        if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
+      }
+    } else {
+      // If change is 0 or NaN, apply neutral background if a parent header item exists
+      if (parentHeaderItem) {
+        parentHeaderItem.classList.add('neutral-bg');
+      }
+    }
+
+    changeElement.textContent = formattedChange;
+    console.log(`DEBUG (updateChangeIndicator): Updated change element '${changeElementId}' with value: '${formattedChange}'`);
+  } else {
+    console.warn(`DEBUG (updateChangeIndicator): Change element with ID '${changeElementId}' NOT FOUND!`);
+  }
+}
+
+// Function to update a value and apply color based on a separate change value
+// Used for: US10Y/US30Y Yields, 30Y/15Y Fixed Rates (top snapshot)
+function updateValueWithColorBasedOnChange(valueElementId, changeValue, isInverted = false) {
   const valueElement = document.getElementById(valueElementId);
   if (!valueElement) {
-    console.warn(`DEBUG (updateValueAndColor): Value element with ID '${valueElementId}' NOT FOUND!`);
+    console.warn(`DEBUG (updateValueWithColorBasedOnChange): Value element with ID '${valueElementId}' NOT FOUND!`);
     return;
   }
 
-  // First, update the text content of the value element
-  updateTextElement(valueElementId, formatValue(value));
-
-  const numericChange = parseFloat(change);
+  const numericChange = parseFloat(changeValue);
 
   // Determine positive/negative flags
   let isPositiveChange = false;
   let isNegativeChange = false;
   if (!isNaN(numericChange)) {
-    if (numericChange > 0) {
-      isPositiveChange = true;
-    } else if (numericChange < 0) {
-      isNegativeChange = true;
+    if (isInverted) {
+      isPositiveChange = numericChange < 0; // Inverted: negative change is "positive"
+      isNegativeChange = numericChange > 0; // Inverted: positive change is "negative"
+    } else {
+      isPositiveChange = numericChange > 0;
+      isNegativeChange = numericChange < 0;
     }
   }
 
-  // Remove existing color classes first
-  valueElement.classList.remove('positive', 'negative');
-  // Also remove background classes from parent header item if it exists
-  const parentHeaderItem = valueElement.closest('.header-item');
-  if (parentHeaderItem) {
-    parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
+  // Remove existing color classes (important for updates)
+  valueElement.classList.remove('positive', 'negative', 'neutral');
+
+  // Apply new color class
+  if (isPositiveChange) {
+    valueElement.classList.add('positive');
+  } else if (isNegativeChange) {
+    valueElement.classList.add('negative');
+  } else {
+    valueElement.classList.add('neutral'); // For zero or non-numeric changes
   }
 
-  // Apply new color classes based on flags and isInverted
-  if (isInverted) { // For Treasuries and Rates (higher value/change is 'negative' for bond prices/borrowers)
-    if (isPositiveChange) {
-      valueElement.classList.add('negative'); // Red for positive change
-      if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
-    } else if (isNegativeChange) {
-      valueElement.classList.add('positive'); // Green for negative change
-      if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
-    } else {
-      if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
-    }
-  } else { // For MBS/Equities (default: positive change is 'positive')
-    if (isPositiveChange) {
-      valueElement.classList.add('positive');
-      if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
-    } else if (isNegativeChange) {
-      valueElement.classList.add('negative');
-      if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
-    } else {
-      if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
-    }
-  }
-  console.log(`DEBUG (updateValueAndColor): Applied color to '${valueElementId}' based on change '${change}' (inverted: ${isInverted})`);
+  // The actual value text is updated by updateTextElement, which also handles highlight
+  // This function only handles the color based on change.
+  // The value itself should be updated by a separate call to updateTextElement
+  // before or after calling this function.
+  console.log(`DEBUG (updateValueWithColorBasedOnChange): Applied color to '${valueElementId}' based on change: '${changeValue}' (Positive: ${isPositiveChange}, Negative: ${isNegativeChange})`);
 }
 
-/**
- * Updates a dedicated 'change' element's text and color.
- * This is typically used for the "Today" column in snapshot or "Change" column in tables.
- * @param {string} changeElementId - The ID of the HTML element displaying the change.
- * @param {string|number} change - The change value.
- * @param {boolean} [isInverted=false] - If true, positive change is red, negative is green.
- */
-function updateChangeTextAndColor(changeElementId, change, isInverted = false) {
-  const changeElement = document.getElementById(changeElementId);
-  if (!changeElement) {
-    console.warn(`DEBUG (updateChangeTextAndColor): Change element with ID '${changeElementId}' NOT FOUND!`);
-    return;
-  }
 
-  let formattedChange = formatValue(change);
-  const numericChange = parseFloat(change);
-
-  // Determine positive/negative flags and add '+' prefix if positive
-  let isPositiveChange = false;
-  let isNegativeChange = false;
-  if (!isNaN(numericChange)) {
-    if (numericChange > 0) {
-      formattedChange = `+${formattedChange}`;
-      isPositiveChange = true;
-    } else if (numericChange < 0) {
-      isNegativeChange = true;
-    }
+function formatValue(value) {
+  if (value === null || value === undefined || value === '') {
+    return '--';
   }
-
-  // Apply highlight only if the change value itself is different
-  if (changeElement.textContent !== formattedChange) {
-    changeElement.classList.remove('highlight-on-update');
-    void changeElement.offsetWidth; // Trigger reflow
-    changeElement.classList.add('highlight-on-update');
+  const num = parseFloat(value);
+  if (isNaN(num)) {
+    return '--';
   }
-
-  // Remove existing color classes first
-  changeElement.classList.remove('positive', 'negative');
-  const parentHeaderItem = changeElement.closest('.header-item'); // Get parent for background
-  if (parentHeaderItem) {
-    parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
+  // Determine if it's a bond price (usually 2 decimal places) or yield (3 decimal places)
+  // This is a heuristic; a more robust solution might pass a type hint
+  if (value.toString().includes('.') && value.toString().split('.')[1].length > 2) {
+    return num.toFixed(3); // Likely a yield
   }
-
-  // Apply new color classes based on flags and isInverted
-  if (isInverted) { // For Treasuries and Rates (higher yield/rate is 'negative')
-    if (isPositiveChange) {
-      changeElement.classList.add('negative'); // Red for positive change
-      if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
-    } else if (isNegativeChange) {
-      changeElement.classList.add('positive'); // Green for negative change
-      if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
-    } else {
-      if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
-    }
-  } else { // For MBS/Equities (default: positive change is 'positive')
-    if (isPositiveChange) {
-      changeElement.classList.add('positive');
-      if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
-    } else if (isNegativeChange) {
-      changeElement.classList.add('negative');
-      if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
-    } else {
-      if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
-    }
-  }
-  changeElement.textContent = formattedChange;
-  console.log(`DEBUG (updateChangeTextAndColor): Updated change element '${changeElementId}' with value: '${formattedChange}'`);
+  return num.toFixed(2); // Likely a price or general number
 }
 
-/**
- * Formats a numeric value to 3 decimal places, or returns '--' if invalid.
- * @param {string|number} val - The value to format.
- * @returns {string} The formatted value.
- */
-function formatValue(val) {
-  const num = parseFloat(val);
-  if (!isNaN(num)) {
-    return num.toFixed(3);
-  }
-  return val !== null && val !== undefined && val !== "" ? val : "--";
-}
-
-/**
- * Formats a numeric value as a percentage to 3 decimal places, or returns '--'.
- * @param {string|number} val - The value to format.
- * @returns {string} The formatted percentage.
- */
-function formatPercentage(val) {
-  const formatted = formatValue(val);
-  return formatted !== '--' ? `${formatted}%` : '--';
-}
-
-/**
- * Formats a date string from YYYY-MM-DD to MM/DD/YYYY.
- * @param {string} dateString - The date string to format.
- * @returns {string} The formatted date or '--'.
- */
-function formatDate(dateString) {
-  console.log(`DEBUG (formatDate): Received dateString: '${dateString}' (type: ${typeof dateString})`);
-  if (!dateString || dateString === "N/A" || dateString === "--") {
-    return "--";
+function formatTimestamp(timestamp) {
+  if (!timestamp) {
+    return '--';
   }
   try {
-    const parts = String(dateString).split('-'); // Ensure it's a string before splitting
-    if (parts.length === 3) {
-      const formatted = `${parts[1]}/${parts[2]}/${parts[0]}`;
-      console.log(`DEBUG (formatDate): Formatted to: '${formatted}'`);
-      return formatted;
-    }
-    console.log(`DEBUG (formatDate): Returning original dateString (not YYYY-MM-DD format): '${dateString}'`);
-    return dateString;
+    // Assuming timestamp is in "YYYY-MM-DD HH:MM:SS" format
+    const [datePart, timePart] = timestamp.split(' ');
+    const [hours, minutes, seconds] = timePart.split(':');
+    return `${hours}:${minutes}:${seconds}`;
   } catch (e) {
-    console.error("Error formatting date:", e, dateString);
-    return "--";
+    console.error("Error formatting timestamp:", timestamp, e);
+    return '--';
   }
 }
 
 
-// --- Market Data ---
-/**
- * Fetches and updates market snapshot data (MBS, Treasuries).
- */
+// --- Fetch Functions ---
+
 async function fetchAndUpdateMarketData() {
-  console.log("Fetching market data...");
   try {
-    const res = await fetch("/.netlify/functions/getTopDashboardData");
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const data = await res.json();
-    console.log("DEBUG (fetchAndUpdateMarketData): Received data:", data);
-
-    // US10Y Treasury
-    if (data?.US10Y) {
-      const y = parseFloat(data.US10Y.yield);
-      const c = parseFloat(data.US10Y.change);
-      console.log(`DEBUG (MarketData): US10Y - Yield: ${y}, Change: ${c}`);
-      // Update value and apply color to the value element
-      updateValueAndColor('us10yValue', y, c, true); // true for inverted colors (yields)
-      // Update the separate change element for "Today" column
-      updateChangeTextAndColor('us10yChange', c, true); // true for inverted colors (yields)
-    } else {
-      console.warn("DEBUG (MarketData): US10Y data is missing from getTopDashboardData.");
-      updateTextElement('us10yValue', '--');
-      updateTextElement('us10yChange', '--');
-      // Ensure background color is reset if data is missing
-      const parentHeaderItem = document.getElementById('us10yValue')?.closest('.header-item');
-      if (parentHeaderItem) parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
+    const response = await fetch('/.netlify/functions/getMarketData');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    const data = await response.json();
+    console.log("DEBUG (fetchAndUpdateMarketData): Fetched market data:", data); // Log fetched data
 
-    // US30Y Treasury
-    if (data?.US30Y) {
-      const y = parseFloat(data.US30Y.yield);
-      const c = parseFloat(data.US30Y.change);
-      console.log(`DEBUG (MarketData): US30Y - Yield: ${y}, Change: ${c}`);
-      // Update value and apply color to the value element
-      updateValueAndColor('us30yValue', y, c, true); // true for inverted colors (yields)
-      // Update the separate change element for "Today" column
-      updateChangeTextAndColor('us30yChange', c, true); // true for inverted colors (yields)
-    } else {
-      console.warn("DEBUG (MarketData): US30Y data is missing from getTopDashboardData.");
-      updateTextElement('us30yValue', '--');
-      updateTextElement('us30yChange', '--');
-      // Ensure background color is reset if data is missing
-      const parentHeaderItem = document.getElementById('us30yValue')?.closest('.header-item');
-      if (parentHeaderItem) parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
-    }
+    // Update MBS
+    updateTextElement('umbs55Value', formatValue(data.UMBS_5_5.current));
+    updateChangeIndicator('umbs55Value', 'umbs55Change', data.UMBS_5_5.current, data.UMBS_5_5.change);
 
-    // UMBS 5.5
-    if (data?.UMBS_5_5) {
-      const v = parseFloat(data.UMBS_5_5.current);
-      const c = parseFloat(data.UMBS_5_5.change); // This 'change' comes from Firestore `Daily_Change`
-      updateTextElement('umbs55Value', isNaN(v) ? "--" : v.toFixed(3)); // Update value (no color on value for MBS)
-      updateChangeTextAndColor('umbs55Change', c); // Apply color to change (not inverted)
-    } else {
-      updateTextElement('umbs55Value', '--');
-      updateTextElement('umbs55Change', '--');
-      const parentHeaderItem = document.getElementById('umbs55Value')?.closest('.header-item');
-      if (parentHeaderItem) parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
-    }
+    updateTextElement('umbs60Value', formatValue(data.UMBS_6_0.current));
+    updateChangeIndicator('umbs60Value', 'umbs60Change', data.UMBS_6_0.current, data.UMBS_6_0.change);
 
-    // GNMA 5.5
-    if (data?.GNMA_5_5) {
-      const v = parseFloat(data.GNMA_5_5.current);
-      const c = parseFloat(data.GNMA_5_5.change); // This 'change' comes from Firestore `Daily_Change`
-      updateTextElement('gnma55Value', isNaN(v) ? "--" : v.toFixed(3)); // Update value (no color on value for MBS)
-      updateChangeTextAndColor('gnma55Change', c); // Apply color to change (not inverted)
-    } else {
-      updateTextElement('gnma55Value', '--');
-      updateTextElement('gnma55Change', '--');
-      const parentHeaderItem = document.getElementById('gnma55Value')?.closest('.header-item');
-      if (parentHeaderItem) parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
-    }
+    // Update Treasuries
+    updateTextElement('us10yValue', formatValue(data.US10Y.current));
+    updateChangeIndicator('us10yValue', 'us10yChange', data.US10Y.current, data.US10Y.change, true); // Inverted for yield
+
+    updateTextElement('us30yValue', formatValue(data.US30Y.current));
+    updateChangeIndicator('us30yValue', 'us30yChange', data.US30Y.current, data.US30Y.change, true); // Inverted for yield
+
+    // Update Rates
+    // For rates, "Today" refers to the daily change, "Yesterday" refers to the current rate.
+    // The HTML has "Today" and "Yesterday" columns.
+    // The "Today" column for rates should display the daily_change
+    // The "Yesterday" column for rates should display the current rate (which was yesterday's close for the change calculation)
+    updateTextElement('fixed30yToday', formatValue(data.fixed30Y.daily_change));
+    updateValueWithColorBasedOnChange('fixed30yToday', data.fixed30Y.daily_change, true); // Inverted for rates
+    updateTextElement('fixed30yYesterday', formatValue(data.fixed30Y.current));
+
+    updateTextElement('fixed15yToday', formatValue(data.fixed15Y.daily_change));
+    updateValueWithColorBasedOnChange('fixed15yToday', data.fixed15Y.daily_change, true); // Inverted for rates
+    updateTextElement('fixed15yYesterday', formatValue(data.fixed15Y.current));
+
+
+    // Update Equities
+    updateTextElement('sp500Value', formatValue(data.SP500.current));
+    updateChangeIndicator('sp500Value', 'sp500Change', data.SP500.current, data.SP500.change);
+
+    updateTextElement('dowValue', formatValue(data.DOW.current));
+    updateChangeIndicator('dowValue', 'dowChange', data.DOW.current, data.DOW.change);
+
+    updateTextElement('nasdaqValue', formatValue(data.NASDAQ.current));
+    updateChangeIndicator('nasdaqValue', 'nasdaqChange', data.NASDAQ.current, data.NASDAQ.change);
+
+    updateTextElement('marketLastUpdated', `Last Updated: ${formatTimestamp(data.last_updated)}`);
+
   } catch (err) {
     console.error("Market data fetch error:", err);
-    // Ensure all market snapshot elements are reset on error
-    updateTextElement('us10yValue', '--');
-    updateTextElement('us10yChange', '--');
-    updateTextElement('us30yValue', '--');
-    updateTextElement('us30yChange', '--');
-    updateTextElement('umbs55Value', '--');
-    updateTextElement('umbs55Change', '--');
-    updateTextElement('gnma55Value', '--');
-    updateTextElement('gnma55Change', '--');
-    // Reset background colors on error
-    document.querySelectorAll('.snapshot-grid .header-item').forEach(item => {
-      item.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
-    });
+    updateTextElement('marketLastUpdated', `Last Updated: Error`);
+    // Set all snapshot values to '--' on error
+    const snapshotElements = [
+      'umbs55Value', 'umbs55Change', 'umbs60Value', 'umbs60Change',
+      'us10yValue', 'us10yChange', 'us30yValue', 'us30yChange',
+      'fixed30yToday', 'fixed30yYesterday', 'fixed15yToday', 'fixed15yYesterday',
+      'sp500Value', 'sp500Change', 'dowValue', 'dowChange', 'nasdaqValue', 'nasdaqChange'
+    ];
+    snapshotElements.forEach(id => updateTextElement(id, '--'));
   }
 }
 
-// --- Daily Rates ---
-/**
- * Fetches and updates daily mortgage rates data.
- */
 async function fetchAndUpdateDailyRates() {
-  console.log("Fetching daily rates...");
   try {
-    const res = await fetch("/.netlify/functions/getDailyRatesData");
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const data = await res.json();
-    console.log("DEBUG (fetchAndUpdateDailyRates): Received data from Netlify function:", data);
-
-    /**
-     * Helper to update a single row in the Daily Mortgage Rates table.
-     * @param {string} prefix - The ID prefix for the rate elements (e.g., 'fixed30y').
-     * @param {object} rateData - The data object for the specific rate.
-     */
-    function updateRateRow(prefix, rateData) {
-      console.log(`DEBUG (updateRateRow): Processing ${prefix}. rateData:`, rateData);
-
-      if (!rateData) {
-        console.warn(`DEBUG (updateRateRow): rateData is null/undefined for ${prefix}. Setting all to '--'.`);
-        updateTextElement(`${prefix}Current`, '--');
-        const currentElement = document.getElementById(`${prefix}Current`);
-        if (currentElement) {
-            currentElement.classList.remove('positive', 'negative'); // Remove text colors
-            const parentRow = currentElement.closest('tr');
-            if (parentRow) parentRow.classList.remove('positive-bg', 'negative-bg', 'neutral-bg'); // Remove row background colors
-        }
-        updateTextElement(`${prefix}YesterdayTable`, '--'); // For table-specific Yesterday ID
-        updateTextElement(`${prefix}LastMonth`, '--');
-        updateTextElement(`${prefix}YearAgo`, '--');
-        updateTextElement(`${prefix}ChangeVs1M`, '--');
-        updateTextElement(`${prefix}ChangeVs1Y`, '--');
-        return;
-      }
-
-      // Update the 'Current' rate value and apply color based on daily_change (inverted)
-      updateValueAndColor(`${prefix}Current`, rateData.latest, rateData.daily_change, true);
-
-      // Update Yesterday, Last Month, Year Ago values
-      // Check for specific table IDs for 'Yesterday' if different from general pattern
-      if (prefix === "fixed30y") {
-        updateTextElement("fixed30yYesterdayTable", formatPercentage(rateData.yesterday));
-      } else if (prefix === "fixed15y") {
-        updateTextElement("fixed15yYesterdayTable", formatPercentage(rateData.yesterday));
-      } else { // Generic for other rates like VA, FHA, Jumbo, USDA
-        updateTextElement(`${prefix}Yesterday`, formatPercentage(rateData.yesterday));
-      }
-
-      updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
-      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago));
-
-      // Calculate and update ChangeVs1M and ChangeVs1Y
-      let changeVs1M = null;
-      let changeVs1Y = null;
-      const latest = parseFloat(rateData.latest);
-      const lastMonth = parseFloat(rateData.last_month);
-      const yearAgo = parseFloat(rateData.year_ago);
-
-      if (!isNaN(latest) && !isNaN(lastMonth)) {
-        changeVs1M = (latest - lastMonth).toFixed(3);
-      }
-      if (!isNaN(latest) && !isNaN(yearAgo)) {
-        changeVs1Y = (latest - yearAgo).toFixed(3);
-      }
-
-      updateTextElement(`${prefix}ChangeVs1M`, changeVs1M !== null ? `${changeVs1M}%` : "--");
-      updateTextElement(`${prefix}ChangeVs1Y`, changeVs1Y !== null ? `${changeVs1Y}%` : "--");
+    const response = await fetch('/.netlify/functions/getDailyRatesData');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    const data = await response.json();
+    console.log("DEBUG (fetchAndUpdateDailyRates): Fetched daily rates data:", data); // Log fetched data
 
-    // --- Top snapshot (Rates section) ---
-    // Fixed30Y
-    if (data?.fixed30Y) {
-        const latest30Y = parseFloat(data.fixed30Y.latest);
-        const dailyChange30Y = parseFloat(data.fixed30Y.daily_change);
-        const yesterday30Y = parseFloat(data.fixed30Y.yesterday);
+    updateTextElement('dailyRatesLastUpdated', `Last Updated: ${formatTimestamp(data.last_updated)}`);
 
-        // Update value and apply color to the value element (fixed30yValue)
-        updateValueAndColor("fixed30yValue", latest30Y, dailyChange30Y, true); // true for inverted colors
-        // Update the separate change element for "Today" column
-        updateChangeTextAndColor("fixed30yToday", dailyChange30Y, true); // true for inverted colors
-        updateTextElement("fixed30yYesterday", formatPercentage(yesterday30Y));
-    } else {
-        console.warn("DEBUG (DailyRates): fixed30Y data is missing.");
-        updateTextElement("fixed30yValue", "--");
-        updateTextElement("fixed30yToday", "--");
-        updateTextElement("fixed30yYesterday", "--");
-        const parentHeaderItem = document.getElementById('fixed30yValue')?.closest('.header-item');
-        if (parentHeaderItem) parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
-    }
+    // Update 30Y Fixed
+    updateTextElement('fixed30yCurrent', formatValue(data.fixed30Y.current));
+    updateTextElement('fixed30yChange', formatValue(data.fixed30Y.daily_change));
+    updateTextElement('fixed30yOpen', formatValue(data.fixed30Y.open));
+    updateTextElement('fixed30yHigh', formatValue(data.fixed30Y.high));
+    updateTextElement('fixed30yLow', formatValue(data.fixed30Y.low));
+    updateTextElement('fixed30yPrevClose', formatValue(data.fixed30Y.prevClose));
+    updateTextElement('fixed30yUpdated', formatTimestamp(data.fixed30Y.last_updated));
 
-    // Fixed15Y
-    if (data?.fixed15Y) {
-        const latest15Y = parseFloat(data.fixed15Y.latest);
-        const dailyChange15Y = parseFloat(data.fixed15Y.daily_change);
-        const yesterday15Y = parseFloat(data.fixed15Y.yesterday);
+    // Update 15Y Fixed
+    updateTextElement('fixed15yCurrent', formatValue(data.fixed15Y.current));
+    updateTextElement('fixed15yChange', formatValue(data.fixed15Y.daily_change));
+    updateTextElement('fixed15yOpen', formatValue(data.fixed15Y.open));
+    updateTextElement('fixed15yHigh', formatValue(data.fixed15Y.high));
+    updateTextElement('fixed15yLow', formatValue(data.fixed15Y.low));
+    updateTextElement('fixed15yPrevClose', formatValue(data.fixed15Y.prevClose));
+    updateTextElement('fixed15yUpdated', formatTimestamp(data.fixed15Y.last_updated));
 
-        // Update value and apply color to the value element (fixed15yValue)
-        updateValueAndColor("fixed15yValue", latest15Y, dailyChange15Y, true); // true for inverted colors
-        // Update the separate change element for "Today" column
-        updateChangeTextAndColor("fixed15yToday", dailyChange15Y, true); // true for inverted colors
-        updateTextElement("fixed15yYesterday", formatPercentage(yesterday15Y));
-    } else {
-        console.warn("DEBUG (DailyRates): fixed15Y data is missing.");
-        updateTextElement("fixed15yValue", "--");
-        updateTextElement("fixed15yToday", "--");
-        updateTextElement("fixed15yYesterday", "--");
-        const parentHeaderItem = document.getElementById('fixed15yValue')?.closest('.header-item');
-        if (parentHeaderItem) parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
-    }
+    // Update FHA 30Y Fixed
+    updateTextElement('fha30yCurrent', formatValue(data.fha30Y.current));
+    updateTextElement('fha30yChange', formatValue(data.fha30Y.daily_change));
+    updateTextElement('fha30yOpen', formatValue(data.fha30Y.open));
+    updateTextElement('fha30yHigh', formatValue(data.fha30Y.high));
+    updateTextElement('fha30yLow', formatValue(data.fha30Y.low));
+    updateTextElement('fha30yPrevClose', formatValue(data.fha30Y.prevClose));
+    updateTextElement('fha30yUpdated', formatTimestamp(data.fha30Y.last_updated));
 
-    // --- Table rows (Daily Mortgage Rates section) ---
-    // Ensure correct casing for data keys as per Netlify function output
-    updateRateRow("fixed30y", data.fixed30Y);
-    updateRateRow("va30y", data.va30Y);
-    updateRateRow("fha30y", data.fha30Y);
-    updateRateRow("jumbo30y", data.jumbo30Y); // Confirmed casing with backend expectation
-    updateRateRow("usda30y", data.usda30Y);   // Confirmed casing with backend expectation
-    updateRateRow("fixed15y", data.fixed15Y); // Confirmed casing with backend expectation
+    // Update VA 30Y Fixed
+    updateTextElement('va30yCurrent', formatValue(data.va30Y.current));
+    updateTextElement('va30yChange', formatValue(data.va30Y.daily_change));
+    updateTextElement('va30yOpen', formatValue(data.va30Y.open));
+    updateTextElement('va30yHigh', formatValue(data.va30Y.high));
+    updateTextElement('va30yLow', formatValue(data.va30Y.low));
+    updateTextElement('va30yPrevClose', formatValue(data.va30Y.prevClose));
+    updateTextElement('va30yUpdated', formatTimestamp(data.va30Y.last_updated));
+
+    // Update Jumbo 30Y Fixed
+    updateTextElement('jumbo30yCurrent', formatValue(data.jumbo30Y.current));
+    updateTextElement('jumbo30yChange', formatValue(data.jumbo30Y.daily_change));
+    updateTextElement('jumbo30yOpen', formatValue(data.jumbo30Y.open));
+    updateTextElement('jumbo30yHigh', formatValue(data.jumbo30Y.high));
+    updateTextElement('jumbo30yLow', formatValue(data.jumbo30Y.low));
+    updateTextElement('jumbo30yPrevClose', formatValue(data.jumbo30Y.prevClose));
+    updateTextElement('jumbo30yUpdated', formatTimestamp(data.jumbo30Y.last_updated));
+
+    // Update Jumbo 15Y Fixed
+    updateTextElement('jumbo15yCurrent', formatValue(data.jumbo15Y.current));
+    updateTextElement('jumbo15yChange', formatValue(data.jumbo15Y.daily_change));
+    updateTextElement('jumbo15yOpen', formatValue(data.jumbo15Y.open));
+    updateTextElement('jumbo15yHigh', formatValue(data.jumbo15Y.high));
+    updateTextElement('jumbo15yLow', formatValue(data.jumbo15Y.low));
+    updateTextElement('jumbo15yPrevClose', formatValue(data.jumbo15Y.prevClose));
+    updateTextElement('jumbo15yUpdated', formatTimestamp(data.jumbo15Y.last_updated));
+
 
   } catch (err) {
-    console.error("Daily Rates fetch error:", err);
-    // Reset all daily rates elements on error
-    const ratePrefixes = ["fixed30y", "va30y", "fha30y", "jumbo30y", "usda30y", "fixed15y"];
-    ratePrefixes.forEach(prefix => {
-        updateTextElement(`${prefix}Current`, '--');
-        updateTextElement(`${prefix}YesterdayTable`, '--');
-        updateTextElement(`${prefix}LastMonth`, '--');
-        updateTextElement(`${prefix}YearAgo`, '--');
-        updateTextElement(`${prefix}ChangeVs1M`, '--');
-        updateTextElement(`${prefix}ChangeVs1Y`, '--');
-        // Also reset colors and background if elements exist
-        const currentElement = document.getElementById(`${prefix}Current`);
-        if (currentElement) {
-            currentElement.classList.remove('positive', 'negative');
-            const parentRow = currentElement.closest('tr');
-            if (parentRow) parentRow.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
-        }
-    });
-    // Reset top snapshot rates as well
-    updateTextElement("fixed30yValue", "--");
-    updateTextElement("fixed30yToday", "--");
-    updateTextElement("fixed30yYesterday", "--");
-    updateTextElement("fixed15yValue", "--");
-    updateTextElement("fixed15yToday", "--");
-    updateTextElement("fixed15yYesterday", "--");
-    document.querySelectorAll('.snapshot-grid .header-item').forEach(item => {
-      item.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
-    });
+    console.error("Daily rates data fetch error:", err);
+    updateTextElement('dailyRatesLastUpdated', `Last Updated: Error`);
+    // Set all daily rates values to '--' on error
+    const rateElements = [
+      'fixed30yCurrent', 'fixed30yChange', 'fixed30yOpen', 'fixed30yHigh', 'fixed30yLow', 'fixed30yPrevClose', 'fixed30yUpdated',
+      'fixed15yCurrent', 'fixed15yChange', 'fixed15yOpen', 'fixed15yHigh', 'fixed15yLow', 'fixed15yPrevClose', 'fixed15yUpdated',
+      'fha30yCurrent', 'fha30yChange', 'fha30yOpen', 'fha30yHigh', 'fha30yLow', 'fha30yPrevClose', 'fha30yUpdated',
+      'va30yCurrent', 'va30yChange', 'va30yOpen', 'va30yHigh', 'va30yLow', 'va30yPrevClose', 'va30yUpdated',
+      'jumbo30yCurrent', 'jumbo30yChange', 'jumbo30yOpen', 'jumbo30yHigh', 'jumbo30yLow', 'jumbo30yPrevClose', 'jumbo30yUpdated',
+      'jumbo15yCurrent', 'jumbo15yChange', 'jumbo15yOpen', 'jumbo15yHigh', 'jumbo15yLow', 'jumbo15yPrevClose', 'jumbo15yUpdated'
+    ];
+    rateElements.forEach(id => updateTextElement(id, '--'));
   }
 }
 
-// --- Live Stocks ---
-/**
- * Fetches and updates live stock data for SPY, QQQ, DIA.
- */
 async function fetchAndUpdateLiveStockData() {
-  console.log("Fetching live stock data...");
   try {
-    const res = await fetch("/.netlify/functions/getLiveStockData");
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const data = await res.json();
-    console.log("DEBUG (fetchAndUpdateLiveStockData): Received data:", data);
-
-    /**
-     * Updates a stock's change percentage and applies color.
-     * @param {string} id - The ID of the HTML element to update (e.g., 'spyChange').
-     * @param {object} item - The stock data object.
-     */
-    function updateStockChange(id, item) {
-      const el = document.getElementById(id);
-      if (!el) {
-        console.warn(`DEBUG (updateStockChange): Element with ID '${id}' NOT FOUND!`);
-        return;
-      }
-
-      let formattedChange = '--';
-      el.classList.remove('positive', 'negative', 'highlight-on-update'); // Remove highlight too
-
-      if (item && item.percentChange !== undefined) {
-        const n = parseFloat(item.percentChange);
-        if (!isNaN(n)) {
-          const t = n.toFixed(2);
-          if (n > 0) {
-            formattedChange = `+${t}%`;
-            el.classList.add('positive');
-          } else if (n < 0) {
-            formattedChange = `${t}%`;
-            el.classList.add('negative');
-          } else {
-            formattedChange = '0.00%';
-          }
-        }
-      }
-
-      if (el.textContent !== formattedChange) { // Apply highlight only if content changes
-        el.classList.remove('highlight-on-update');
-        void el.offsetWidth; // Trigger reflow
-        el.classList.add('highlight-on-update');
-      }
-      el.textContent = formattedChange;
-      console.log(`DEBUG (updateStockChange): Updated '${id}' with '${formattedChange}'`);
+    const response = await fetch('/.netlify/functions/getLiveStockData');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    const data = await response.json();
+    console.log("DEBUG (fetchAndUpdateLiveStockData): Fetched live stock data:", data); // Log fetched data
 
-    updateStockChange('spyChange', data.SPY);
-    updateStockChange('qqqChange', data.QQQ);
-    updateStockChange('diaChange', data.DIA);
+    updateTextElement('liveStockLastUpdated', `Last Updated: ${formatTimestamp(data.last_updated)}`);
+
+    // Update DOW
+    updateTextElement('dowCurrent', formatValue(data.DOW.current));
+    updateTextElement('dowChange', formatValue(data.DOW.daily_change));
+    updateTextElement('dowOpen', formatValue(data.DOW.open));
+    updateTextElement('dowHigh', formatValue(data.DOW.high));
+    updateTextElement('dowLow', formatValue(data.DOW.low));
+    updateTextElement('dowPrevClose', formatValue(data.DOW.prevClose));
+    updateTextElement('dowUpdated', formatTimestamp(data.DOW.last_updated));
+
+    // Update S&P 500
+    updateTextElement('sp500Current', formatValue(data.SP500.current));
+    updateTextElement('sp500Change', formatValue(data.SP500.daily_change));
+    updateTextElement('sp500Open', formatValue(data.SP500.open));
+    updateTextElement('sp500High', formatValue(data.SP500.high));
+    updateTextElement('sp500Low', formatValue(data.SP500.low));
+    updateTextElement('sp500PrevClose', formatValue(data.SP500.prevClose));
+    updateTextElement('sp500Updated', formatTimestamp(data.SP500.last_updated));
+
+    // Update NASDAQ
+    updateTextElement('nasdaqCurrent', formatValue(data.NASDAQ.current));
+    updateTextElement('nasdaqChange', formatValue(data.NASDAQ.daily_change));
+    updateTextElement('nasdaqOpen', formatValue(data.NASDAQ.open));
+    updateTextElement('nasdaqHigh', formatValue(data.NASDAQ.high));
+    updateTextElement('nasdaqLow', formatValue(data.NASDAQ.low));
+    updateTextElement('nasdaqPrevClose', formatValue(data.NASDAQ.prevClose));
+    updateTextElement('nasdaqUpdated', formatTimestamp(data.NASDAQ.last_updated));
+
   } catch (err) {
-    console.error("Stock data fetch error:", err);
-    // Reset all stock elements on error
-    updateTextElement('spyChange', '--');
-    updateTextElement('qqqChange', '--');
-    updateTextElement('diaChange', '--');
-    document.getElementById('spyChange')?.classList.remove('positive', 'negative');
-    document.getElementById('qqqChange')?.classList.remove('positive', 'negative');
-    document.getElementById('diaChange')?.classList.remove('positive', 'negative');
+    console.error("Live stock data fetch error:", err);
+    updateTextElement('liveStockLastUpdated', `Last Updated: Error`);
+    // Set all stock values to '--' on error
+    const stockElements = [
+      'dowCurrent', 'dowChange', 'dowOpen', 'dowHigh', 'dowLow', 'dowPrevClose', 'dowUpdated',
+      'sp500Current', 'sp500Change', 'sp500Open', 'sp500High', 'sp500Low', 'sp500PrevClose', 'sp500Updated',
+      'nasdaqCurrent', 'nasdaqChange', 'nasdaqOpen', 'nasdaqHigh', 'nasdaqLow', 'nasdaqPrevClose', 'nasdaqUpdated'
+    ];
+    stockElements.forEach(id => updateTextElement(id, '--'));
   }
 }
 
-// --- Economic Indicators ---
-/**
- * Fetches and updates economic indicators data.
- */
 async function fetchAndUpdateEconomicIndicators() {
-  console.log("Fetching economic indicators...");
   try {
-    const res = await fetch("/.netlify/functions/getEconomicIndicatorsData");
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const data = await res.json();
-    console.log("DEBUG (fetchAndUpdateEconomicIndicators): Received data:", data);
+    const response = await fetch('/.netlify/functions/getEconomicIndicators');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log("DEBUG (fetchAndUpdateEconomicIndicators): Fetched economic indicators data:", data); // Log fetched data
 
-    const rows = {
-      HOUST: "houst",
-      PERMIT1: "permit1",
-      HOUST1F: "houst1f",
-      RSXFS: "rsxfs",
-      UMCSENT: "umcsent",
-      CSUSHPINSA: "csushpinsa",
-      PERMIT: "permit",
-      T10YIE: "t10yie",
-      T10Y2Y: "t10y2y"
-    };
+    updateTextElement('economicIndicatorsLastUpdated', `Last Updated: ${formatTimestamp(data.last_updated)}`);
 
-    Object.entries(rows).forEach(([seriesId, prefix]) => {
-      const d = data[seriesId];
-      if (!d) {
-        console.warn(`DEBUG (EconomicIndicators): Data for ${seriesId} is missing.`);
-        updateTextElement(`${prefix}Latest`, '--');
-        updateTextElement(`${prefix}Date`, '--');
-        updateTextElement(`${prefix}LastMonth`, '--');
-        updateTextElement(`${prefix}YearAgo`, '--');
-        updateTextElement(`${prefix}NextRelease`, '--');
-        updateTextElement(`${prefix}CoveragePeriod`, '--');
-        return;
-      }
-      updateTextElement(`${prefix}Latest`, formatValue(d.latest));
-      updateTextElement(`${prefix}Date`, formatDate(d.latest_date));
-      updateTextElement(`${prefix}LastMonth`, formatValue(d.last_month));
-      updateTextElement(`${prefix}YearAgo`, formatValue(d.year_ago));
-      updateTextElement(`${prefix}NextRelease`, formatValue(d.next_release));
-      updateTextElement(`${prefix}CoveragePeriod`, formatValue(d.coverage_period));
-    });
+    // Update CPI
+    updateTextElement('cpiLatest', formatValue(data.CPI.latest));
+    updateTextElement('cpiDate', data.CPI.date || '--');
+    updateTextElement('cpiLastMonth', formatValue(data.CPI.lastMonth));
+    updateTextElement('cpiYearAgo', formatValue(data.CPI.yearAgo));
+    updateTextElement('cpiNextRelease', data.CPI.nextRelease || '--');
+    updateTextElement('cpiCoveragePeriod', data.CPI.coveragePeriod || '--');
+
+    // Update PPI
+    updateTextElement('ppiLatest', formatValue(data.PPI.latest));
+    updateTextElement('ppiDate', data.PPI.date || '--');
+    updateTextElement('ppiLastMonth', formatValue(data.PPI.lastMonth));
+    updateTextElement('ppiYearAgo', formatValue(data.PPI.yearAgo));
+    updateTextElement('ppiNextRelease', data.PPI.nextRelease || '--');
+    updateTextElement('ppiCoveragePeriod', data.PPI.coveragePeriod || '--');
+
+    // Update Fed Funds Rate
+    updateTextElement('fedFundsLatest', formatValue(data.FedFundsRate.latest));
+    updateTextElement('fedFundsDate', data.FedFundsRate.date || '--');
+    updateTextElement('fedFundsLastMonth', formatValue(data.FedFundsRate.lastMonth));
+    updateTextElement('fedFundsYearAgo', formatValue(data.FedFundsRate.yearAgo));
+    updateTextElement('fedFundsNextRelease', data.FedFundsRate.nextRelease || '--');
+    updateTextElement('fedFundsCoveragePeriod', data.FedFundsRate.coveragePeriod || '--');
+
+    // Update Unemployment Rate
+    updateTextElement('unemploymentLatest', formatValue(data.UnemploymentRate.latest));
+    updateTextElement('unemploymentDate', data.UnemploymentRate.date || '--');
+    updateTextElement('unemploymentLastMonth', formatValue(data.UnemploymentRate.lastMonth));
+    updateTextElement('unemploymentYearAgo', formatValue(data.UnemploymentRate.yearAgo));
+    updateTextElement('unemploymentNextRelease', data.UnemploymentRate.nextRelease || '--');
+    updateTextElement('unemploymentCoveragePeriod', data.UnemploymentRate.coveragePeriod || '--');
+
+    // Update Housing Starts
+    updateTextElement('housingStartsLatest', formatValue(data.HousingStarts.latest));
+    updateTextElement('housingStartsDate', data.HousingStarts.date || '--');
+    updateTextElement('housingStartsLastMonth', formatValue(data.HousingStarts.lastMonth));
+    updateTextElement('housingStartsYearAgo', formatValue(data.HousingStarts.yearAgo));
+    updateTextElement('housingStartsNextRelease', data.HousingStarts.nextRelease || '--');
+    updateTextElement('housingStartsCoveragePeriod', data.HousingStarts.coveragePeriod || '--');
+
+    // Update Building Permits
+    updateTextElement('permitLatest', formatValue(data.BuildingPermits.latest));
+    updateTextElement('permitDate', data.BuildingPermits.date || '--');
+    updateTextElement('permitLastMonth', formatValue(data.BuildingPermits.lastMonth));
+    updateTextElement('permitYearAgo', formatValue(data.BuildingPermits.yearAgo));
+    updateTextElement('permitNextRelease', data.BuildingPermits.nextRelease || '--');
+    updateTextElement('permitCoveragePeriod', data.BuildingPermits.coveragePeriod || '--');
+
+    // Update 10Y Breakeven Inflation Rate
+    updateTextElement('t10yieLatest', formatValue(data['10YIE'].latest));
+    updateTextElement('t10yieDate', data['10YIE'].date || '--');
+    updateTextElement('t10yieLastMonth', formatValue(data['10YIE'].lastMonth));
+    updateTextElement('t10yieYearAgo', formatValue(data['10YIE'].yearAgo));
+    updateTextElement('t10yieNextRelease', data['10YIE'].nextRelease || '--');
+    updateTextElement('t10yieCoveragePeriod', data['10YIE'].coveragePeriod || '--');
+
+    // Update 10Y Minus 2Y Treasury
+    updateTextElement('t10y2yLatest', formatValue(data['10YMinus2Y'].latest));
+    updateTextElement('t10y2yDate', data['10YMinus2Y'].date || '--');
+    updateTextElement('t10y2yLastMonth', formatValue(data['10YMinus2Y'].lastMonth));
+    updateTextElement('t10y2yYearAgo', formatValue(data['10YMinus2Y'].yearAgo));
+    updateTextElement('t10y2yNextRelease', data['10YMinus2Y'].nextRelease || '--');
+    updateTextElement('t10y2yCoveragePeriod', data['10YMinus2Y'].coveragePeriod || '--');
+
   } catch (err) {
-    console.error("Economic Indicators fetch error:", err);
-    // Reset all economic indicators elements on error
-    const rows = {
-      HOUST: "houst", PERMIT1: "permit1", HOUST1F: "houst1f", RSXFS: "rsxfs",
-      UMCSENT: "umcsent", CSUSHPINSA: "csushpinsa", PERMIT: "permit",
-      T10YIE: "t10yie", T10Y2Y: "t10y2y"
-    };
-    Object.values(rows).forEach(prefix => {
-      updateTextElement(`${prefix}Latest`, '--');
-      updateTextElement(`${prefix}Date`, '--');
-      updateTextElement(`${prefix}LastMonth`, '--');
-      updateTextElement(`${prefix}YearAgo`, '--');
-      updateTextElement(`${prefix}NextRelease`, '--');
-      updateTextElement(`${prefix}CoveragePeriod`, '--');
-    });
+    console.error("Economic indicators fetch error:", err);
+    updateTextElement('economicIndicatorsLastUpdated', `Last Updated: Error`);
+    // Set all economic indicators to '--' on error
+    const ecoElements = [
+      'cpiLatest', 'cpiDate', 'cpiLastMonth', 'cpiYearAgo', 'cpiNextRelease', 'cpiCoveragePeriod',
+      'ppiLatest', 'ppiDate', 'ppiLastMonth', 'ppiYearAgo', 'ppiNextRelease', 'ppiCoveragePeriod',
+      'fedFundsLatest', 'fedFundsDate', 'fedFundsLastMonth', 'fedFundsYearAgo', 'fedFundsNextRelease', 'fedFundsCoveragePeriod',
+      'unemploymentLatest', 'unemploymentDate', 'unemploymentLastMonth', 'unemploymentYearAgo', 'unemploymentNextRelease', 'unemploymentCoveragePeriod',
+      'housingStartsLatest', 'housingStartsDate', 'housingStartsLastMonth', 'housingStartsYearAgo', 'housingStartsNextRelease', 'housingStartsCoveragePeriod',
+      'permitLatest', 'permitDate', 'permitLastMonth', 'permitYearAgo', 'permitNextRelease', 'permitCoveragePeriod',
+      't10yieLatest', 't10yieDate', 't10yieLastMonth', 't10yieYearAgo', 't10yieNextRelease', 't10yieCoveragePeriod',
+      't10y2yLatest', 't10y2yDate', 't10y2yLastMonth', 't10y2yYearAgo', 't10y2yNextRelease', 't10y2yCoveragePeriod'
+    ];
+    ecoElements.forEach(id => updateTextElement(id, '--'));
   }
 }
 
-// --- Bonds & Treasuries ---
-/**
- * Fetches and updates bond and treasury data for the detailed table.
- */
 async function fetchAndUpdateBondData() {
-    console.log("Fetching bond and treasury data for table...");
     try {
-        const res = await fetch("/.netlify/functions/getAllBondData");
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        console.log("DEBUG (fetchAndUpdateBondData): Received data:", data);
-
-        // Format the global last_updated timestamp
-        let formattedGlobalTimestamp = '--';
-        if (data.last_updated) {
-            const timestamp = new Date(data.last_updated.replace(' ', 'T'));
-            formattedGlobalTimestamp = timestamp.toLocaleString('en-US', {
-                month: '2-digit',
-                day: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true,
-                timeZone: 'America/Los_Angeles', // Ensure this matches your data's timezone or desired display timezone
-                timeZoneName: 'short'
-            });
-            updateTextElement('bondLastUpdated', `Last Updated: ${formattedGlobalTimestamp}`);
-        } else {
-            updateTextElement('bondLastUpdated', `Last Updated: --`);
+        // Fetch bond data from Netlify function
+        const response = await fetch('/.netlify/functions/getAllBondData');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        const bondData = await response.json();
+        console.log("DEBUG (fetchAndUpdateBondData): FULL BOND DATA RECEIVED:", bondData); // NEW: Log entire received data
+
+        // Update last updated timestamp
+        updateTextElement('bondLastUpdated', `Last Updated: ${formatTimestamp(bondData.last_updated)}`);
 
         const bondInstruments = [
             "US10Y", "US30Y",
             "UMBS_5_5", "UMBS_6_0", "GNMA_5_5", "GNMA_6_0",
-            "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", // Ensure GNMA_6_0_Shadow is handled correctly
+            "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", "GNMA_5_5_Shadow", "GNMA_6_0_Shadow"
         ];
 
         bondInstruments.forEach(instrumentKey => {
-            const instrumentData = data[instrumentKey];
             let baseId = instrumentKey.toLowerCase().replace(/_/g, '');
-
-            // Special handling for GNMA_6_0_Shadow to match HTML ID 'gnma60shadowTable'
+            // This special case is redundant but harmless, keeping it for now.
             if (instrumentKey === "GNMA_6_0_Shadow") {
                 baseId = "gnma60shadow";
             }
 
+            const instrumentData = bondData[instrumentKey];
             const tableIdPrefix = `${baseId}Table`;
-            console.log(`DEBUG (BondData): Processing instrument: ${instrumentKey}, Base ID: ${baseId}, Table ID Prefix: ${tableIdPrefix}`);
 
-
-            // Determine if the instrument is a Treasury (US10Y or US30Y) for inverted color logic
-            const isInvertedColors = (instrumentKey === "US10Y" || instrumentKey === "US30Y");
+            console.log(`DEBUG (fetchAndUpdateBondData): Processing instrument: '${instrumentKey}', baseId: '${baseId}'`); // NEW: Log instrument being processed
+            console.log(`DEBUG (fetchAndUpdateBondData): instrumentData for '${instrumentKey}':`, instrumentData); // NEW: Log specific instrument data
 
             if (instrumentData) {
-                console.log(`--- Data for ${instrumentKey} (Table) ---`);
-                console.log(`Current: ${instrumentData.current}, Change: ${instrumentData.change}, Open: ${instrumentData.open}`);
-                console.log(`High: ${instrumentData.high}, Low: ${instrumentData.low}, PrevClose: ${instrumentData.prevClose}`);
-                console.log(`Last Updated (Instrument): ${instrumentData.last_updated}`);
-                console.log(`--- End ${instrumentKey} Data ---`);
-
                 updateTextElement(`${tableIdPrefix}Current`, formatValue(instrumentData.current));
-                // Apply color to the change element
-                updateChangeTextAndColor(`${tableIdPrefix}Change`, instrumentData.change, isInvertedColors);
-
+                updateTextElement(`${tableIdPrefix}Change`, formatValue(instrumentData.change));
                 updateTextElement(`${tableIdPrefix}Open`, formatValue(instrumentData.open));
                 updateTextElement(`${tableIdPrefix}High`, formatValue(instrumentData.high));
                 updateTextElement(`${tableIdPrefix}Low`, formatValue(instrumentData.low));
                 updateTextElement(`${tableIdPrefix}PrevClose`, formatValue(instrumentData.prevClose));
-
-                // CRITICAL FIX: Use individual instrument's last_updated if available, otherwise global
-                let instrumentUpdatedTime = formattedGlobalTimestamp;
-                if (instrumentData.last_updated) {
-                    try {
-                        const individualTimestamp = new Date(instrumentData.last_updated.replace(' ', 'T'));
-                        instrumentUpdatedTime = individualTimestamp.toLocaleString('en-US', {
-                            month: '2-digit',
-                            day: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                            hour12: true,
-                            timeZone: 'America/Los_Angeles',
-                            timeZoneName: 'short'
-                        });
-                    } catch (e) {
-                        console.error(`Error formatting individual timestamp for ${instrumentKey}:`, e);
-                        instrumentUpdatedTime = formattedGlobalTimestamp; // Fallback on error
-                    }
-                }
-                updateTextElement(`${tableIdPrefix}Updated`, instrumentUpdatedTime);
-
+                updateTextElement(`${tableIdPrefix}Updated`, formatTimestamp(instrumentData.last_updated));
             } else {
-                console.warn(`Data for ${instrumentKey} not found in bond data. Setting defaults.`);
+                console.warn(`DEBUG (fetchAndUpdateBondData): Data missing or null for instrument: ${instrumentKey}. Setting to '--'.`); // Debug missing data
+                // If data is missing, ensure all fields show '--'
                 updateTextElement(`${tableIdPrefix}Current`, '--');
                 updateTextElement(`${tableIdPrefix}Change`, '--');
                 updateTextElement(`${tableIdPrefix}Open`, '--');
@@ -687,11 +489,11 @@ async function fetchAndUpdateBondData() {
     } catch (err) {
         console.error("Bond data fetch error:", err);
         updateTextElement('bondLastUpdated', `Last Updated: Error`);
-        // Ensure all rows are reset to default on error
+        // On error, set all bond data to '--'
         const bondInstruments = [
             "US10Y", "US30Y",
             "UMBS_5_5", "UMBS_6_0", "GNMA_5_5", "GNMA_6_0",
-            "UMBS_5_5_Shadow", "UMBS_6_0_Shadow"
+            "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", "GNMA_5_5_Shadow", "GNMA_6_0_Shadow"
         ];
         bondInstruments.forEach(instrumentKey => {
             let baseId = instrumentKey.toLowerCase().replace(/_/g, '');
@@ -718,12 +520,13 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchAndUpdateEconomicIndicators();
   fetchAndUpdateBondData();
 
-  // Increased refresh rate for market and bond data as requested implicitly by urgency
+  // Increased refresh rate for market and bond data
   setInterval(fetchAndUpdateMarketData, 30000); // Every 30 seconds
   setInterval(fetchAndUpdateLiveStockData, 30000); // Every 30 seconds
   setInterval(fetchAndUpdateBondData, 30000); // Every 30 seconds
   // Economic indicators and daily rates typically don't change as frequently,
   // so keeping them at default or slightly longer intervals might be efficient.
+  // For now, let's keep daily rates at 60s, economic indicators at 5 minutes (300000ms)
   setInterval(fetchAndUpdateDailyRates, 60000); // Every 60 seconds
   setInterval(fetchAndUpdateEconomicIndicators, 300000); // Every 5 minutes
 });
