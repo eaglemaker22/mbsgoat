@@ -192,10 +192,12 @@ async function fetchAndUpdateDailyRates() {
     const res = await fetch("/.netlify/functions/getDailyRatesData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
-    console.log("DEBUG (fetchAndUpdateDailyRates): Received data from Netlify function:", data);
+    // ENHANCED LOGGING: Log the entire data object received from the Netlify function
+    console.log("DEBUG (fetchAndUpdateDailyRates): Received data from Netlify function:", JSON.stringify(data, null, 2));
 
     function updateRateRow(prefix, rateData) {
-      console.log(`DEBUG (updateRateRow): Processing ${prefix}. rateData:`, rateData);
+      // ENHANCED LOGGING: Log the specific rateData being processed for each row
+      console.log(`DEBUG (updateRateRow): Processing ${prefix}. rateData:`, JSON.stringify(rateData, null, 2));
 
       if (!rateData) {
         console.warn(`DEBUG (updateRateRow): rateData is null/undefined for ${prefix}. Setting all to '--'.`);
@@ -226,8 +228,11 @@ async function fetchAndUpdateDailyRates() {
       updateChangeIndicator(`${prefix}Current`, `${prefix}Current`,
                             rateData.latest, rateData.daily_change, true); // true for inverted colors
 
+      console.log(`DEBUG (updateRateRow): Attempting to update ${prefix}Current with value: ${rateData.latest}`);
+
+
+      // Use rateData.yesterday for all, as the Netlify function should provide it consistently
       // The HTML IDs are already set up to match this pattern or specific table IDs
-      // Ensure rateData.yesterday is correctly provided by the Netlify function
       if (prefix === "fixed30y") {
         updateTextElement("fixed30yYesterdayTable", formatPercentage(rateData.yesterday));
         console.log(`DEBUG (updateRateRow): Attempting to update fixed30yYesterdayTable with value: ${rateData.yesterday}`);
