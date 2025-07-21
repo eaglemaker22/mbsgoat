@@ -42,19 +42,33 @@ function updateValueWithColorBasedOnChange(valueElementId, changeValue, isInvert
 
   // Remove existing color classes first
   valueElement.classList.remove('positive', 'negative');
+  // Also remove background classes from parent header item if it exists
+  const parentHeaderItem = valueElement.closest('.header-item');
+  if (parentHeaderItem) {
+    parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
+  }
+
 
   // Apply new color classes based on flags and isInverted
   if (isInverted) { // For Treasuries and Rates (higher value/change is 'negative')
     if (isPositiveChange) {
       valueElement.classList.add('negative'); // Red for positive change
+      if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
     } else if (isNegativeChange) {
       valueElement.classList.add('positive'); // Green for negative change
+      if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
+    } else {
+      if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
     }
   } else { // For MBS/Equities (default: positive change is 'positive')
     if (isPositiveChange) {
       valueElement.classList.add('positive');
+      if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
     } else if (isNegativeChange) {
       valueElement.classList.add('negative');
+      if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
+    } else {
+      if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
     }
   }
   // The actual text content of valueElementId is updated by updateTextElement in the main fetch functions.
@@ -96,19 +110,32 @@ function updateChangeTextAndColor(changeElementId, change, isInverted = false) {
 
   // Remove existing color classes first
   changeElement.classList.remove('positive', 'negative');
+  const parentHeaderItem = changeElement.closest('.header-item'); // Get parent for background
+  if (parentHeaderItem) {
+    parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
+  }
+
 
   // Apply new color classes based on flags and isInverted
   if (isInverted) { // For Treasuries and Rates (higher yield/rate is 'negative')
     if (isPositiveChange) {
       changeElement.classList.add('negative'); // Red for positive change
+      if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
     } else if (isNegativeChange) {
       changeElement.classList.add('positive'); // Green for negative change
+      if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
+    } else {
+      if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
     }
   } else { // For MBS/Equities (default: positive change is 'positive')
     if (isPositiveChange) {
       changeElement.classList.add('positive');
+      if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
     } else if (isNegativeChange) {
       changeElement.classList.add('negative');
+      if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
+    } else {
+      if (parentHeaderItem) parentHeaderItem.classList.add('neutral-bg');
     }
   }
   changeElement.textContent = formattedChange;
@@ -292,13 +319,13 @@ async function fetchAndUpdateDailyRates() {
         updateTextElement("fixed15yYesterday", "--");
     }
 
-    // Table rows
+    // Table rows - MODIFIED: Corrected casing for jumbo30y and usda30y
     updateRateRow("fixed30y", data.fixed30Y);
     updateRateRow("va30y", data.va30Y);
     updateRateRow("fha30y", data.fha30Y);
-    updateRateRow("jumbo30y", data.jumbo30Y); // Ensure case matches Netlify function output
-    updateRateRow("usda30y", data.usda30y);
-    updateRateRow("fixed15y", data.fixed15Y); // Ensure case matches Netlify function output
+    updateRateRow("jumbo30y", data.jumbo30Y); // Corrected to data.jumbo30Y
+    updateRateRow("usda30y", data.usda30Y); // Corrected to data.usda30Y
+    updateRateRow("fixed15y", data.fixed15Y); // Corrected to data.fixed15Y
 
   } catch (err) {
     console.error("Daily Rates fetch error:", err);
@@ -401,15 +428,21 @@ async function fetchAndUpdateBondData() {
 
 
         const bondInstruments = [
-            "US10Y", // New: Add US10Y
-            "US30Y", // New: Add US30Y
+            "US10Y",
+            "US30Y",
             "UMBS_5_5", "UMBS_6_0", "GNMA_5_5", "GNMA_6_0",
             "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", "GNMA_5_5_Shadow", "GNMA_6_0_Shadow"
         ];
 
         bondInstruments.forEach(instrumentKey => {
             const instrumentData = data[instrumentKey];
-            const baseId = instrumentKey.toLowerCase().replace(/_/g, '');
+            let baseId = instrumentKey.toLowerCase().replace(/_/g, ''); // Default conversion
+            
+            // Special handling for GNMA_6_0_Shadow to match HTML ID
+            if (instrumentKey === "GNMA_6_0_Shadow") {
+                baseId = "gnma60shadow"; // Ensure it matches the HTML ID exactly
+            }
+
             const tableIdPrefix = `${baseId}Table`;
 
             // Determine if the instrument is a Treasury (US10Y or US30Y) for inverted color logic
@@ -452,7 +485,10 @@ async function fetchAndUpdateBondData() {
             "UMBS_5_5_Shadow", "UMBS_6_0_Shadow", "GNMA_5_5_Shadow", "GNMA_6_0_Shadow"
         ];
         bondInstruments.forEach(instrumentKey => {
-            const baseId = instrumentKey.toLowerCase().replace(/_/g, '');
+            let baseId = instrumentKey.toLowerCase().replace(/_/g, '');
+            if (instrumentKey === "GNMA_6_0_Shadow") {
+                baseId = "gnma60shadow";
+            }
             const tableIdPrefix = `${baseId}Table`;
             updateTextElement(`${tableIdPrefix}Current`, '--');
             updateTextElement(`${tableIdPrefix}Change`, '--');
