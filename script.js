@@ -200,7 +200,12 @@ async function fetchAndUpdateDailyRates() {
       if (!rateData) {
         console.warn(`DEBUG (updateRateRow): rateData is null/undefined for ${prefix}. Setting all to '--'.`);
         updateTextElement(`${prefix}Current`, '--');
-        // Corrected IDs for Yesterday in table
+        // Ensure to remove colors if data is missing
+        const currentElement = document.getElementById(`${prefix}Current`);
+        if (currentElement) {
+            currentElement.classList.remove('positive', 'negative');
+        }
+        // These IDs are for the table, ensure they exist in HTML
         if (prefix === "fixed30y") {
             updateTextElement("fixed30yYesterdayTable", '--');
         } else if (prefix === "fixed15y") {
@@ -215,18 +220,14 @@ async function fetchAndUpdateDailyRates() {
         return;
       }
 
-      // MODIFIED: Use updateChangeIndicator for the 'Current' rate to apply colors
-      // The change is rateData.daily_change, and it's an inverted color scheme for rates.
-      // Pass rateData.latest as both value and change to updateChangeIndicator
-      // so the color is based on the daily_change associated with the latest value.
+      // MODIFIED: Use updateChangeIndicator to color the 'Current' rate directly
+      // valueElementId and changeElementId are the same here because we're coloring the 'Current' value
+      // isInverted = true because higher rates are 'negative' (red), lower are 'positive' (green)
       updateChangeIndicator(`${prefix}Current`, `${prefix}Current`,
-                            rateData.latest, rateData.daily_change, true); // isInverted = true for rates
+                            rateData.latest, rateData.daily_change, true); // true for inverted colors
 
-      console.log(`DEBUG (updateRateRow): Attempting to update ${prefix}Current with value: ${rateData.latest}`);
-
-
-      // Use rateData.yesterday for all, as the Netlify function should provide it consistently
       // The HTML IDs are already set up to match this pattern or specific table IDs
+      // Ensure rateData.yesterday is correctly provided by the Netlify function
       if (prefix === "fixed30y") {
         updateTextElement("fixed30yYesterdayTable", formatPercentage(rateData.yesterday));
         console.log(`DEBUG (updateRateRow): Attempting to update fixed30yYesterdayTable with value: ${rateData.yesterday}`);
@@ -239,7 +240,6 @@ async function fetchAndUpdateDailyRates() {
       }
 
       updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
-      // FIXED: Missing closing parenthesis here
       updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago));
 
       let changeVs1M = null;
@@ -257,34 +257,50 @@ async function fetchAndUpdateDailyRates() {
 
       updateTextElement(`${prefix}ChangeVs1M`, changeVs1M !== null ? `${changeVs1M}%` : "--");
       updateTextElement(`${prefix}ChangeVs1Y`, changeVs1Y !== null ? `${changeVs1Y}%` : "--");
-
-      // Removed: Logic for 'DailyChange' element as it does not exist in HTML for this table
     }
 
-    // Top snapshot - Ensure correct casing based on getDailyRatesData_updated
-    updateTextElement("fixed30yValue", formatPercentage(data?.fixed30Y?.latest));
-    updateTextElement("fixed30yYesterday", formatPercentage(data?.fixed30Y?.yesterday));
-    updateTextElement("fixed15yValue", formatPercentage(data?.fixed15y?.latest)); // Corrected to lowercase 'y'
-    updateTextElement("fixed15yYesterday", formatPercentage(data?.fixed15y?.yesterday)); // Corrected to lowercase 'y'
+    // Top snapshot - Ensure consistent casing for data access (using lowercase 'y' as per your working script)
+    if (data?.fixed30Y) {
+        const latest30Y = parseFloat(data.fixed30Y.latest);
+        const dailyChange30Y = parseFloat(data.fixed30Y.daily_change);
+        updateChangeIndicator("fixed30yValue", "fixed30yValue", // Apply color to the value itself
+                              latest30Y, dailyChange30Y, true); // isInverted = true for rates
+        updateTextElement("fixed30yYesterday", formatPercentage(data.fixed30Y.yesterday)); // Update Yesterday value
+    } else {
+        updateTextElement("fixed30yValue", "--");
+        updateTextElement("fixed30yYesterday", "--");
+    }
 
-    // Table rows - Ensure correct casing based on getDailyRatesData_updated
+    if (data?.fixed15y) { // CORRECTED: Using lowercase 'y' for fixed15y
+        const latest15Y = parseFloat(data.fixed15y.latest);
+        const dailyChange15Y = parseFloat(data.fixed15y.daily_change);
+        updateChangeIndicator("fixed15yValue", "fixed15yValue", // Apply color to the value itself
+                              latest15Y, dailyChange15Y, true); // isInverted = true for rates
+        updateTextElement("fixed15yYesterday", formatPercentage(data.fixed15y.yesterday)); // Update Yesterday value
+    } else {
+        updateTextElement("fixed15yValue", "--");
+        updateTextElement("fixed15yYesterday", "--");
+    }
+
+
+    // Table rows - Ensure consistent casing for data access (using lowercase 'y' as per your working script)
     updateRateRow("fixed30y", data.fixed30Y);
     updateRateRow("va30y", data.va30Y);
     updateRateRow("fha30y", data.fha30Y);
-    updateRateRow("jumbo30y", data.jumbo30y); // Corrected to lowercase 'y'
-    updateRateRow("usda30y", data.usda30y);   // Corrected to lowercase 'y'
-    updateRateRow("fixed15y", data.fixed15y); // Corrected to lowercase 'y'
+    updateRateRow("jumbo30y", data.jumbo30y); // CORRECTED: Using lowercase 'y' for jumbo30y
+    updateRateRow("usda30y", data.usda30y);   // CORRECTED: Using lowercase 'y' for usda30y
+    updateRateRow("fixed15y", data.fixed15y); // CORRECTED: Using lowercase 'y' for fixed15y
 
-    // NEW DEBUG SECTION: Display Jumbo and 15Y Fixed Current at the bottom
+    // DEBUG SECTION: Display Jumbo and 15Y Fixed Current at the bottom (using lowercase 'y' as per your working script)
     console.log("DEBUG (Daily Rates): Attempting to update DEBUG RATES section.");
-    if (data?.jumbo30y?.latest) { // Corrected to lowercase 'y'
-      updateTextElement("debugJumbo30Y", formatPercentage(data.jumbo30y.latest)); // Corrected to lowercase 'y'
+    if (data?.jumbo30y?.latest) { // CORRECTED: Using lowercase 'y' for jumbo30y
+      updateTextElement("debugJumbo30Y", formatPercentage(data.jumbo30y.latest));
       console.log(`DEBUG (Daily Rates): Updated debugJumbo30Y with: ${data.jumbo30y.latest}`);
     } else {
       console.warn("DEBUG (Daily Rates): data.jumbo30y.latest is not available for debug section.");
     }
-    if (data?.fixed15y?.latest) { // Corrected to lowercase 'y'
-      updateTextElement("debugFixed15Y", formatPercentage(data.fixed15y.latest)); // Corrected to lowercase 'y'
+    if (data?.fixed15y?.latest) { // CORRECTED: Using lowercase 'y' for fixed15y
+      updateTextElement("debugFixed15Y", formatPercentage(data.fixed15y.latest));
       console.log(`DEBUG (Daily Rates): Updated debugFixed15Y with: ${data.fixed15y.latest}`);
     } else {
       console.warn("DEBUG (Daily Rates): data.fixed15y.latest is not available for debug section.");
@@ -309,7 +325,7 @@ async function fetchAndUpdateLiveStockData() {
 
       let formattedChange = '--';
       // Ensure highlight-on-update is removed here too for proper re-triggering
-      el.classList.remove('positive', 'negative', 'highlight-on-update'); 
+      el.classList.remove('positive', 'negative', 'highlight-on-update');
 
       if (item && item.percentChange !== undefined) {
         const n = parseFloat(item.percentChange);
