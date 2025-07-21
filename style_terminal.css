@@ -6,11 +6,12 @@
 }
 
 body {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'Roboto Mono', monospace; /* Changed font to Roboto Mono */
   background-color: #000;
   color: #f0f0f0;
-  line-height: 1.4;
+  line-height: 1.6; /* Slightly increased line height for better readability */
   padding: 20px;
+  font-size: 1.1em; /* Increased base font size for overall clarity */
 }
 
 /* Top Header Branding */
@@ -26,11 +27,11 @@ body {
 .terminal-header .title {
   color: #00FF66;
   font-weight: lighter;
-  font-size: 1.6em; /* 16% bigger */
+  font-size: 1.8em; /* Made title slightly larger */
 }
 
 .terminal-header .status {
-  font-size: 1.1em; /* 20% bigger */
+  font-size: 1.2em; /* Made status text slightly larger */
   display: flex;
   align-items: center;
   gap: 5px;
@@ -58,7 +59,7 @@ body {
 .terminal-section h2 {
   color: #FFD700;
   font-weight: 700;
-  font-size: 1em;
+  font-size: 1.1em; /* Slightly increased section title font size */
   margin-bottom: 8px;
   text-transform: uppercase;
   border-bottom: 1px solid #FF0000;
@@ -90,6 +91,7 @@ body {
 /* Make specific header labels white */
 .snapshot-grid-header span {
   color: #FFD700;
+  font-size: 1.05em; /* Ensuring header labels are clear */
 }
 .snapshot-grid-header span:nth-child(2), /* Price */
 .snapshot-grid-header span:nth-child(3), /* Today after Price */
@@ -99,7 +101,7 @@ body {
 .snapshot-grid-header span:nth-child(9), /* Mortgage Yesterday */
 .snapshot-grid-header span:nth-child(11) /* Equities Today */ {
   color: #fff;
-  font-size: 0.9em;
+  font-size: 1em; /* Slightly increased sub-labels */
 }
 
 /* Tables */
@@ -107,12 +109,12 @@ body {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
-  font-size: 0.85em;
+  font-size: 0.9em; /* Increased table base font size */
 }
 
 .terminal-table th,
 .terminal-table td {
-  padding: 4px 6px;
+  padding: 5px 8px; /* Slightly increased padding for better spacing */
   text-align: left;
   border-bottom: 1px solid #333;
 }
@@ -174,24 +176,16 @@ body {
   font-weight: normal;
 }
 
-/* UPDATED: Highlight Animation (Background Flash) - White and Longer */
+/* UPDATED: Highlight Animation (Background Flash) - Blue and Longer */
 @keyframes highlight-fade {
-    from { background-color: rgba(255, 255, 255, 0.8); } /* White flash */
+    from { background-color: rgba(0, 0, 255, 0.8); } /* Blue flash */
     to { background-color: transparent; } /* Fades to transparent */
 }
 
 .highlight-on-update {
-    animation: highlight-fade 2.25s ease-out; /* Apply the animation for 2.25 seconds (1.5s * 1.5) */
+    animation: highlight-fade 3.375s ease-out; /* Apply the animation for 3.375 seconds (2.25s * 1.5) */
 }
 
-/* UPDATED: Border Flash Animation - White and Longer */
-@keyframes border-flash {
-    0% { border: 1px solid rgba(255, 255, 255, 0.8); } /* White border */
-    100% { border: 1px solid transparent; } /* Fades to transparent */
-}
-
-.border-flash-on-update {
-    animation: border-flash 1.5s ease-out; /* Apply the animation for 1.5 seconds (1s * 1.5) */
-    /* Ensure a default border is present so the animation has something to transition from */
-    border: 1px solid transparent;
-}
+/* Removed: Border Flash Animation as requested for consistency */
+/* @keyframes border-flash { ... } */
+/* .border-flash-on-update { ... } */
