@@ -174,24 +174,24 @@ body {
   font-weight: normal;
 }
 
-/* UPDATED: Highlight Animation (Background Flash) - Made more noticeable */
+/* UPDATED: Highlight Animation (Background Flash) - White and Longer */
 @keyframes highlight-fade {
-    from { background-color: rgba(255, 255, 0, 0.8); } /* Brighter Yellowish flash */
+    from { background-color: rgba(255, 255, 255, 0.8); } /* White flash */
     to { background-color: transparent; } /* Fades to transparent */
 }
 
 .highlight-on-update {
-    animation: highlight-fade 1.5s ease-out; /* Apply the animation for 1.5 seconds */
+    animation: highlight-fade 2.25s ease-out; /* Apply the animation for 2.25 seconds (1.5s * 1.5) */
 }
 
-/* NEW: Border Flash Animation */
+/* UPDATED: Border Flash Animation - White and Longer */
 @keyframes border-flash {
-    0% { border: 1px solid rgba(0, 255, 255, 0.8); } /* Cyan border */
+    0% { border: 1px solid rgba(255, 255, 255, 0.8); } /* White border */
     100% { border: 1px solid transparent; } /* Fades to transparent */
 }
 
 .border-flash-on-update {
-    animation: border-flash 1s ease-out; /* Apply the animation for 1 second */
+    animation: border-flash 1.5s ease-out; /* Apply the animation for 1.5 seconds (1s * 1.5) */
     /* Ensure a default border is present so the animation has something to transition from */
     border: 1px solid transparent;
 }
