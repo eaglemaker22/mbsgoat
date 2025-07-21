@@ -25,34 +25,42 @@ function updateTextElement(elementId, value) {
 
 // MODIFIED: Added isInverted parameter for color logic
 function updateChangeIndicator(valueElementId, changeElementId, value, change, isInverted = false) {
-  // Update the main value element and trigger its highlight animation
+  // Always update the main value element first, and trigger its highlight animation
   updateTextElement(valueElementId, formatValue(value));
 
   const changeElement = document.getElementById(changeElementId);
-  // The parentHeaderItem is used for background color changes, which are currently not applied
-  // to individual rate cells in the Daily Mortgage Rates table, but are used in the top snapshot.
   const parentHeaderItem = changeElement ? changeElement.closest('.header-item') : null;
 
   if (changeElement) {
-    let formattedChange = formatValue(change);
+    let formattedChange;
+    const numericChange = parseFloat(change);
+
+    // Determine positive/negative flags
+    let isPositiveChange = false;
+    let isNegativeChange = false;
+
+    if (!isNaN(numericChange)) {
+        if (numericChange > 0) {
+            isPositiveChange = true;
+        } else if (numericChange < 0) {
+            isNegativeChange = true;
+        }
+    }
+
+    // Format the change string based on whether it's the value itself or a separate change indicator
+    if (valueElementId === changeElementId) { // If we are coloring the value element directly (e.g., 'Current' rate)
+        formattedChange = formatValue(value); // Use the original value, no '+' prefix for positive
+    } else { // If it's a separate change indicator (e.g., 'Today' column)
+        formattedChange = formatValue(change);
+        if (isPositiveChange) {
+            formattedChange = `+${formattedChange}`; // Add '+' for positive changes
+        }
+    }
+
     // Remove existing color classes to ensure correct application
     changeElement.classList.remove('positive', 'negative');
     if (parentHeaderItem) {
       parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg'); // Reset all background classes
-    }
-
-    let isPositiveChange = false;
-    let isNegativeChange = false;
-
-    const numericChange = parseFloat(change);
-    if (!isNaN(numericChange)) {
-      if (numericChange > 0) {
-        formattedChange = `+${numericChange}`;
-        isPositiveChange = true;
-      } else if (numericChange < 0) {
-        formattedChange = `${numericChange}`;
-        isNegativeChange = true;
-      }
     }
 
     // Apply colors based on isInverted flag
