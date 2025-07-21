@@ -446,9 +446,9 @@ async function fetchAndUpdateBondData() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const bondData = await response.json();
-        console.log("DEBUG (fetchAndUpdateBondData): FULL BOND DATA RECEIVED:", bondData); // NEW: Log entire received data
+        console.log("DEBUG (fetchAndUpdateBondData): FULL BOND DATA RECEIVED:", bondData); // Log entire received data
 
-        // Update last updated timestamp
+        // Update last updated timestamp for the section header
         updateTextElement('bondLastUpdated', `Last Updated: ${formatTimestamp(bondData.last_updated)}`);
 
         const bondInstruments = [
@@ -459,20 +459,18 @@ async function fetchAndUpdateBondData() {
 
         bondInstruments.forEach(instrumentKey => {
             let baseId = instrumentKey.toLowerCase().replace(/_/g, '');
-            // This special case is redundant but harmless, keeping it for now.
-            // It ensures 'gnma60shadow' is correctly mapped, though the general replace should handle it.
+            // Explicitly handle shadow bonds for robustness, though replace should cover it
             if (instrumentKey === "GNMA_6_0_Shadow") {
                 baseId = "gnma60shadow";
-            } else if (instrumentKey === "GNMA_5_5_Shadow") { // Added for explicit mapping
+            } else if (instrumentKey === "GNMA_5_5_Shadow") {
                 baseId = "gnma55shadow";
             }
-
 
             const instrumentData = bondData[instrumentKey];
             const tableIdPrefix = `${baseId}Table`;
 
-            console.log(`DEBUG (fetchAndUpdateBondData): Processing instrument: '${instrumentKey}', baseId: '${baseId}'`); // NEW: Log instrument being processed
-            console.log(`DEBUG (fetchAndUpdateBondData): instrumentData for '${instrumentKey}':`, instrumentData); // NEW: Log specific instrument data
+            console.log(`DEBUG (fetchAndUpdateBondData): Processing instrument: '${instrumentKey}', baseId: '${baseId}'`); // Log instrument being processed
+            console.log(`DEBUG (fetchAndUpdateBondData): instrumentData for '${instrumentKey}':`, instrumentData); // Log specific instrument data
 
             if (instrumentData) {
                 updateTextElement(`${tableIdPrefix}Current`, formatValue(instrumentData.current));
@@ -481,6 +479,7 @@ async function fetchAndUpdateBondData() {
                 updateTextElement(`${tableIdPrefix}High`, formatValue(instrumentData.high));
                 updateTextElement(`${tableIdPrefix}Low`, formatValue(instrumentData.low));
                 updateTextElement(`${tableIdPrefix}PrevClose`, formatValue(instrumentData.prevClose));
+                // This line ensures the individual instrument's timestamp is used
                 updateTextElement(`${tableIdPrefix}Updated`, formatTimestamp(instrumentData.last_updated));
             } else {
                 console.warn(`DEBUG (fetchAndUpdateBondData): Data missing or null for instrument: ${instrumentKey}. Setting to '--'.`); // Debug missing data
@@ -491,7 +490,7 @@ async function fetchAndUpdateBondData() {
                 updateTextElement(`${tableIdPrefix}High`, '--');
                 updateTextElement(`${tableIdPrefix}Low`, '--');
                 updateTextElement(`${tableIdPrefix}PrevClose`, '--');
-                updateTextElement(`${tableIdPrefix}Updated`, '--');
+                updateTextElement(`${tableIdPrefix}Updated`, '--'); // Ensure it's still '--' on error
             }
         });
 
