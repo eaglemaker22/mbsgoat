@@ -4,65 +4,17 @@ function updateTextElement(elementId, value) {
   if (element) {
     // Check if the value is actually changing before applying highlight
     if (element.textContent !== String(value)) { // Convert value to string for comparison
-      // Remove all highlight classes first to reset any animation
-      element.classList.remove('highlight-on-update', 'border-flash-on-update');
+      // Remove the class first to reset the animation
+      element.classList.remove('highlight-on-update');
       // Trigger reflow to restart the animation
       void element.offsetWidth; // This forces a reflow
-
-      // Apply the unified highlight animation
+      // Add the class back
       element.classList.add('highlight-on-update');
     }
     element.textContent = value;
-    console.log(`DEBUG (updateTextElement): Updated element '${elementId}' with value: '${value}'`); // Re-enabled DEBUG log
+    console.log(`DEBUG (updateTextElement): Updated element '${elementId}' with value: '${value}'`);
   } else {
-    console.warn(`DEBUG (updateTextElement): Element with ID '${elementId}' NOT FOUND!`); // Re-enabled DEBUG warn
-  }
-}
-
-// MODIFIED: Added isInverted parameter for color logic, and highlight logic
-function updateChangeIndicator(valueElementId, changeElementId, value, change, isInverted = false) {
-  updateTextElement(valueElementId, formatValue(value)); // This will apply highlight to the value
-
-  const changeElement = document.getElementById(changeElementId);
-  // Note: .closest('.header-item') might not be relevant for all elements,
-  // but keeping it for compatibility with existing HTML structure.
-  const parentHeaderItem = changeElement ? changeElement.closest('.header-item') : null;
-
-  if (changeElement) {
-    let formattedChange = formatValue(change);
-    const numericChange = parseFloat(change);
-
-    // Remove existing color classes
-    changeElement.classList.remove('positive', 'negative');
-    if (parentHeaderItem) {
-      parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg');
-    }
-
-    // Determine color based on change and isInverted flag
-    if (!isNaN(numericChange) && numericChange !== 0) {
-      const isPositive = numericChange > 0;
-      const applyPositive = isInverted ? !isPositive : isPositive;
-      const applyNegative = isInverted ? isPositive : !isPositive;
-
-      if (applyPositive) {
-        changeElement.classList.add('positive');
-        if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
-        formattedChange = `+${formattedChange}`;
-      } else if (applyNegative) {
-        changeElement.classList.add('negative');
-        if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
-      }
-    } else {
-      // If change is 0 or NaN, apply neutral background if a parent header item exists
-      if (parentHeaderItem) {
-        parentHeaderItem.classList.add('neutral-bg');
-      }
-    }
-
-    changeElement.textContent = formattedChange;
-    console.log(`DEBUG (updateChangeIndicator): Updated change element '${changeElementId}' with value: '${formattedChange}'`);
-  } else {
-    console.warn(`DEBUG (updateChangeIndicator): Change element with ID '${changeElementId}' NOT FOUND!`);
+    console.warn(`DEBUG (updateTextElement): Element with ID '${elementId}' NOT FOUND!`);
   }
 }
 
@@ -90,7 +42,7 @@ function updateValueWithColorBasedOnChange(valueElementId, changeValue, isInvert
     }
   }
 
-  // Remove existing color classes (important for updates)
+  // Remove existing color classes
   valueElement.classList.remove('positive', 'negative', 'neutral');
 
   // Apply new color class
@@ -107,6 +59,59 @@ function updateValueWithColorBasedOnChange(valueElementId, changeValue, isInvert
   // The value itself should be updated by a separate call to updateTextElement
   // before or after calling this function.
   console.log(`DEBUG (updateValueWithColorBasedOnChange): Applied color to '${valueElementId}' based on change: '${changeValue}' (Positive: ${isPositiveChange}, Negative: ${isNegativeChange})`);
+}
+
+// MODIFIED: Corrected logic for value update and color application
+function updateChangeIndicator(valueElementId, changeElementId, value, change, isInverted = false) {
+  // Ensure the main value is updated and triggers highlight
+  updateTextElement(valueElementId, formatValue(value));
+
+  const changeElement = document.getElementById(changeElementId);
+  const parentHeaderItem = changeElement ? changeElement.closest('.header-item') : null;
+
+  if (changeElement) {
+    let formattedChange = formatValue(change);
+    const numericChange = parseFloat(change);
+
+    // Determine positive/negative flags BEFORE applying classes
+    let isPositiveChange = false;
+    let isNegativeChange = false;
+    if (!isNaN(numericChange)) {
+      if (isInverted) {
+        isPositiveChange = numericChange < 0; // Inverted: negative change is "positive"
+        isNegativeChange = numericChange > 0; // Inverted: positive change is "negative"
+      } else {
+        isPositiveChange = numericChange > 0;
+        isNegativeChange = numericChange < 0;
+      }
+    }
+
+    // Remove existing color classes
+    changeElement.classList.remove('positive', 'negative');
+    if (parentHeaderItem) {
+      parentHeaderItem.classList.remove('positive-bg', 'negative-bg', 'neutral-bg'); // Reset all background classes
+    }
+
+    // Apply new color class and update formattedChange
+    if (isPositiveChange) {
+      changeElement.classList.add('positive');
+      if (parentHeaderItem) parentHeaderItem.classList.add('positive-bg');
+      formattedChange = `+${formattedChange}`; // Add '+' sign for positive changes
+    } else if (isNegativeChange) {
+      changeElement.classList.add('negative');
+      if (parentHeaderItem) parentHeaderItem.classList.add('negative-bg');
+    } else {
+      // If change is 0 or NaN, apply neutral background if a parent header item exists
+      if (parentHeaderItem) {
+        parentHeaderItem.classList.add('neutral-bg');
+      }
+    }
+
+    changeElement.textContent = formattedChange;
+    console.log(`DEBUG (updateChangeIndicator): Updated change element '${changeElementId}' with value: '${formattedChange}'`);
+  } else {
+    console.warn(`DEBUG (updateChangeIndicator): Change element with ID '${changeElementId}' NOT FOUND!`);
+  }
 }
 
 
@@ -455,9 +460,13 @@ async function fetchAndUpdateBondData() {
         bondInstruments.forEach(instrumentKey => {
             let baseId = instrumentKey.toLowerCase().replace(/_/g, '');
             // This special case is redundant but harmless, keeping it for now.
+            // It ensures 'gnma60shadow' is correctly mapped, though the general replace should handle it.
             if (instrumentKey === "GNMA_6_0_Shadow") {
                 baseId = "gnma60shadow";
+            } else if (instrumentKey === "GNMA_5_5_Shadow") { // Added for explicit mapping
+                baseId = "gnma55shadow";
             }
+
 
             const instrumentData = bondData[instrumentKey];
             const tableIdPrefix = `${baseId}Table`;
@@ -499,6 +508,8 @@ async function fetchAndUpdateBondData() {
             let baseId = instrumentKey.toLowerCase().replace(/_/g, '');
             if (instrumentKey === "GNMA_6_0_Shadow") {
                 baseId = "gnma60shadow";
+            } else if (instrumentKey === "GNMA_5_5_Shadow") {
+                baseId = "gnma55shadow";
             }
             const tableIdPrefix = `${baseId}Table`;
             updateTextElement(`${tableIdPrefix}Current`, '--');
