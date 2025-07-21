@@ -42,8 +42,7 @@ exports.handler = async function (event, context) {
     const us30yData = us30ySnap.exists ? us30ySnap.data() : {};
 
 
-    // This helper function works perfectly for both MBS/Shadow and Treasuries
-    // because your Firestore fields for US10Y/US30Y are also prefixed (e.g., US10Y_Current)
+    // This helper function extracts the core bond fields (current, change, open, etc.)
     function extractBondFields(data, prefix) {
       return {
         change: data[`${prefix}_Daily_Change`] || null,
@@ -56,25 +55,25 @@ exports.handler = async function (event, context) {
     }
 
     const result = {
-      // Assuming last_updated is present in the shadow_bonds document
-      last_updated: shadowData.last_updated || null,
+      // This overall last_updated can remain for general section timestamp if needed,
+      // but individual rows will now use their specific timestamps.
+      last_updated: shadowData.last_updated || null, 
 
-      // MBS Products
-      UMBS_5_5: extractBondFields(realData, "UMBS_5_5"),
-      UMBS_6_0: extractBondFields(realData, "UMBS_6_0"),
-      GNMA_5_5: extractBondFields(realData, "GNMA_5_5"),
-      GNMA_6_0: extractBondFields(realData, "GNMA_6_0"),
+      // MBS Products - Now include document-level last_updated for each instrument
+      UMBS_5_5: { ...extractBondFields(realData, "UMBS_5_5"), last_updated: realData.last_updated || null },
+      UMBS_6_0: { ...extractBondFields(realData, "UMBS_6_0"), last_updated: realData.last_updated || null },
+      GNMA_5_5: { ...extractBondFields(realData, "GNMA_5_5"), last_updated: realData.last_updated || null },
+      GNMA_6_0: { ...extractBondFields(realData, "GNMA_6_0"), last_updated: realData.last_updated || null },
 
-      // Shadow Bonds
-      UMBS_5_5_Shadow: extractBondFields(shadowData, "UMBS_5_5_Shadow"),
-      UMBS_6_0_Shadow: extractBondFields(shadowData, "UMBS_6_0_Shadow"),
-      GNMA_5_5_Shadow: extractBondFields(shadowData, "GNMA_5_5_Shadow"),
-      GNMA_6_0_Shadow: extractBondFields(shadowData, "GNMA_6_0_Shadow"),
+      // Shadow Bonds - Now include document-level last_updated for each instrument
+      UMBS_5_5_Shadow: { ...extractBondFields(shadowData, "UMBS_5_5_Shadow"), last_updated: shadowData.last_updated || null },
+      UMBS_6_0_Shadow: { ...extractBondFields(shadowData, "UMBS_6_0_Shadow"), last_updated: shadowData.last_updated || null },
+      GNMA_5_5_Shadow: { ...extractBondFields(shadowData, "GNMA_5_5_Shadow"), last_updated: shadowData.last_updated || null },
+      GNMA_6_0_Shadow: { ...extractBondFields(shadowData, "GNMA_6_0_Shadow"), last_updated: shadowData.last_updated || null },
 
-      // ADDED: US10Y and US30Y data
-      // The `extractBondFields` function works here too, by passing "US10Y" and "US30Y" as prefixes
-      US10Y: extractBondFields(us10yData, "US10Y"),
-      US30Y: extractBondFields(us30yData, "US30Y"),
+      // US10Y and US30Y data - Now include document-level last_updated for each instrument
+      US10Y: { ...extractBondFields(us10yData, "US10Y"), last_updated: us10yData.last_updated || null },
+      US30Y: { ...extractBondFields(us30yData, "US30Y"), last_updated: us30yData.last_updated || null },
     };
 
     return {
