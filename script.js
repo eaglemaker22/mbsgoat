@@ -13,9 +13,9 @@ function updateTextElement(elementId, value) {
       element.classList.add('highlight-on-update');
     }
     element.textContent = value;
-    // console.log(`DEBUG (updateTextElement): Updated element '${elementId}' with value: '${value}'`); // Commented for less console noise
+    console.log(`DEBUG (updateTextElement): Updated element '${elementId}' with value: '${value}'`); // Re-enabled DEBUG log
   } else {
-    // console.warn(`Element with ID '${elementId}' NOT FOUND!`); // Commented for less console noise
+    console.warn(`DEBUG (updateTextElement): Element with ID '${elementId}' NOT FOUND!`); // Re-enabled DEBUG warn
   }
 }
 
@@ -79,9 +79,9 @@ function updateChangeIndicator(valueElementId, changeElementId, value, change, i
       changeElement.classList.add('highlight-on-update');
     }
     changeElement.textContent = formattedChange;
-    // console.log(`DEBUG (updateChangeIndicator): Updated change element '${changeElementId}' with value: '${formattedChange}'`); // Commented for less console noise
+    console.log(`DEBUG (updateChangeIndicator): Updated change element '${changeElementId}' with value: '${formattedChange}'`); // Re-enabled DEBUG log
   } else {
-    // console.warn(`DEBUG (updateChangeIndicator): Change element with ID '${changeElementId}' NOT FOUND!`); // Commented for less console noise
+    console.warn(`DEBUG (updateChangeIndicator): Change element with ID '${changeElementId}' NOT FOUND!`); // Re-enabled DEBUG warn
   }
 }
 
@@ -100,7 +100,7 @@ function formatPercentage(val) {
 
 // Helper function for formatting dates
 function formatDate(dateString) {
-  // console.log(`DEBUG (formatDate): Received dateString: '${dateString}' (type: ${typeof dateString})`); // Commented for less console noise
+  console.log(`DEBUG (formatDate): Received dateString: '${dateString}' (type: ${typeof dateString})`); // Re-enabled DEBUG log
   if (!dateString || dateString === "N/A" || dateString === "--") {
     return "--";
   }
@@ -108,10 +108,10 @@ function formatDate(dateString) {
     const parts = String(dateString).split('-'); // Ensure it's a string before splitting
     if (parts.length === 3) {
       const formatted = `${parts[1]}/${parts[2]}/${parts[0]}`;
-      // console.log(`DEBUG (formatDate): Formatted to: '${formatted}'`); // Commented for less console noise
+      console.log(`DEBUG (formatDate): Formatted to: '${formatted}'`); // Re-enabled DEBUG log
       return formatted;
     }
-    // console.log(`DEBUG (formatDate): Returning original dateString (not YYYY-MM-DD format): '${dateString}'`); // Commented for less console noise
+    console.log(`DEBUG (formatDate): Returning original dateString (not YYYY-MM-DD format): '${dateString}'`); // Re-enabled DEBUG log
     return dateString;
   } catch (e) {
     console.error("Error formatting date:", e, dateString);
@@ -122,7 +122,7 @@ function formatDate(dateString) {
 
 // --- Market Data --- (UPDATED for Treasury color inversion)
 async function fetchAndUpdateMarketData() {
-  // console.log("Fetching market data..."); // Commented for less console noise
+  console.log("Fetching market data..."); // Re-enabled DEBUG log
   try {
     const res = await fetch("/.netlify/functions/getTopDashboardData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -174,18 +174,18 @@ async function fetchAndUpdateMarketData() {
 
 // --- Daily Rates --- (UPDATED for 15Y Fixed Yesterday)
 async function fetchAndUpdateDailyRates() {
-  // console.log("Fetching daily rates..."); // Commented for less console noise
+  console.log("Fetching daily rates..."); // Re-enabled DEBUG log
   try {
     const res = await fetch("/.netlify/functions/getDailyRatesData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
-    // console.log("DEBUG (fetchAndUpdateDailyRates): Received data from Netlify function:", data); // Commented for less console noise
+    console.log("DEBUG (fetchAndUpdateDailyRates): Received data from Netlify function:", data); // Re-enabled DEBUG log
 
     function updateRateRow(prefix, rateData) {
-      // console.log(`DEBUG (updateRateRow): Processing ${prefix}. rateData:`, rateData); // Commented for less console noise
+      console.log(`DEBUG (updateRateRow): Processing ${prefix}. rateData:`, rateData); // Re-enabled DEBUG log
 
       if (!rateData) {
-        // console.warn(`DEBUG (updateRateRow): rateData is null/undefined for ${prefix}. Setting all to '--'.`); // Commented for less console noise
+        console.warn(`DEBUG (updateRateRow): rateData is null/undefined for ${prefix}. Setting all to '--'.`); // Re-enabled DEBUG warn
         updateTextElement(`${prefix}Current`, '--');
         updateTextElement(`${prefix}YesterdayTable`, '--'); // Assuming this ID exists for tables
         updateTextElement(`${prefix}LastMonth`, '--');
@@ -197,7 +197,7 @@ async function fetchAndUpdateDailyRates() {
       }
 
       updateTextElement(`${prefix}Current`, formatPercentage(rateData.latest));
-      // console.log(`DEBUG (updateRateRow): Attempting to update ${prefix}Current with value: ${rateData.latest}`); // Commented for less console noise
+      console.log(`DEBUG (updateRateRow): Attempting to update ${prefix}Current with value: ${rateData.latest}`); // Re-enabled DEBUG log
 
 
       // Use rateData.yesterday for all, as the Netlify function should provide it consistently
@@ -211,7 +211,7 @@ async function fetchAndUpdateDailyRates() {
       }
 
       updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
-      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago);
+      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago)); // Corrected: Added missing closing parenthesis
 
       let changeVs1M = null;
       let changeVs1Y = null;
@@ -264,7 +264,7 @@ async function fetchAndUpdateDailyRates() {
 
 // --- Live Stocks ---
 async function fetchAndUpdateLiveStockData() {
-  // console.log("Fetching live stock data..."); // Commented for less console noise
+  console.log("Fetching live stock data..."); // Re-enabled DEBUG log
   try {
     const res = await fetch("/.netlify/functions/getLiveStockData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -311,12 +311,12 @@ async function fetchAndUpdateLiveStockData() {
 
 // --- Economic Indicators ---
 async function fetchAndUpdateEconomicIndicators() {
-  // console.log("Fetching economic indicators..."); // Commented for less console noise
+  console.log("Fetching economic indicators..."); // Re-enabled DEBUG log
   try {
     const res = await fetch("/.netlify/functions/getEconomicIndicatorsData");
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
-    // console.log("DEBUG (fetchAndUpdateEconomicIndicators): Received data from Netlify function:", data); // Commented for less console noise
+    console.log("DEBUG (fetchAndUpdateEconomicIndicators): Received data from Netlify function:", data); // Re-enabled DEBUG log
 
     const rows = {
       HOUST: "houst",
@@ -348,7 +348,7 @@ async function fetchAndUpdateEconomicIndicators() {
 
 // --- Bonds & Treasuries ---
 async function fetchAndUpdateBondData() {
-    // console.log("Fetching bond and treasury data for table..."); // Commented for less console noise
+    console.log("Fetching bond and treasury data for table..."); // Re-enabled DEBUG log
     try {
         const res = await fetch("/.netlify/functions/getAllBondData");
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -389,10 +389,10 @@ async function fetchAndUpdateBondData() {
             const isInvertedColors = (instrumentKey === "US10Y" || instrumentKey === "US30Y");
 
             if (instrumentData) {
-                // console.log(`--- Data for ${instrumentKey} ---`); // Commented for less console noise
-                // console.log(`Current: ${instrumentData.current}, Change: ${instrumentData.change}, Open: ${instrumentData.open}`); // Commented for less console noise
-                // console.log(`High: ${instrumentData.high}, Low: ${instrumentData.low}, PrevClose: ${instrumentData.prevClose}`); // Commented for less console noise
-                // console.log(`--- End ${instrumentKey} Data ---`); // Commented for less console noise
+                console.log(`--- Data for ${instrumentKey} ---`); // Re-enabled DEBUG log
+                console.log(`Current: ${instrumentData.current}, Change: ${instrumentData.change}, Open: ${instrumentData.open}`); // Re-enabled DEBUG log
+                console.log(`High: ${instrumentData.high}, Low: ${instrumentData.low}, PrevClose: ${instrumentData.prevClose}`); // Re-enabled DEBUG log
+                console.log(`--- End ${instrumentKey} Data ---`); // Re-enabled DEBUG log
 
                 updateChangeIndicator(`${tableIdPrefix}Current`, `${tableIdPrefix}Change`,
                                       instrumentData.current, instrumentData.change, isInvertedColors);
@@ -406,7 +406,7 @@ async function fetchAndUpdateBondData() {
                 updateTextElement(`${tableIdPrefix}Updated`, formattedTimestampForTable);
 
             } else {
-                // console.warn(`Data for ${instrumentKey} not found in bond data. Setting defaults.`); // Commented for less console noise
+                console.warn(`Data for ${instrumentKey} not found in bond data. Setting defaults.`); // Re-enabled DEBUG warn
                 updateTextElement(`${tableIdPrefix}Current`, '--');
                 updateTextElement(`${tableIdPrefix}Change`, '--');
                 updateTextElement(`${tableIdPrefix}Open`, '--');
@@ -414,9 +414,7 @@ async function fetchAndUpdateBondData() {
                 updateTextElement(`${tableIdPrefix}Low`, '--');
                 updateTextElement(`${tableIdPrefix}PrevClose`, '--');
                 updateTextElement(`${tableIdPrefix}Updated`, '--');
-            }
-        });
-
+            });
     } catch (err) {
         console.error("Bond data fetch error:", err);
         updateTextElement('bondLastUpdated', `Last Updated: Error`);
