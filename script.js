@@ -211,7 +211,7 @@ async function fetchAndUpdateDailyRates() {
       }
 
       updateTextElement(`${prefix}LastMonth`, formatPercentage(rateData.last_month));
-      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago)); // Corrected: Added missing closing parenthesis
+      updateTextElement(`${prefix}YearAgo`, formatPercentage(rateData.year_ago));
 
       let changeVs1M = null;
       let changeVs1Y = null;
@@ -414,11 +414,11 @@ async function fetchAndUpdateBondData() {
                 updateTextElement(`${tableIdPrefix}Low`, '--');
                 updateTextElement(`${tableIdPrefix}PrevClose`, '--');
                 updateTextElement(`${tableIdPrefix}Updated`, '--');
-            });
+            }
+        }); // Corrected this line by removing the extra ')'
     } catch (err) {
         console.error("Bond data fetch error:", err);
         updateTextElement('bondLastUpdated', `Last Updated: Error`);
-        // Ensure all rows are reset to default on error
         const bondInstruments = [
             "US10Y", "US30Y", // Include them in error handling as well
             "UMBS_5_5", "UMBS_6_0", "GNMA_5_5", "GNMA_6_0",
