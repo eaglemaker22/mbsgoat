@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MBSGOAT Terminal</title>
   <link rel="stylesheet" href="style_terminal.css" />
+  <!-- Changed font from IBM Plex Mono to Roboto Mono -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -74,7 +75,7 @@
 
     <section class="terminal-section">
       <h2>BONDS & TREASURIES</h2>
-      <!-- Removed: <p id="bondLastUpdated" style="font-size: 0.8em; margin-bottom: 10px; color: #00ff00;">Last Updated: --</p> -->
+      <p id="bondLastUpdated" style="font-size: 0.8em; margin-bottom: 10px; color: #00ff00;">Last Updated: --</p>
       <table class="terminal-table">
         <thead>
           <tr>
@@ -170,7 +171,7 @@
             <td id="gnma60shadowTableUpdated">--</td>
           </tr>
           <tr>
-            <td>US10Y Treasury</td>
+            <td>US10Y</td>
             <td id="us10yTableCurrent">--</td>
             <td id="us10yTableChange">--</td>
             <td id="us10yTableOpen">--</td>
@@ -180,7 +181,7 @@
             <td id="us10yTableUpdated">--</td>
           </tr>
           <tr>
-            <td>US30Y Treasury</td>
+            <td>US30Y</td>
             <td id="us30yTableCurrent">--</td>
             <td id="us30yTableChange">--</td>
             <td id="us30yTableOpen">--</td>
@@ -201,9 +202,9 @@
             <th>Product</th>
             <th>Current</th>
             <th>Yesterday</th>
-            <!-- Removed: <th>Change</th> -->
             <th>Last Month</th>
             <th>1 Year Ago</th>
+            <th>Daily Change</th> <!-- NEW: Added Daily Change column header -->
           </tr>
         </thead>
         <tbody>
@@ -211,49 +212,49 @@
             <td>30Y Fixed</td>
             <td><span id="fixed30yCurrent">--</span></td>
             <td><span id="fixed30yYesterdayTable">--</span></td>
-            <!-- Removed: <td><span id="fixed30yDailyChange">--</span></td> -->
             <td><span id="fixed30yLastMonth">--</span></td>
             <td><span id="fixed30yYearAgo">--</span></td>
+            <td><span id="fixed30yDailyChange">--</span></td> <!-- NEW: Added Daily Change cell -->
           </tr>
           <tr>
             <td>30Y VA</td>
             <td><span id="va30yCurrent">--</span></td>
             <td><span id="va30yYesterday">--</span></td>
-            <!-- Removed: <td><span id="va30yDailyChange">--</span></td> -->
             <td><span id="va30yLastMonth">--</span></td>
             <td><span id="va30yYearAgo">--</span></td>
+            <td><span id="va30yDailyChange">--</span></td> <!-- NEW: Added Daily Change cell -->
           </tr>
           <tr>
             <td>30Y FHA</td>
             <td><span id="fha30yCurrent">--</span></td>
             <td><span id="fha30yYesterday">--</span></td>
-            <!-- Removed: <td><span id="fha30yDailyChange">--</span></td> -->
             <td><span id="fha30yLastMonth">--</span></td>
             <td><span id="fha30yYearAgo">--</span></td>
+            <td><span id="fha30yDailyChange">--</span></td> <!-- NEW: Added Daily Change cell -->
           </tr>
           <tr>
             <td>30Y Jumbo</td>
             <td><span id="jumbo30yCurrent">--</span></td>
             <td><span id="jumbo30yYesterday">--</span></td>
-            <!-- Removed: <td><span id="jumbo30yDailyChange">--</span></td> -->
             <td><span id="jumbo30yLastMonth">--</span></td>
-            <td><span id="jumbo30yYearAgo">--</td>
+            <td><span id="jumbo30yYearAgo">--</span></td>
+            <td><span id="jumbo30yDailyChange">--</span></td> <!-- NEW: Added Daily Change cell -->
           </tr>
           <tr>
             <td>30Y USDA</td>
             <td><span id="usda30yCurrent">--</span></td>
             <td><span id="usda30yYesterday">--</span></td>
-            <!-- Removed: <td><span id="usda30yDailyChange">--</span></td> -->
-            <td><span id="usda30yLastMonth">--</span></td>
+            <td><span id="usda30yLastMonth">--</td>
             <td><span id="usda30yYearAgo">--</span></td>
+            <td><span id="usda30yDailyChange">--</span></td> <!-- NEW: Added Daily Change cell -->
           </tr>
           <tr>
             <td>15Y Fixed</td>
             <td><span id="fixed15yCurrent">--</span></td>
             <td><span id="fixed15yYesterdayTable">--</span></td>
-            <!-- Removed: <td><span id="fixed15yDailyChange">--</span></td> -->
             <td><span id="fixed15yLastMonth">--</span></td>
             <td><span id="fixed15yYearAgo">--</span></td>
+            <td><span id="fixed15yDailyChange">--</span></td> <!-- NEW: Added Daily Change cell -->
           </tr>
         </tbody>
       </table>
