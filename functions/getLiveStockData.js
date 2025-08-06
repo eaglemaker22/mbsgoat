@@ -17,8 +17,8 @@ exports.handler = async function (event, context) {
         'QQQ',          // Nasdaq 100 ETF
         'DIA',          // Dow Jones ETF
         'BINANCE:BTCUSDT', // Bitcoin (USD) from Binance
-        '^VIX',         // Volatility Index
-        'DX-Y.NYB'      // US Dollar Index
+        '^VIXY',         // Volatility Index
+        'UUP'      // US Dollar Index
     ];
 
     const data = {};
