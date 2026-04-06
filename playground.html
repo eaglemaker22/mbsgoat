@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MBSGOAT — Playground</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#080b0f;color:#b8ccd8;font-family:'Share Tech Mono',monospace;font-size:12px;min-height:100vh;}
+a{color:inherit;text-decoration:none;}
+
+/* Layout */
+.hdr{background:#0a0e14;border-bottom:1px solid #1a2332;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.logo{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#00e87a;letter-spacing:3px;}
+.logo span{color:#ffb800;}
+.hdr-right{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.badge{font-size:10px;border:1px solid;padding:2px 8px;letter-spacing:1px;}
+.badge-g{color:#00e87a;border-color:#00e87a;}
+.badge-a{color:#ffb800;border-color:#ffb800;}
+.badge-r{color:#ff3d3d;border-color:#ff3d3d;}
+.badge-dim{color:#3a4a5c;border-color:#3a4a5c;}
+#clock{color:#3a4a5c;font-size:11px;}
+
+.wrap{max-width:1400px;margin:0 auto;padding:16px 20px;}
+
+/* Section headers */
+.sec-hdr{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;color:#ffb800;letter-spacing:2px;border-bottom:1px solid #1a2332;padding-bottom:5px;margin:20px 0 12px;display:flex;justify-content:space-between;align-items:center;}
+.sec-src{font-size:10px;font-family:'Share Tech Mono',monospace;font-weight:400;}
+.src-live{color:#00e87a;}
+.src-est{color:#ffb800;}
+.src-fred{color:#4da6ff;}
+.src-err{color:#ff3d3d;}
+
+/* HERO — synthetic MBS indicator */
+.hero{background:#0d1117;border:1px solid #1a2332;border-left:3px solid #00e87a;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+.hero-label{font-size:10px;color:#3a4a5c;letter-spacing:2px;margin-bottom:6px;}
+.hero-val{font-family:'Rajdhani',sans-serif;font-size:48px;font-weight:700;line-height:1;}
+.hero-val.up{color:#00e87a;}
+.hero-val.dn{color:#ff3d3d;}
+.hero-val.flat{color:#3a4a5c;}
+.hero-sub{font-size:11px;color:#3a4a5c;margin-top:4px;}
+.hero-divider{width:1px;height:60px;background:#1a2332;}
+.hero-stat{text-align:center;}
+.hero-stat-val{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:600;margin-bottom:2px;}
+.hero-stat-lbl{font-size:10px;color:#3a4a5c;letter-spacing:1px;}
+.hero-note{font-size:10px;color:#3a4a5c;margin-top:8px;padding-top:8px;border-top:1px solid #1a2332;flex:100%;line-height:1.6;}
+
+/* Cards grid */
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:16px;}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:16px;}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:16px;}
+@media(max-width:700px){.grid4,.grid3{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:420px){.grid4,.grid3,.grid2{grid-template-columns:1fr;}}
+
+.card{background:#0d1117;border:1px solid #1a2332;padding:10px 12px;}
+.card-lbl{font-size:10px;color:#3a4a5c;letter-spacing:1px;margin-bottom:4px;}
+.card-val{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:600;color:#b8ccd8;margin-bottom:2px;}
+.card-ch{font-size:11px;margin-bottom:2px;}
+.card-meta{font-size:10px;color:#3a4a5c;}
+.up{color:#00e87a;}
+.dn{color:#ff3d3d;}
+.neu{color:#3a4a5c;}
+.err{color:#ff3d3d;font-size:10px;}
+
+/* Yield curve bars */
+.curve-wrap{background:#0d1117;border:1px solid #1a2332;padding:14px 16px;margin-bottom:16px;}
+.curve-row{display:flex;align-items:center;gap:10px;margin-bottom:5px;}
+.curve-lbl{font-size:10px;color:#3a4a5c;width:28px;text-align:right;flex-shrink:0;}
+.curve-track{flex:1;background:#111820;height:6px;}
+.curve-fill{height:6px;background:#4da6ff;}
+.curve-val{font-size:11px;color:#b8ccd8;width:48px;text-align:right;}
+.curve-date{font-size:10px;color:#3a4a5c;margin-bottom:10px;}
+.curve-spread{font-size:11px;margin-top:8px;padding-top:8px;border-top:1px solid #1a2332;}
+
+/* FRED mortgage table */
+table{width:100%;border-collapse:collapse;margin-bottom:16px;}
+th{font-size:10px;color:#ffb800;padding:5px 8px;border-bottom:1px solid #1a2332;text-align:left;letter-spacing:1px;font-weight:400;}
+td{font-size:11px;padding:6px 8px;border-bottom:1px solid #0f1620;color:#b8ccd8;}
+tr:hover td{background:#0d1420;}
+.td-name{color:#4da6ff;}
+.td-ch-up{color:#00e87a;}
+.td-ch-dn{color:#ff3d3d;}
+
+/* Status / ticker */
+.status-bar{background:#060a0e;border-top:1px solid #1a2332;padding:5px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:10px;color:#3a4a5c;position:sticky;bottom:0;}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#00e87a;margin-right:5px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.blink{animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* Refresh btn */
+.refresh-btn{background:transparent;border:1px solid #1a2332;color:#3a4a5c;font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 10px;cursor:pointer;letter-spacing:1px;}
+.refresh-btn:hover{border-color:#00e87a;color:#00e87a;}
+
+/* Error banner */
+.err-banner{background:#1a0808;border:1px solid #ff3d3d;color:#ff3d3d;padding:10px 14px;font-size:11px;margin-bottom:12px;display:none;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div><a href="/"><div class="logo">MBS<span>GOAT</span></div></a></div>
+  <div class="hdr-right">
+    <span id="clock"></span>
+    <span class="badge badge-dim" id="badge-finnhub">FINNHUB ○</span>
+    <span class="badge badge-dim" id="badge-fred">FRED ○</span>
+    <span class="badge badge-dim" id="badge-tsy">TREASURY ○</span>
+    <span class="badge badge-a">PLAYGROUND</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="err-banner" id="err-banner"></div>
+
+  <!-- HERO: Synthetic MBS Indicator -->
+  <div class="sec-hdr">
+    SYNTHETIC UMBS INDICATOR
+    <span class="sec-src src-est">● ESTIMATED — MBB 70% + TLT 30%</span>
+  </div>
+  <div class="hero" id="hero">
+    <div>
+      <div class="hero-label">TODAY'S +/–</div>
+      <div class="hero-val flat" id="hero-val">--</div>
+      <div class="hero-sub" id="hero-sub">Awaiting data...</div>
+    </div>
+    <div class="hero-divider"></div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" id="hero-ticks">--</div>
+      <div class="hero-stat-lbl">EST. TICKS</div>
+    </div>
+    <div class="hero-divider"></div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" id="hero-mbb">--</div>
+      <div class="hero-stat-lbl">MBB +/–</div>
+    </div>
+    <div class="hero-divider"></div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" id="hero-tlt">--</div>
+      <div class="hero-stat-lbl">TLT +/–</div>
+    </div>
+    <div class="hero-divider"></div>
+    <div class="hero-stat">
+      <div class="hero-stat-val" id="hero-direction">--</div>
+      <div class="hero-stat-lbl">SIGNAL</div>
+    </div>
+    <div class="hero-note">
+      Synthetic indicator derived from MBB (iShares Agency MBS ETF) and TLT (20Y+ Treasury ETF).
+      MBB directly holds UMBS and GNMA bonds. This is a <strong>directional proxy</strong>, not a live MBS price.
+      Validate against MBS Live for accuracy calibration.
+    </div>
+  </div>
+
+  <!-- MBS Proxy ETFs -->
+  <div class="sec-hdr">
+    MBS PROXY ETFs
+    <span class="sec-src src-live" id="src-finnhub">● FINNHUB</span>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-lbl">MBB — iShares Agency MBS ETF</div><div class="card-val" id="mbb-val">--</div><div class="card-ch" id="mbb-ch">--</div><div class="card-meta">Holds UMBS + GNMA directly</div></div>
+    <div class="card"><div class="card-lbl">TLT — 20Y+ Treasury ETF</div><div class="card-val" id="tlt-val">--</div><div class="card-ch" id="tlt-ch">--</div><div class="card-meta">Duration / rate sensitivity proxy</div></div>
+    <div class="card"><div class="card-lbl">VMBS — Vanguard MBS ETF</div><div class="card-val" id="vmbs-val">--</div><div class="card-ch" id="vmbs-ch">--</div><div class="card-meta">Secondary MBS proxy</div></div>
+  </div>
+
+  <!-- Equities + BTC -->
+  <div class="sec-hdr">
+    EQUITIES & CRYPTO
+    <span class="sec-src src-live">● FINNHUB</span>
+  </div>
+  <div class="grid4">
+    <div class="card"><div class="card-lbl">SPY — S&P 500</div><div class="card-val" id="spy-val">--</div><div class="card-ch" id="spy-ch">--</div><div class="card-meta" id="spy-meta"></div></div>
+    <div class="card"><div class="card-lbl">QQQ — Nasdaq 100</div><div class="card-val" id="qqq-val">--</div><div class="card-ch" id="qqq-ch">--</div><div class="card-meta"></div></div>
+    <div class="card"><div class="card-lbl">DIA — Dow Jones</div><div class="card-val" id="dia-val">--</div><div class="card-ch" id="dia-ch">--</div><div class="card-meta"></div></div>
+    <div class="card"><div class="card-lbl">BTC — Bitcoin (USD)</div><div class="card-val" id="btc-val">--</div><div class="card-ch" id="btc-ch">--</div><div class="card-meta">Binance feed</div></div>
+  </div>
+
+  <!-- Yield Curve -->
+  <div class="sec-hdr">
+    US TREASURY YIELD CURVE
+    <span class="sec-src src-live" id="src-tsy">● US TREASURY XML</span>
+  </div>
+  <div class="curve-wrap">
+    <div class="curve-date" id="curve-date">Loading...</div>
+    <div id="curve-bars">
+      <div style="color:#3a4a5c;font-size:11px;">Loading yield curve...</div>
+    </div>
+    <div class="curve-spread" id="curve-spread"></div>
+  </div>
+
+  <!-- OBMMI Mortgage Rates -->
+  <div class="sec-hdr">
+    OBMMI MORTGAGE RATES — OPTIMAL BLUE
+    <span class="sec-src src-fred" id="src-obmmi">● FRED API (DAILY)</span>
+  </div>
+  <table id="obmmi-table">
+    <thead><tr><th>PRODUCT</th><th>RATE</th><th>CHANGE</th><th>AS OF</th><th>PREV</th></tr></thead>
+    <tbody id="obmmi-body">
+      <tr><td colspan="5" class="neu">Loading OBMMI data...</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Freddie Mac PMMS -->
+  <div class="sec-hdr">
+    FREDDIE MAC PMMS RATES
+    <span class="sec-src src-fred">● FRED API (WEEKLY)</span>
+  </div>
+  <table>
+    <thead><tr><th>PRODUCT</th><th>RATE</th><th>CHANGE</th><th>AS OF</th><th>PREV</th></tr></thead>
+    <tbody id="pmms-body">
+      <tr><td colspan="5" class="neu">Loading PMMS data...</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Economic indicators -->
+  <div class="sec-hdr">
+    ECONOMIC INDICATORS
+    <span class="sec-src src-fred">● FRED API</span>
+  </div>
+  <table>
+    <thead><tr><th>INDICATOR</th><th>LATEST</th><th>CHANGE</th><th>AS OF</th><th>PREV</th></tr></thead>
+    <tbody id="econ-body">
+      <tr><td colspan="5" class="neu">Loading economic data...</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Data meta -->
+  <div class="sec-hdr">
+    DATA SOURCE STATUS
+    <span class="sec-src"><button class="refresh-btn" onclick="load()">REFRESH ALL</button></span>
+  </div>
+  <div class="grid4" id="meta-grid">
+    <div class="card"><div class="card-lbl">FINNHUB</div><div class="card-val neu" id="meta-finnhub">--</div><div class="card-meta">Equities, ETFs, BTC</div></div>
+    <div class="card"><div class="card-lbl">FRED API</div><div class="card-val neu" id="meta-fred">--</div><div class="card-meta">OBMMI, PMMS, Econ</div></div>
+    <div class="card"><div class="card-lbl">TREASURY XML</div><div class="card-val neu" id="meta-tsy">--</div><div class="card-meta">Official yield curve</div></div>
+    <div class="card"><div class="card-lbl">LAST FETCH</div><div class="card-val neu" id="meta-time">--</div><div class="card-meta">Auto-refreshes 5 min</div></div>
+  </div>
+
+</div>
+
+<div class="status-bar">
+  <div><span class="dot"></span>MBSGOAT PLAYGROUND — DATA AUDIT MODE</div>
+  <div id="status-msg">Initializing...</div>
+  <div id="status-time"></div>
+</div>
+
+<script>
+var lastData = null;
+
+function clock() {
+  var now = new Date();
+  var et = now.toLocaleTimeString('en-US', {timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', second: '2-digit'});
+  var day = now.getDay();
+  var h = parseInt(now.toLocaleString('en-US', {timeZone: 'America/New_York', hour: 'numeric', hour12: false}));
+  var open = day >= 1 && day <= 5 && h >= 9 && h < 16;
+  document.getElementById('clock').textContent = 'ET ' + et + ' — MKT ' + (open ? 'OPEN' : 'CLOSED');
+}
+setInterval(clock, 1000);
+clock();
+
+function fmt(v, d) {
+  if (v === null || v === undefined || isNaN(v)) return '--';
+  return parseFloat(v).toFixed(d !== undefined ? d : 2);
+}
+
+function fmtCh(ch, pct) {
+  if (ch === null || ch === undefined || isNaN(ch)) return {str: '--', cls: 'neu'};
+  var s = ch >= 0 ? '+' : '';
+  var pcts = pct !== undefined && !isNaN(pct) ? ' (' + s + parseFloat(pct).toFixed(2) + '%)' : '';
+  return {str: s + parseFloat(ch).toFixed(2) + pcts, cls: ch >= 0 ? 'up' : 'dn'};
+}
+
+function setCard(valId, chId, val, ch, pct, prefix) {
+  var ve = document.getElementById(valId);
+  var ce = document.getElementById(chId);
+  if (ve) ve.textContent = (prefix || '') + fmt(val, 2);
+  if (ce) {
+    var f = fmtCh(ch, pct);
+    ce.textContent = f.str;
+    ce.className = 'card-ch ' + f.cls;
+  }
+}
+
+function renderHero(s) {
+  if (!s) return;
+  var el = document.getElementById('hero-val');
+  var sign = s.compositePct >= 0 ? '+' : '';
+  el.textContent = sign + fmt(s.compositePct, 3) + '%';
+  el.className = 'hero-val ' + (s.compositePct > 0.05 ? 'up' : s.compositePct < -0.05 ? 'dn' : 'flat');
+  document.getElementById('hero-sub').textContent = 'Composite daily change — ' + s.direction.toUpperCase();
+  document.getElementById('hero-ticks').textContent = (s.estimatedTicks >= 0 ? '+' : '') + fmt(s.estimatedTicks, 1);
+  document.getElementById('hero-mbb').className = 'hero-stat-val ' + (s.inputs.mbbPct >= 0 ? 'up' : 'dn');
+  document.getElementById('hero-mbb').textContent = (s.inputs.mbbPct >= 0 ? '+' : '') + fmt(s.inputs.mbbPct, 3) + '%';
+  document.getElementById('hero-tlt').className = 'hero-stat-val ' + (s.inputs.tltPct >= 0 ? 'up' : 'dn');
+  document.getElementById('hero-tlt').textContent = (s.inputs.tltPct >= 0 ? '+' : '') + fmt(s.inputs.tltPct, 3) + '%';
+  var dir = document.getElementById('hero-direction');
+  dir.textContent = s.direction.toUpperCase();
+  dir.className = 'hero-stat-val ' + (s.direction === 'better' ? 'up' : s.direction === 'worse' ? 'dn' : 'neu');
+}
+
+function renderEquity(sym, valId, chId, prefix) {
+  var d = lastData && lastData.equities && lastData.equities[sym];
+  var ve = document.getElementById(valId);
+  var ce = document.getElementById(chId);
+  if (!d || d.error) {
+    if (ve) ve.textContent = '--';
+    if (ce) { ce.textContent = d ? d.error : '--'; ce.className = 'card-ch err'; }
+    return;
+  }
+  if (ve) ve.textContent = (prefix || '$') + fmt(d.current, 2);
+  if (ce) {
+    var f = fmtCh(d.change, d.pct);
+    ce.textContent = f.str;
+    ce.className = 'card-ch ' + f.cls;
+  }
+}
+
+function renderCurve(tsy) {
+  var barsEl = document.getElementById('curve-bars');
+  var dateEl = document.getElementById('curve-date');
+  var spreadEl = document.getElementById('curve-spread');
+
+  if (!tsy || tsy.error) {
+    barsEl.innerHTML = '<div class="err">Treasury XML error: ' + (tsy ? tsy.error : 'no data') + '</div>';
+    document.getElementById('badge-tsy').className = 'badge badge-r';
+    document.getElementById('badge-tsy').textContent = 'TREASURY ✕';
+    return;
+  }
+
+  dateEl.textContent = 'Official US Treasury yield curve — as of ' + (tsy.date || '--');
+  document.getElementById('badge-tsy').className = 'badge badge-g';
+  document.getElementById('badge-tsy').textContent = 'TREASURY ●';
+
+  var pts = [
+    {lbl:'1M', v:tsy.m1}, {lbl:'3M', v:tsy.m3}, {lbl:'6M', v:tsy.m6},
+    {lbl:'1Y', v:tsy.y1}, {lbl:'2Y', v:tsy.y2}, {lbl:'3Y', v:tsy.y3},
+    {lbl:'5Y', v:tsy.y5}, {lbl:'7Y', v:tsy.y7}, {lbl:'10Y', v:tsy.y10},
+    {lbl:'20Y', v:tsy.y20}, {lbl:'30Y', v:tsy.y30}
+  ].filter(function(p){ return p.v; });
+
+  if (!pts.length) {
+    barsEl.innerHTML = '<div class="neu">No yield data — may be weekend/holiday</div>';
+    document.getElementById('src-tsy').textContent = '● END OF DAY — NO DATA TODAY';
+    document.getElementById('src-tsy').className = 'sec-src src-est';
+    return;
+  }
+
+  var max = Math.max.apply(null, pts.map(function(p){return p.v;}));
+  var min = Math.min.apply(null, pts.map(function(p){return p.v;}));
+  var range = max - min || 0.01;
+
+  barsEl.innerHTML = pts.map(function(p) {
+    var pct = ((p.v - min) / range * 100).toFixed(1);
+    return '<div class="curve-row">' +
+      '<div class="curve-lbl">' + p.lbl + '</div>' +
+      '<div class="curve-track"><div class="curve-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="curve-val">' + p.v.toFixed(3) + '%</div>' +
+      '</div>';
+  }).join('');
+
+  var t2 = tsy.y2, t10 = tsy.y10;
+  if (t2 && t10) {
+    var spd = ((t10 - t2) * 100).toFixed(0);
+    spreadEl.innerHTML = '10Y-2Y spread: <span class="' + (spd > 0 ? 'up' : 'dn') + '">' + spd + ' bps — ' + (spd > 0 ? 'Normal curve' : 'INVERTED ⚠') + '</span>';
+  }
+  document.getElementById('meta-tsy').textContent = pts.length + ' maturities';
+  document.getElementById('meta-tsy').className = 'card-val up';
+}
+
+function renderFred(fred) {
+  if (!fred || Object.keys(fred).length === 0) {
+    document.getElementById('obmmi-body').innerHTML = '<tr><td colspan="5" class="neu">No FRED data — check FRED_API_KEY env var in Netlify</td></tr>';
+    document.getElementById('pmms-body').innerHTML = '<tr><td colspan="5" class="neu">No FRED data</td></tr>';
+    document.getElementById('econ-body').innerHTML = '<tr><td colspan="5" class="neu">No FRED data</td></tr>';
+    document.getElementById('badge-fred').className = 'badge badge-r';
+    document.getElementById('badge-fred').textContent = 'FRED ✕';
+    document.getElementById('meta-fred').textContent = 'No key';
+    return;
+  }
+
+  var loaded = Object.values(fred).filter(function(r){return !r.error;}).length;
+  document.getElementById('badge-fred').className = loaded > 0 ? 'badge badge-g' : 'badge badge-r';
+  document.getElementById('badge-fred').textContent = loaded > 0 ? 'FRED ●' : 'FRED ✕';
+  document.getElementById('meta-fred').textContent = loaded + ' series';
+  document.getElementById('meta-fred').className = loaded > 0 ? 'card-val up' : 'card-val err';
+
+  var obmmiMap = {
+    'OBMMIC30YF':    '30Y Conventional',
+    'OBMMIFHA30YF':  '30Y FHA',
+    'OBMMIVA30YF':   '30Y VA',
+    'OBMMIJUMBO30YF':'30Y Jumbo',
+    'OBMMIC15YF':    '15Y Conventional',
+  };
+  var obmmiRows = Object.keys(obmmiMap).map(function(sid) {
+    var d = fred[sid];
+    var name = obmmiMap[sid];
+    if (!d || d.error) return '<tr><td class="td-name">' + name + '</td><td colspan="4" class="err">' + (d ? d.error : 'not loaded') + '</td></tr>';
+    var chCls = d.change > 0 ? 'td-ch-up' : d.change < 0 ? 'td-ch-dn' : '';
+    var chStr = d.change !== null ? (d.change >= 0 ? '+' : '') + d.change.toFixed(3) + '%' : '--';
+    return '<tr><td class="td-name">' + name + '</td><td>' + fmt(d.latest, 2) + '%</td><td class="' + chCls + '">' + chStr + '</td><td>' + (d.latestDate || '--') + '</td><td>' + fmt(d.prev, 2) + '%</td></tr>';
+  });
+  document.getElementById('obmmi-body').innerHTML = obmmiRows.join('') || '<tr><td colspan="5" class="neu">No OBMMI data</td></tr>';
+
+  var pmmsMap = {'MORTGAGE30US': '30Y Fixed (Freddie Mac)', 'MORTGAGE15US': '15Y Fixed (Freddie Mac)'};
+  var pmmsRows = Object.keys(pmmsMap).map(function(sid) {
+    var d = fred[sid];
+    if (!d || d.error) return '<tr><td class="td-name">' + pmmsMap[sid] + '</td><td colspan="4" class="err">' + (d ? d.error : 'not loaded') + '</td></tr>';
+    var chCls = d.change > 0 ? 'td-ch-up' : d.change < 0 ? 'td-ch-dn' : '';
+    var chStr = d.change !== null ? (d.change >= 0 ? '+' : '') + d.change.toFixed(3) + '%' : '--';
+    return '<tr><td class="td-name">' + pmmsMap[sid] + '</td><td>' + fmt(d.latest, 2) + '%</td><td class="' + chCls + '">' + chStr + '</td><td>' + (d.latestDate || '--') + '</td><td>' + fmt(d.prev, 2) + '%</td></tr>';
+  });
+  document.getElementById('pmms-body').innerHTML = pmmsRows.join('');
+
+  var econMap = {
+    'T10Y2Y':     '10Y-2Y Treasury Spread',
+    'T10YIE':     '10Y Breakeven Inflation',
+    'HOUST':      'Housing Starts (K)',
+    'CSUSHPINSA': 'Case-Shiller US HPI',
+    'UMCSENT':    'Consumer Sentiment',
+    'PERMIT':     'Building Permits (K)',
+  };
+  var econRows = Object.keys(econMap).map(function(sid) {
+    var d = fred[sid];
+    if (!d || d.error) return '<tr><td class="td-name">' + econMap[sid] + '</td><td colspan="4" class="err">' + (d ? d.error : 'not loaded') + '</td></tr>';
+    var chCls = d.change > 0 ? 'td-ch-up' : d.change < 0 ? 'td-ch-dn' : '';
+    var chStr = d.change !== null ? (d.change >= 0 ? '+' : '') + d.change.toFixed(3) : '--';
+    return '<tr><td class="td-name">' + econMap[sid] + '</td><td>' + fmt(d.latest, 2) + '</td><td class="' + chCls + '">' + chStr + '</td><td>' + (d.latestDate || '--') + '</td><td>' + fmt(d.prev, 2) + '</td></tr>';
+  });
+  document.getElementById('econ-body').innerHTML = econRows.join('');
+}
+
+function render(data) {
+  lastData = data;
+
+  // Hero + MBS proxies
+  renderHero(data.syntheticMBS);
+  renderEquity('MBB', 'mbb-val', 'mbb-ch', '$');
+  renderEquity('TLT', 'tlt-val', 'tlt-ch', '$');
+  renderEquity('VMBS', 'vmbs-val', 'vmbs-ch', '$');
+
+  // Equities
+  renderEquity('SPY', 'spy-val', 'spy-ch', '$');
+  renderEquity('QQQ', 'qqq-val', 'qqq-ch', '$');
+  renderEquity('DIA', 'dia-val', 'dia-ch', '$');
+  renderEquity('BINANCE:BTCUSDT', 'btc-val', 'btc-ch', '$');
+
+  // Yield curve
+  renderCurve(data.treasury);
+
+  // FRED
+  renderFred(data.fred);
+
+  // Meta
+  var meta = data.meta || {};
+  var fhLoaded = meta.symbolsLoaded || 0;
+  var fhTotal = meta.symbolsRequested || 0;
+  document.getElementById('meta-finnhub').textContent = fhLoaded + '/' + fhTotal + ' symbols';
+  document.getElementById('meta-finnhub').className = fhLoaded > 0 ? 'card-val up' : 'card-val dn';
+  document.getElementById('meta-time').textContent = new Date().toLocaleTimeString('en-US', {timeZone: 'America/New_York'}) + ' ET';
+  document.getElementById('meta-time').className = 'card-val neu';
+
+  // Badges
+  if (fhLoaded > 0) {
+    document.getElementById('badge-finnhub').className = 'badge badge-g';
+    document.getElementById('badge-finnhub').textContent = 'FINNHUB ●';
+  } else {
+    document.getElementById('badge-finnhub').className = 'badge badge-r';
+    document.getElementById('badge-finnhub').textContent = 'FINNHUB ✕';
+  }
+
+  document.getElementById('status-msg').textContent = 'Loaded ' + fhLoaded + ' symbols — ' + (meta.fredSeriesLoaded || 0) + ' FRED series — Treasury ' + (data.treasury && !data.treasury.error ? 'OK' : 'ERR');
+  document.getElementById('status-time').textContent = data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : '';
+}
+
+async function load() {
+  document.getElementById('status-msg').textContent = 'Fetching... ';
+  try {
+    var r = await fetch('/.netlify/functions/getMarketData');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+    document.getElementById('err-banner').style.display = 'none';
+    render(data);
+  } catch (e) {
+    var banner = document.getElementById('err-banner');
+    banner.style.display = 'block';
+    banner.textContent = 'Error fetching data: ' + e.message + ' — Make sure FINNHUB_API_KEY is set in Netlify environment variables and the function is deployed.';
+    document.getElementById('status-msg').textContent = 'Error: ' + e.message;
+    console.error('Load error:', e);
+  }
+}
+
+load();
+setInterval(load, 300000); // refresh every 5 min
+</script>
+</body>
+</html>
