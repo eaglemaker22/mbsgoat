@@ -178,7 +178,7 @@ tr:hover td{background:#0d1420;}
   <!-- Yield Curve -->
   <div class="sec-hdr">
     US TREASURY YIELD CURVE
-    <span class="sec-src src-live" id="src-tsy">● US TREASURY XML</span>
+    <span class="sec-src src-fred" id="src-tsy">● FRED H.15 (DAILY)</span>
   </div>
   <div class="curve-wrap">
     <div class="curve-date" id="curve-date">Loading...</div>
@@ -232,7 +232,7 @@ tr:hover td{background:#0d1420;}
   <div class="grid4" id="meta-grid">
     <div class="card"><div class="card-lbl">FINNHUB</div><div class="card-val neu" id="meta-finnhub">--</div><div class="card-meta">Equities, ETFs, BTC</div></div>
     <div class="card"><div class="card-lbl">FRED API</div><div class="card-val neu" id="meta-fred">--</div><div class="card-meta">OBMMI, PMMS, Econ</div></div>
-    <div class="card"><div class="card-lbl">TREASURY XML</div><div class="card-val neu" id="meta-tsy">--</div><div class="card-meta">Official yield curve</div></div>
+    <div class="card"><div class="card-lbl">YIELD CURVE</div><div class="card-val neu" id="meta-tsy">--</div><div class="card-meta">FRED H.15 daily</div></div>
     <div class="card"><div class="card-lbl">LAST FETCH</div><div class="card-val neu" id="meta-time">--</div><div class="card-meta">Auto-refreshes 5 min</div></div>
   </div>
 
@@ -315,33 +315,30 @@ function renderEquity(sym, valId, chId, prefix) {
   }
 }
 
-function renderCurve(tsy) {
+function renderCurve(yc) {
   var barsEl = document.getElementById('curve-bars');
   var dateEl = document.getElementById('curve-date');
   var spreadEl = document.getElementById('curve-spread');
 
-  if (!tsy || tsy.error) {
-    barsEl.innerHTML = '<div class="err">Treasury XML error: ' + (tsy ? tsy.error : 'no data') + '</div>';
+  if (!yc || (!yc.y10 && !yc.y2)) {
+    barsEl.innerHTML = '<div class="err">Yield curve unavailable</div>';
     document.getElementById('badge-tsy').className = 'badge badge-r';
-    document.getElementById('badge-tsy').textContent = 'TREASURY ✕';
+    document.getElementById('badge-tsy').textContent = 'YIELD ✕';
     return;
   }
 
-  dateEl.textContent = 'Official US Treasury yield curve — as of ' + (tsy.date || '--');
+  dateEl.textContent = 'US Treasury yield curve — FRED H.15 — as of ' + (yc.date || '--');
   document.getElementById('badge-tsy').className = 'badge badge-g';
-  document.getElementById('badge-tsy').textContent = 'TREASURY ●';
+  document.getElementById('badge-tsy').textContent = 'YIELD ●';
 
   var pts = [
-    {lbl:'1M', v:tsy.m1}, {lbl:'3M', v:tsy.m3}, {lbl:'6M', v:tsy.m6},
-    {lbl:'1Y', v:tsy.y1}, {lbl:'2Y', v:tsy.y2}, {lbl:'3Y', v:tsy.y3},
-    {lbl:'5Y', v:tsy.y5}, {lbl:'7Y', v:tsy.y7}, {lbl:'10Y', v:tsy.y10},
-    {lbl:'20Y', v:tsy.y20}, {lbl:'30Y', v:tsy.y30}
+    {lbl:'1M', v:yc.m1}, {lbl:'3M', v:yc.m3}, {lbl:'6M', v:yc.m6},
+    {lbl:'1Y', v:yc.y1}, {lbl:'2Y', v:yc.y2}, {lbl:'5Y', v:yc.y5},
+    {lbl:'10Y', v:yc.y10}, {lbl:'20Y', v:yc.y20}, {lbl:'30Y', v:yc.y30}
   ].filter(function(p){ return p.v; });
 
   if (!pts.length) {
-    barsEl.innerHTML = '<div class="neu">No yield data — may be weekend/holiday</div>';
-    document.getElementById('src-tsy').textContent = '● END OF DAY — NO DATA TODAY';
-    document.getElementById('src-tsy').className = 'sec-src src-est';
+    barsEl.innerHTML = '<div class="neu">No yield data — weekend or holiday</div>';
     return;
   }
 
@@ -358,7 +355,7 @@ function renderCurve(tsy) {
       '</div>';
   }).join('');
 
-  var t2 = tsy.y2, t10 = tsy.y10;
+  var t2 = yc.y2, t10 = yc.y10;
   if (t2 && t10) {
     var spd = ((t10 - t2) * 100).toFixed(0);
     spreadEl.innerHTML = '10Y-2Y spread: <span class="' + (spd > 0 ? 'up' : 'dn') + '">' + spd + ' bps — ' + (spd > 0 ? 'Normal curve' : 'INVERTED ⚠') + '</span>';
@@ -445,7 +442,7 @@ function render(data) {
   renderEquity('BINANCE:BTCUSDT', 'btc-val', 'btc-ch', '$');
 
   // Yield curve
-  renderCurve(data.treasury);
+  renderCurve(data.yieldCurve);
 
   // FRED
   renderFred(data.fred);
@@ -468,7 +465,7 @@ function render(data) {
     document.getElementById('badge-finnhub').textContent = 'FINNHUB ✕';
   }
 
-  document.getElementById('status-msg').textContent = 'Loaded ' + fhLoaded + ' symbols — ' + (meta.fredSeriesLoaded || 0) + ' FRED series — Treasury ' + (data.treasury && !data.treasury.error ? 'OK' : 'ERR');
+  document.getElementById('status-msg').textContent = 'Loaded ' + fhLoaded + ' symbols — ' + (meta.fredSeriesLoaded || 0) + ' FRED series';
   document.getElementById('status-time').textContent = data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : '';
 }
 
