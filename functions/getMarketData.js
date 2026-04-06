@@ -1,5 +1,5 @@
 // functions/getMarketData.js
-// Uses Node.js built-in https only — no npm dependencies needed
+// Uses Node.js built-in https only — zero npm dependencies
 
 const https = require('https');
 
@@ -10,21 +10,28 @@ const FINNHUB_SYMBOLS = [
   'SPY', 'QQQ', 'DIA', 'MBB', 'TLT', 'VMBS', 'BINANCE:BTCUSDT', 'UUP',
 ];
 
-// Batched to avoid FRED rate limits — 5 at a time max
-// MORTGAGE15US discontinued Nov 2025 — using OBMMIC15YF instead
 const FRED_SERIES = [
-  'OBMMIC30YF',     // OBMMI 30Y conventional (daily)
-  'OBMMIFHA30YF',   // OBMMI 30Y FHA (daily)
-  'OBMMIVA30YF',    // OBMMI 30Y VA (daily)
-  'OBMMIJUMBO30YF', // OBMMI 30Y Jumbo (daily)
-  'OBMMIC15YF',     // OBMMI 15Y conventional (daily)
-  'MORTGAGE30US',   // Freddie Mac PMMS 30Y (weekly)
-  'T10Y2Y',         // 10Y-2Y spread (daily)
-  'T10YIE',         // 10Y breakeven inflation (daily)
-  'HOUST',          // Housing starts (monthly)
-  'CSUSHPINSA',     // Case-Shiller HPI (monthly)
-  'UMCSENT',        // Consumer sentiment (monthly)
-  'PERMIT',         // Building permits (monthly)
+  'OBMMIC30YF',    // OBMMI 30Y conventional (daily)
+  'OBMMIFHA30YF',  // OBMMI 30Y FHA (daily)
+  'OBMMIVA30YF',   // OBMMI 30Y VA (daily)
+  'OBMMIJUMBO30YF',// OBMMI 30Y Jumbo (daily)
+  'OBMMIC15YF',    // OBMMI 15Y conventional (daily)
+  'MORTGAGE30US',  // Freddie Mac PMMS 30Y (weekly)
+  'DGS1MO',        // 1-month Treasury yield
+  'DGS3MO',        // 3-month Treasury yield
+  'DGS6MO',        // 6-month Treasury yield
+  'DGS1',          // 1-year Treasury yield
+  'DGS2',          // 2-year Treasury yield
+  'DGS5',          // 5-year Treasury yield
+  'DGS10',         // 10-year Treasury yield
+  'DGS20',         // 20-year Treasury yield
+  'DGS30',         // 30-year Treasury yield
+  'T10Y2Y',        // 10Y-2Y spread (daily)
+  'T10YIE',        // 10Y breakeven inflation (daily)
+  'HOUST',         // Housing starts (monthly)
+  'CSUSHPINSA',    // Case-Shiller HPI (monthly)
+  'UMCSENT',       // Consumer sentiment (monthly)
+  'PERMIT',        // Building permits (monthly)
 ];
 
 function get(url) {
@@ -39,16 +46,14 @@ function get(url) {
   });
 }
 
-// Run promises in batches to avoid rate limiting
 async function batchAll(items, fn, batchSize) {
   const results = [];
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
     const batchResults = await Promise.all(batch.map(fn));
     results.push(...batchResults);
-    // Small delay between batches
     if (i + batchSize < items.length) {
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 250));
     }
   }
   return results;
@@ -106,55 +111,6 @@ async function fetchFredSeries(seriesId) {
   }
 }
 
-async function fetchTreasuryYieldCurve() {
-  const now = new Date();
-  // Try current month and up to 3 prior months
-  const months = [];
-  for (let i = 0; i < 4; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push(`${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`);
-  }
-
-  async function tryMonth(ym) {
-    const url = `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=${ym}`;
-    const res = await get(url);
-    if (res.status !== 200) return null;
-    const txt = res.body;
-    const entries = [...txt.matchAll(/<entry>([\s\S]*?)<\/entry>/g)];
-    if (!entries.length) return null;
-    const last = entries[entries.length - 1][1];
-
-    function ex(tag) {
-      const m = last.match(new RegExp(`<[^>]*${tag}[^>]*>([\\d.]+)<`));
-      return m ? parseFloat(m[1]) : null;
-    }
-    function exStr(tag) {
-      const m = last.match(new RegExp(`<[^>]*${tag}[^>]*>([^<]+)<`));
-      return m ? m[1].trim() : null;
-    }
-
-    const date = exStr('NEW_DATE');
-    const result = {
-      date: date ? date.slice(0, 10) : ym,
-      m1: ex('d_1_MONTH'), m3: ex('d_3_MONTH'), m6: ex('d_6_MONTH'),
-      y1: ex('d_1_YEAR'),  y2: ex('d_2_YEAR'),  y3: ex('d_3_YEAR'),
-      y5: ex('d_5_YEAR'),  y7: ex('d_7_YEAR'),  y10: ex('d_10_YEAR'),
-      y20: ex('d_20_YEAR'), y30: ex('d_30_YEAR'),
-    };
-    return result.y10 ? result : null;
-  }
-
-  for (const ym of months) {
-    try {
-      const result = await tryMonth(ym);
-      if (result) return result;
-    } catch (e) {
-      continue;
-    }
-  }
-  return { error: 'No Treasury data available' };
-}
-
 exports.handler = async function (event, context) {
   const headers = {
     'Content-Type': 'application/json',
@@ -168,13 +124,9 @@ exports.handler = async function (event, context) {
   }
 
   try {
-    // Finnhub all in parallel — fast
-    // FRED in batches of 4 — avoids rate limiting
-    // Treasury sequential month fallback
-    const [finnhubResults, fredResults, treasury] = await Promise.all([
+    const [finnhubResults, fredResults] = await Promise.all([
       Promise.all(FINNHUB_SYMBOLS.map(fetchFinnhub)),
-      FRED_KEY ? batchAll(FRED_SERIES, fetchFredSeries, 4) : Promise.resolve([]),
-      fetchTreasuryYieldCurve(),
+      FRED_KEY ? batchAll(FRED_SERIES, fetchFredSeries, 5) : Promise.resolve([]),
     ]);
 
     const equities = {};
@@ -182,6 +134,21 @@ exports.handler = async function (event, context) {
 
     const fred = {};
     fredResults.forEach(r => { if (r.seriesId) fred[r.seriesId] = r; });
+
+    // Build yield curve object from FRED DGS series
+    const yieldCurve = {
+      source: 'FRED H.15',
+      date: fred['DGS10']?.latestDate || null,
+      m1:  fred['DGS1MO']?.latest || null,
+      m3:  fred['DGS3MO']?.latest || null,
+      m6:  fred['DGS6MO']?.latest || null,
+      y1:  fred['DGS1']?.latest   || null,
+      y2:  fred['DGS2']?.latest   || null,
+      y5:  fred['DGS5']?.latest   || null,
+      y10: fred['DGS10']?.latest  || null,
+      y20: fred['DGS20']?.latest  || null,
+      y30: fred['DGS30']?.latest  || null,
+    };
 
     // Synthetic MBS indicator: MBB 70% + TLT 30%
     let syntheticMBS = null;
@@ -207,7 +174,7 @@ exports.handler = async function (event, context) {
         timestamp: new Date().toISOString(),
         equities,
         fred,
-        treasury,
+        yieldCurve,
         syntheticMBS,
         meta: {
           finnhubKey: !!FINNHUB_KEY,
