@@ -1,49 +1,34 @@
 // functions/getMarketData.js
-// Consolidated market data proxy for MBSGOAT Playground
-// Handles: Finnhub (equities, ETFs, BTC), FRED (OBMMI, PMMS, econ), Treasury XML
-
 const fetch = require('node-fetch');
 
 const FINNHUB_KEY = process.env.FINNHUB_API_KEY;
 const FRED_KEY = process.env.FRED_API_KEY;
 
-// All Finnhub symbols we want
 const FINNHUB_SYMBOLS = [
-  'SPY',               // S&P 500
-  'QQQ',               // Nasdaq 100
-  'DIA',               // Dow Jones
-  'MBB',               // iShares Agency MBS ETF — core synthetic indicator input
-  'TLT',               // 20Y+ Treasury ETF — duration proxy
-  'VMBS',              // Vanguard MBS ETF
-  'ZN=F',              // 10Y Treasury futures (may not be on Finnhub free tier)
-  'BINANCE:BTCUSDT',   // Bitcoin
-  'UUP',               // US Dollar index ETF
+  'SPY', 'QQQ', 'DIA', 'MBB', 'TLT', 'VMBS', 'BINANCE:BTCUSDT', 'UUP',
 ];
 
-// FRED series we want
 const FRED_SERIES = [
-  'OBMMIC30YF',        // OBMMI 30Y conventional
-  'OBMMIFHA30YF',      // OBMMI 30Y FHA
-  'OBMMIVA30YF',       // OBMMI 30Y VA
-  'OBMMIJUMBO30YF',    // OBMMI 30Y Jumbo
-  'OBMMIC15YF',        // OBMMI 15Y conventional
-  'MORTGAGE30US',      // Freddie Mac PMMS 30Y
-  'MORTGAGE15US',      // Freddie Mac PMMS 15Y
-  'T10Y2Y',            // 10Y-2Y spread
-  'T10YIE',            // 10Y breakeven inflation
-  'HOUST',             // Housing starts
-  'CSUSHPINSA',        // Case-Shiller HPI
-  'UMCSENT',           // Consumer sentiment
-  'PERMIT',            // Building permits
+  'OBMMIC30YF', 'OBMMIFHA30YF', 'OBMMIVA30YF', 'OBMMIJUMBO30YF', 'OBMMIC15YF',
+  'MORTGAGE30US', 'MORTGAGE15US',
+  'T10Y2Y', 'T10YIE', 'HOUST', 'CSUSHPINSA', 'UMCSENT', 'PERMIT',
 ];
+
+function timeout(ms) {
+  return new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
+}
+
+async function safeFetch(url, ms) {
+  return Promise.race([fetch(url), timeout(ms)]);
+}
 
 async function fetchFinnhub(symbol) {
   try {
     const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_KEY}`;
-    const r = await fetch(url, { timeout: 8000 });
+    const r = await safeFetch(url, 6000);
     if (!r.ok) return { symbol, error: `HTTP ${r.status}` };
     const q = await r.json();
-    if (!q || q.c === undefined || q.c === 0) return { symbol, error: 'No data' };
+    if (!q || !q.c || q.c === 0) return { symbol, error: 'No data' };
     const current = parseFloat(q.c);
     const prev = parseFloat(q.pc);
     const change = current - prev;
@@ -65,10 +50,10 @@ async function fetchFinnhub(symbol) {
 }
 
 async function fetchFredSeries(seriesId) {
-  if (!FRED_KEY) return { seriesId, error: 'No FRED key configured' };
+  if (!FRED_KEY) return { seriesId, error: 'No FRED key' };
   try {
     const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${FRED_KEY}&limit=3&sort_order=desc&file_type=json`;
-    const r = await fetch(url, { timeout: 8000 });
+    const r = await safeFetch(url, 6000);
     if (!r.ok) return { seriesId, error: `HTTP ${r.status}` };
     const d = await r.json();
     if (d.error_message) return { seriesId, error: d.error_message };
@@ -87,53 +72,53 @@ async function fetchFredSeries(seriesId) {
   }
 }
 
-async function tryTreasuryMonth(ym) {
-  const url = `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=${ym}`;
-  const r = await fetch(url, { timeout: 12000 });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  const txt = await r.text();
-  const entries = [...txt.matchAll(/<entry>([\s\S]*?)<\/entry>/g)];
-  if (!entries.length) return null;
-  const lastEntry = entries[entries.length - 1][1];
-  function extract(tag) {
-    const m = lastEntry.match(new RegExp(`<[^>]*${tag}[^>]*>([^<]+)<\/[^>]*>`));
-    return m ? parseFloat(m[1]) : null;
-  }
-  function extractStr(tag) {
-    const m = lastEntry.match(new RegExp(`<[^>]*${tag}[^>]*>([^<]+)<\/[^>]*>`));
-    return m ? m[1].trim() : null;
-  }
-  const date = extractStr('NEW_DATE');
-  const result = {
-    date: date ? date.slice(0, 10) : ym,
-    m1: extract('d_1_MONTH'), m3: extract('d_3_MONTH'), m6: extract('d_6_MONTH'),
-    y1: extract('d_1_YEAR'),  y2: extract('d_2_YEAR'),  y3: extract('d_3_YEAR'),
-    y5: extract('d_5_YEAR'),  y7: extract('d_7_YEAR'),  y10: extract('d_10_YEAR'),
-    y20: extract('d_20_YEAR'), y30: extract('d_30_YEAR'),
-  };
-  const hasData = [result.y2, result.y10, result.y30].some(v => v !== null);
-  if (!hasData) return null;
-  return result;
-}
-
 async function fetchTreasuryYieldCurve() {
-  try {
-    const now = new Date();
-    const monthsToTry = [];
-    for (let i = 0; i < 4; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      monthsToTry.push(`${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`);
+  // Try current month and previous month in parallel — take whichever has data
+  const now = new Date();
+  const months = [0, 1, 2].map(i => {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+  async function tryMonth(ym) {
+    const url = `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=${ym}`;
+    const r = await safeFetch(url, 8000);
+    if (!r.ok) return null;
+    const txt = await r.text();
+    const entries = [...txt.matchAll(/<entry>([\s\S]*?)<\/entry>/g)];
+    if (!entries.length) return null;
+    const last = entries[entries.length - 1][1];
+
+    function ex(tag) {
+      const m = last.match(new RegExp(`<[^>]*${tag}[^>]*>([\\d.]+)<`));
+      return m ? parseFloat(m[1]) : null;
     }
-    for (const ym of monthsToTry) {
-      try {
-        const result = await tryTreasuryMonth(ym);
-        if (result) return result;
-      } catch (e) { continue; }
+    function exStr(tag) {
+      const m = last.match(new RegExp(`<[^>]*${tag}[^>]*>([^<]+)<`));
+      return m ? m[1].trim() : null;
     }
-    return { error: 'No Treasury data found for recent months' };
-  } catch (e) {
-    return { error: e.message };
+
+    const date = exStr('NEW_DATE');
+    const result = {
+      date: date ? date.slice(0, 10) : ym,
+      m1: ex('d_1_MONTH'), m3: ex('d_3_MONTH'), m6: ex('d_6_MONTH'),
+      y1: ex('d_1_YEAR'),  y2: ex('d_2_YEAR'),  y3: ex('d_3_YEAR'),
+      y5: ex('d_5_YEAR'),  y7: ex('d_7_YEAR'),  y10: ex('d_10_YEAR'),
+      y20: ex('d_20_YEAR'), y30: ex('d_30_YEAR'),
+    };
+    return (result.y10 || result.y2) ? result : null;
   }
+
+  // Try months sequentially — stop at first success
+  for (const ym of months) {
+    try {
+      const result = await tryMonth(ym);
+      if (result) return result;
+    } catch (e) {
+      continue;
+    }
+  }
+  return { error: 'No Treasury data available' };
 }
 
 exports.handler = async function (event, context) {
@@ -149,44 +134,34 @@ exports.handler = async function (event, context) {
   }
 
   try {
-    // Run everything in parallel
+    // Finnhub and FRED run in parallel — Treasury runs separately
+    // This avoids one slow source blocking everything else
     const [finnhubResults, fredResults, treasury] = await Promise.all([
       Promise.all(FINNHUB_SYMBOLS.map(fetchFinnhub)),
       FRED_KEY ? Promise.all(FRED_SERIES.map(fetchFredSeries)) : Promise.resolve([]),
       fetchTreasuryYieldCurve(),
     ]);
 
-    // Shape Finnhub results into a clean object
     const equities = {};
-    finnhubResults.forEach(r => {
-      equities[r.symbol] = r;
-    });
+    finnhubResults.forEach(r => { equities[r.symbol] = r; });
 
-    // Shape FRED results
     const fred = {};
-    fredResults.forEach(r => {
-      if (r.seriesId) fred[r.seriesId] = r;
-    });
+    fredResults.forEach(r => { if (r.seriesId) fred[r.seriesId] = r; });
 
-    // Compute synthetic MBS indicator if MBB loaded
+    // Synthetic MBS indicator
     let syntheticMBS = null;
     const mbb = equities['MBB'];
     const tlt = equities['TLT'];
     if (mbb && !mbb.error && tlt && !tlt.error) {
-      // Weighted synthetic: MBB drives 70%, TLT duration 30%
-      // Expressed as estimated 32nds-equivalent +/- (scale to typical MBS daily range)
       const mbbPct = mbb.pct;
       const tltPct = tlt.pct;
       const composite = (mbbPct * 0.70) + (tltPct * 0.30);
-      // Scale to approximate MBS price points (MBS trades in 32nds, ~1% = 32 ticks)
-      const estimatedTicks = composite * 32;
       syntheticMBS = {
         compositePct: parseFloat(composite.toFixed(4)),
-        estimatedTicks: parseFloat(estimatedTicks.toFixed(1)),
-        estimatedPoints: parseFloat((composite).toFixed(4)),
+        estimatedTicks: parseFloat((composite * 32).toFixed(1)),
         direction: composite > 0.05 ? 'better' : composite < -0.05 ? 'worse' : 'flat',
         inputs: { mbbPct, tltPct },
-        note: 'Synthetic estimate from MBB (70%) + TLT (30%). Not a live MBS price.',
+        note: 'Synthetic estimate: MBB (70%) + TLT (30%). Not a live MBS price.',
       };
     }
 
