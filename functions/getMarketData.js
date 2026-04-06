@@ -87,45 +87,50 @@ async function fetchFredSeries(seriesId) {
   }
 }
 
+async function tryTreasuryMonth(ym) {
+  const url = `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=${ym}`;
+  const r = await fetch(url, { timeout: 12000 });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const txt = await r.text();
+  const entries = [...txt.matchAll(/<entry>([\s\S]*?)<\/entry>/g)];
+  if (!entries.length) return null;
+  const lastEntry = entries[entries.length - 1][1];
+  function extract(tag) {
+    const m = lastEntry.match(new RegExp(`<[^>]*${tag}[^>]*>([^<]+)<\/[^>]*>`));
+    return m ? parseFloat(m[1]) : null;
+  }
+  function extractStr(tag) {
+    const m = lastEntry.match(new RegExp(`<[^>]*${tag}[^>]*>([^<]+)<\/[^>]*>`));
+    return m ? m[1].trim() : null;
+  }
+  const date = extractStr('NEW_DATE');
+  const result = {
+    date: date ? date.slice(0, 10) : ym,
+    m1: extract('d_1_MONTH'), m3: extract('d_3_MONTH'), m6: extract('d_6_MONTH'),
+    y1: extract('d_1_YEAR'),  y2: extract('d_2_YEAR'),  y3: extract('d_3_YEAR'),
+    y5: extract('d_5_YEAR'),  y7: extract('d_7_YEAR'),  y10: extract('d_10_YEAR'),
+    y20: extract('d_20_YEAR'), y30: extract('d_30_YEAR'),
+  };
+  const hasData = [result.y2, result.y10, result.y30].some(v => v !== null);
+  if (!hasData) return null;
+  return result;
+}
+
 async function fetchTreasuryYieldCurve() {
   try {
-    const ym = new Date().toISOString().slice(0, 7).replace('-', '');
-    const url = `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=${ym}`;
-    const r = await fetch(url, { timeout: 10000 });
-    if (!r.ok) return { error: `HTTP ${r.status}` };
-    const txt = await r.text();
-
-    // Parse XML manually — no DOM parser in Node
-    const entries = [...txt.matchAll(/<entry>([\s\S]*?)<\/entry>/g)];
-    if (!entries.length) return { error: 'No entries' };
-
-    const lastEntry = entries[entries.length - 1][1];
-
-    function extract(tag) {
-      const m = lastEntry.match(new RegExp(`<${tag}[^>]*>([^<]+)<\/${tag}>`));
-      return m ? parseFloat(m[1]) : null;
+    const now = new Date();
+    const monthsToTry = [];
+    for (let i = 0; i < 4; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      monthsToTry.push(`${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`);
     }
-    function extractStr(tag) {
-      const m = lastEntry.match(new RegExp(`<${tag}[^>]*>([^<]+)<\/${tag}>`));
-      return m ? m[1].trim() : null;
+    for (const ym of monthsToTry) {
+      try {
+        const result = await tryTreasuryMonth(ym);
+        if (result) return result;
+      } catch (e) { continue; }
     }
-
-    const date = extractStr('NEW_DATE') || extractStr('d:NEW_DATE');
-
-    return {
-      date: date ? date.slice(0, 10) : 'unknown',
-      m1:  extract('d_1_MONTH')  || extract('BC_1MONTH'),
-      m3:  extract('d_3_MONTH')  || extract('BC_3MONTH'),
-      m6:  extract('d_6_MONTH')  || extract('BC_6MONTH'),
-      y1:  extract('d_1_YEAR')   || extract('BC_1YEAR'),
-      y2:  extract('d_2_YEAR')   || extract('BC_2YEAR'),
-      y3:  extract('d_3_YEAR')   || extract('BC_3YEAR'),
-      y5:  extract('d_5_YEAR')   || extract('BC_5YEAR'),
-      y7:  extract('d_7_YEAR')   || extract('BC_7YEAR'),
-      y10: extract('d_10_YEAR')  || extract('BC_10YEAR'),
-      y20: extract('d_20_YEAR')  || extract('BC_20YEAR'),
-      y30: extract('d_30_YEAR')  || extract('BC_30YEAR'),
-    };
+    return { error: 'No Treasury data found for recent months' };
   } catch (e) {
     return { error: e.message };
   }
