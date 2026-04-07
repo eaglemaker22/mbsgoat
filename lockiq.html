@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MBSGOAT — LockIQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080b0f;--panel:#0d1117;--card:#111820;
+  --border:#1a2332;--border2:#243040;
+  --green:#00e87a;--amber:#ffb800;--red:#ff3d3d;--blue:#4da6ff;--cyan:#00d4ff;
+  --text:#b8ccd8;--dim:#3a4a5c;--muted:#6b7c93;
+  --green-bg:#001a0d;--red-bg:#1a0505;--amber-bg:#1a1200;
+}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:12px;min-height:100vh;}
+
+/* HEADER */
+.hdr{background:#0a0e14;border-bottom:1px solid var(--border);padding:8px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:100;}
+.logo{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--green);letter-spacing:2px;}
+.logo span{color:var(--amber);}
+.logo sub{font-size:11px;color:var(--dim);letter-spacing:1px;font-family:'Share Tech Mono',monospace;font-weight:400;}
+.hdr-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.badge{font-size:10px;border:1px solid;padding:2px 8px;letter-spacing:1px;}
+.bg{color:var(--green);border-color:var(--green);}
+.ba{color:var(--amber);border-color:var(--amber);}
+.br{color:var(--red);border-color:var(--red);}
+.bd{color:var(--dim);border-color:var(--dim);}
+#clock{color:var(--muted);font-size:11px;}
+
+/* NAV TABS */
+.nav{display:flex;background:#0a0e14;border-bottom:1px solid var(--border);}
+.nav-tab{padding:10px 20px;font-size:11px;cursor:pointer;color:var(--dim);border-right:1px solid var(--border);letter-spacing:1px;border-bottom:2px solid transparent;transition:all .2s;}
+.nav-tab.on{color:var(--green);border-bottom-color:var(--green);background:var(--bg);}
+.nav-tab:hover:not(.on){color:var(--text);}
+
+/* SCREENS */
+.screen{display:none;padding:16px 20px;max-width:1400px;margin:0 auto;}
+.screen.on{display:block;}
+
+/* SECTION HEADERS */
+.sh{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;color:var(--amber);letter-spacing:2px;border-bottom:1px solid var(--border);padding-bottom:6px;margin:20px 0 12px;display:flex;justify-content:space-between;align-items:center;}
+.sh:first-child{margin-top:0;}
+.sh-src{font-size:10px;font-family:'Share Tech Mono',monospace;font-weight:400;color:var(--dim);}
+
+/* RPM GAUGE */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;margin:8px 0 20px;}
+.gauge-svg{width:320px;max-width:100%;}
+.gauge-reading{text-align:center;margin-top:8px;}
+.gauge-score{font-family:'Rajdhani',sans-serif;font-size:52px;font-weight:700;line-height:1;}
+.gauge-label{font-size:12px;letter-spacing:2px;margin-top:4px;}
+.gauge-sub{font-size:11px;color:var(--muted);margin-top:6px;}
+
+/* TIME SELECTOR */
+.time-sel{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.ts-btn{background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 12px;cursor:pointer;letter-spacing:1px;}
+.ts-btn.on{border-color:var(--amber);color:var(--amber);}
+.ts-btn:hover:not(.on){border-color:var(--muted);color:var(--text);}
+
+/* CARDS GRID */
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px;}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:14px;}
+@media(max-width:700px){.g4,.g3{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:420px){.g4,.g3,.g2{grid-template-columns:1fr;}}
+
+.card{background:var(--card);border:1px solid var(--border);padding:10px 12px;}
+.card-lbl{font-size:10px;color:var(--dim);letter-spacing:1px;margin-bottom:4px;}
+.card-val{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:600;margin-bottom:2px;}
+.card-ch{font-size:11px;margin-bottom:2px;}
+.card-meta{font-size:10px;color:var(--dim);}
+.up{color:var(--green);}.dn{color:var(--red);}.neu{color:var(--muted);}
+
+/* IMPACT PANEL */
+.impact-hero{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--amber);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.impact-lbl{font-size:10px;color:var(--dim);letter-spacing:2px;margin-bottom:4px;}
+.impact-val{font-family:'Rajdhani',sans-serif;font-size:38px;font-weight:700;line-height:1;}
+.impact-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.impact-divider{width:1px;height:50px;background:var(--border);}
+.impact-stat{text-align:center;}
+.impact-stat-val{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:600;margin-bottom:2px;}
+.impact-stat-lbl{font-size:10px;color:var(--dim);letter-spacing:1px;}
+
+/* LOAN TABLE */
+.loan-form{background:var(--card);border:1px solid var(--border);padding:14px 16px;margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;flex-wrap:wrap;}
+@media(max-width:800px){.form-row{grid-template-columns:1fr 1fr;}}
+.form-group label{font-size:10px;color:var(--dim);letter-spacing:1px;display:block;margin-bottom:4px;}
+.form-group input{width:100%;background:#070a0e;border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:12px;padding:6px 8px;outline:none;}
+.form-group input:focus{border-color:var(--amber);}
+.add-btn{background:transparent;border:1px solid var(--green);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:11px;padding:7px 16px;cursor:pointer;letter-spacing:1px;white-space:nowrap;}
+.add-btn:hover{background:var(--green-bg);}
+
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{text-align:left;color:var(--amber);padding:5px 8px;border-bottom:1px solid var(--border);font-weight:normal;letter-spacing:1px;font-size:10px;}
+td{padding:6px 8px;border-bottom:1px solid #0d1420;}
+tr:hover td{background:#0d1824;}
+.del-btn{background:transparent;border:none;color:var(--dim);cursor:pointer;font-size:14px;padding:0 4px;}
+.del-btn:hover{color:var(--red);}
+.risk-low{color:var(--green);font-size:10px;}
+.risk-med{color:var(--amber);font-size:10px;}
+.risk-high{color:var(--red);font-size:10px;}
+.impact-pos{color:var(--green);}
+.impact-neg{color:var(--red);}
+
+/* EVENTS */
+.event-card{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--dim);padding:10px 14px;margin-bottom:8px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
+.event-card.high{border-left-color:var(--red);}
+.event-card.med{border-left-color:var(--amber);}
+.event-card.low{border-left-color:var(--muted);}
+.event-time{font-size:11px;color:var(--amber);white-space:nowrap;min-width:80px;}
+.event-name{font-size:12px;color:var(--text);font-weight:500;}
+.event-impact{font-size:10px;margin-top:3px;}
+.event-high{color:var(--red);}
+.event-med{color:var(--amber);}
+.event-low{color:var(--muted);}
+.event-est{font-size:11px;color:var(--muted);margin-left:auto;}
+
+/* ALERT BANNER */
+.alert-banner{padding:10px 16px;margin-bottom:12px;font-size:12px;border-left:3px solid;display:none;}
+.alert-bad{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+.alert-good{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+.alert-warn{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+
+/* STATUS BAR */
+.sbar{background:#060a0e;border-top:1px solid var(--border);padding:5px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;font-size:10px;color:var(--dim);position:sticky;bottom:0;}
+.dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);margin-right:4px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* REPRICE METER */
+.meter-wrap{margin:10px 0 16px;}
+.meter-label-row{display:flex;justify-content:space-between;margin-bottom:5px;font-size:10px;}
+.meter-track{height:12px;background:#0d1420;border:1px solid var(--border);position:relative;overflow:hidden;}
+.meter-center{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border2);}
+.meter-fill{position:absolute;top:0;bottom:0;transition:all .5s;}
+.meter-ticks{display:flex;justify-content:space-between;margin-top:3px;font-size:9px;color:var(--dim);}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="logo">MBS<span>GOAT</span> <sub>LOCKIQ</sub></div>
+  </div>
+  <div class="hdr-right">
+    <span id="clock"></span>
+    <span class="badge bd" id="badge-data">DATA ○</span>
+    <span class="badge ba" id="mkt-badge">MKT --</span>
+  </div>
+</div>
+
+<div class="nav">
+  <div class="nav-tab on" onclick="nav('pulse',this)">▸ MARKET PULSE</div>
+  <div class="nav-tab" onclick="nav('pipeline',this)">▸ MY PIPELINE</div>
+  <div class="nav-tab" onclick="nav('events',this)">▸ EVENT RISK</div>
+</div>
+
+<!-- SCREEN 1: MARKET PULSE -->
+<div class="screen on" id="sc-pulse">
+
+  <div class="alert-banner" id="alert-box"></div>
+
+  <div class="sh">RATE PRESSURE GAUGE <span class="sh-src" id="gauge-src">● LIVE</span></div>
+
+  <div class="time-sel">
+    <span style="font-size:10px;color:var(--dim);padding:4px 0;">SINCE:</span>
+    <button class="ts-btn on" onclick="setWindow('open',this)">MARKET OPEN</button>
+    <button class="ts-btn" onclick="setWindow('1h',this)">1 HOUR AGO</button>
+    <button class="ts-btn" onclick="setWindow('30m',this)">30 MIN AGO</button>
+    <button class="ts-btn" onclick="setWindow('now',this)">RIGHT NOW</button>
+  </div>
+
+  <!-- RPM GAUGE SVG -->
+  <div class="gauge-wrap">
+    <svg class="gauge-svg" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#ff3d3d"/>
+          <stop offset="50%" style="stop-color:#ffb800"/>
+          <stop offset="100%" style="stop-color:#00e87a"/>
+        </linearGradient>
+      </defs>
+      <!-- Background arc track -->
+      <path d="M 30 155 A 130 130 0 0 1 290 155" fill="none" stroke="#1a2332" stroke-width="20" stroke-linecap="round"/>
+      <!-- Color arc -->
+      <path d="M 30 155 A 130 130 0 0 1 290 155" fill="none" stroke="url(#arcGrad)" stroke-width="8" stroke-linecap="round" opacity="0.4"/>
+      <!-- Zone labels -->
+      <text x="18" y="175" font-size="9" fill="#ff3d3d" font-family="Share Tech Mono">WORSE</text>
+      <text x="130" y="32" font-size="9" fill="#ffb800" font-family="Share Tech Mono" text-anchor="middle">NEUTRAL</text>
+      <text x="278" y="175" font-size="9" fill="#00e87a" font-family="Share Tech Mono" text-anchor="end">BETTER</text>
+      <!-- Tick marks -->
+      <g stroke="#243040" stroke-width="1">
+        <line x1="160" y1="25" x2="160" y2="38"/>
+        <line x1="83" y1="47" x2="89" y2="58"/>
+        <line x1="237" y1="47" x2="231" y2="58"/>
+        <line x1="32" y1="115" x2="44" y2="118"/>
+        <line x1="288" y1="115" x2="276" y2="118"/>
+      </g>
+      <!-- Needle -->
+      <g id="needle-g" transform="rotate(0, 160, 155)">
+        <line x1="160" y1="155" x2="160" y2="42" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+        <circle cx="160" cy="155" r="6" fill="#1a2332" stroke="#ffffff" stroke-width="2"/>
+        <circle cx="160" cy="155" r="2" fill="#ffffff"/>
+      </g>
+      <!-- Score display -->
+      <text id="gauge-score-svg" x="160" y="145" font-size="22" font-family="Rajdhani" font-weight="700" fill="#ffffff" text-anchor="middle">--</text>
+    </svg>
+    <div class="gauge-reading">
+      <div class="gauge-label" id="gauge-label" style="color:var(--muted);">LOADING DATA...</div>
+      <div class="gauge-sub" id="gauge-sub">Awaiting market data</div>
+    </div>
+  </div>
+
+  <!-- REPRICE PROXIMITY METER -->
+  <div class="sh">REPRICE PROXIMITY <span class="sh-src">Based on 25-tick threshold</span></div>
+  <div class="meter-wrap">
+    <div class="meter-label-row">
+      <span style="color:var(--green)">BETTER ◀</span>
+      <span id="meter-pct" style="color:var(--text)">0%</span>
+      <span style="color:var(--red)">▶ WORSE</span>
+    </div>
+    <div class="meter-track">
+      <div class="meter-center"></div>
+      <div class="meter-fill" id="meter-fill" style="background:var(--muted);width:0%;left:50%;"></div>
+    </div>
+    <div class="meter-ticks">
+      <span>-50t</span><span>-25t</span><span>0</span><span>+25t</span><span>+50t</span>
+    </div>
+    <div style="font-size:11px;color:var(--dim);margin-top:6px;" id="reprice-msg">Calculating reprice proximity...</div>
+  </div>
+
+  <!-- MARKET MOVEMENT -->
+  <div class="sh">MARKET MOVEMENT <span class="sh-src" id="move-since">● SINCE OPEN</span></div>
+  <div class="g4">
+    <div class="card"><div class="card-lbl">10Y YIELD Δ</div><div class="card-val" id="m-10y">--</div><div class="card-ch neu" id="m-10y-abs">--</div></div>
+    <div class="card"><div class="card-lbl">MBB Δ</div><div class="card-val" id="m-mbb">--</div><div class="card-ch neu" id="m-mbb-abs">--</div></div>
+    <div class="card"><div class="card-lbl">TLT Δ</div><div class="card-val" id="m-tlt">--</div><div class="card-ch neu" id="m-tlt-abs">--</div></div>
+    <div class="card"><div class="card-lbl">IMPLIED RATE MOVE</div><div class="card-val" id="m-rate">--</div><div class="card-meta">~bps change</div></div>
+  </div>
+
+  <!-- SYNTHETIC MBS -->
+  <div class="sh">SYNTHETIC UMBS INDICATOR <span class="sh-src">● MBB×0.4345 HEDGE RATIO</span></div>
+  <div class="g4">
+    <div class="card"><div class="card-lbl">EST. UMBS 5.5 Δ</div><div class="card-val" id="s-umbs55">--</div><div class="card-meta">Points from open</div></div>
+    <div class="card"><div class="card-lbl">EST. TICKS</div><div class="card-val" id="s-ticks">--</div><div class="card-meta">32nds equivalent</div></div>
+    <div class="card"><div class="card-lbl">DIRECTION</div><div class="card-val" id="s-dir">--</div><div class="card-meta" id="s-conf">--</div></div>
+    <div class="card"><div class="card-lbl">REPRICE RISK</div><div class="card-val" id="s-risk">--</div><div class="card-meta" id="s-risk-sub">--</div></div>
+  </div>
+
+  <!-- LIVE PRICES -->
+  <div class="sh">LIVE MARKET DATA <span class="sh-src">● FINNHUB</span></div>
+  <div class="g4">
+    <div class="card"><div class="card-lbl">MBB</div><div class="card-val" id="p-mbb">--</div><div class="card-ch neu" id="c-mbb">--</div><div class="card-meta">Agency MBS ETF</div></div>
+    <div class="card"><div class="card-lbl">TLT</div><div class="card-val" id="p-tlt">--</div><div class="card-ch neu" id="c-tlt">--</div><div class="card-meta">20Y+ Treasury ETF</div></div>
+    <div class="card"><div class="card-lbl">SPY</div><div class="card-val" id="p-spy">--</div><div class="card-ch neu" id="c-spy">--</div><div class="card-meta">S&P 500</div></div>
+    <div class="card"><div class="card-lbl">BTC</div><div class="card-val" id="p-btc">--</div><div class="card-ch neu" id="c-btc">--</div><div class="card-meta">Bitcoin</div></div>
+  </div>
+
+  <!-- OBMMI RATES -->
+  <div class="sh">TODAY'S MORTGAGE RATES <span class="sh-src">● FRED / OPTIMAL BLUE OBMMI</span></div>
+  <div class="g3">
+    <div class="card"><div class="card-lbl">30Y CONVENTIONAL</div><div class="card-val up" id="r-30c">--</div><div class="card-ch" id="r-30c-ch">--</div><div class="card-meta" id="r-30c-dt">--</div></div>
+    <div class="card"><div class="card-lbl">30Y FHA</div><div class="card-val up" id="r-fha">--</div><div class="card-ch" id="r-fha-ch">--</div><div class="card-meta" id="r-fha-dt">--</div></div>
+    <div class="card"><div class="card-lbl">30Y VA</div><div class="card-val up" id="r-va">--</div><div class="card-ch" id="r-va-ch">--</div><div class="card-meta" id="r-va-dt">--</div></div>
+    <div class="card"><div class="card-lbl">30Y JUMBO</div><div class="card-val up" id="r-jumbo">--</div><div class="card-ch" id="r-jumbo-ch">--</div><div class="card-meta" id="r-jumbo-dt">--</div></div>
+    <div class="card"><div class="card-lbl">15Y CONVENTIONAL</div><div class="card-val up" id="r-15c">--</div><div class="card-ch" id="r-15c-ch">--</div><div class="card-meta" id="r-15c-dt">--</div></div>
+    <div class="card"><div class="card-lbl">30Y FIXED (PMMS)</div><div class="card-val up" id="r-pmms">--</div><div class="card-ch neu" id="r-pmms-dt">Weekly avg</div><div class="card-meta">Freddie Mac</div></div>
+  </div>
+
+</div>
+
+<!-- SCREEN 2: PIPELINE -->
+<div class="screen" id="sc-pipeline">
+
+  <div class="sh">MARKET IMPACT SUMMARY</div>
+  <div class="impact-hero">
+    <div>
+      <div class="impact-lbl">TOTAL PIPELINE IMPACT</div>
+      <div class="impact-val" id="total-impact">$0</div>
+      <div class="impact-sub" id="total-impact-sub">No loans entered</div>
+    </div>
+    <div class="impact-divider"></div>
+    <div class="impact-stat">
+      <div class="impact-stat-val" id="pip-loans">0</div>
+      <div class="impact-stat-lbl">LOANS</div>
+    </div>
+    <div class="impact-divider"></div>
+    <div class="impact-stat">
+      <div class="impact-stat-val" id="pip-vol">$0</div>
+      <div class="impact-stat-lbl">VOLUME</div>
+    </div>
+    <div class="impact-divider"></div>
+    <div class="impact-stat">
+      <div class="impact-stat-val" id="pip-risk-ct">0</div>
+      <div class="impact-stat-lbl">HIGH RISK</div>
+    </div>
+  </div>
+
+  <div class="sh">ADD LOAN TO PIPELINE</div>
+  <div class="loan-form">
+    <div class="form-row">
+      <div class="form-group"><label>BORROWER / ID</label><input id="f-name" placeholder="Smith / 2024-001"/></div>
+      <div class="form-group"><label>LOAN AMOUNT ($)</label><input id="f-amt" type="number" placeholder="450000"/></div>
+      <div class="form-group"><label>RATE (%)</label><input id="f-rate" type="number" step="0.125" placeholder="6.75"/></div>
+      <div class="form-group"><label>LOCK STATUS</label><input id="f-lock" placeholder="Floating / Locked"/></div>
+      <div class="form-group"><label>CLOSE DATE</label><input id="f-close" type="date"/></div>
+      <div class="form-group"><label>&nbsp;</label><button class="add-btn" onclick="addLoan()">+ ADD LOAN</button></div>
+    </div>
+  </div>
+
+  <div class="sh">PIPELINE <span class="sh-src" id="pip-src">0 LOANS</span></div>
+  <div style="overflow-x:auto;">
+    <table id="loan-table">
+      <thead>
+        <tr>
+          <th>BORROWER</th>
+          <th>AMOUNT</th>
+          <th>RATE</th>
+          <th>STATUS</th>
+          <th>CLOSE</th>
+          <th>DAYS LEFT</th>
+          <th>MKT MOVE</th>
+          <th>$ IMPACT</th>
+          <th>RISK</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="loan-tbody">
+        <tr><td colspan="10" class="neu" style="padding:20px 8px;">No loans in pipeline. Add a loan above.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="font-size:10px;color:var(--dim);margin-top:10px;line-height:1.7;">
+    Dollar impact calculation: Rate change → price change (0.125% ≈ 1 point ≈ 1% of loan) → loan amount × price change %.
+    Market move = synthetic UMBS change from your selected time window.
+    Risk scoring: HIGH = &lt;10 days + worsening market. MEDIUM = &lt;21 days or significant move. LOW = all others.
+  </div>
+
+</div>
+
+<!-- SCREEN 3: EVENT RISK -->
+<div class="screen" id="sc-events">
+
+  <div class="sh">UPCOMING ECONOMIC EVENTS <span class="sh-src">● STATIC CALENDAR — UPDATE WEEKLY</span></div>
+  <div id="event-list"></div>
+
+  <div class="sh" style="margin-top:20px;">VOLATILITY CONTEXT</div>
+  <div class="g3">
+    <div class="card"><div class="card-lbl">10Y-2Y SPREAD</div><div class="card-val" id="e-spread">--</div><div class="card-meta" id="e-spread-dt">--</div></div>
+    <div class="card"><div class="card-lbl">10Y BREAKEVEN INFLATION</div><div class="card-val" id="e-bei">--</div><div class="card-meta" id="e-bei-dt">--</div></div>
+    <div class="card"><div class="card-lbl">CONSUMER SENTIMENT</div><div class="card-val" id="e-sent">--</div><div class="card-meta" id="e-sent-dt">--</div></div>
+  </div>
+
+  <div class="sh">YIELD CURVE <span class="sh-src">● FRED H.15</span></div>
+  <div style="background:var(--card);border:1px solid var(--border);padding:14px 16px;">
+    <div style="font-size:10px;color:var(--dim);margin-bottom:10px;" id="curve-date">Loading...</div>
+    <div id="curve-bars"></div>
+    <div style="font-size:11px;margin-top:10px;" id="curve-spread"></div>
+  </div>
+
+</div>
+
+<div class="sbar">
+  <div><span class="dot"></span>MBSGOAT LOCKIQ</div>
+  <div id="sbar-msg">Initializing...</div>
+  <div id="sbar-time"></div>
+</div>
+
+<script>
+// ===== STATE =====
+var D = null;          // market data from API
+var loans = JSON.parse(localStorage.getItem('lockiq_loans')||'[]');
+var timeWindow = 'open';
+var snapshots = {};    // time-windowed snapshots
+
+// ===== CLOCK =====
+function clock() {
+  var now = new Date();
+  var et = now.toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  var d = now.getDay(), h = parseInt(now.toLocaleString('en-US',{timeZone:'America/New_York',hour:'numeric',hour12:false}));
+  var open = d>=1&&d<=5&&h>=9&&h<16;
+  document.getElementById('clock').textContent = 'ET '+et;
+  document.getElementById('mkt-badge').textContent = 'MKT '+(open?'OPEN':'CLOSED');
+  document.getElementById('mkt-badge').className = 'badge '+(open?'bg':'bd');
+}
+setInterval(clock,1000); clock();
+
+// ===== NAVIGATION =====
+function nav(id, el) {
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('sc-'+id).classList.add('on');
+}
+
+// ===== TIME WINDOW =====
+function setWindow(w, el) {
+  timeWindow = w;
+  document.querySelectorAll('.ts-btn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  var labels = {open:'SINCE OPEN',h1:'SINCE 1HR AGO','30m':'SINCE 30MIN AGO',now:'RIGHT NOW'};
+  document.getElementById('move-since').textContent = '● '+( labels[w]||'SINCE OPEN');
+  if(D) renderAll(D);
+}
+
+// ===== FORMAT HELPERS =====
+function fmt(v,d){return isNaN(parseFloat(v))?'--':parseFloat(v).toFixed(d==null?2:d);}
+function fmtD(v){if(!v)return '--'; return new Date(v+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function fmtCh(ch,pct){
+  if(isNaN(ch))return{str:'--',cls:'neu'};
+  var s=ch>=0?'+':'';
+  var ps=pct!=null&&!isNaN(pct)?' ('+s+parseFloat(pct).toFixed(2)+'%)':'';
+  return{str:s+parseFloat(ch).toFixed(2)+ps,cls:ch>=0?'up':'dn'};
+}
+function fmtRate(ch){
+  if(!ch)return{str:'--',cls:'neu'};
+  var s=ch>=0?'+':'';
+  return{str:s+parseFloat(ch).toFixed(3)+'%',cls:ch>=0?'dn':'up'};  // rate up = bad for borrowers
+}
+function dollar(n){
+  if(isNaN(n))return'$0';
+  var a=Math.abs(n);
+  return (n<0?'-':'+')+' $'+a.toLocaleString('en-US',{maximumFractionDigits:0});
+}
+
+// ===== GET WINDOWED CHANGE =====
+function getWindowChange(sym) {
+  if(!D||!D.equities) return null;
+  var eq = D.equities[sym];
+  if(!eq||eq.error) return null;
+
+  // For now use daily change — in future we'd store snapshots
+  // 'open' = change from previous close (what Finnhub gives us)
+  // All windows currently use daily change until we have intraday snapshots
+  return { ch: eq.change, pct: eq.pct, current: eq.current, open: eq.open };
+}
+
+// ===== GAUGE =====
+function updateGauge(score) {
+  // score: -1 (worst) to +1 (best)
+  var clamp = Math.max(-1, Math.min(1, score));
+  // Needle: -90deg (left/red) to +90deg (right/green), 0 = center
+  var angle = clamp * 90;
+  document.getElementById('needle-g').setAttribute('transform','rotate('+angle+', 160, 155)');
+
+  var pct = ((clamp+1)/2*100).toFixed(0);
+  var scoreStr = (clamp>=0?'+':'')+clamp.toFixed(2);
+  document.getElementById('gauge-score-svg').textContent = scoreStr;
+
+  var label, col, subtext;
+  if(clamp > 0.3){label='IMPROVING';col='var(--green)';}
+  else if(clamp > 0.1){label='SLIGHTLY BETTER';col='var(--green)';}
+  else if(clamp > -0.1){label='NEUTRAL';col='var(--amber)';}
+  else if(clamp > -0.3){label='SLIGHTLY WORSE';col='var(--red)';}
+  else{label='WORSENING';col='var(--red)';}
+
+  document.getElementById('gauge-label').textContent = 'RATE PRESSURE: '+scoreStr+' ('+label+')';
+  document.getElementById('gauge-label').style.color = col;
+  document.getElementById('gauge-score-svg').setAttribute('fill', col);
+
+  return {clamp, label, col};
+}
+
+// ===== REPRICE METER =====
+function updateMeter(ticks) {
+  var track = document.getElementById('meter-fill');
+  var pctEl = document.getElementById('meter-pct');
+  var msg = document.getElementById('reprice-msg');
+
+  // Scale: ±50 ticks = full meter
+  var scale = Math.max(-50, Math.min(50, ticks));
+  var pct = Math.abs(scale) / 50 * 50; // % from center
+
+  if(scale >= 0) {
+    track.style.left = '50%';
+    track.style.width = pct+'%';
+    track.style.background = 'var(--red)';
+  } else {
+    track.style.left = (50-pct)+'%';
+    track.style.width = pct+'%';
+    track.style.background = 'var(--green)';
+  }
+
+  pctEl.textContent = (ticks>=0?'+':'')+ticks.toFixed(1)+' ticks';
+
+  var thresh = 25;
+  var pctOfThresh = (Math.abs(ticks)/thresh*100).toFixed(0);
+
+  if(Math.abs(ticks) >= thresh) {
+    msg.innerHTML = '<span style="color:var(--red)">⚠ REPRICE LIKELY — movement exceeds '+thresh+'-tick threshold ('+pctOfThresh+'% of threshold)</span>';
+  } else if(Math.abs(ticks) >= thresh*0.7) {
+    msg.innerHTML = '<span style="color:var(--amber)">⚡ WATCH CLOSELY — '+pctOfThresh+'% of reprice threshold reached</span>';
+  } else {
+    msg.innerHTML = '<span style="color:var(--green)">✓ Within normal range — '+pctOfThresh+'% of reprice threshold</span>';
+  }
+}
+
+// ===== MAIN RENDER =====
+function renderAll(data) {
+  D = data;
+  var eq = data.equities||{};
+  var fred = data.fred||{};
+  var yc = data.yieldCurve||{};
+  var syn = data.syntheticMBS||null;
+
+  // --- MBB change (our primary input) ---
+  var mbb = eq['MBB'];
+  var tlt = eq['TLT'];
+  var mbbCh = mbb&&!mbb.error ? mbb.change : 0;
+  var tltCh = tlt&&!tlt.error ? tlt.change : 0;
+  var mbbPct = mbb&&!mbb.error ? mbb.pct : 0;
+
+  // Synthetic UMBS change using empirical hedge ratio 0.4345 from regression
+  // Applied to MBB % change converted to price points
+  // MBB price ~$94, so 0.15% change = ~$0.14 = 0.14 pts on ~$94 base
+  // UMBS hedge ratio applied to MBB point change
+  var mbbPointChange = mbbCh; // MBB moves in dollar terms
+  var umbsEst = mbbPointChange * 0.4345 * (100/94); // normalize to 100 basis
+  var ticksEst = umbsEst * 32;
+
+  // Score for gauge: normalize MBB % change to -1/+1
+  // Typical daily range ~0.5%, so score = pct / 0.5 clamped to ±1
+  var score = mbbPct / 0.5;
+
+  // --- GAUGE ---
+  var g = updateGauge(score);
+
+  // --- REPRICE METER ---
+  updateMeter(ticksEst);
+
+  // --- ALERT ---
+  var alertBox = document.getElementById('alert-box');
+  if(Math.abs(ticksEst) >= 25) {
+    alertBox.style.display = 'block';
+    if(ticksEst < 0) {
+      alertBox.className = 'alert-banner alert-bad';
+      alertBox.textContent = '⚠ REPRICE ALERT — Market has worsened ' + Math.abs(ticksEst).toFixed(1) + ' ticks. Lender reprices likely if this holds.';
+    } else {
+      alertBox.className = 'alert-banner alert-good';
+      alertBox.textContent = '✓ POSITIVE MOVE — Market improved '+ticksEst.toFixed(1)+' ticks. Watch for lender price improvements.';
+    }
+  } else {
+    alertBox.style.display = 'none';
+  }
+
+  // --- MOVEMENT PANEL ---
+  function setMov(vid, cid, ch, abs, suffix) {
+    var e = document.getElementById(vid);
+    var ec = document.getElementById(cid);
+    if(!e) return;
+    e.textContent = (ch>=0?'+':'')+ch.toFixed(3)+(suffix||'');
+    e.className = 'card-val '+(ch>=0?'up':'dn');
+    if(ec) { ec.textContent = abs; ec.className = 'card-ch neu'; }
+  }
+
+  // 10Y yield change (from FRED — daily)
+  var t10y = fred['DGS10'];
+  if(t10y&&!t10y.error) setMov('m-10y','m-10y-abs',t10y.change||0,'As of '+t10y.latestDate,'%');
+  else document.getElementById('m-10y').textContent = '--';
+
+  if(mbb&&!mbb.error) setMov('m-mbb','m-mbb-abs',mbbCh,'$'+fmt(mbb.current),' pts');
+  if(tlt&&!tlt.error) setMov('m-tlt','m-tlt-abs',tltCh,'$'+fmt(tlt.current),' pts');
+
+  // Implied rate move from MBB (rough: 1pt MBB ≈ 12.5bps rate)
+  var impliedBps = -(mbbCh * 12.5).toFixed(1);
+  var rm = document.getElementById('m-rate');
+  rm.textContent = (impliedBps>=0?'+':'')+impliedBps+' bps';
+  rm.className = 'card-val '+(impliedBps<=0?'up':'dn');
+
+  // --- SYNTHETIC MBS PANEL ---
+  var s55 = document.getElementById('s-umbs55');
+  var stk = document.getElementById('s-ticks');
+  var sdir = document.getElementById('s-dir');
+  var sconf = document.getElementById('s-conf');
+  var srisk = document.getElementById('s-risk');
+  var sriskSub = document.getElementById('s-risk-sub');
+
+  s55.textContent = (umbsEst>=0?'+':'')+umbsEst.toFixed(3)+' pts';
+  s55.className = 'card-val '+(umbsEst>=0?'up':'dn');
+  stk.textContent = (ticksEst>=0?'+':'')+ticksEst.toFixed(1);
+  stk.className = 'card-val '+(ticksEst>=0?'up':'dn');
+
+  var dir = ticksEst > 1 ? 'BETTER' : ticksEst < -1 ? 'WORSE' : 'FLAT';
+  sdir.textContent = dir;
+  sdir.className = 'card-val '+(dir==='BETTER'?'up':dir==='WORSE'?'dn':'neu');
+  sconf.textContent = 'Hedge ratio: 0.4345 (empirical)';
+
+  var absT = Math.abs(ticksEst);
+  if(absT >= 25) { srisk.textContent='HIGH'; srisk.className='card-val dn'; sriskSub.textContent='Reprice threshold exceeded'; }
+  else if(absT >= 15) { srisk.textContent='MEDIUM'; srisk.className='card-val'; srisk.style.color='var(--amber)'; sriskSub.textContent='Approaching reprice zone'; }
+  else { srisk.textContent='LOW'; srisk.className='card-val up'; sriskSub.textContent='Within normal range'; }
+
+  // --- LIVE PRICES ---
+  function setPrice(pid, cid, sym, prefix) {
+    var d = eq[sym];
+    var pe = document.getElementById(pid);
+    var ce = document.getElementById(cid);
+    if(!d||d.error) { if(pe)pe.textContent='--'; return; }
+    if(pe) pe.textContent = (prefix||'$')+fmt(d.current);
+    if(ce) { var f=fmtCh(d.change,d.pct); ce.textContent=f.str; ce.className='card-ch '+f.cls; }
+  }
+  setPrice('p-mbb','c-mbb','MBB','$');
+  setPrice('p-tlt','c-tlt','TLT','$');
+  setPrice('p-spy','c-spy','SPY','$');
+  setPrice('p-btc','c-btc','BINANCE:BTCUSDT','$');
+
+  // --- OBMMI RATES ---
+  function setRate(vid, cid, dtid, sid) {
+    var d = fred[sid];
+    var ve = document.getElementById(vid);
+    var ce = document.getElementById(cid);
+    var de = document.getElementById(dtid);
+    if(!d||d.error) { if(ve)ve.textContent='--'; return; }
+    if(ve) ve.textContent = fmt(d.latest,2)+'%';
+    if(ce) { var f=fmtRate(d.change); ce.textContent=f.str; ce.className='card-ch '+f.cls; }
+    if(de) de.textContent = 'As of '+fmtD(d.latestDate);
+  }
+  setRate('r-30c','r-30c-ch','r-30c-dt','OBMMIC30YF');
+  setRate('r-fha','r-fha-ch','r-fha-dt','OBMMIFHA30YF');
+  setRate('r-va','r-va-ch','r-va-dt','OBMMIVA30YF');
+  setRate('r-jumbo','r-jumbo-ch','r-jumbo-dt','OBMMIJUMBO30YF');
+  setRate('r-15c','r-15c-ch','r-15c-dt','OBMMIC15YF');
+
+  var pmms = fred['MORTGAGE30US'];
+  if(pmms&&!pmms.error) {
+    document.getElementById('r-pmms').textContent = fmt(pmms.latest,2)+'%';
+    document.getElementById('r-pmms-dt').textContent = 'As of '+fmtD(pmms.latestDate);
+  }
+
+  // --- EVENT SCREEN INDICATORS ---
+  var spread = fred['T10Y2Y'];
+  var bei = fred['T10YIE'];
+  var sent = fred['UMCSENT'];
+  if(spread&&!spread.error) { document.getElementById('e-spread').textContent=fmt(spread.latest,2)+'%'; document.getElementById('e-spread-dt').textContent='As of '+fmtD(spread.latestDate); }
+  if(bei&&!bei.error) { document.getElementById('e-bei').textContent=fmt(bei.latest,2)+'%'; document.getElementById('e-bei-dt').textContent='As of '+fmtD(bei.latestDate); }
+  if(sent&&!sent.error) { document.getElementById('e-sent').textContent=fmt(sent.latest,1); document.getElementById('e-sent-dt').textContent='As of '+fmtD(sent.latestDate); }
+
+  // --- YIELD CURVE ---
+  renderCurve(yc);
+
+  // --- STATUS ---
+  document.getElementById('badge-data').className = 'badge bg';
+  document.getElementById('badge-data').textContent = 'DATA ●';
+  document.getElementById('sbar-msg').textContent = 'MBB '+fmt(mbbPct,3)+'% | Synthetic UMBS: '+(ticksEst>=0?'+':'')+ticksEst.toFixed(1)+' ticks | '+g.label;
+  document.getElementById('sbar-time').textContent = new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York'});
+
+  // Update pipeline
+  renderPipeline();
+}
+
+// ===== YIELD CURVE =====
+function renderCurve(yc) {
+  var barsEl = document.getElementById('curve-bars');
+  var dateEl = document.getElementById('curve-date');
+  var spreadEl = document.getElementById('curve-spread');
+  if(!yc||(!yc.y10&&!yc.y2)) { barsEl.innerHTML='<div class="neu">Yield curve unavailable</div>'; return; }
+  dateEl.textContent = 'FRED H.15 — as of '+( yc.date||'--');
+  var pts=[{l:'1M',v:yc.m1},{l:'3M',v:yc.m3},{l:'6M',v:yc.m6},{l:'1Y',v:yc.y1},{l:'2Y',v:yc.y2},{l:'5Y',v:yc.y5},{l:'10Y',v:yc.y10},{l:'20Y',v:yc.y20},{l:'30Y',v:yc.y30}].filter(p=>p.v);
+  if(!pts.length){barsEl.innerHTML='<div class="neu">No data</div>';return;}
+  var max=Math.max(...pts.map(p=>p.v)),min=Math.min(...pts.map(p=>p.v)),range=max-min||0.01;
+  barsEl.innerHTML=pts.map(p=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;"><div style="font-size:10px;color:var(--dim);width:28px;text-align:right;">${p.l}</div><div style="flex:1;background:#0d1420;height:5px;"><div style="width:${((p.v-min)/range*100).toFixed(1)}%;height:5px;background:var(--blue);"></div></div><div style="font-size:11px;color:var(--text);width:48px;text-align:right;">${p.v.toFixed(3)}%</div></div>`).join('');
+  if(yc.y2&&yc.y10){var spd=((yc.y10-yc.y2)*100).toFixed(0);spreadEl.innerHTML='10Y-2Y spread: <span style="color:'+(spd>0?'var(--green)':'var(--red)')+'">'+spd+' bps — '+(spd>0?'Normal curve':'INVERTED ⚠')+'</span>';}
+}
+
+// ===== PIPELINE =====
+function saveLoan() { localStorage.setItem('lockiq_loans', JSON.stringify(loans)); }
+
+function addLoan() {
+  var name = document.getElementById('f-name').value.trim();
+  var amt = parseFloat(document.getElementById('f-amt').value);
+  var rate = parseFloat(document.getElementById('f-rate').value);
+  var lock = document.getElementById('f-lock').value.trim() || 'Floating';
+  var close = document.getElementById('f-close').value;
+  if(!name||!amt||!rate) { alert('Please fill in Borrower, Amount, and Rate.'); return; }
+  loans.push({id:Date.now(),name,amt,rate,lock,close,addedAt:new Date().toISOString()});
+  saveLoan();
+  ['f-name','f-amt','f-rate','f-lock','f-close'].forEach(id=>document.getElementById(id).value='');
+  renderPipeline();
+}
+
+function removeLoan(id) {
+  loans = loans.filter(l=>l.id!==id);
+  saveLoan(); renderPipeline();
+}
+
+function renderPipeline() {
+  var tbody = document.getElementById('loan-tbody');
+  if(!loans.length) {
+    tbody.innerHTML='<tr><td colspan="10" class="neu" style="padding:20px 8px;">No loans in pipeline. Add a loan above.</td></tr>';
+    document.getElementById('total-impact').textContent='$0';
+    document.getElementById('total-impact-sub').textContent='No loans entered';
+    document.getElementById('pip-loans').textContent='0';
+    document.getElementById('pip-vol').textContent='$0';
+    document.getElementById('pip-risk-ct').textContent='0';
+    document.getElementById('pip-src').textContent='0 LOANS';
+    return;
+  }
+
+  // Get current synthetic ticks
+  var ticksEst = 0;
+  if(D&&D.equities&&D.equities['MBB']&&!D.equities['MBB'].error) {
+    var mbbCh = D.equities['MBB'].change||0;
+    var umbsEst = mbbCh * 0.4345 * (100/94);
+    ticksEst = umbsEst * 32;
+  }
+
+  var totalImpact = 0, totalVol = 0, highRisk = 0;
+  var today = new Date();
+
+  var rows = loans.map(loan => {
+    var daysLeft = loan.close ? Math.ceil((new Date(loan.close) - today) / 86400000) : null;
+
+    // Dollar impact: ticks → points → % → dollars
+    // 1 tick = 1/32 point, 1 point ≈ 0.125% rate move ≈ 1% of loan value
+    var pointChange = ticksEst / 32;
+    var dollarImpact = loan.amt * (pointChange / 100);
+    totalImpact += dollarImpact;
+    totalVol += loan.amt;
+
+    // Risk scoring
+    var risk = 'LOW';
+    if((daysLeft !== null && daysLeft < 10) && ticksEst < -15) risk = 'HIGH';
+    else if((daysLeft !== null && daysLeft < 21) || Math.abs(ticksEst) > 20) risk = 'MEDIUM';
+    if(risk==='HIGH') highRisk++;
+
+    var riskEl = risk==='HIGH'?'<span class="risk-high">⚠ HIGH</span>':risk==='MEDIUM'?'<span class="risk-med">◆ MED</span>':'<span class="risk-low">✓ LOW</span>';
+    var impactEl = '<span class="'+(dollarImpact>=0?'impact-pos':'impact-neg')+'">'+dollar(dollarImpact)+'</span>';
+    var moveEl = '<span class="'+(ticksEst>=0?'up':'dn')+'">'+(ticksEst>=0?'+':'')+ticksEst.toFixed(1)+' ticks</span>';
+
+    return `<tr>
+      <td style="color:var(--amber)">${loan.name}</td>
+      <td>$${loan.amt.toLocaleString()}</td>
+      <td>${loan.rate.toFixed(3)}%</td>
+      <td style="color:var(--muted)">${loan.lock}</td>
+      <td>${loan.close||'--'}</td>
+      <td style="color:${daysLeft!==null?(daysLeft<10?'var(--red)':daysLeft<21?'var(--amber)':'var(--green)'):'var(--dim)'}">${daysLeft!==null?daysLeft+'d':'--'}</td>
+      <td>${moveEl}</td>
+      <td>${impactEl}</td>
+      <td>${riskEl}</td>
+      <td><button class="del-btn" onclick="removeLoan(${loan.id})">✕</button></td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = rows.join('');
+  document.getElementById('total-impact').textContent = dollar(totalImpact);
+  document.getElementById('total-impact').className = 'impact-val '+(totalImpact>=0?'up':'dn');
+  document.getElementById('total-impact-sub').textContent = (totalImpact<0?'Pipeline is worse':'Pipeline is better')+' by this amount vs today\'s open';
+  document.getElementById('pip-loans').textContent = loans.length;
+  document.getElementById('pip-vol').textContent = '$'+Math.round(totalVol/1000)+'K';
+  document.getElementById('pip-risk-ct').textContent = highRisk;
+  document.getElementById('pip-src').textContent = loans.length+' LOAN'+(loans.length!==1?'S':'');
+}
+
+// ===== EVENTS CALENDAR =====
+var EVENTS = [
+  {date:'2026-04-09',time:'8:30 AM',name:'CPI — Consumer Price Index',impact:'high',consensus:'Est: +0.1% MoM',note:'High impact for MBS. Surprise to upside = rates worse.'},
+  {date:'2026-04-10',time:'8:30 AM',name:'PPI — Producer Price Index',impact:'high',consensus:'Est: +0.2% MoM',note:'Leading indicator for inflation. Watch closely.'},
+  {date:'2026-04-11',time:'10:00 AM',name:'University of Michigan Sentiment',impact:'med',consensus:'Est: 57.0',note:'Consumer sentiment. Influences Fed outlook.'},
+  {date:'2026-04-14',time:'All day',name:'Tax Day — April 15 (observed)',impact:'low',consensus:'--',note:'Historically low volume. Thin trading.'},
+  {date:'2026-04-16',time:'8:30 AM',name:'Retail Sales',impact:'high',consensus:'Est: +0.6%',note:'Strong retail = inflation risk = rates higher.'},
+  {date:'2026-04-17',time:'8:30 AM',name:'Housing Starts & Building Permits',impact:'med',consensus:'Est: 1.42M',note:'Housing supply data. Relevant to mortgage market.'},
+  {date:'2026-04-30',time:'2:00 PM',name:'FOMC Meeting Decision',impact:'high',consensus:'Hold expected',note:'Fed rate decision. Highest impact event for MBS.'},
+  {date:'2026-05-02',time:'8:30 AM',name:'Jobs Report (NFP)',impact:'high',consensus:'Est: +185K',note:'Non-farm payrolls. Major market mover.'},
+];
+
+function renderEvents() {
+  var el = document.getElementById('event-list');
+  var today = new Date();
+  today.setHours(0,0,0,0);
+
+  var upcoming = EVENTS.filter(e => new Date(e.date+'T00:00:00') >= today)
+    .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+  if(!upcoming.length) { el.innerHTML='<div class="neu">No upcoming events in calendar. Update EVENTS array in code.</div>'; return; }
+
+  el.innerHTML = upcoming.map(e => {
+    var dt = new Date(e.date+'T00:00:00');
+    var daysAway = Math.ceil((dt-today)/86400000);
+    var dLabel = daysAway===0?'TODAY':daysAway===1?'TOMORROW':daysAway+'d away';
+    var impCls = e.impact==='high'?'event-high':e.impact==='med'?'event-med':'event-low';
+    var impLabel = e.impact==='high'?'⚠ HIGH IMPACT':e.impact==='med'?'◆ MED IMPACT':'LOW IMPACT';
+    return `<div class="event-card ${e.impact}">
+      <div class="event-time">
+        <div style="color:var(--amber);font-size:10px;">${dLabel}</div>
+        <div style="margin-top:2px;">${e.time}</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:2px;">${dt.toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+      </div>
+      <div style="flex:1;">
+        <div class="event-name">${e.name}</div>
+        <div class="event-impact ${impCls}" style="margin-top:3px;">${impLabel}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">${e.note}</div>
+      </div>
+      <div class="event-est">${e.consensus}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== DATA FETCH =====
+async function load() {
+  document.getElementById('sbar-msg').textContent = 'Fetching market data...';
+  try {
+    var r = await fetch('/.netlify/functions/getMarketData');
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var data = await r.json();
+    if(data.error) throw new Error(data.error);
+    renderAll(data);
+  } catch(e) {
+    document.getElementById('sbar-msg').textContent = 'Error: '+e.message;
+    document.getElementById('badge-data').className='badge br';
+    document.getElementById('badge-data').textContent='DATA ✕';
+    console.error('LockIQ load error:',e);
+  }
+}
+
+// ===== INIT =====
+renderEvents();
+renderPipeline();
+load();
+setInterval(load, 300000); // refresh every 5 min
+</script>
+</body>
+</html>
