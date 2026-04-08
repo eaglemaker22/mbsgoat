@@ -6,506 +6,6 @@
 <title>Reprice Watch — MBSGOAT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
-
-<!-- Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, onSnapshot, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  // ── Firebase config ──────────────────────────────────────────────────────────
-  // Replace with your actual config or load from environment
-  const firebaseConfig = {
-    apiKey:            window.FIREBASE_API_KEY            || "YOUR_API_KEY",
-    authDomain:        window.FIREBASE_AUTH_DOMAIN        || "YOUR_AUTH_DOMAIN",
-    projectId:         window.FIREBASE_PROJECT_ID         || "mbsgoat",
-    storageBucket:     window.FIREBASE_STORAGE_BUCKET     || "YOUR_STORAGE_BUCKET",
-    messagingSenderId: window.FIREBASE_MESSAGING_SENDER_ID|| "YOUR_SENDER_ID",
-    appId:             window.FIREBASE_APP_ID             || "YOUR_APP_ID"
-  };
-
-  const app  = initializeApp(firebaseConfig);
-  const db   = getFirestore(app);
-
-  // ── State ────────────────────────────────────────────────────────────────────
-  const state = {
-    // MBS prices (from market_data/mbs_products — real MBS Live)
-    umbs55:      { current: null, dailyChange: null, open: null, high: null, low: null, priorClose: null },
-    // Shadow bonds (from market_data/shadow_bonds — TradingView scraper)
-    shadow:      { zn: null, znChg: null },
-    // Yields (from market_data/us10y_current)
-    tenY:        { yield: null, change: null },
-    // Intraday history for velocity and rate-sheet anchor
-    history:     [],
-    // Rate sheet anchor price (ticks) — set from 10:30 ET snapshot
-    rateSheetTicks: null,
-    rateSheetTime:  '10:30 AM ET',
-    // User mark
-    markTicks:   null,
-    markTimeStr: null,
-    // Reprice trigger threshold (ticks)
-    repriceTrigger: 6,
-    // Data source status
-    liveData: false
-  };
-
-  // ── Helpers ──────────────────────────────────────────────────────────────────
-  function mbsStrToTicks(priceStr) {
-    if (!priceStr && priceStr !== 0) return null;
-    const s = String(priceStr).trim();
-    if (s.includes('-')) {
-      const [h, t] = s.split('-');
-      return parseInt(h) * 32 + parseInt(t);
-    }
-    const f = parseFloat(s);
-    return isNaN(f) ? null : Math.round(f * 32);
-  }
-
-  function ticksToMBSStr(ticks) {
-    if (ticks === null || isNaN(ticks)) return '---';
-    const handles = Math.floor(ticks / 32);
-    const rem = Math.abs(ticks % 32);
-    return `${handles}-${String(rem).padStart(2,'0')}`;
-  }
-
-  function fmtTicks(t) {
-    if (t === null) return '—';
-    return (t > 0 ? '+' : '') + t + (Math.abs(t) === 1 ? ' tick' : ' ticks');
-  }
-
-  function colorOf(val) {
-    if (val === null) return '#64748b';
-    if (val > 0) return '#22c55e';
-    if (val < 0) return '#ef4444';
-    return '#64748b';
-  }
-
-  // ── Time helpers ─────────────────────────────────────────────────────────────
-  function nowET() {
-    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
-  }
-
-  function clockTick() {
-    const now = nowET();
-    const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 || 12;
-    document.getElementById('clock-time').textContent =
-      `${h12}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} ${ampm} ET`;
-    document.getElementById('clock-date').textContent =
-      now.toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
-    updateSessionBar(h, m);
-  }
-
-  function updateSessionBar(h, m) {
-    const openMin = 9*60+30, closeMin = 16*60, nowMin = h*60+m;
-    const sessionLen = closeMin - openMin;
-    const elapsed = Math.max(0, Math.min(nowMin - openMin, sessionLen));
-    const pct = Math.min((elapsed / sessionLen) * 100, 100);
-    document.getElementById('session-fill').style.width = pct + '%';
-    document.getElementById('session-dot').style.left  = pct + '%';
-  }
-
-  // ── Firestore listeners ───────────────────────────────────────────────────────
-
-  // 1. Real MBS prices from mbs_products
-  onSnapshot(doc(db, 'market_data', 'mbs_products'), snap => {
-    if (!snap.exists()) return;
-    const d = snap.data();
-
-    const cur        = mbsStrToTicks(d.UMBS_5_5_Current);
-    const chg        = parseFloat(d.UMBS_5_5_Daily_Change ?? d.Daily_Change);
-    const open       = mbsStrToTicks(d.UMBS_5_5_Open      ?? d.Open);
-    const high       = mbsStrToTicks(d.UMBS_5_5_TodayHigh ?? d.TodayHigh);
-    const low        = mbsStrToTicks(d.UMBS_5_5_TodayLow  ?? d.TodayLow);
-    const priorClose = mbsStrToTicks(d.UMBS_5_5_PriorDayClose ?? d.PriorDayClose);
-
-    state.umbs55 = { current: cur, dailyChange: chg, open, high, low, priorClose };
-    state.liveData = true;
-
-    // Auto-set rate sheet anchor if not yet set and it's past 10:30 ET
-    if (state.rateSheetTicks === null) {
-      trySetRateSheetAnchor();
-    }
-
-    renderAll();
-  });
-
-  // 2. Shadow bonds — ZN futures from shadow_scraper
-  onSnapshot(doc(db, 'market_data', 'shadow_bonds'), snap => {
-    if (!snap.exists()) return;
-    const d = snap.data();
-    // ZN raw price stored as ZN_Shadow or similar
-    const znRaw = d.ZN_Shadow ?? d.ZN_Current ?? d.ZN_Price ?? null;
-    const znChg = parseFloat(d.ZN_Change ?? d.ZN_Daily_Change ?? 0);
-    state.shadow.zn    = znRaw;
-    state.shadow.znChg = znChg;
-    renderZN();
-  });
-
-  // 3. 10Y yield
-  onSnapshot(doc(db, 'market_data', 'us10y_current'), snap => {
-    if (!snap.exists()) return;
-    const d = snap.data();
-    state.tenY.yield  = parseFloat(d.yield ?? d.rate ?? d.value ?? 0);
-    state.tenY.change = parseFloat(d.change ?? d.daily_change ?? 0);
-    renderTenY();
-  });
-
-  // 4. Try to load 10:30 snapshot from market_daily_history for rate sheet anchor
-  async function trySetRateSheetAnchor() {
-    const now = nowET();
-    const h = now.getHours(), m = now.getMinutes();
-    if (h < 10 || (h === 10 && m < 30)) {
-      // Market hasn't hit 10:30 yet — use opening price as temporary anchor
-      if (state.umbs55.open !== null) {
-        state.rateSheetTicks = state.umbs55.open;
-        state.rateSheetTime  = 'Open (pre-10:30)';
-      }
-      return;
-    }
-
-    // Try to find a history snapshot near 10:30
-    try {
-      const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
-      const histRef = collection(db, 'market_daily_history', today, 'snapshots');
-      const q = query(histRef, orderBy('timestamp'), limit(100));
-      const snaps = await getDocs(q);
-
-      let best = null, bestDiff = Infinity;
-      const target = 10*60+30;
-      snaps.forEach(s => {
-        const d = s.data();
-        if (!d.timestamp) return;
-        const t = d.timestamp.toDate ? d.timestamp.toDate() : new Date(d.timestamp);
-        const et = new Date(t.toLocaleString('en-US', { timeZone:'America/New_York' }));
-        const mins = et.getHours()*60 + et.getMinutes();
-        const diff = Math.abs(mins - target);
-        if (diff < bestDiff && diff <= 15) { // within 15 min of 10:30
-          bestDiff = diff;
-          best = d;
-        }
-      });
-
-      if (best) {
-        const sheetTicks = mbsStrToTicks(best.UMBS_5_5_Current ?? best.price ?? best.umbs55);
-        if (sheetTicks) {
-          state.rateSheetTicks = sheetTicks;
-          state.rateSheetTime  = '10:30 ET';
-          renderAll();
-          return;
-        }
-      }
-    } catch(e) {
-      console.warn('Could not load history for rate sheet anchor:', e);
-    }
-
-    // Fallback: use current open price
-    if (state.umbs55.open !== null) {
-      state.rateSheetTicks = state.umbs55.open;
-      state.rateSheetTime  = 'Open (fallback)';
-    }
-  }
-
-  // ── Render functions ─────────────────────────────────────────────────────────
-
-  function renderAll() {
-    renderMBSHero();
-    renderAnchors();
-    renderRepriceBar();
-    renderSignals();
-    renderVelocity();
-    renderZN();
-  }
-
-  function renderMBSHero() {
-    const { current, priorClose, open, high, low } = state.umbs55;
-    if (current === null) return;
-
-    document.getElementById('umbs-price').textContent = ticksToMBSStr(current);
-    document.getElementById('prior-close').textContent = priorClose !== null ? ticksToMBSStr(priorClose) : '—';
-    document.getElementById('today-open').textContent  = open !== null ? ticksToMBSStr(open) : '—';
-    document.getElementById('range-lo').textContent    = low  !== null ? ticksToMBSStr(low)  : '—';
-    document.getElementById('range-hi').textContent    = high !== null ? ticksToMBSStr(high) : '—';
-
-    if (priorClose !== null) {
-      const dayDiff = current - priorClose;
-      const badge = document.getElementById('umbs-day-badge');
-      badge.textContent = (dayDiff >= 0 ? '▲ +' : '▼ ') + ticksToMBSStr(Math.abs(dayDiff)) + ' today';
-      badge.className = 'mbs-badge ' + (dayDiff >= 0 ? 'badge-pos' : 'badge-neg');
-    }
-
-    document.getElementById('data-source').textContent = state.liveData ? 'Live · MBS Live' : 'Connecting...';
-    document.getElementById('live-dot').style.background = state.liveData ? '#22c55e' : '#64748b';
-  }
-
-  function renderAnchors() {
-    const cur = state.umbs55.current;
-    if (cur === null) return;
-
-    const set = (id, val) => {
-      if (val === null) return;
-      const el = document.getElementById(id);
-      el.textContent = (val >= 0 ? '+' : '') + val;
-      el.style.color = colorOf(val);
-    };
-
-    if (state.umbs55.priorClose !== null) set('anc-close', cur - state.umbs55.priorClose);
-    if (state.umbs55.open !== null)       set('anc-open',  cur - state.umbs55.open);
-    if (state.rateSheetTicks !== null)    set('anc-sheet',  cur - state.rateSheetTicks);
-    if (state.markTicks !== null) {
-      const diff = cur - state.markTicks;
-      set('anc-mark', diff);
-      document.getElementById('mark-result-display').textContent = fmtTicks(diff);
-      document.getElementById('mark-result-display').style.color = colorOf(diff);
-    }
-    document.getElementById('sheet-anchor-time').textContent = state.rateSheetTime;
-  }
-
-  function renderRepriceBar() {
-    const cur = state.umbs55.current;
-    if (cur === null || state.rateSheetTicks === null) return;
-
-    const diff = cur - state.rateSheetTicks; // positive = favorable, negative = adverse
-    const adverse = -diff;
-    const trigger = state.repriceTrigger;
-
-    const fillEl   = document.getElementById('reprice-fill');
-    const statusEl = document.getElementById('reprice-status-text');
-    const labelEl  = document.getElementById('reprice-ticks-label');
-
-    if (diff >= 0) {
-      fillEl.style.width      = '0%';
-      fillEl.style.background = '#22c55e';
-      statusEl.textContent    = 'No adverse risk';
-      statusEl.style.color    = '#22c55e';
-      labelEl.textContent     = fmtTicks(diff) + ' favorable from rate sheet';
-      labelEl.style.color     = '#22c55e';
-    } else {
-      const pct = Math.min((adverse / trigger) * 100, 100);
-      fillEl.style.width = pct + '%';
-      if (adverse >= trigger) {
-        fillEl.style.background = '#ef4444';
-        statusEl.textContent    = 'Reprice likely';
-        statusEl.style.color    = '#ef4444';
-        labelEl.style.color     = '#ef4444';
-        labelEl.textContent     = '−' + adverse + ' ticks · threshold crossed';
-      } else if (adverse >= Math.floor(trigger * 0.66)) {
-        fillEl.style.background = '#f59e0b';
-        statusEl.textContent    = 'Watch closely';
-        statusEl.style.color    = '#f59e0b';
-        labelEl.style.color     = '#f59e0b';
-        labelEl.textContent     = '−' + adverse + ' ticks · ' + (trigger - adverse) + ' ticks to trigger';
-      } else {
-        fillEl.style.background = '#60a5fa';
-        statusEl.textContent    = 'Within tolerance';
-        statusEl.style.color    = '#60a5fa';
-        labelEl.style.color     = '#64748b';
-        labelEl.textContent     = '−' + adverse + ' ticks · ' + (trigger - adverse) + ' ticks to trigger';
-      }
-    }
-  }
-
-  function renderTenY() {
-    const { yield: y, change: c } = state.tenY;
-    if (!y) return;
-    document.getElementById('teny-yield').textContent = y.toFixed(3) + '%';
-    const badge = document.getElementById('teny-chg-badge');
-    badge.textContent = (c >= 0 ? '▲ +' : '▼ ') + Math.abs(c).toFixed(3);
-    // Yield up = bad for MBS → badge-neg color
-    badge.className = 'mbs-badge ' + (c >= 0 ? 'badge-neg' : 'badge-pos');
-    document.getElementById('teny-bps').textContent = (c >= 0 ? '+' : '') + (c * 100).toFixed(1) + ' bps today';
-
-    // Level proximity
-    const levels = [4.00, 4.25, 4.50, 4.75, 5.00];
-    const nearest = levels.reduce((a, b) => Math.abs(b - y) < Math.abs(a - y) ? b : a);
-    const distBps = Math.round(Math.abs(y - nearest) * 100);
-    const noteEl = document.getElementById('teny-level-note');
-    if (distBps <= 15) {
-      noteEl.textContent = distBps + ' bps from ' + nearest.toFixed(2) + '% key level';
-      noteEl.style.display = 'block';
-    } else {
-      noteEl.style.display = 'none';
-    }
-
-    // Position dot on level bar
-    const lo = 4.00, hi = 4.75;
-    const pct = Math.max(0, Math.min(((y - lo) / (hi - lo)) * 100, 100));
-    const dot = document.getElementById('teny-dot');
-    dot.style.left       = pct + '%';
-    dot.style.background = c >= 0 ? '#ef4444' : '#60a5fa';
-  }
-
-  function renderZN() {
-    const { zn, znChg } = state.shadow;
-    if (zn === null) return;
-    document.getElementById('zn-price').textContent = zn;
-    const badge = document.getElementById('zn-chg-badge');
-    const chgNum = parseFloat(znChg) || 0;
-    badge.textContent = (chgNum >= 0 ? '▲ +' : '▼ ') + Math.abs(chgNum).toFixed(2);
-    badge.className   = 'mbs-badge ' + (chgNum >= 0 ? 'badge-pos' : 'badge-neg');
-
-    // Lag/lead detection: compare ZN direction vs UMBS direction from rate sheet
-    const lagEl = document.getElementById('zn-lag-badge');
-    if (state.umbs55.current !== null && state.rateSheetTicks !== null) {
-      const umbsDiff  = state.umbs55.current - state.rateSheetTicks;
-      const znDiffDir = chgNum >= 0 ? 1 : -1;
-      const umbsDir   = umbsDiff >= 0 ? 1 : -1;
-      if (znDiffDir !== umbsDir && Math.abs(chgNum) > 0.05) {
-        lagEl.textContent    = znDiffDir > 0 ? 'ZN improved · UMBS lagging' : 'ZN dropped · UMBS lagging';
-        lagEl.style.color    = '#f59e0b';
-        lagEl.style.background = 'rgba(245,158,11,0.1)';
-        lagEl.style.border   = '1px solid rgba(245,158,11,0.2)';
-      } else {
-        lagEl.textContent    = 'UMBS tracking ZN';
-        lagEl.style.color    = '#60a5fa';
-        lagEl.style.background = 'rgba(96,165,250,0.1)';
-        lagEl.style.border   = '1px solid rgba(96,165,250,0.2)';
-      }
-    }
-  }
-
-  function renderVelocity() {
-    // Velocity is derived from history snapshots if available
-    // For now uses a simple delta from state if history is sparse
-    const cur = state.umbs55.current;
-    if (cur === null) return;
-
-    // Placeholder: in production, calculate from history array
-    // These will be updated when history snapshots are added
-    const vel15El   = document.getElementById('vel-15');
-    const vel15Note = document.getElementById('vel-15-note');
-    const vel30El   = document.getElementById('vel-30');
-    const vel30Note = document.getElementById('vel-30-note');
-
-    const v15 = state.vel15 ?? null;
-    const v30 = state.vel30 ?? null;
-
-    if (v15 !== null) {
-      vel15El.textContent  = fmtTicks(v15);
-      vel15El.style.color  = colorOf(v15);
-      vel15Note.textContent = v15 > 0 ? 'Improving — momentum positive' : v15 < 0 ? 'Deteriorating — watch closely' : 'Flat — no directional movement';
-    } else {
-      vel15El.textContent = '—';
-      vel15Note.textContent = 'Needs intraday history';
-    }
-    if (v30 !== null) {
-      vel30El.textContent  = fmtTicks(v30);
-      vel30El.style.color  = colorOf(v30);
-      vel30Note.textContent = v30 > 0 ? 'Gradual drift higher' : v30 < 0 ? 'Gradual drift lower' : 'Sideways session';
-    } else {
-      vel30El.textContent = '—';
-      vel30Note.textContent = 'Needs intraday history';
-    }
-  }
-
-  function renderSignals() {
-    const cur = state.umbs55.current;
-    if (cur === null) return;
-
-    const diff = state.rateSheetTicks !== null ? cur - state.rateSheetTicks : null;
-    const trigger = state.repriceTrigger;
-    const v30 = state.vel30 ?? 0;
-
-    // Reprice risk signal
-    const sigR    = document.getElementById('sig-reprice');
-    const sigRSub = document.getElementById('sig-reprice-sub');
-    if (diff === null) {
-      sigR.textContent = '—'; sigR.style.color = '#64748b';
-      sigRSub.textContent = 'Awaiting rate sheet anchor';
-    } else if (diff >= 0) {
-      sigR.textContent = 'Low'; sigR.style.color = '#22c55e';
-      sigRSub.textContent = fmtTicks(diff) + ' favorable from sheet';
-    } else if (Math.abs(diff) >= trigger) {
-      sigR.textContent = 'High'; sigR.style.color = '#ef4444';
-      sigRSub.textContent = 'Reprice threshold crossed';
-    } else {
-      sigR.textContent = 'Medium'; sigR.style.color = '#f59e0b';
-      sigRSub.textContent = Math.abs(diff) + '/' + trigger + ' ticks toward trigger';
-    }
-
-    // Direction signal
-    const sigD    = document.getElementById('sig-direction');
-    const sigDSub = document.getElementById('sig-direction-sub');
-    sigD.textContent = v30 > 0 ? 'Improving' : v30 < 0 ? 'Deteriorating' : 'Neutral';
-    sigD.style.color = colorOf(v30);
-    sigDSub.textContent = state.vel30 !== null ? 'Based on last 30 min' : 'Needs intraday history';
-
-    // Lock lean signal
-    const sigL    = document.getElementById('sig-lock');
-    const sigLSub = document.getElementById('sig-lock-sub');
-    if (diff !== null && diff >= 3 && v30 >= 0) {
-      sigL.textContent = 'Float-friendly'; sigL.style.color = '#2dd4bf';
-      sigLSub.textContent = 'No immediate adverse risk';
-    } else if (diff !== null && Math.abs(diff) >= trigger - 2) {
-      sigL.textContent = 'Lock now'; sigL.style.color = '#ef4444';
-      sigLSub.textContent = 'Near reprice threshold';
-    } else {
-      sigL.textContent = 'Neutral'; sigL.style.color = '#64748b';
-      sigLSub.textContent = 'Monitor conditions';
-    }
-  }
-
-  // ── Event countdown ──────────────────────────────────────────────────────────
-  const EVENTS = [
-    { time:'8:30 AM',  name:'Initial Jobless Claims',     impact:'high' },
-    { time:'10:00 AM', name:'Fed Speaker (check calendar)', impact:'med' },
-    { time:'2:00 PM',  name:'10-Year Note Auction',        impact:'high' },
-    { time:'3:00 PM',  name:'Consumer Credit',             impact:'low'  },
-  ];
-
-  function buildEvents() {
-    const now    = nowET();
-    const nowMin = now.getHours()*60 + now.getMinutes();
-    const list   = document.getElementById('events-list');
-    list.innerHTML = '';
-    EVENTS.forEach(ev => {
-      const [hm, ampm] = ev.time.split(' ');
-      let [h, m] = hm.split(':').map(Number);
-      if (ampm === 'PM' && h !== 12) h += 12;
-      if (ampm === 'AM' && h === 12) h = 0;
-      const evMin = h*60 + m;
-      const diff  = evMin - nowMin;
-      let countdown = diff < 0 ? 'passed' : diff < 60 ? diff + 'm' : Math.floor(diff/60) + 'h ' + (diff%60) + 'm';
-      const div = document.createElement('div');
-      div.className = 'event-item';
-      div.innerHTML = `
-        <span class="event-time">${ev.time}</span>
-        <span class="event-name" style="${diff < 0 ? 'color:#3a4560' : ''}">${ev.name}</span>
-        <span class="event-impact impact-${ev.impact}">${ev.impact.toUpperCase()}</span>
-        <span class="event-countdown" style="color:${diff < 0 ? '#3a4560' : diff < 60 ? '#f59e0b' : '#64748b'}">${countdown}</span>
-      `;
-      list.appendChild(div);
-    });
-  }
-
-  // ── User mark input ──────────────────────────────────────────────────────────
-  window.setMark = function() {
-    const val   = document.getElementById('mark-price-input').value.trim();
-    const ticks = mbsStrToTicks(val);
-    if (ticks && ticks > 0) {
-      state.markTicks   = ticks;
-      state.markTimeStr = nowET().toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/New_York' });
-      document.getElementById('anc-mark-time').textContent = state.markTimeStr;
-      renderAnchors();
-    }
-  };
-
-  window.clearMark = function() {
-    state.markTicks = null;
-    document.getElementById('anc-mark').textContent = '—';
-    document.getElementById('anc-mark').style.color = '#64748b';
-    document.getElementById('anc-mark-time').textContent = 'not set';
-    document.getElementById('mark-result-display').textContent = '—';
-    document.getElementById('mark-price-input').value = '';
-  };
-
-  // ── Boot ─────────────────────────────────────────────────────────────────────
-  clockTick();
-  buildEvents();
-  setInterval(clockTick, 1000);
-  setInterval(buildEvents, 30000);
-</script>
-
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -527,18 +27,12 @@
   --font-mono: 'IBM Plex Mono', monospace;
   --font-sans: 'IBM Plex Sans', sans-serif;
 }
-
 html, body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; }
-body { padding: 0; }
-a { color: var(--blue); text-decoration: none; }
+.page { max-width: 960px; margin: 0 auto; padding: 16px 20px 48px; }
 
-.page { max-width: 960px; margin: 0 auto; padding: 16px 20px 40px; }
-
-/* ── Nav link back ── */
 .nav-back { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); font-family: var(--font-sans); margin-bottom: 16px; text-decoration: none; letter-spacing: 0.05em; }
 .nav-back:hover { color: var(--text); }
 
-/* ── Header ── */
 .header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
 .logo { font-size: 11px; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; font-family: var(--font-sans); }
 .logo span { color: var(--amber); font-weight: 500; }
@@ -547,53 +41,47 @@ a { color: var(--blue); text-decoration: none; }
 .clock .time { font-size: 15px; font-weight: 500; }
 .clock .date { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--font-sans); }
 
-/* ── Session bar ── */
 .session-bar { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; }
 .session-track { flex: 1; position: relative; height: 4px; background: var(--dim); border-radius: 2px; margin: 0 8px; }
-.session-fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--blue)); border-radius: 2px; transition: width 60s linear; }
-.session-dot { position: absolute; top: -4px; width: 12px; height: 12px; border-radius: 50%; background: var(--amber); border: 2px solid var(--bg); transform: translateX(-50%); transition: left 60s linear; }
+.session-fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--blue)); border-radius: 2px; }
+.session-dot  { position: absolute; top: -4px; width: 12px; height: 12px; border-radius: 50%; background: var(--amber); border: 2px solid var(--bg); transform: translateX(-50%); }
 .session-marker { position: absolute; top: 10px; font-size: 9px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; font-family: var(--font-sans); text-align: center; line-height: 1.4; }
 .session-label { font-size: 11px; color: var(--muted); white-space: nowrap; font-family: var(--font-sans); }
 .session-label span { color: var(--text); font-weight: 500; }
 
-/* ── MBS Hero block ── */
 .mbs-hero { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
-.mbs-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
+.mbs-top  { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
 .mbs-ticker { font-size: 11px; color: var(--teal); letter-spacing: 0.1em; font-family: var(--font-sans); margin-bottom: 4px; text-transform: uppercase; }
-.mbs-price { font-size: 48px; font-weight: 500; letter-spacing: -0.03em; line-height: 1; }
+.mbs-price  { font-size: 48px; font-weight: 500; letter-spacing: -0.03em; line-height: 1; }
 .mbs-change-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
-.mbs-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 4px; font-size: 12px; font-weight: 500; }
-.badge-pos { background: var(--green-bg); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
-.badge-neg { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(239,68,68,0.2); }
-.badge-neu { background: rgba(100,116,139,0.1); color: var(--muted); border: 1px solid var(--border); }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+.badge-pos  { background: var(--green-bg); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+.badge-neg  { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(239,68,68,0.2); }
+.badge-neu  { background: rgba(100,116,139,0.1); color: var(--muted); border: 1px solid var(--border); }
+.mbs-right  { text-align: right; }
+.mbs-right .rl { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--font-sans); margin-bottom: 4px; }
+.mbs-right .rv { font-size: 14px; font-weight: 500; }
+.mbs-right .ro { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: var(--font-sans); }
 
-.mbs-right { text-align: right; }
-.mbs-right .label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--font-sans); margin-bottom: 4px; }
-.mbs-right .range-val { font-size: 14px; font-weight: 500; }
-.mbs-right .open-val  { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: var(--font-sans); }
-
-/* ── Reprice bar ── */
 .reprice-section { margin-bottom: 18px; }
-.reprice-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.reprice-title  { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--font-sans); }
-.reprice-status { font-size: 13px; font-weight: 500; font-family: var(--font-sans); }
-.reprice-track  { height: 8px; background: var(--dim); border-radius: 4px; overflow: hidden; }
-.reprice-fill   { height: 100%; border-radius: 4px; transition: width 0.8s ease, background 0.4s ease; }
+.reprice-header  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.reprice-title   { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--font-sans); }
+.reprice-status  { font-size: 13px; font-weight: 500; font-family: var(--font-sans); color: var(--muted); }
+.reprice-track   { height: 8px; background: var(--dim); border-radius: 4px; overflow: hidden; }
+.reprice-fill    { height: 100%; border-radius: 4px; width: 0%; transition: width 0.8s ease, background 0.4s ease; background: var(--dim); }
 .reprice-markers { display: flex; justify-content: space-between; margin-top: 4px; }
 .reprice-marker  { font-size: 9px; color: var(--dim); font-family: var(--font-sans); }
-.reprice-ticks-label { font-size: 11px; text-align: right; margin-top: 3px; font-family: var(--font-sans); }
+.reprice-sub     { font-size: 11px; text-align: right; margin-top: 3px; font-family: var(--font-sans); color: var(--muted); }
 
-/* ── Anchor grid ── */
 .anchors-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--dim); border-radius: 8px; overflow: hidden; }
 .anchor-cell  { background: var(--surface2); padding: 12px; text-align: center; }
 .anchor-cell.active { background: #1a2235; }
 .anchor-label { font-size: 9px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; font-family: var(--font-sans); }
-.anchor-val   { font-size: 22px; font-weight: 500; line-height: 1; }
+.anchor-val   { font-size: 22px; font-weight: 500; line-height: 1; color: var(--muted); }
 .anchor-time  { font-size: 9px; color: var(--dim); margin-top: 4px; font-family: var(--font-sans); }
 
-/* ── Mark input ── */
 .mark-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; }
-.mark-label { font-size: 11px; color: var(--muted); font-family: var(--font-sans); flex: 1; min-width: 180px; }
+.mark-label { font-size: 11px; color: var(--muted); font-family: var(--font-sans); flex: 1; min-width: 160px; }
 .mark-label strong { color: var(--text); font-weight: 500; }
 .mark-input { background: var(--surface2); border: 1px solid var(--dim); border-radius: 6px; color: var(--text); font-family: var(--font-mono); font-size: 13px; padding: 6px 10px; width: 90px; outline: none; }
 .mark-input:focus { border-color: var(--amber); }
@@ -602,35 +90,30 @@ a { color: var(--blue); text-decoration: none; }
 .mark-clear { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 6px 10px; font-size: 11px; cursor: pointer; font-family: var(--font-sans); }
 .mark-result { font-size: 13px; font-weight: 500; min-width: 80px; text-align: right; color: var(--muted); font-family: var(--font-mono); }
 
-/* ── Section heading ── */
 .section-heading { font-size: 10px; color: var(--dim); letter-spacing: 0.12em; text-transform: uppercase; font-family: var(--font-sans); margin-bottom: 10px; }
 
-/* ── 2-col grid ── */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-@media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .anchors-grid { grid-template-columns: repeat(2,1fr); } .mbs-top { flex-direction: column; gap: 12px; } .grid-3 { grid-template-columns: 1fr; } }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
 
-/* ── Rate env cards ── */
-.rate-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.rate-card  { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
 .rate-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--font-sans); margin-bottom: 4px; }
 .rate-value { font-size: 32px; font-weight: 500; line-height: 1; }
 .rate-meta  { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-.lag-badge  { font-size: 10px; padding: 2px 8px; border-radius: 3px; font-family: var(--font-sans); font-weight: 500; border: 1px solid rgba(96,165,250,0.2); }
+.lag-badge  { font-size: 10px; padding: 2px 8px; border-radius: 3px; font-family: var(--font-sans); font-weight: 500; border: 1px solid rgba(96,165,250,0.2); color: var(--blue); background: rgba(96,165,250,0.08); }
 .level-bar  { height: 4px; background: var(--dim); border-radius: 2px; position: relative; margin-top: 12px; }
 .level-dot  { position: absolute; top: -4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--bg); transform: translateX(-50%); transition: left 0.5s ease; }
 .level-labels { display: flex; justify-content: space-between; margin-top: 6px; }
 .level-label  { font-size: 9px; color: var(--dim); font-family: var(--font-sans); }
 .level-note   { font-size: 10px; color: var(--amber); margin-top: 8px; font-family: var(--font-sans); display: none; }
-.zn-note      { font-size: 10px; color: var(--muted); margin-top: 10px; font-family: var(--font-sans); line-height: 1.6; }
+.card-note    { font-size: 10px; color: var(--muted); margin-top: 10px; font-family: var(--font-sans); line-height: 1.6; }
 
-/* ── Velocity ── */
 .vel-card  { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
 .vel-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--font-sans); margin-bottom: 10px; }
-.vel-value { font-size: 24px; font-weight: 500; }
+.vel-value { font-size: 24px; font-weight: 500; color: var(--muted); }
 .vel-sub   { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: var(--font-sans); }
 
-/* ── Event strip ── */
-.event-card   { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 20px; }
-.event-item   { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.event-card  { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 20px; }
+.event-item  { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); }
 .event-item:last-child { border-bottom: none; padding-bottom: 0; }
 .event-time   { font-size: 11px; color: var(--muted); min-width: 64px; font-family: var(--font-sans); }
 .event-name   { font-size: 12px; font-family: var(--font-sans); flex: 1; }
@@ -638,21 +121,27 @@ a { color: var(--blue); text-decoration: none; }
 .impact-high  { background: rgba(239,68,68,0.15); color: var(--red); }
 .impact-med   { background: rgba(245,158,11,0.1);  color: var(--amber); }
 .impact-low   { background: rgba(100,116,139,0.1); color: var(--muted); }
-.event-countdown { font-size: 11px; font-weight: 500; min-width: 54px; text-align: right; font-family: var(--font-mono); }
+.event-cd     { font-size: 11px; font-weight: 500; min-width: 54px; text-align: right; font-family: var(--font-mono); }
 
-/* ── Signal row ── */
-.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
 .signal-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
 .signal-icon { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; font-family: var(--font-sans); margin-bottom: 6px; text-transform: uppercase; }
-.signal-text { font-size: 15px; font-weight: 500; font-family: var(--font-sans); }
+.signal-text { font-size: 15px; font-weight: 500; font-family: var(--font-sans); color: var(--muted); }
 .signal-sub  { font-size: 10px; color: var(--muted); margin-top: 4px; font-family: var(--font-sans); }
 
-/* ── Footer ── */
-.footer-row { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+.footer-row  { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
 .footer-note { font-size: 10px; color: var(--dim); font-family: var(--font-sans); display: flex; align-items: center; gap: 5px; }
-.live-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.live-dot    { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); display: inline-block; flex-shrink: 0; }
 .live-dot.on { background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.error-banner { background: var(--red-bg); border: 1px solid rgba(239,68,68,0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; color: var(--red); font-family: var(--font-sans); display: none; }
+
+@media (max-width: 600px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .anchors-grid { grid-template-columns: repeat(2,1fr); }
+  .mbs-top { flex-direction: column; gap: 12px; }
+  .mbs-price { font-size: 36px; }
+}
 </style>
 </head>
 <body>
@@ -660,7 +149,6 @@ a { color: var(--blue); text-decoration: none; }
 
   <a class="nav-back" href="/lockiq">← LockIQ</a>
 
-  <!-- Header -->
   <div class="header">
     <div>
       <div class="logo">MBS<span>GOAT</span></div>
@@ -672,7 +160,6 @@ a { color: var(--blue); text-decoration: none; }
     </div>
   </div>
 
-  <!-- Session progress bar -->
   <div class="session-bar">
     <div class="session-label">Open <span>9:30</span></div>
     <div class="session-track">
@@ -684,83 +171,81 @@ a { color: var(--blue); text-decoration: none; }
     <div class="session-label">Close <span>4:00</span></div>
   </div>
 
-  <!-- MBS Hero -->
+  <div class="error-banner" id="error-banner"></div>
+
   <div class="mbs-hero">
     <div class="mbs-top">
       <div>
         <div class="mbs-ticker">UMBS 5.5 — Current Price</div>
         <div class="mbs-price" id="umbs-price">—</div>
         <div class="mbs-change-row">
-          <span class="mbs-badge badge-neu" id="umbs-day-badge">Loading...</span>
+          <span class="badge badge-neu" id="umbs-day-badge">Loading...</span>
           <span style="font-size:11px;color:var(--muted);font-family:var(--font-sans)">Prior close: <span id="prior-close">—</span></span>
+          <span style="font-size:10px;color:var(--dim);font-family:var(--font-sans)" id="data-src"></span>
         </div>
       </div>
       <div class="mbs-right">
-        <div class="label">Today's range</div>
-        <div class="range-val"><span id="range-lo">—</span> <span style="color:var(--dim)">→</span> <span id="range-hi">—</span></div>
-        <div class="open-val">Open: <span id="today-open">—</span></div>
+        <div class="rl">Today's range</div>
+        <div class="rv"><span id="range-lo">—</span> <span style="color:var(--dim)">→</span> <span id="range-hi">—</span></div>
+        <div class="ro">Open: <span id="today-open">—</span></div>
       </div>
     </div>
 
-    <!-- Reprice exposure bar -->
     <div class="reprice-section">
       <div class="reprice-header">
-        <div class="reprice-title">Reprice exposure — from rate sheet (<span id="sheet-anchor-time">10:30 ET</span>)</div>
-        <div class="reprice-status" id="reprice-status-text" style="color:var(--muted)">—</div>
+        <div class="reprice-title">Reprice exposure — from rate sheet (<span id="sheet-label">10:30 ET</span>)</div>
+        <div class="reprice-status" id="reprice-status">—</div>
       </div>
       <div class="reprice-track">
-        <div class="reprice-fill" id="reprice-fill" style="width:0%;background:var(--dim)"></div>
+        <div class="reprice-fill" id="reprice-fill"></div>
       </div>
       <div class="reprice-markers">
         <span class="reprice-marker">0 ticks (sheet)</span>
         <span class="reprice-marker">−3 ticks</span>
         <span class="reprice-marker">−6 ticks (trigger)</span>
       </div>
-      <div class="reprice-ticks-label" id="reprice-ticks-label" style="color:var(--muted)">Awaiting data...</div>
+      <div class="reprice-sub" id="reprice-sub">Awaiting data...</div>
     </div>
 
-    <!-- 4 anchor deltas -->
     <div class="anchors-grid">
       <div class="anchor-cell">
         <div class="anchor-label">vs Prior Close</div>
-        <div class="anchor-val" id="anc-close" style="color:var(--muted)">—</div>
+        <div class="anchor-val" id="anc-close">—</div>
         <div class="anchor-time">ticks</div>
       </div>
       <div class="anchor-cell">
         <div class="anchor-label">vs Today Open</div>
-        <div class="anchor-val" id="anc-open" style="color:var(--muted)">—</div>
+        <div class="anchor-val" id="anc-open">—</div>
         <div class="anchor-time">ticks</div>
       </div>
       <div class="anchor-cell active">
         <div class="anchor-label" style="color:var(--amber)">vs Rate Sheet</div>
-        <div class="anchor-val" id="anc-sheet" style="color:var(--muted)">—</div>
+        <div class="anchor-val" id="anc-sheet">—</div>
         <div class="anchor-time" style="color:var(--amber)">10:30 ET</div>
       </div>
       <div class="anchor-cell">
         <div class="anchor-label">vs Your Mark</div>
-        <div class="anchor-val" id="anc-mark" style="color:var(--muted)">—</div>
+        <div class="anchor-val" id="anc-mark">—</div>
         <div class="anchor-time" id="anc-mark-time">not set</div>
       </div>
     </div>
   </div>
 
-  <!-- User mark input -->
   <div class="mark-row">
-    <div class="mark-label"><strong>Mark from a moment</strong> — enter a price to track from (e.g. when you quoted a borrower or saw the sheet)</div>
-    <input class="mark-input" id="mark-price-input" type="text" placeholder="100-06" />
+    <div class="mark-label"><strong>Mark from a moment</strong> — enter the price you want to measure from (decimal points, e.g. 100.5625)</div>
+    <input class="mark-input" id="mark-input" type="text" placeholder="100.5625" />
     <button class="mark-btn" onclick="setMark()">Set Mark</button>
     <button class="mark-clear" onclick="clearMark()">Clear</button>
-    <div class="mark-result" id="mark-result-display">—</div>
+    <div class="mark-result" id="mark-result">—</div>
   </div>
 
-  <!-- Rate environment -->
   <div class="section-heading">Rate environment</div>
   <div class="grid-2">
     <div class="rate-card">
       <div class="rate-label">10-Year Treasury</div>
       <div class="rate-value" id="teny-yield">—</div>
       <div class="rate-meta">
-        <span class="mbs-badge badge-neu" id="teny-chg-badge">—</span>
+        <span class="badge badge-neu" id="teny-badge">—</span>
         <span style="font-size:11px;color:var(--muted);font-family:var(--font-sans)" id="teny-bps">—</span>
       </div>
       <div class="level-note" id="teny-level-note"></div>
@@ -773,68 +258,415 @@ a { color: var(--blue); text-decoration: none; }
         <span class="level-label">4.75%</span>
       </div>
     </div>
-
     <div class="rate-card">
-      <div class="rate-label">ZN Futures — 10Y Note</div>
-      <div class="rate-value" id="zn-price">—</div>
+      <div class="rate-label">UMBS 5.5 — Shadow (TradingView)</div>
+      <div class="rate-value" id="shadow-price">—</div>
       <div class="rate-meta">
-        <span class="mbs-badge badge-neu" id="zn-chg-badge">—</span>
-        <span class="lag-badge" id="zn-lag-badge" style="color:var(--blue);background:rgba(96,165,250,0.1)">awaiting data</span>
+        <span class="badge badge-neu" id="shadow-badge">—</span>
+        <span class="lag-badge">shadow scraper</span>
       </div>
-      <div class="zn-note">ZN leads UMBS on large moves (&gt;3 ticks). A gap between ZN direction and UMBS signals a catch-up move is likely.</div>
+      <div class="card-note">Directional confirmation. Compare to MBS Live price above — divergence signals a likely catch-up move.</div>
     </div>
   </div>
 
-  <!-- Velocity -->
-  <div class="section-heading">Velocity &amp; direction</div>
+  <div class="section-heading">Daily change context</div>
   <div class="grid-2" style="margin-bottom:20px">
     <div class="vel-card">
-      <div class="vel-label">Last 15 min</div>
-      <div class="vel-value" id="vel-15" style="color:var(--muted)">—</div>
-      <div class="vel-sub" id="vel-15-note">Needs intraday history snapshots</div>
+      <div class="vel-label">Points change today</div>
+      <div class="vel-value" id="vel-pts">—</div>
+      <div class="vel-sub"   id="vel-pts-note">From prior close</div>
     </div>
     <div class="vel-card">
-      <div class="vel-label">Last 30 min</div>
-      <div class="vel-value" id="vel-30" style="color:var(--muted)">—</div>
-      <div class="vel-sub" id="vel-30-note">Needs intraday history snapshots</div>
+      <div class="vel-label">Ticks change today</div>
+      <div class="vel-value" id="vel-ticks">—</div>
+      <div class="vel-sub"   id="vel-ticks-note">32nds of a point</div>
     </div>
   </div>
 
-  <!-- Event risk -->
   <div class="section-heading">Event risk today</div>
   <div class="event-card">
     <div id="events-list"></div>
   </div>
 
-  <!-- Signal summary -->
   <div class="section-heading">Signal summary</div>
   <div class="grid-3">
     <div class="signal-card">
       <div class="signal-icon">Reprice Risk</div>
-      <div class="signal-text" id="sig-reprice" style="color:var(--muted)">—</div>
-      <div class="signal-sub" id="sig-reprice-sub">Awaiting data</div>
+      <div class="signal-text" id="sig-reprice">—</div>
+      <div class="signal-sub"  id="sig-reprice-sub">Awaiting data</div>
     </div>
     <div class="signal-card">
-      <div class="signal-icon">Direction</div>
-      <div class="signal-text" id="sig-direction" style="color:var(--muted)">—</div>
-      <div class="signal-sub" id="sig-direction-sub">Awaiting data</div>
+      <div class="signal-icon">Daily Direction</div>
+      <div class="signal-text" id="sig-direction">—</div>
+      <div class="signal-sub"  id="sig-direction-sub">Awaiting data</div>
     </div>
     <div class="signal-card">
       <div class="signal-icon">Lock Lean</div>
-      <div class="signal-text" id="sig-lock" style="color:var(--muted)">—</div>
-      <div class="signal-sub" id="sig-lock-sub">Awaiting data</div>
+      <div class="signal-text" id="sig-lock">—</div>
+      <div class="signal-sub"  id="sig-lock-sub">Awaiting data</div>
     </div>
   </div>
 
-  <!-- Footer -->
   <div class="footer-row">
     <div class="footer-note">
-      <span class="live-dot on" id="live-dot"></span>
-      <span id="data-source">Connecting to Firestore...</span>
+      <span class="live-dot" id="live-dot"></span>
+      <span id="footer-status">Connecting...</span>
     </div>
     <div class="footer-note">Rate sheet anchor: 10:30 ET · Reprice trigger: −6 ticks</div>
   </div>
 
 </div>
+<script>
+const API_URL         = '/.netlify/functions/getMarketData';
+const REFRESH_MS      = 60000;
+const REPRICE_TRIGGER = 6;
+
+const S = {
+  currentPts: null, priorClosePts: null, openPts: null,
+  highPts: null, lowPts: null,
+  deltaPoints: null, deltaTicks: null,
+  rateSheetPts: null, rateSheetLabel: '10:30 ET',
+  markPts: null, markTimeStr: null,
+  tenY: null, tenYChange: null,
+  shadowCurrent: null, shadowChange: null,
+  dataSource: null, lastUpdated: null, lastFetch: null,
+};
+
+function ptsToTicks(pts) { return (pts === null || isNaN(pts)) ? null : Math.round(pts * 32); }
+
+function fmtPts(pts) {
+  if (pts === null) return '—';
+  const h = Math.floor(pts);
+  const t = Math.round((pts - h) * 32);
+  return h + '-' + String(t).padStart(2,'0');
+}
+
+function fmtTicks(t) {
+  if (t === null) return '—';
+  return (t > 0 ? '+' : '') + t + (Math.abs(t) === 1 ? ' tick' : ' ticks');
+}
+
+function color(val) {
+  if (val === null || val === undefined) return 'var(--muted)';
+  return val > 0 ? 'var(--green)' : val < 0 ? 'var(--red)' : 'var(--muted)';
+}
+
+function setText(id, txt, clr) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = txt;
+  if (clr !== undefined) el.style.color = clr;
+}
+
+function nowET() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+}
+
+function clockTick() {
+  const now = nowET();
+  const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+  const ap = h >= 12 ? 'PM' : 'AM', h12 = h % 12 || 12;
+  setText('clock-time', h12 + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + ' ' + ap + ' ET');
+  setText('clock-date', now.toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' }));
+  const pct = Math.max(0, Math.min(((h*60+m - 570) / 390) * 100, 100));
+  document.getElementById('session-fill').style.width = pct + '%';
+  document.getElementById('session-dot').style.left   = pct + '%';
+}
+
+function trySetRateSheetAnchor() {
+  if (S.rateSheetPts !== null) return;
+  const now = nowET();
+  const h = now.getHours(), m = now.getMinutes();
+  if (h < 10 || (h === 10 && m < 30)) {
+    if (S.openPts !== null) { S.rateSheetPts = S.openPts; S.rateSheetLabel = 'Open (pre-10:30)'; }
+  } else {
+    if (S.currentPts !== null) { S.rateSheetPts = S.currentPts; S.rateSheetLabel = '~10:30 ET'; }
+  }
+}
+
+async function fetchData() {
+  try {
+    const res  = await fetch(API_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    ingest(data);
+    document.getElementById('error-banner').style.display = 'none';
+  } catch(e) {
+    document.getElementById('error-banner').textContent = 'Could not reach getMarketData: ' + e.message;
+    document.getElementById('error-banner').style.display = 'block';
+  }
+}
+
+function ingest(data) {
+  // 1. Real MBS Live prices (best source)
+  const mbs = data.realMBS;
+  if (mbs && mbs.UMBS55 && mbs.UMBS55.current) {
+    S.currentPts    = mbs.UMBS55.current;
+    S.priorClosePts = mbs.UMBS55.priorClose;
+    S.openPts       = mbs.UMBS55.open;
+    S.highPts       = mbs.UMBS55.high;
+    S.lowPts        = mbs.UMBS55.low;
+    S.deltaPoints   = mbs.UMBS55.dailyChange;
+    S.deltaTicks    = S.deltaPoints !== null ? S.deltaPoints * 32 : null;
+    S.dataSource    = 'MBS Live';
+    S.lastUpdated   = mbs.lastUpdated;
+  }
+
+  // 2. Shadow bonds fallback
+  const shd = data.shadow;
+  if (!S.currentPts && shd && shd.UMBS55 && shd.UMBS55.current) {
+    S.currentPts    = shd.UMBS55.current;
+    S.priorClosePts = shd.UMBS55.priorClose;
+    S.openPts       = shd.UMBS55.open;
+    S.highPts       = shd.UMBS55.high;
+    S.lowPts        = shd.UMBS55.low;
+    S.deltaPoints   = shd.UMBS55.dailyChange;
+    S.deltaTicks    = S.deltaPoints !== null ? S.deltaPoints * 32 : null;
+    S.dataSource    = 'Shadow (TV)';
+    S.lastUpdated   = shd.lastUpdated;
+  }
+
+  // 3. lockiqSignal fills gaps
+  const ls = data.lockiqSignal;
+  if (ls) {
+    if (!S.currentPts    && ls.current)    S.currentPts    = ls.current;
+    if (!S.priorClosePts && ls.priorClose) S.priorClosePts = ls.priorClose;
+    if (!S.openPts       && ls.open)       S.openPts       = ls.open;
+    if (S.deltaPoints === null && ls.deltaPoints != null) {
+      S.deltaPoints = ls.deltaPoints;
+      S.deltaTicks  = ls.deltaTicks;
+    }
+    if (!S.dataSource)  S.dataSource  = ls.source;
+    if (!S.lastUpdated) S.lastUpdated = ls.lastUpdated;
+  }
+
+  // Shadow comparison card
+  if (shd && shd.UMBS55) {
+    S.shadowCurrent = shd.UMBS55.current;
+    S.shadowChange  = shd.UMBS55.dailyChange;
+  }
+
+  // 10Y yield — Firestore first, FRED fallback
+  const ly = data.liveYields;
+  if (ly && ly.us10y) {
+    S.tenY = ly.us10y.current;
+    S.tenYChange = ly.us10y.dailyChange;
+    if (!S.tenYChange && ly.us10y.priorClose && S.tenY) {
+      S.tenYChange = S.tenY - ly.us10y.priorClose;
+    }
+  }
+  if (!S.tenY && data.fred && data.fred['DGS10']) S.tenY = data.fred['DGS10'].latest;
+
+  S.lastFetch = new Date();
+  trySetRateSheetAnchor();
+  render();
+}
+
+function render() {
+  // ── Hero ──
+  if (S.currentPts !== null) {
+    setText('umbs-price',  fmtPts(S.currentPts));
+    setText('prior-close', fmtPts(S.priorClosePts));
+    setText('today-open',  fmtPts(S.openPts));
+    setText('range-lo',    fmtPts(S.lowPts));
+    setText('range-hi',    fmtPts(S.highPts));
+    setText('data-src',    S.dataSource ? '· ' + S.dataSource : '');
+
+    if (S.deltaPoints !== null) {
+      const t = Math.round(S.deltaTicks || S.deltaPoints * 32);
+      const b = document.getElementById('umbs-day-badge');
+      b.textContent = (t >= 0 ? '▲ +' : '▼ ') + Math.abs(t) + ' ticks today';
+      b.className   = 'badge ' + (t >= 0 ? 'badge-pos' : 'badge-neg');
+    }
+  }
+
+  // ── Reprice bar ──
+  setText('sheet-label', S.rateSheetLabel);
+  if (S.currentPts !== null && S.rateSheetPts !== null) {
+    const diff    = ptsToTicks(S.currentPts) - ptsToTicks(S.rateSheetPts);
+    const adverse = -diff;
+    const f = document.getElementById('reprice-fill');
+    const st = document.getElementById('reprice-status');
+    const sb = document.getElementById('reprice-sub');
+    if (diff >= 0) {
+      f.style.width = '0%'; f.style.background = 'var(--green)';
+      st.textContent = 'No adverse risk'; st.style.color = 'var(--green)';
+      sb.textContent = '+' + diff + ' ticks favorable from rate sheet'; sb.style.color = 'var(--green)';
+    } else {
+      const pct = Math.min((adverse / REPRICE_TRIGGER) * 100, 100);
+      f.style.width = pct + '%';
+      if (adverse >= REPRICE_TRIGGER) {
+        f.style.background = 'var(--red)'; st.textContent = 'Reprice likely'; st.style.color = 'var(--red)';
+        sb.textContent = '−' + adverse + ' ticks · threshold crossed'; sb.style.color = 'var(--red)';
+      } else if (adverse >= Math.floor(REPRICE_TRIGGER * 0.66)) {
+        f.style.background = 'var(--amber)'; st.textContent = 'Watch closely'; st.style.color = 'var(--amber)';
+        sb.textContent = '−' + adverse + ' ticks · ' + (REPRICE_TRIGGER - adverse) + ' to trigger'; sb.style.color = 'var(--amber)';
+      } else {
+        f.style.background = 'var(--blue)'; st.textContent = 'Within tolerance'; st.style.color = 'var(--blue)';
+        sb.textContent = '−' + adverse + ' ticks · ' + (REPRICE_TRIGGER - adverse) + ' to trigger'; sb.style.color = 'var(--muted)';
+      }
+    }
+  }
+
+  // ── Anchor deltas ──
+  if (S.currentPts !== null) {
+    const curT = ptsToTicks(S.currentPts);
+    const setA = (id, pts) => {
+      if (pts === null) return;
+      const d = curT - ptsToTicks(pts);
+      const el = document.getElementById(id);
+      el.textContent = (d >= 0 ? '+' : '') + d;
+      el.style.color = color(d);
+    };
+    setA('anc-close', S.priorClosePts);
+    setA('anc-open',  S.openPts);
+    if (S.rateSheetPts !== null) setA('anc-sheet', S.rateSheetPts);
+    if (S.markPts !== null) {
+      const d = curT - ptsToTicks(S.markPts);
+      setText('anc-mark',    (d >= 0 ? '+' : '') + d, color(d));
+      setText('mark-result', fmtTicks(d), color(d));
+    }
+  }
+
+  // ── 10Y ──
+  if (S.tenY !== null) {
+    setText('teny-yield', S.tenY.toFixed(3) + '%');
+    const chg = S.tenYChange || 0;
+    const tb = document.getElementById('teny-badge');
+    tb.textContent = (chg >= 0 ? '▲ +' : '▼ ') + Math.abs(chg).toFixed(3);
+    tb.className   = 'badge ' + (chg >= 0 ? 'badge-neg' : 'badge-pos');
+    setText('teny-bps', (chg >= 0 ? '+' : '') + (chg * 100).toFixed(1) + ' bps today');
+    const levels  = [4.00, 4.25, 4.50, 4.75, 5.00];
+    const nearest = levels.reduce((a, b) => Math.abs(b - S.tenY) < Math.abs(a - S.tenY) ? b : a);
+    const dist    = Math.round(Math.abs(S.tenY - nearest) * 100);
+    const nEl     = document.getElementById('teny-level-note');
+    nEl.textContent = dist <= 15 ? dist + ' bps from ' + nearest.toFixed(2) + '% key level' : '';
+    nEl.style.display = dist <= 15 ? 'block' : 'none';
+    const pct = Math.max(0, Math.min(((S.tenY - 4.00) / 0.75) * 100, 100));
+    const dot = document.getElementById('teny-dot');
+    dot.style.left = pct + '%'; dot.style.background = chg >= 0 ? 'var(--red)' : 'var(--blue)';
+  }
+
+  // ── Shadow ──
+  if (S.shadowCurrent !== null) {
+    setText('shadow-price', fmtPts(S.shadowCurrent));
+    const chg = S.shadowChange || 0;
+    const t   = Math.round(chg * 32);
+    const sb  = document.getElementById('shadow-badge');
+    sb.textContent = (t >= 0 ? '▲ +' : '▼ ') + Math.abs(t) + ' ticks';
+    sb.className   = 'badge ' + (t >= 0 ? 'badge-pos' : 'badge-neg');
+  }
+
+  // ── Velocity ──
+  if (S.deltaPoints !== null) {
+    const t = Math.round(S.deltaTicks || S.deltaPoints * 32);
+    const p = S.deltaPoints;
+    setText('vel-pts',   (p >= 0 ? '+' : '') + p.toFixed(4) + ' pts', color(p));
+    setText('vel-pts-note', 'From prior close · ' + (S.dataSource || ''));
+    setText('vel-ticks', (t >= 0 ? '+' : '') + t + ' ticks', color(t));
+    setText('vel-ticks-note', t === 0 ? 'Flat' : t > 0 ? 'Improvement from prior close' : 'Deterioration from prior close');
+  }
+
+  // ── Signals ──
+  const curT   = ptsToTicks(S.currentPts);
+  const sheetT = ptsToTicks(S.rateSheetPts);
+  const diff   = (curT !== null && sheetT !== null) ? curT - sheetT : null;
+  const ticks  = S.deltaTicks !== null ? Math.round(S.deltaTicks) : null;
+
+  if (diff === null) {
+    setText('sig-reprice', '—', 'var(--muted)'); setText('sig-reprice-sub', 'Awaiting data');
+  } else if (diff >= 0) {
+    setText('sig-reprice', 'Low', 'var(--green)'); setText('sig-reprice-sub', '+' + diff + ' ticks favorable');
+  } else if (Math.abs(diff) >= REPRICE_TRIGGER) {
+    setText('sig-reprice', 'High', 'var(--red)'); setText('sig-reprice-sub', 'Threshold crossed');
+  } else {
+    setText('sig-reprice', 'Medium', 'var(--amber)'); setText('sig-reprice-sub', Math.abs(diff) + '/' + REPRICE_TRIGGER + ' ticks to trigger');
+  }
+
+  if (ticks === null) {
+    setText('sig-direction', '—', 'var(--muted)'); setText('sig-direction-sub', 'Awaiting data');
+  } else {
+    setText('sig-direction', ticks > 0 ? 'Improving' : ticks < 0 ? 'Deteriorating' : 'Flat', color(ticks));
+    setText('sig-direction-sub', fmtTicks(ticks) + ' from prior close');
+  }
+
+  if (diff === null) {
+    setText('sig-lock', '—', 'var(--muted)'); setText('sig-lock-sub', 'Awaiting data');
+  } else if (diff >= 3 && (ticks === null || ticks >= 0)) {
+    setText('sig-lock', 'Float-friendly', 'var(--teal)'); setText('sig-lock-sub', 'No immediate adverse risk');
+  } else if (Math.abs(diff) >= REPRICE_TRIGGER - 2) {
+    setText('sig-lock', 'Lock now', 'var(--red)'); setText('sig-lock-sub', 'Near reprice threshold');
+  } else {
+    setText('sig-lock', 'Neutral', 'var(--muted)'); setText('sig-lock-sub', 'Monitor conditions');
+  }
+
+  // ── Footer ──
+  const dot = document.getElementById('live-dot');
+  if (S.currentPts !== null) {
+    dot.className = 'live-dot on';
+    const ago = S.lastFetch
+      ? 'Last fetch: ' + S.lastFetch.toLocaleTimeString('en-US', { timeZone:'America/New_York', hour:'numeric', minute:'2-digit' })
+      : '';
+    setText('footer-status', 'Live · ' + (S.dataSource || 'Firestore') + ' · ' + ago);
+  } else {
+    dot.className = 'live-dot';
+    setText('footer-status', 'Waiting for data...');
+  }
+}
+
+// ── Events ──
+const EVENTS = [
+  { time:'8:30 AM',  name:'Initial Jobless Claims',       impact:'high' },
+  { time:'10:00 AM', name:'Fed Speaker (check calendar)', impact:'med'  },
+  { time:'2:00 PM',  name:'10-Year Note Auction',         impact:'high' },
+  { time:'3:00 PM',  name:'Consumer Credit',              impact:'low'  },
+];
+function buildEvents() {
+  const now = nowET(), nowMin = now.getHours()*60 + now.getMinutes();
+  const list = document.getElementById('events-list');
+  list.innerHTML = '';
+  EVENTS.forEach(ev => {
+    const [hm, ap] = ev.time.split(' ');
+    let [h, m] = hm.split(':').map(Number);
+    if (ap === 'PM' && h !== 12) h += 12;
+    if (ap === 'AM' && h === 12) h  = 0;
+    const diff = (h*60+m) - nowMin;
+    const cd   = diff < 0 ? 'passed' : diff < 60 ? diff + 'm' : Math.floor(diff/60) + 'h ' + (diff%60) + 'm';
+    const el   = document.createElement('div');
+    el.className = 'event-item';
+    el.innerHTML = `<span class="event-time">${ev.time}</span>
+      <span class="event-name" style="${diff<0?'color:var(--dim)':''}">${ev.name}</span>
+      <span class="event-impact impact-${ev.impact}">${ev.impact.toUpperCase()}</span>
+      <span class="event-cd" style="color:${diff<0?'var(--dim)':diff<60?'var(--amber)':'var(--muted)'}">${cd}</span>`;
+    list.appendChild(el);
+  });
+}
+
+// ── Mark ──
+function setMark() {
+  const val = parseFloat(document.getElementById('mark-input').value.trim());
+  if (!isNaN(val) && val > 0) {
+    S.markPts     = val;
+    S.markTimeStr = nowET().toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/New_York' });
+    setText('anc-mark-time', S.markTimeStr);
+    render();
+  }
+}
+function clearMark() {
+  S.markPts = null;
+  setText('anc-mark', '—', 'var(--muted)');
+  setText('anc-mark-time', 'not set');
+  setText('mark-result', '—', 'var(--muted)');
+  document.getElementById('mark-input').value = '';
+}
+
+// ── Boot ──
+clockTick();
+buildEvents();
+fetchData();
+setInterval(clockTick,   1000);
+setInterval(buildEvents, 30000);
+setInterval(fetchData,   REFRESH_MS);
+</script>
 </body>
 </html>
