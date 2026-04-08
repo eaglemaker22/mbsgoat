@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBSGOAT | Raw Feed</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #050508;
+    --surface: #0d0d14;
+    --border: #1a1a2e;
+    --border-bright: #2a2a4a;
+    --text: #e8e8f0;
+    --muted: #5a5a7a;
+    --dim: #3a3a5a;
+    --green: #00ff88;
+    --red: #ff3355;
+    --yellow: #ffcc00;
+    --blue: #4488ff;
+    --cyan: #00ccff;
+    --orange: #ff8844;
+    --green-dim: rgba(0,255,136,0.08);
+    --red-dim: rgba(255,51,85,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    color: var(--cyan);
+  }
+
+  .logo span { color: var(--muted); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .clock {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 11px;
+  }
+
+  .status-dot {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--muted);
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--dim);
+  }
+
+  .dot.live { background: var(--green); animation: pulse 2s infinite; }
+  .dot.stale { background: var(--yellow); }
+  .dot.error { background: var(--red); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Layout */
+  .main {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Section */
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Data Grid */
+  .data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .data-card {
+    background: var(--surface);
+    padding: 14px 16px;
+    position: relative;
+    transition: background 0.15s;
+  }
+
+  .data-card:hover { background: #111120; }
+
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .card-price {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 6px;
+    transition: color 0.3s;
+  }
+
+  .card-price.flash-up { color: var(--green); }
+  .card-price.flash-down { color: var(--red); }
+
+  .card-change {
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .card-change.pos { color: var(--green); }
+  .card-change.neg { color: var(--red); }
+  .card-change.flat { color: var(--muted); }
+
+  .card-meta {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .meta-key {
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .meta-val {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .card-updated {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 9px;
+    color: var(--dim);
+  }
+
+  /* Source tag */
+  .source-tag {
+    position: absolute;
+    bottom: 8px;
+    right: 10px;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  /* MBS section gets special treatment */
+  .mbs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .mbs-card {
+    background: var(--surface);
+    padding: 16px 18px;
+    position: relative;
+  }
+
+  .mbs-card:hover { background: #111120; }
+
+  .mbs-name {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .mbs-price {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 4px;
+    transition: color 0.3s;
+  }
+
+  .mbs-price.flash-up { color: var(--green); }
+  .mbs-price.flash-down { color: var(--red); }
+
+  .mbs-change {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+
+  .mbs-ohlc {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .ohlc-item { display: flex; flex-direction: column; gap: 3px; }
+  .ohlc-key { font-size: 9px; color: var(--dim); letter-spacing: 0.1em; }
+  .ohlc-val { font-size: 11px; color: var(--muted); }
+
+  /* FRED / OBMMI */
+  .fred-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .fred-card {
+    background: var(--surface);
+    padding: 16px 18px;
+  }
+
+  .fred-name {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--orange);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .fred-value {
+    font-size: 24px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .fred-desc {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'IBM Plex Sans', sans-serif;
+    margin-bottom: 8px;
+  }
+
+  .fred-date {
+    font-size: 10px;
+    color: var(--dim);
+  }
+
+  /* Raw log */
+  .log-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+
+  .log-line {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+    border-bottom: 1px solid var(--border);
+    padding: 2px 0;
+  }
+
+  .log-line .ts { color: var(--dim); margin-right: 8px; }
+  .log-line .ok { color: var(--green); margin-right: 6px; }
+  .log-line .err { color: var(--red); margin-right: 6px; }
+
+  /* Refresh bar */
+  .refresh-bar {
+    height: 2px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .refresh-progress {
+    height: 100%;
+    background: var(--cyan);
+    width: 100%;
+    transform-origin: left;
+    animation: shrink 60s linear infinite;
+  }
+
+  @keyframes shrink {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+  }
+
+  /* Loading state */
+  .loading {
+    color: var(--dim);
+    font-size: 12px;
+  }
+
+  .skeleton {
+    background: var(--border);
+    border-radius: 2px;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* Nav */
+  .nav-link {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+
+  .nav-link:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+  }
+
+  .nav-link.active {
+    color: var(--cyan);
+    border-color: var(--cyan);
+    background: rgba(0,204,255,0.05);
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .main { padding: 12px; }
+    .header { padding: 10px 12px; }
+    .mbs-grid, .data-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="refresh-bar"><div class="refresh-progress" id="refreshBar"></div></div>
+
+<div class="header">
+  <div class="logo">MBS<span>GOAT</span> // RAW FEED</div>
+  <div class="header-right">
+    <div class="status-bar">
+      <div class="status-dot"><div class="dot live" id="dotMBS"></div>MBS LIVE</div>
+      <div class="status-dot"><div class="dot live" id="dotTV"></div>TRADINGVIEW</div>
+      <div class="status-dot"><div class="dot stale" id="dotFRED"></div>FRED</div>
+    </div>
+    <div class="clock" id="clock">--:--:-- --</div>
+    <a href="/lockiq" class="nav-link">LOCKIQ</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- MBS LIVE -->
+  <div>
+    <div class="section-label">MBS Live — UMBS / GNMA</div>
+    <div class="mbs-grid" id="mbsGrid">
+      <div class="mbs-card"><div class="loading skeleton" style="height:80px"></div></div>
+      <div class="mbs-card"><div class="loading skeleton" style="height:80px"></div></div>
+      <div class="mbs-card"><div class="loading skeleton" style="height:80px"></div></div>
+      <div class="mbs-card"><div class="loading skeleton" style="height:80px"></div></div>
+    </div>
+  </div>
+
+  <!-- TREASURIES -->
+  <div>
+    <div class="section-label">Treasuries — Yields</div>
+    <div class="data-grid" id="yieldGrid">
+      <div class="data-card"><div class="loading skeleton" style="height:60px"></div></div>
+      <div class="data-card"><div class="loading skeleton" style="height:60px"></div></div>
+    </div>
+  </div>
+
+  <!-- FUTURES -->
+  <div>
+    <div class="section-label">Bond Futures — CBOT</div>
+    <div class="data-grid" id="futuresGrid">
+      <div class="data-card"><div class="loading skeleton" style="height:60px"></div></div>
+      <div class="data-card"><div class="loading skeleton" style="height:60px"></div></div>
+    </div>
+  </div>
+
+  <!-- ETFs -->
+  <div>
+    <div class="section-label">ETFs — TLT / MBB</div>
+    <div class="data-grid" id="etfGrid">
+      <div class="data-card"><div class="loading skeleton" style="height:60px"></div></div>
+      <div class="data-card"><div class="loading skeleton" style="height:60px"></div></div>
+    </div>
+  </div>
+
+  <!-- FRED / OBMMI -->
+  <div>
+    <div class="section-label">FRED — Optimal Blue Mortgage Market Indices</div>
+    <div class="fred-grid" id="fredGrid">
+      <div class="fred-card"><div class="loading skeleton" style="height:60px"></div></div>
+      <div class="fred-card"><div class="loading skeleton" style="height:60px"></div></div>
+      <div class="fred-card"><div class="loading skeleton" style="height:60px"></div></div>
+    </div>
+  </div>
+
+  <!-- Activity Log -->
+  <div>
+    <div class="section-label">Activity Log</div>
+    <div class="log-container" id="logContainer">
+      <div class="log-line"><span class="ts">--:--:--</span>Initializing feeds...</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ============================================================
+// CONFIG — update these with your actual values
+// ============================================================
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const FRED_API_KEY = "YOUR_FRED_API_KEY";
+
+const FRED_SERIES = [
+  { id: "OBMMIC30YF",  label: "30Y Fixed",         desc: "OBMMI 30-Year Fixed Rate" },
+  { id: "OBMMIC15YF",  label: "15Y Fixed",          desc: "OBMMI 15-Year Fixed Rate" },
+  { id: "OBMMIFHA30YF",label: "30Y FHA",            desc: "OBMMI 30-Year FHA Rate"   },
+];
+
+// ============================================================
+
+const app = initializeApp(FIREBASE_CONFIG);
+const db = getFirestore(app);
+
+// State
+let prevMBS = {};
+let prevTV = {};
+let fredData = {};
+let fredLastFetch = 0;
+const FRED_TTL = 10 * 60 * 1000; // 10 min
+
+// ── Clock ──────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Log ───────────────────────────────────────────────────
+function log(msg, ok = true) {
+  const el = document.getElementById('logContainer');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
+  line.innerHTML = `<span class="ts">${ts}</span><span class="${ok ? 'ok' : 'err'}">${ok ? '✓' : '✗'}</span>${msg}`;
+  el.insertBefore(line, el.firstChild);
+  if (el.children.length > 50) el.removeChild(el.lastChild);
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function fmt(val, decimals = 3) {
+  if (val === null || val === undefined || val === 'N/A') return '—';
+  const n = parseFloat(val);
+  return isNaN(n) ? val : n.toFixed(decimals);
+}
+
+function changeClass(val) {
+  const n = parseFloat(val);
+  if (isNaN(n) || n === 0) return 'flat';
+  return n > 0 ? 'pos' : 'neg';
+}
+
+function changePrefix(val) {
+  const n = parseFloat(val);
+  if (isNaN(n) || n === 0) return '';
+  return n > 0 ? '+' : '';
+}
+
+function flashPrice(el, newVal, oldVal) {
+  if (!oldVal || oldVal === newVal) return;
+  const newN = parseFloat(newVal);
+  const oldN = parseFloat(oldVal);
+  if (isNaN(newN) || isNaN(oldN)) return;
+  el.classList.remove('flash-up', 'flash-down');
+  el.classList.add(newN > oldN ? 'flash-up' : 'flash-down');
+  setTimeout(() => el.classList.remove('flash-up', 'flash-down'), 1500);
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const diff = Math.floor((Date.now() - d) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  return `${Math.floor(diff/3600)}h ago`;
+}
+
+// ── MBS Grid ──────────────────────────────────────────────
+function renderMBS(data) {
+  const products = [
+    { key: 'UMBS_5_5', label: 'UMBS 5.5' },
+    { key: 'UMBS_6_0', label: 'UMBS 6.0' },
+    { key: 'GNMA_5_5', label: 'GNMA 5.5' },
+    { key: 'GNMA_6_0', label: 'GNMA 6.0' },
+  ];
+
+  const grid = document.getElementById('mbsGrid');
+  grid.innerHTML = '';
+
+  products.forEach(p => {
+    const cur   = data[`${p.key}_Current`];
+    const chg   = data[`${p.key}_Daily_Change`];
+    const open  = data[`${p.key}_Open`];
+    const high  = data[`${p.key}_TodayHigh`];
+    const low   = data[`${p.key}_TodayLow`];
+    const prev  = data[`${p.key}_PriorDayClose`];
+    const cls   = changeClass(chg);
+    const oldCur = prevMBS[`${p.key}_Current`];
+
+    const card = document.createElement('div');
+    card.className = 'mbs-card';
+    card.innerHTML = `
+      <div class="mbs-name">${p.label}</div>
+      <div class="mbs-price" id="mbs-price-${p.key}">${fmt(cur, 2)}</div>
+      <div class="mbs-change ${cls}">${changePrefix(chg)}${fmt(chg, 2)} pts</div>
+      <div class="mbs-ohlc">
+        <div class="ohlc-item"><div class="ohlc-key">OPEN</div><div class="ohlc-val">${fmt(open,2)}</div></div>
+        <div class="ohlc-item"><div class="ohlc-key">HIGH</div><div class="ohlc-val">${fmt(high,2)}</div></div>
+        <div class="ohlc-item"><div class="ohlc-key">LOW</div><div class="ohlc-val">${fmt(low,2)}</div></div>
+        <div class="ohlc-item"><div class="ohlc-key">PREV</div><div class="ohlc-val">${fmt(prev,2)}</div></div>
+      </div>
+      <div class="source-tag">MBS LIVE</div>
+    `;
+    grid.appendChild(card);
+
+    // Flash on change
+    const priceEl = card.querySelector(`#mbs-price-${p.key}`);
+    flashPrice(priceEl, cur, oldCur);
+  });
+
+  prevMBS = { ...data };
+  document.getElementById('dotMBS').className = 'dot live';
+}
+
+// ── TV / Shadow data card ─────────────────────────────────
+function tvCard(label, current, change, open, high, low, prev, source, decimals = 3) {
+  const cls = changeClass(change);
+  return `
+    <div class="data-card">
+      <div class="card-label">${label}</div>
+      <div class="card-price">${fmt(current, decimals)}</div>
+      <div class="card-change ${cls}">${changePrefix(change)}${fmt(change, decimals)}</div>
+      <div class="card-meta">
+        <div class="meta-item"><div class="meta-key">OPEN</div><div class="meta-val">${fmt(open, decimals)}</div></div>
+        <div class="meta-item"><div class="meta-key">HIGH</div><div class="meta-val">${fmt(high, decimals)}</div></div>
+        <div class="meta-item"><div class="meta-key">LOW</div><div class="meta-val">${fmt(low, decimals)}</div></div>
+        <div class="meta-item"><div class="meta-key">PREV</div><div class="meta-val">${fmt(prev, decimals)}</div></div>
+      </div>
+      <div class="source-tag">${source}</div>
+    </div>
+  `;
+}
+
+// ── Render Yields ─────────────────────────────────────────
+function renderYields(us10y, us30y) {
+  document.getElementById('yieldGrid').innerHTML =
+    tvCard('US 10-YEAR',
+      us10y.US10Y_Current, us10y.US10Y_Daily_Change,
+      us10y.US10Y_Open, us10y.US10Y_TodayHigh, us10y.US10Y_TodayLow, us10y.US10Y_PriorDayClose,
+      'TRADINGVIEW') +
+    tvCard('US 30-YEAR',
+      us30y.US30Y_Current, us30y.US30Y_Daily_Change,
+      us30y.US30Y_Open, us30y.US30Y_TodayHigh, us30y.US30Y_TodayLow, us30y.US30Y_PriorDayClose,
+      'TRADINGVIEW');
+}
+
+// ── Render Futures / ETFs from shadow_bonds doc ───────────
+function renderFuturesETFs(shadow) {
+  // Shadow doc stores raw scraped inputs too — ZN, TN, TLT, MBB
+  // We surface them directly
+  const items = [
+    { label: 'ZN1! 10Y FUT', cur: shadow.ZN_Current,  chg: shadow.ZN_Daily_Change,  src: 'TRADINGVIEW' },
+    { label: 'TN1! ULTRA',   cur: shadow.TN_Current,  chg: shadow.TN_Daily_Change,  src: 'TRADINGVIEW' },
+  ];
+
+  const etfItems = [
+    { label: 'TLT ETF',  cur: shadow.TLT_Current, chg: shadow.TLT_Daily_Change, src: 'TRADINGVIEW' },
+    { label: 'MBB ETF',  cur: shadow.MBB_Current, chg: shadow.MBB_Daily_Change, src: 'TRADINGVIEW' },
+  ];
+
+  document.getElementById('futuresGrid').innerHTML = items.map(i =>
+    `<div class="data-card">
+      <div class="card-label">${i.label}</div>
+      <div class="card-price">${i.cur || '—'}</div>
+      <div class="card-change ${changeClass(i.chg)}">${changePrefix(i.chg)}${fmt(i.chg, 3)}</div>
+      <div class="source-tag">${i.src}</div>
+    </div>`
+  ).join('');
+
+  document.getElementById('etfGrid').innerHTML = etfItems.map(i =>
+    `<div class="data-card">
+      <div class="card-label">${i.label}</div>
+      <div class="card-price">${fmt(i.cur, 2)}</div>
+      <div class="card-change ${changeClass(i.chg)}">${changePrefix(i.chg)}${fmt(i.chg, 2)}</div>
+      <div class="source-tag">${i.src}</div>
+    </div>`
+  ).join('');
+}
+
+// ── FRED ──────────────────────────────────────────────────
+async function fetchFRED() {
+  if (Date.now() - fredLastFetch < FRED_TTL) return;
+  fredLastFetch = Date.now();
+
+  const grid = document.getElementById('fredGrid');
+
+  const results = await Promise.all(FRED_SERIES.map(async s => {
+    try {
+      const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${s.id}&api_key=${FRED_API_KEY}&sort_order=desc&limit=1&file_type=json`;
+      const r = await fetch(url);
+      const d = await r.json();
+      const obs = d.observations?.[0];
+      return { ...s, value: obs?.value, date: obs?.date };
+    } catch (e) {
+      return { ...s, value: null, date: null };
+    }
+  }));
+
+  grid.innerHTML = results.map(r => `
+    <div class="fred-card">
+      <div class="fred-name">${r.label}</div>
+      <div class="fred-value">${r.value ? parseFloat(r.value).toFixed(3) + '%' : '—'}</div>
+      <div class="fred-desc">${r.desc}</div>
+      <div class="fred-date">As of ${r.date || '—'}</div>
+    </div>
+  `).join('');
+
+  log(`FRED OBMMI updated — ${results.filter(r=>r.value).length}/${results.length} series`);
+  document.getElementById('dotFRED').className = 'dot live';
+}
+
+// ── Firestore fetch ───────────────────────────────────────
+async function fetchFirestore() {
+  try {
+    const [mbsSnap, us10ySnap, us30ySnap, shadowSnap] = await Promise.all([
+      getDoc(doc(db, 'market_data', 'mbs_products')),
+      getDoc(doc(db, 'market_data', 'us10y_current')),
+      getDoc(doc(db, 'market_data', 'us30y_current')),
+      getDoc(doc(db, 'market_data', 'shadow_bonds')),
+    ]);
+
+    if (mbsSnap.exists()) {
+      renderMBS(mbsSnap.data());
+      log(`MBS Live — UMBS 5.5: ${mbsSnap.data().UMBS_5_5_Current}`);
+    }
+
+    if (us10ySnap.exists() && us30ySnap.exists()) {
+      renderYields(us10ySnap.data(), us30ySnap.data());
+      log(`Yields — 10Y: ${us10ySnap.data().US10Y_Current}  30Y: ${us30ySnap.data().US30Y_Current}`);
+    }
+
+    if (shadowSnap.exists()) {
+      renderFuturesETFs(shadowSnap.data());
+      log(`TradingView shadow data updated`);
+      document.getElementById('dotTV').className = 'dot live';
+    }
+
+  } catch (e) {
+    log(`Firestore error: ${e.message}`, false);
+    document.getElementById('dotMBS').className = 'dot error';
+    document.getElementById('dotTV').className = 'dot error';
+  }
+}
+
+// ── Refresh loop ──────────────────────────────────────────
+async function refresh() {
+  await fetchFirestore();
+  await fetchFRED();
+
+  // Reset progress bar animation
+  const bar = document.getElementById('refreshBar');
+  bar.style.animation = 'none';
+  bar.offsetHeight; // reflow
+  bar.style.animation = 'shrink 60s linear forwards';
+}
+
+// Boot
+refresh();
+setInterval(refresh, 60000);
+
+</script>
+</body>
+</html>
