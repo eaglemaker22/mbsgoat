@@ -319,23 +319,49 @@ exports.handler = async function (event) {
     // ── Parallel fetch everything ──────────────────────────────────────────
     const allFinnhubSymbols = [...FINNHUB_EQUITIES, ...FINNHUB_OTHER];
 
-    const [
-      finnhubResults,
-      fredResults,
-      fsShadow,
-      fsUS10Y,
-      fsUS30Y,
-      fsMBS,
-      fsBrokerRates,
-    ] = await Promise.all([
-      batchAll(allFinnhubSymbols, fetchFinnhub, 5),
-      FRED_KEY ? batchAll(FRED_SERIES, fetchFredSeries, 5) : Promise.resolve([]),
-      fetchFirestore('market_data', 'shadow_bonds'),
-      fetchFirestore('market_data', 'us10y_current'),
-      fetchFirestore('market_data', 'us30y_current'),
-      fetchFirestore('market_data', 'mbs_products'),
-      fetchFirestore('market_data', 'broker_rates'),   // manually updated by Python app
-    ]);
+    // Get Firebase token once, reuse for all Firestore calls
+const fbToken = await getFirebaseToken();
+const fsGet = (collection, doc) => {
+  if (!FB_PROJECT || !fbToken) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${collection}/${doc}`;
+    const req = https.request(url, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${fbToken}`, 'Content-Type': 'application/json' },
+    });
+    req.setTimeout(6000, () => { req.destroy(); resolve(null); });
+    req.on('error', () => resolve(null));
+    req.on('response', (res) => {
+      let data = '';
+      res.on('data', c => { data += c; });
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          resolve(parsed.fields ? flattenFirestore(parsed.fields) : null);
+        } catch { resolve(null); }
+      });
+    });
+    req.end();
+  });
+};
+
+const [
+  finnhubResults,
+  fredResults,
+  fsShadow,
+  fsUS10Y,
+  fsUS30Y,
+  fsMBS,
+  fsBrokerRates,
+] = await Promise.all([
+  batchAll(allFinnhubSymbols, fetchFinnhub, 5),
+  FRED_KEY ? batchAll(FRED_SERIES, fetchFredSeries, 5) : Promise.resolve([]),
+  fsGet('market_data', 'shadow_bonds'),
+  fsGet('market_data', 'us10y_current'),
+  fsGet('market_data', 'us30y_current'),
+  fsGet('market_data', 'mbs_products'),
+  fsGet('market_data', 'broker_rates'),
+]);
 
     // Index results
     const fh = {};
