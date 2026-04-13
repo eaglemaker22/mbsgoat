@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LockIQ Beta · MBSGOAT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── THEME VARIABLES ───────────────────────────────── */
+    :root {
+      --bg:      #0a0c10;
+      --bg2:     #111418;
+      --bg3:     #181c22;
+      --bg4:     #1f242c;
+      --border:  rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.13);
+      --text:    #f0f2f5;
+      --muted:   #7a8494;
+      --muted2:  #4a5260;
+      --up:      #22c77a;
+      --down:    #f04a4a;
+      --warn:    #f5a623;
+      --accent:  #3d8ef8;
+      --c-safe:    #22c77a;
+      --c-watch:   #f5a623;
+      --c-caution: #ff8c00;
+      --c-reprice: #f04a4a;
+      --c-certain: #c0392b;
+    }
+    .light {
+      --bg:      #f0f2f5;
+      --bg2:     #ffffff;
+      --bg3:     #e8eaed;
+      --bg4:     #dde0e5;
+      --border:  rgba(0,0,0,0.08);
+      --border2: rgba(0,0,0,0.14);
+      --text:    #111418;
+      --muted:   #5a6270;
+      --muted2:  #9aa0aa;
+      --accent:  #1a6ef0;
+    }
+
+    /* ── RESET ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── LAYOUT ─────────────────────────────────────────── */
+    #app { max-width: 1100px; margin: 0 auto; padding: 14px 14px 24px; }
+
+    /* ── TOP BAR ─────────────────────────────────────────── */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .logo { font-size: 13px; font-weight: 700; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+    .logo span { color: var(--accent); }
+    .top-right { display: flex; align-items: center; gap: 10px; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--muted2);
+      transition: background 0.3s;
+    }
+    .status-dot.live { background: var(--up); box-shadow: 0 0 6px var(--up); }
+    .status-dot.error { background: var(--down); }
+    .status-text { font-size: 11px; color: var(--muted2); letter-spacing: .04em; }
+    .theme-btn {
+      background: var(--bg3); border: 1px solid var(--border2);
+      color: var(--text); font-family: 'Syne', sans-serif;
+      font-size: 12px; font-weight: 600; padding: 5px 12px;
+      border-radius: 20px; cursor: pointer; letter-spacing: .05em;
+    }
+    .theme-btn:hover { background: var(--bg4); }
+
+    /* ── SIGNAL HERO ─────────────────────────────────────── */
+    .signal-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 18px 20px 16px;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .signal-wrap::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--signal-color, var(--c-watch));
+      transition: background 0.4s;
+    }
+    .signal-tag {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px;
+    }
+
+    /* spectrum row */
+    .spectrum-row { display: flex; align-items: baseline; margin-bottom: 14px; }
+    .spec-div { width: 1px; background: var(--border); align-self: stretch; margin: 4px 0; flex-shrink: 0; }
+    .spec-item { flex: 1; text-align: center; padding: 4px 2px; }
+    .spec-label {
+      font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      transition: font-size .25s, color .25s;
+    }
+    .spec-item.inactive .spec-label { font-size: 11px; }
+    .spec-item.active   .spec-label { font-size: 34px; line-height: 1; }
+
+    /* inactive tinted colors */
+    .spec-item.inactive.s-safe    .spec-label { color: #1a5c3a; }
+    .spec-item.inactive.s-watch   .spec-label { color: #7a5200; }
+    .spec-item.inactive.s-caution .spec-label { color: #7a3d00; }
+    .spec-item.inactive.s-reprice .spec-label { color: #7a1a1a; }
+    .spec-item.inactive.s-certain .spec-label { color: #5a1010; }
+    .light .spec-item.inactive.s-safe    .spec-label { color: #aaccbb; }
+    .light .spec-item.inactive.s-watch   .spec-label { color: #c8a860; }
+    .light .spec-item.inactive.s-caution .spec-label { color: #c07020; }
+    .light .spec-item.inactive.s-reprice .spec-label { color: #cc7070; }
+    .light .spec-item.inactive.s-certain .spec-label { color: #bb5050; }
+    /* active colors */
+    .spec-item.active.s-safe    .spec-label { color: var(--c-safe); }
+    .spec-item.active.s-watch   .spec-label { color: var(--c-watch); }
+    .spec-item.active.s-caution .spec-label { color: var(--c-caution); }
+    .spec-item.active.s-reprice .spec-label { color: var(--c-reprice); }
+    .spec-item.active.s-certain .spec-label { color: var(--c-certain); }
+
+    /* meta row */
+    .signal-meta { display: flex; gap: 20px; flex-wrap: wrap; }
+    .smeta { display: flex; flex-direction: column; gap: 2px; }
+    .smeta-label { font-size: 10px; color: var(--muted); letter-spacing: .07em; text-transform: uppercase; }
+    .smeta-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 20px; font-weight: 700; color: var(--text);
+    }
+    .smeta-val.neg  { color: var(--down); }
+    .smeta-val.pos  { color: var(--up); }
+    .smeta-val.warn { color: var(--warn); }
+    .signal-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 10px; flex-wrap: wrap; gap: 6px;
+    }
+    .signal-updated { font-size: 11px; color: var(--muted2); letter-spacing: .03em; }
+
+    /* ── SECTION LABEL ───────────────────────────────────── */
+    .section-label {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .16em; text-transform: uppercase;
+      color: var(--muted2); margin: 10px 0 6px;
+    }
+
+    /* ── TILE GRID ────────────────────────────────────────── */
+    .tile-grid { display: grid; gap: 8px; }
+    .g5 { grid-template-columns: repeat(5, 1fr); }
+    .g3 { grid-template-columns: repeat(3, 1fr); }
+
+    .tile {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      transition: border-color .15s, background .15s;
+    }
+    .tile.clickable { cursor: pointer; }
+    .tile.clickable:hover { border-color: var(--border2); background: var(--bg3); }
+
+    .tile-name {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 4px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .ci { width: 10px; height: 10px; opacity: .35; flex-shrink: 0; transition: opacity .15s; }
+    .tile.clickable:hover .ci { opacity: .8; }
+
+    .tile-price {
+      font-family: 'Space Mono', monospace;
+      font-size: 22px; font-weight: 700;
+      color: var(--text); line-height: 1.1;
+    }
+    .tile-index-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 14px; color: var(--muted);
+      margin-top: 1px;
+    }
+    .tile-chg {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px; margin-top: 2px;
+    }
+    .tile-chg.up  { color: var(--up); }
+    .tile-chg.dn  { color: var(--down); }
+    .tile-chg.neu { color: var(--muted); }
+    .tile-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* skeleton shimmer */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+      height: 22px; width: 70%;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ── RATES PANEL ─────────────────────────────────────── */
+    .rates-panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+    }
+    .rates-inner { display: flex; align-items: stretch; }
+    .rates-col { flex: 1; }
+    .rates-col-head {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted);
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+    .rate-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; }
+    .rate-type { font-size: 12px; color: var(--muted); }
+    .rate-val  { font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; color: var(--text); }
+    .rates-divider { width: 1px; background: var(--border); margin: 0 14px; }
+    .rate-note { font-size: 11px; color: var(--muted2); margin-top: 8px; letter-spacing: .03em; }
+
+    /* ── MODAL ───────────────────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.78); z-index: 1000;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 22px 24px;
+      width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .modal-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    .modal-close {
+      background: var(--bg3); border: 1px solid var(--border2);
+      color: var(--text); font-family: 'Syne', sans-serif;
+      font-size: 16px; width: 32px; height: 32px;
+      border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: var(--bg4); }
+    .modal-stats {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; margin-bottom: 16px;
+    }
+    .modal-stat { background: var(--bg3); border-radius: 8px; padding: 8px 10px; }
+    .modal-stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .modal-stat-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 14px; font-weight: 700; color: var(--text); margin-top: 2px;
+    }
+    .modal-stat-val.neg { color: var(--down); }
+    .modal-stat-val.pos { color: var(--up); }
+    .modal-chart-wrap { position: relative; width: 100%; height: 220px; }
+    .modal-note { font-size: 11px; color: var(--muted2); margin-top: 10px; text-align: right; }
+
+    /* ── RESPONSIVE ──────────────────────────────────────── */
+    @media (max-width: 700px) {
+      .g5 { grid-template-columns: repeat(3, 1fr); }
+      .g3 { grid-template-columns: repeat(3, 1fr); }
+      .desktop-only { display: none !important; }
+      .tile-price { font-size: 17px; }
+      .spec-item.active .spec-label { font-size: 24px; }
+      .spec-item.inactive .spec-label { font-size: 10px; }
+      .rates-inner { flex-direction: column; gap: 12px; }
+      .rates-divider { display: none; }
+      .modal-stats { grid-template-columns: repeat(2, 1fr); }
+      .smeta-val { font-size: 16px; }
+    }
+    @media (max-width: 420px) {
+      .g5 { grid-template-columns: repeat(2, 1fr); }
+      .signal-meta { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="logo">MBS<span>GOAT</span> · Beta</div>
+    <div class="top-right">
+      <div class="status-dot" id="statusDot"></div>
+      <div class="status-text" id="statusText">Connecting…</div>
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀ Light</button>
+    </div>
+  </div>
+
+  <!-- SIGNAL HERO -->
+  <div class="signal-wrap" id="signalWrap">
+    <div class="signal-tag">LockIQ Signal</div>
+    <div class="spectrum-row" id="spectrumRow">
+      <div class="spec-item s-safe inactive"    data-state="SAFE"><div class="spec-label">Safe</div></div>
+      <div class="spec-div"></div>
+      <div class="spec-item s-watch active"     data-state="WATCH"><div class="spec-label">Watch</div></div>
+      <div class="spec-div"></div>
+      <div class="spec-item s-caution inactive" data-state="CAUTION"><div class="spec-label">Caution</div></div>
+      <div class="spec-div"></div>
+      <div class="spec-item s-reprice inactive" data-state="REPRICE LIKELY"><div class="spec-label">Reprice Likely</div></div>
+      <div class="spec-div"></div>
+      <div class="spec-item s-certain inactive" data-state="REPRICE CERTAIN"><div class="spec-label">Reprice Certain</div></div>
+    </div>
+    <div class="signal-meta">
+      <div class="smeta">
+        <div class="smeta-label">Est. MBS Move</div>
+        <div class="smeta-val neg" id="sigEstMove">— bps</div>
+      </div>
+      <div class="smeta">
+        <div class="smeta-label">10Y Δ open</div>
+        <div class="smeta-val" id="sig10yDelta">—</div>
+      </div>
+      <div class="smeta">
+        <div class="smeta-label">ZN Δ open</div>
+        <div class="smeta-val" id="sigZNDelta">—</div>
+      </div>
+      <div class="smeta">
+        <div class="smeta-label">MBB Δ open</div>
+        <div class="smeta-val" id="sigMBBDelta">—</div>
+      </div>
+      <div class="smeta">
+        <div class="smeta-label">Reprice Risk</div>
+        <div class="smeta-val warn" id="sigRisk">—</div>
+      </div>
+    </div>
+    <div class="signal-footer">
+      <div class="signal-updated" id="signalUpdated">Loading…</div>
+    </div>
+  </div>
+
+  <!-- MBS & BONDS -->
+  <div class="section-label">MBS &amp; Bonds</div>
+  <div class="tile-grid g5" style="margin-bottom:8px;">
+
+    <div class="tile clickable" onclick="openModal('umbs55')">
+      <div class="tile-name">UMBS 5.5 <svg class="ci" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="0,8 3,5 6,6 10,1"/></svg></div>
+      <div class="tile-price" id="umbs55-price"><div class="skeleton"></div></div>
+      <div class="tile-chg"   id="umbs55-chg"></div>
+      <div class="tile-sub"   id="umbs55-open"></div>
+    </div>
+
+    <div class="tile clickable" onclick="openModal('umbs60')">
+      <div class="tile-name">UMBS 6.0 <svg class="ci" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="0,8 3,5 6,6 10,1"/></svg></div>
+      <div class="tile-price" id="umbs60-price"><div class="skeleton"></div></div>
+      <div class="tile-chg"   id="umbs60-chg"></div>
+      <div class="tile-sub"   id="umbs60-open"></div>
+    </div>
+
+    <div class="tile clickable" onclick="openModal('us10y')">
+      <div class="tile-name">US 10Y <svg class="ci" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="0,8 3,5 6,6 10,1"/></svg></div>
+      <div class="tile-price" id="us10y-price"><div class="skeleton"></div></div>
+      <div class="tile-chg"   id="us10y-chg"></div>
+      <div class="tile-sub"   id="us10y-open"></div>
+    </div>
+
+    <div class="tile clickable" onclick="openModal('zn')">
+      <div class="tile-name">ZN1! <svg class="ci" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="0,8 3,5 6,6 10,1"/></svg></div>
+      <div class="tile-price" id="zn-price"><div class="skeleton"></div></div>
+      <div class="tile-chg"   id="zn-chg"></div>
+      <div class="tile-sub"   id="zn-open"></div>
+    </div>
+
+    <div class="tile clickable" onclick="openModal('mbb')">
+      <div class="tile-name">MBB <svg class="ci" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="0,8 3,5 6,6 10,1"/></svg></div>
+      <div class="tile-price" id="mbb-price"><div class="skeleton"></div></div>
+      <div class="tile-chg"   id="mbb-chg"></div>
+      <div class="tile-sub"   id="mbb-open"></div>
+    </div>
+
+  </div>
+
+  <!-- INTEREST RATES -->
+  <div class="section-label">Interest Rates</div>
+  <div class="rates-panel">
+    <div class="rates-inner">
+      <div class="rates-col">
+        <div class="rates-col-head">Optimal Blue</div>
+        <div class="rate-row"><span class="rate-type">Conv 30</span><span class="rate-val" id="ob-conv30">—</span></div>
+        <div class="rate-row"><span class="rate-type">Conv 15</span><span class="rate-val" id="ob-conv15">—</span></div>
+        <div class="rate-row"><span class="rate-type">FHA 30</span> <span class="rate-val" id="ob-fha30">—</span></div>
+        <div class="rate-row"><span class="rate-type">VA 30</span>  <span class="rate-val" id="ob-va30">—</span></div>
+        <div class="rate-note" id="ob-asof"></div>
+      </div>
+      <div class="rates-divider"></div>
+      <div class="rates-col">
+        <div class="rates-col-head">My Broker</div>
+        <div class="rate-row"><span class="rate-type">Conv 30</span><span class="rate-val" id="br-conv30">—</span></div>
+        <div class="rate-row"><span class="rate-type">Conv 15</span><span class="rate-val" id="br-conv15">—</span></div>
+        <div class="rate-row"><span class="rate-type">FHA 30</span> <span class="rate-val" id="br-fha30">—</span></div>
+        <div class="rate-row"><span class="rate-type">VA 30</span>  <span class="rate-val" id="br-va30">—</span></div>
+        <div class="rate-note" id="br-asof"></div>
+      </div>
+      <div class="rates-divider"></div>
+      <div class="rates-col">
+        <div class="rates-col-head">Freddie PMMS</div>
+        <div class="rate-row"><span class="rate-type">Conv 30</span><span class="rate-val" id="fm-conv30">—</span></div>
+        <div class="rate-row"><span class="rate-type">Conv 15</span><span class="rate-val" id="fm-conv15">—</span></div>
+        <div class="rate-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+          <span class="rate-type" style="color:var(--muted2);font-size:11px;">Fed Funds Target</span>
+          <span class="rate-val" style="color:var(--muted);font-size:13px;" id="fedFunds">—</span>
+        </div>
+        <div class="rate-note" id="fm-asof"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MACRO -->
+  <div class="section-label">Macro</div>
+  <div class="tile-grid g3" style="margin-bottom:8px;">
+    <div class="tile">
+      <div class="tile-name">VIX</div>
+      <div class="tile-price" id="vix-price"><div class="skeleton"></div></div>
+      <div class="tile-chg"   id="vix-chg"></div>
+    </div>
+    <div class="tile">
+      <div class="tile-name">2–10Y Spread</div>
+      <div class="tile-price" id="spread-price"><div class="skeleton"></div></div>
+      <div class="tile-chg"   id="spread-chg"></div>
+    </div>
+    <div class="tile clickable" onclick="openModal('btc')">
+      <div class="tile-name">BTC <svg class="ci" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="0,8 3,5 6,6 10,1"/></svg></div>
+      <div class="tile-price" id="btc-price"><div class="skeleton"></div></div>
+      <div class="tile-chg"   id="btc-chg"></div>
+    </div>
+  </div>
+
+  <!-- EQUITIES (desktop only) -->
+  <div class="section-label desktop-only">Equities</div>
+  <div class="tile-grid g3 desktop-only" style="margin-bottom:4px;">
+    <div class="tile">
+      <div class="tile-name">DOW</div>
+      <div class="tile-price" id="dow-pct"><div class="skeleton"></div></div>
+      <div class="tile-index-val" id="dow-val"></div>
+    </div>
+    <div class="tile">
+      <div class="tile-name">NASDAQ</div>
+      <div class="tile-price" id="qqq-pct"><div class="skeleton"></div></div>
+      <div class="tile-index-val" id="qqq-val"></div>
+    </div>
+    <div class="tile">
+      <div class="tile-name">S&amp;P 500</div>
+      <div class="tile-price" id="spx-pct"><div class="skeleton"></div></div>
+      <div class="tile-index-val" id="spx-val"></div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-stats" id="modalStats"></div>
+    <div class="modal-chart-wrap">
+      <canvas id="modalChart" role="img" aria-label="Intraday price chart"></canvas>
+    </div>
+    <div class="modal-note" id="modalNote"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIG — update NETLIFY_FN to match your function path
+   ═══════════════════════════════════════════════════════ */
+const NETLIFY_FN       = '/.netlify/functions/getMarketData';
+const REFRESH_FAST_MS  = 90_000;   // bonds / MBS / signal
+const REFRESH_SLOW_MS  = 300_000;  // rates (Freddie, FRED)
+
+/* ── REGRESSION CONSTANTS (from confirmed model) ────────
+   ΔUMBS5.5 = (−2.387 × Δ10Y_bps) + (0.069 × ΔZN_bps) + (0.122 × ΔMBB_bps)
+   All deltas in basis-point equivalent (price points × 100)
+   Result in basis points
+   ─────────────────────────────────────────────────────── */
+const REG = { b10y: -2.387, bZN: 0.069, bMBB: 0.122 };
+
+/* Reprice thresholds (bps adverse MBS move) */
+const THRESHOLDS = { safe: 15, watch: 25, caution: 40, reprice: 62, certain: 100 };
+
+/* ── STATE ──────────────────────────────────────────────  */
+let lastData    = {};
+let chartInst   = null;
+let fastTimer   = null;
+let slowTimer   = null;
+let isDark      = true;
+
+/* ── THEME ──────────────────────────────────────────────  */
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('light', !isDark);
+  document.getElementById('themeBtn').textContent = isDark ? '☀ Light' : '☾ Dark';
+}
+
+/* ── SIGNAL LOGIC ───────────────────────────────────────  */
+function computeSignal(d10yDelta, dZNDelta, dMBBDelta) {
+  // deltas expected in bps
+  const estMove = (REG.b10y * d10yDelta) + (REG.bZN * dZNDelta) + (REG.bMBB * dMBBDelta);
+  const adverse = -estMove; // positive = bad (MBS moving down)
+
+  let state, riskLabel;
+  if      (adverse <= THRESHOLDS.safe)    { state = 'SAFE';           riskLabel = 'No reprice risk'; }
+  else if (adverse <= THRESHOLDS.watch)   { state = 'WATCH';          riskLabel = `Near-par ${adverse.toFixed(1)} bps`; }
+  else if (adverse <= THRESHOLDS.caution) { state = 'CAUTION';        riskLabel = `Near-par ${adverse.toFixed(1)} bps`; }
+  else if (adverse <= THRESHOLDS.reprice) { state = 'REPRICE LIKELY'; riskLabel = `Above-par ${adverse.toFixed(1)} bps`; }
+  else                                    { state = 'REPRICE CERTAIN'; riskLabel = `DANGER ${adverse.toFixed(1)} bps`; }
+
+  return { state, estMove, adverse, riskLabel };
+}
+
+function setSignalState(state) {
+  const colorMap = {
+    'SAFE':           'var(--c-safe)',
+    'WATCH':          'var(--c-watch)',
+    'CAUTION':        'var(--c-caution)',
+    'REPRICE LIKELY': 'var(--c-reprice)',
+    'REPRICE CERTAIN':'var(--c-certain)'
+  };
+  document.getElementById('signalWrap').style.setProperty('--signal-color', colorMap[state] || 'var(--c-watch)');
+  document.querySelectorAll('.spec-item').forEach(el => {
+    const match = el.dataset.state === state;
+    el.classList.toggle('active',   match);
+    el.classList.toggle('inactive', !match);
+  });
+}
+
+/* ── HELPERS ────────────────────────────────────────────  */
+function fmt2(n)    { return n == null ? '—' : n.toFixed(2); }
+function fmt3(n)    { return n == null ? '—' : n.toFixed(3); }
+function fmtPct(n)  { return n == null ? '—' : (n >= 0 ? '+' : '') + n.toFixed(2) + '%'; }
+function fmtBps(n)  { return n == null ? '—' : (n >= 0 ? '+' : '') + n.toFixed(1) + ' bps'; }
+function fmtRate(n) { return n == null ? '—' : n.toFixed(3) + '%'; }
+
+function chgClass(n) {
+  if (n == null) return 'neu';
+  return n > 0 ? 'up' : n < 0 ? 'dn' : 'neu';
+}
+
+function setTile(idPrefix, price, chg, chgLabel, sub) {
+  const pe = document.getElementById(idPrefix + '-price');
+  const ce = document.getElementById(idPrefix + '-chg');
+  const se = document.getElementById(idPrefix + '-open');
+  if (pe) pe.textContent = price ?? '—';
+  if (ce) { ce.textContent = chgLabel ?? ''; ce.className = 'tile-chg ' + chgClass(chg); }
+  if (se && sub != null) se.textContent = sub;
+}
+
+function setEl(id, text, cls) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text ?? '—';
+  if (cls) el.className = el.className.replace(/\b(neg|pos|warn)\b/g, '') + ' ' + cls;
+}
+
+function setStatus(state) {
+  const dot  = document.getElementById('statusDot');
+  const txt  = document.getElementById('statusText');
+  dot.className  = 'status-dot ' + state;
+  txt.textContent = state === 'live' ? 'Live' : state === 'error' ? 'Error' : 'Connecting…';
+}
+
+function nowET() {
+  return new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true }) + ' ET';
+}
+
+/* ── RENDER FROM API RESPONSE ───────────────────────────  */
+function renderData(d) {
+  lastData = d;
+
+  /* ── MBS tiles ── */
+  const u55 = d.umbs55 || {};
+  setTile('umbs55', fmt3(u55.price), u55.dailyChangeBps, fmtBps(u55.dailyChangeBps), u55.open ? 'O: ' + fmt3(u55.open) : null);
+
+  const u60 = d.umbs60 || {};
+  setTile('umbs60', fmt3(u60.price), u60.dailyChangeBps, fmtBps(u60.dailyChangeBps), u60.open ? 'O: ' + fmt3(u60.open) : null);
+
+  /* ── 10Y ── */
+  const t10 = d.us10y || {};
+  setTile('us10y', t10.yield != null ? t10.yield.toFixed(3) + '%' : null, t10.changeBps, fmtBps(t10.changeBps), t10.open != null ? 'O: ' + t10.open.toFixed(3) + '%' : null);
+
+  /* ── ZN ── */
+  const zn = d.zn || {};
+  setTile('zn', zn.price != null ? fmt3(zn.price) : null, zn.changeBps, fmtBps(zn.changeBps), zn.open != null ? 'O: ' + fmt3(zn.open) : null);
+
+  /* ── MBB ── */
+  const mbb = d.mbb || {};
+  setTile('mbb', fmt2(mbb.price), mbb.changeBps, fmtBps(mbb.changeBps), mbb.open != null ? 'O: ' + fmt2(mbb.open) : null);
+
+  /* ── Signal computation ── */
+  const d10y = t10.changeBps ?? 0;
+  const dZN  = zn.changeBps  ?? 0;
+  const dMBB = mbb.changeBps ?? 0;
+  const sig  = computeSignal(d10y, dZN, dMBB);
+  setSignalState(sig.state);
+
+  const dirMove = sig.estMove >= 0 ? '+' : '';
+  setEl('sigEstMove', dirMove + sig.estMove.toFixed(1) + ' bps', sig.estMove < 0 ? 'neg' : 'pos');
+  setEl('sig10yDelta', fmtBps(d10y), d10y > 0 ? 'neg' : 'pos');
+  setEl('sigZNDelta',  fmtBps(dZN),  dZN  < 0 ? 'neg' : 'pos');
+  setEl('sigMBBDelta', fmtBps(dMBB), dMBB < 0 ? 'neg' : 'pos');
+  setEl('sigRisk', sig.riskLabel, 'warn');
+  setEl('signalUpdated', 'Updated ' + nowET() + ' · refreshes every 90s');
+
+  /* ── Rates ── */
+  const ob = d.optimalBlue || {};
+  setEl('ob-conv30', ob.conv30 ? fmtRate(ob.conv30) : '—');
+  setEl('ob-conv15', ob.conv15 ? fmtRate(ob.conv15) : '—');
+  setEl('ob-fha30',  ob.fha30  ? fmtRate(ob.fha30)  : '—');
+  setEl('ob-va30',   ob.va30   ? fmtRate(ob.va30)   : '—');
+  if (ob.asOf) setEl('ob-asof', 'As of ' + ob.asOf);
+
+  const br = d.brokerRates || {};
+  setEl('br-conv30', br.conv30 ? fmtRate(br.conv30) : '—');
+  setEl('br-conv15', br.conv15 ? fmtRate(br.conv15) : '—');
+  setEl('br-fha30',  br.fha30  ? fmtRate(br.fha30)  : '—');
+  setEl('br-va30',   br.va30   ? fmtRate(br.va30)   : '—');
+  if (br.asOf) setEl('br-asof', 'As of ' + br.asOf);
+
+  const fm = d.freddiePMMS || {};
+  setEl('fm-conv30', fm.conv30 ? fmtRate(fm.conv30) : '—');
+  setEl('fm-conv15', fm.conv15 ? fmtRate(fm.conv15) : '—');
+  if (fm.asOf) setEl('fm-asof', 'PMMS week of ' + fm.asOf);
+
+  setEl('fedFunds', d.fedFundsTarget || '4.25–4.50%');
+
+  /* ── VIX ── */
+  const vix = d.vix || {};
+  setTile('vix', fmt2(vix.price), vix.change, vix.change != null ? (vix.change >= 0 ? '+' : '') + fmt2(vix.change) : null, null);
+
+  /* ── 2-10Y Spread ── */
+  const sp = d.spread210 || {};
+  const spVal = sp.value != null ? (sp.value >= 0 ? '+' : '') + sp.value.toFixed(0) + ' bps' : '—';
+  const spChg = sp.change != null ? (sp.change >= 0 ? '+' : '') + sp.change.toFixed(0) + ' bps' : null;
+  setTile('spread', spVal, sp.change, spChg, null);
+
+  /* ── BTC ── */
+  const btc = d.btc || {};
+  const btcPrice = btc.price != null ? btc.price.toLocaleString('en-US', {maximumFractionDigits: 0}) : '—';
+  setTile('btc', btcPrice, btc.changePct, fmtPct(btc.changePct), null);
+
+  /* ── Equities (DOW / NASDAQ / S&P 500) ── */
+  // API returns ETF data (DIA, QQQ, SPY); we display index labels + approx index value
+  // Index multipliers: DIA≈1× (price ≈ DOW/100), QQQ≈40× NASDAQ/100 approx, SPY≈10× SP500/10
+  // Best approach: getMarketData should return actual index values; fallback to ETF pct
+  const dia = d.dia || d.dow || {};
+  const qqq = d.qqq || d.nasdaq || {};
+  const spx = d.spx || d.sp500 || {};
+
+  renderEquity('dow', dia);
+  renderEquity('qqq', qqq);
+  renderEquity('spx', spx);
+
+  setStatus('live');
+}
+
+function renderEquity(id, data) {
+  const pctEl = document.getElementById(id + '-pct');
+  const valEl = document.getElementById(id + '-val');
+  if (!pctEl) return;
+
+  const pct = data.changePct;
+  const val = data.indexValue ?? data.price;
+
+  pctEl.textContent = pct != null ? fmtPct(pct) : '—';
+  pctEl.className = 'tile-price ' + (pct == null ? '' : pct >= 0 ? 'tile-chg up' : 'tile-chg dn');
+
+  if (valEl) {
+    valEl.textContent = val != null
+      ? val.toLocaleString('en-US', { maximumFractionDigits: 2 })
+      : '';
+  }
+}
+
+/* ── FETCH ──────────────────────────────────────────────  */
+async function fetchData() {
+  try {
+    const resp = await fetch(NETLIFY_FN);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    renderData(data);
+  } catch (err) {
+    console.error('[LockIQ Beta] fetch error:', err);
+    setStatus('error');
+    setEl('signalUpdated', 'Update failed · retrying…');
+  }
+}
+
+function startRefresh() {
+  fetchData();
+  fastTimer = setInterval(fetchData, REFRESH_FAST_MS);
+}
+
+/* ── MODAL ──────────────────────────────────────────────  */
+const MODAL_CFG = {
+  umbs55: { title: 'UMBS 5.5',          color: '#f04a4a', src: 'MBS Live' },
+  umbs60: { title: 'UMBS 6.0',          color: '#f04a4a', src: 'MBS Live' },
+  us10y:  { title: 'US 10Y Yield',      color: '#f5a623', src: 'FRED / TradingView' },
+  zn:     { title: 'ZN Futures (ZN1!)', color: '#3d8ef8', src: 'TradingView' },
+  mbb:    { title: 'MBB — iShares MBS ETF', color: '#3d8ef8', src: 'Finnhub' },
+  btc:    { title: 'Bitcoin (BTC/USD)',  color: '#f5a623', src: 'Finnhub' },
+};
+
+function buildModalStats(key) {
+  const d = lastData;
+  const rows = {
+    umbs55: [
+      ['Current',      d.umbs55?.price != null ? fmt3(d.umbs55.price) : '—'],
+      ['Open',         d.umbs55?.open  != null ? fmt3(d.umbs55.open)  : '—'],
+      ['High',         d.umbs55?.high  != null ? fmt3(d.umbs55.high)  : '—'],
+      ['Low',          d.umbs55?.low   != null ? fmt3(d.umbs55.low)   : '—'],
+      ['Prior Close',  d.umbs55?.prevClose != null ? fmt3(d.umbs55.prevClose) : '—'],
+      ['Day Chg (bps)',d.umbs55?.dailyChangeBps != null ? fmtBps(d.umbs55.dailyChangeBps) : '—', d.umbs55?.dailyChangeBps < 0 ? 'neg' : ''],
+      ['vs Rate Sheet',d.umbs55?.vsRateSheet != null ? fmtBps(d.umbs55.vsRateSheet) : '—', d.umbs55?.vsRateSheet < 0 ? 'neg' : ''],
+      ['Source',       'MBS Live'],
+    ],
+    umbs60: [
+      ['Current',      d.umbs60?.price != null ? fmt3(d.umbs60.price) : '—'],
+      ['Open',         d.umbs60?.open  != null ? fmt3(d.umbs60.open)  : '—'],
+      ['High',         d.umbs60?.high  != null ? fmt3(d.umbs60.high)  : '—'],
+      ['Low',          d.umbs60?.low   != null ? fmt3(d.umbs60.low)   : '—'],
+      ['Prior Close',  d.umbs60?.prevClose != null ? fmt3(d.umbs60.prevClose) : '—'],
+      ['Day Chg (bps)',d.umbs60?.dailyChangeBps != null ? fmtBps(d.umbs60.dailyChangeBps) : '—', d.umbs60?.dailyChangeBps < 0 ? 'neg' : ''],
+      ['vs Rate Sheet',d.umbs60?.vsRateSheet != null ? fmtBps(d.umbs60.vsRateSheet) : '—', d.umbs60?.vsRateSheet < 0 ? 'neg' : ''],
+      ['Source',       'MBS Live'],
+    ],
+    us10y: [
+      ['Current',   d.us10y?.yield   != null ? d.us10y.yield.toFixed(3) + '%' : '—'],
+      ['Open',      d.us10y?.open    != null ? d.us10y.open.toFixed(3) + '%'  : '—'],
+      ['High',      d.us10y?.high    != null ? d.us10y.high.toFixed(3) + '%'  : '—'],
+      ['Low',       d.us10y?.low     != null ? d.us10y.low.toFixed(3) + '%'   : '—'],
+      ['Prev Close',d.us10y?.prevClose != null ? d.us10y.prevClose.toFixed(3) + '%' : '—'],
+      ['Day Chg',   d.us10y?.changeBps != null ? fmtBps(d.us10y.changeBps) : '—', d.us10y?.changeBps > 0 ? 'neg' : ''],
+      ['1W Chg',    d.us10y?.weekChangeBps != null ? fmtBps(d.us10y.weekChangeBps) : '—'],
+      ['Source',    'FRED / TradingView'],
+    ],
+    zn: [
+      ['Current',   d.zn?.price  != null ? fmt3(d.zn.price) : '—'],
+      ['Open',      d.zn?.open   != null ? fmt3(d.zn.open)  : '—'],
+      ['High',      d.zn?.high   != null ? fmt3(d.zn.high)  : '—'],
+      ['Low',       d.zn?.low    != null ? fmt3(d.zn.low)   : '—'],
+      ['Prev Close',d.zn?.prevClose != null ? fmt3(d.zn.prevClose) : '—'],
+      ['Day Chg (bps)',d.zn?.changeBps != null ? fmtBps(d.zn.changeBps) : '—', d.zn?.changeBps < 0 ? 'neg' : ''],
+      ['Volume',    d.zn?.volume ?? '—'],
+      ['Source',    'TradingView'],
+    ],
+    mbb: [
+      ['Current',   d.mbb?.price  != null ? fmt2(d.mbb.price) : '—'],
+      ['Open',      d.mbb?.open   != null ? fmt2(d.mbb.open)  : '—'],
+      ['High',      d.mbb?.high   != null ? fmt2(d.mbb.high)  : '—'],
+      ['Low',       d.mbb?.low    != null ? fmt2(d.mbb.low)   : '—'],
+      ['Prev Close',d.mbb?.prevClose != null ? fmt2(d.mbb.prevClose) : '—'],
+      ['Day Chg (bps)',d.mbb?.changeBps != null ? fmtBps(d.mbb.changeBps) : '—', d.mbb?.changeBps < 0 ? 'neg' : ''],
+      ['30D Vol',   d.mbb?.vol30d ?? '—'],
+      ['Source',    'Finnhub'],
+    ],
+    btc: [
+      ['Current',   d.btc?.price != null ? '$' + d.btc.price.toLocaleString('en-US', {maximumFractionDigits:0}) : '—'],
+      ['Open',      d.btc?.open  != null ? '$' + d.btc.open.toLocaleString('en-US',  {maximumFractionDigits:0}) : '—'],
+      ['High',      d.btc?.high  != null ? '$' + d.btc.high.toLocaleString('en-US',  {maximumFractionDigits:0}) : '—'],
+      ['Low',       d.btc?.low   != null ? '$' + d.btc.low.toLocaleString('en-US',   {maximumFractionDigits:0}) : '—'],
+      ['Day Chg',   d.btc?.priceChange != null ? '$' + d.btc.priceChange.toLocaleString('en-US', {maximumFractionDigits:0}) : '—', d.btc?.priceChange < 0 ? 'neg' : ''],
+      ['Day %',     d.btc?.changePct != null ? fmtPct(d.btc.changePct) : '—', d.btc?.changePct < 0 ? 'neg' : ''],
+      ['7D Chg',    d.btc?.week7Pct  != null ? fmtPct(d.btc.week7Pct)  : '—'],
+      ['Source',    'Finnhub'],
+    ],
+  };
+  return rows[key] || [];
+}
+
+function openModal(key) {
+  const cfg = MODAL_CFG[key];
+  if (!cfg) return;
+
+  document.getElementById('modalTitle').textContent = cfg.title;
+
+  const stats = buildModalStats(key);
+  document.getElementById('modalStats').innerHTML = stats.map(([l, v, cls]) =>
+    `<div class="modal-stat">
+       <div class="modal-stat-label">${l}</div>
+       <div class="modal-stat-val ${cls || ''}">${v}</div>
+     </div>`
+  ).join('');
+
+  document.getElementById('modalNote').textContent = 'Source: ' + cfg.src + ' · intraday chart coming next build';
+  document.getElementById('modalOverlay').classList.add('open');
+
+  // Draw a placeholder chart using whatever history we have, or flat line
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+
+  const gc  = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const tc  = isDark ? '#7a8494' : '#888';
+  const ttBg = isDark ? '#181c22' : '#fff';
+  const ttBd = isDark ? '#2a2f38' : '#ddd';
+  const ttTx = isDark ? '#f0f2f5' : '#111';
+
+  // Placeholder flat data — will be replaced with real intraday from getMarketData
+  const placeholderData = Array(12).fill(null);
+  const labels = ['9:30','9:45','10:00','10:15','10:30','10:45','11:00','11:15','11:30','11:45','12:00','12:15'];
+
+  chartInst = new Chart(document.getElementById('modalChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: placeholderData,
+        borderColor: cfg.color,
+        backgroundColor: cfg.color + '18',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        fill: true,
+        tension: 0.35,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: ttBg, borderColor: ttBd, borderWidth: 1, titleColor: ttTx, bodyColor: ttTx, padding: 8 }
+      },
+      scales: {
+        x: { grid: { color: gc }, ticks: { color: tc, font: { size: 11 } } },
+        y: { grid: { color: gc }, ticks: { color: tc, font: { size: 11 }, maxTicksLimit: 5 } }
+      }
+    }
+  });
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+/* ── BOOT ───────────────────────────────────────────────  */
+startRefresh();
+</script>
+</body>
+</html>
