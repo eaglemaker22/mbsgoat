@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Broker Rates Test</title>
+  <style>
+    body { font-family: monospace; background: #0a0c10; color: #f0f2f5; padding: 40px; }
+    h2 { color: #3d8ef8; margin-bottom: 20px; }
+    .row { margin: 8px 0; font-size: 16px; }
+    .label { color: #7a8494; }
+    .val { color: #22c77a; font-weight: bold; }
+    .err { color: #f04a4a; }
+    pre { background: #111418; padding: 20px; border-radius: 8px; overflow: auto;
+          font-size: 12px; color: #aaa; margin-top: 30px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>Firestore Pull Test</h2>
+
+  <div class="row"><span class="label">GNMA 5.5 Current: </span><span id="gnma" class="val">loading...</span></div>
+  <div class="row"><span class="label">broker conv30: </span><span id="conv30" class="val">loading...</span></div>
+  <div class="row"><span class="label">broker conv15: </span><span id="conv15" class="val">loading...</span></div>
+  <div class="row"><span class="label">broker fha30: </span><span id="fha30" class="val">loading...</span></div>
+  <div class="row"><span class="label">broker va30: </span><span id="va30" class="val">loading...</span></div>
+  <div class="row"><span class="label">broker jumbo30: </span><span id="jumbo30" class="val">loading...</span></div>
+  <div class="row"><span class="label">broker as_of: </span><span id="asof" class="val">loading...</span></div>
+  <div class="row" style="margin-top:16px"><span class="label">brokerRatesLoaded: </span><span id="loaded" class="val">loading...</span></div>
+
+  <pre id="raw">waiting for response...</pre>
+
+  <script>
+    async function load() {
+      try {
+        const resp = await fetch('/.netlify/functions/getMarketData');
+        const d = await resp.json();
+
+        const br = d.brokerRates;
+        const mbs = d.realMBS;
+
+        document.getElementById('gnma').textContent =
+          mbs?.GNMA_5_5_Current ?? '— not found';
+
+        if (br) {
+          document.getElementById('conv30').textContent  = br.conv30  ?? '—';
+          document.getElementById('conv15').textContent  = br.conv15  ?? '—';
+          document.getElementById('fha30').textContent   = br.fha30   ?? '—';
+          document.getElementById('va30').textContent    = br.va30    ?? '—';
+          document.getElementById('jumbo30').textContent = br.jumbo30 ?? '—';
+          document.getElementById('asof').textContent    = br.asOf    ?? '—';
+          document.getElementById('loaded').textContent  = 'TRUE ✅';
+        } else {
+          ['conv30','conv15','fha30','va30','jumbo30','asof'].forEach(id => {
+            document.getElementById(id).textContent = '— brokerRates is null';
+            document.getElementById(id).className = 'err';
+          });
+          document.getElementById('loaded').textContent = 'FALSE ❌';
+          document.getElementById('loaded').className = 'err';
+        }
+
+        // Show raw brokerRates + meta section only
+        document.getElementById('raw').textContent =
+          'brokerRates: ' + JSON.stringify(d.brokerRates, null, 2) +
+          '\n\nmeta: ' + JSON.stringify(d.meta, null, 2) +
+          '\n\nrealMBS.GNMA_5_5_Current: ' + (d.realMBS?.GNMA_5_5_Current ?? 'not found');
+
+      } catch(e) {
+        document.getElementById('raw').textContent = 'FETCH ERROR: ' + e.message;
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
