@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LockIQ Beta · MBSGOAT Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#060a0f;--bg1:#0b1018;--bg2:#0f1720;--bg3:#141e2c;
+  --border:#1e2e40;--border2:#253545;
+  --mono:'Share Tech Mono',monospace;--cond:'Barlow Condensed',sans-serif;--body:'Barlow',sans-serif;
+  --blue:#3a7bd5;--blue-dim:#1e3a5a;
+  --cyan:#00c8e0;--cyan-dim:#0a3a45;
+  --green:#00d97e;--green-mid:#00a855;--green-dim:#0a2e1a;
+  --red:#ff4422;--red-mid:#cc3300;
+  --amber:#d4880a;--amber-dim:#2a1a04;
+  --text-pri:#c8d8e8;--text-sec:#5a7a94;--text-dim:#2a3e52;
+  --accent-line:#1e4060;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg0);color:var(--text-pri);font-family:var(--body);font-size:14px;line-height:1.5;min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 24px;background:var(--bg1);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.logo-wrap{display:flex;flex-direction:column}
+.logo-mbsgoat{font-family:var(--cond);font-size:22px;font-weight:700;letter-spacing:.08em;color:#fff;line-height:1}
+.logo-mbsgoat span{color:var(--cyan)}
+.logo-lockiq{font-family:var(--cond);font-size:15px;font-weight:600;letter-spacing:.18em;line-height:1;margin-top:1px}
+.logo-lockiq .lock{color:#e8a020}.logo-lockiq .iq{color:#00c8e0}
+.logo-lockiq .beta{font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:.14em;margin-left:5px;vertical-align:middle}
+.topbar-center{display:flex;align-items:center;gap:14px}
+.nav-pill{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--text-sec);padding:4px 10px;border:1px solid var(--border);border-radius:3px;cursor:pointer;transition:all .15s;text-transform:uppercase}
+.nav-pill:hover,.nav-pill.active{color:var(--cyan);border-color:var(--cyan-dim);background:rgba(0,200,224,.05)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.status-chip{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:.1em}
+.pulse{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.fed-chip{font-family:var(--mono);font-size:9px;color:var(--amber);background:var(--amber-dim);border:1px solid #3a2510;padding:3px 10px;border-radius:3px;letter-spacing:.06em}
+.stale-chip{font-family:var(--mono);font-size:9px;color:#cc6600;background:#1a0e00;border:1px solid #4a2a00;padding:3px 8px;border-radius:3px;letter-spacing:.06em;display:none}
+.stale-chip.visible{display:block}
+
+/* MAIN */
+.main{padding:14px 20px;display:flex;flex-direction:column;gap:14px}
+.sec-header{display:flex;align-items:center;margin-bottom:8px}
+.sec-title{font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.22em;color:var(--text-dim);text-transform:uppercase;white-space:nowrap}
+.sec-line{flex:1;height:1px;background:var(--border);margin-left:10px}
+
+/* DATA FRESHNESS */
+.freshness-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:.08em}
+.freshness-dot{width:5px;height:5px;border-radius:50%;background:var(--green)}
+.freshness-dot.warn{background:var(--amber)}
+.freshness-dot.stale{background:var(--red)}
+
+/* TIMEFRAME BAR */
+.timeframe-bar{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.tf-label{font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:.12em;margin-right:4px;text-transform:uppercase}
+.tf-btn{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--text-sec);padding:4px 11px;border:1px solid var(--border);border-radius:3px;cursor:pointer;transition:all .15s;background:transparent;text-transform:uppercase}
+.tf-btn:hover{color:var(--text-pri);border-color:var(--border2)}
+.tf-btn.active{color:#e8a020;border-color:#5a3a08;background:rgba(232,160,32,.07)}
+.tf-btn:disabled{opacity:.22;cursor:not-allowed}
+
+/* DIALS */
+.dials-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.dial-card{background:var(--bg1);border:1px solid var(--border);border-radius:10px;padding:10px 8px 12px;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden;transition:border-color .3s}
+.dial-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent-line),transparent)}
+.dial-card.loading{opacity:.5}
+.dial-top-label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--text-sec);text-transform:uppercase;margin-bottom:2px}
+.dial-canvas-wrap{width:100%;max-width:174px}
+.dial-delta-main{font-family:var(--mono);font-size:28px;font-weight:400;line-height:1;text-align:center;margin-top:2px;letter-spacing:.02em;transition:color .4s}
+.dial-price-sub{font-family:var(--mono);font-size:15px;color:var(--text-sec);text-align:center;margin-top:4px}
+.dial-ref-row{display:flex;justify-content:space-between;align-items:center;width:100%;padding:5px 4px 0;border-top:1px solid var(--border);margin-top:6px}
+.dial-ref-lbl{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.08em}
+.dial-ref-val{font-family:var(--mono);font-size:12px;color:var(--text-sec)}
+.dial-hl-row{display:flex;justify-content:space-between;width:100%;padding:4px 4px 0;border-top:1px solid var(--border);margin-top:4px}
+.dial-hl-row span{font-family:var(--mono);font-size:10px;color:var(--text-dim)}
+.est-badge{font-family:var(--mono);font-size:7px;color:#5a3a10;background:#1a0f04;border:1px solid #3a2010;padding:2px 7px;border-radius:2px;letter-spacing:.08em;align-self:flex-start;margin-bottom:2px}
+
+/* RATES */
+.rates-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.rate-block{background:var(--bg1);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.rate-block-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.rate-block-title{font-family:var(--cond);font-size:14px;font-weight:600;letter-spacing:.14em;color:#fff;text-transform:uppercase}
+.rate-block-sub{font-family:var(--mono);font-size:8px;color:var(--text-dim);letter-spacing:.08em;margin-top:1px}
+.info-btn{font-family:var(--mono);font-size:9px;color:var(--cyan);background:var(--cyan-dim);border:1px solid #0a3a50;padding:3px 8px;border-radius:3px;cursor:pointer;letter-spacing:.06em;transition:all .15s}
+.info-btn:hover{background:rgba(0,200,224,.12)}
+.rate-cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)}
+.rate-card{background:var(--bg1);padding:12px 10px;cursor:pointer;transition:background .15s;position:relative}
+.rate-card:hover{background:var(--bg3)}
+.rate-card-label{font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px}
+.rate-card-main{font-family:var(--cond);font-size:30px;font-weight:600;line-height:1;color:#fff}
+.rate-card-main span{font-size:16px;font-weight:400;color:var(--text-sec)}
+.rate-card-change{font-family:var(--mono);font-size:11px;margin-top:4px}
+.rate-card-change.pos{color:var(--green)}.rate-card-change.neg{color:var(--red)}.rate-card-change.neu{color:var(--text-sec)}
+.rate-card-source{font-family:var(--mono);font-size:8px;color:var(--text-dim);margin-top:3px}
+.rate-card-tag{position:absolute;top:6px;right:6px;font-family:var(--mono);font-size:7px;color:var(--blue);background:var(--blue-dim);border:1px solid #1a3060;padding:1px 5px;border-radius:2px;letter-spacing:.06em}
+
+/* EQUITIES */
+.equities-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.eq-card{background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px 10px 8px;text-align:center}
+.eq-label{font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:var(--text-sec);text-transform:uppercase;margin-bottom:6px}
+.eq-pct{font-family:var(--cond);font-size:26px;font-weight:600;line-height:1}
+.eq-pct.pos{color:var(--green)}.eq-pct.neg{color:var(--red)}.eq-pct.neu{color:var(--text-sec)}
+.eq-bar{height:2px;border-radius:1px;margin-top:6px;background:var(--border)}
+.eq-bar-fill{height:100%;border-radius:1px}
+
+/* BOTTOM */
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.econ-block,.news-block{background:var(--bg1);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.block-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.block-title{font-family:var(--cond);font-size:13px;font-weight:600;letter-spacing:.16em;color:#fff;text-transform:uppercase}
+.econ-row{display:grid;grid-template-columns:60px 1fr 60px 58px;gap:8px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .12s}
+.econ-row:hover{background:var(--bg2)}.econ-row:last-child{border-bottom:none}
+.econ-date{font-family:var(--mono);font-size:9px;color:var(--text-sec)}
+.econ-event{font-family:var(--body);font-size:12px;color:var(--text-pri)}
+.econ-prev{font-family:var(--mono);font-size:9px;color:var(--text-dim);text-align:right}
+.econ-impact{font-family:var(--mono);font-size:8px;padding:2px 5px;border-radius:2px;text-align:center;letter-spacing:.06em}
+.impact-high{background:#2a0a05;color:#ff5533;border:1px solid #4a1508}
+.impact-med{background:#1a1200;color:#d4880a;border:1px solid #3a2a08}
+.impact-low{background:#0a0f1a;color:#3a6a8a;border:1px solid #1a2a40}
+.news-row{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.news-row:hover{background:var(--bg2)}.news-row:last-child{border-bottom:none}
+.news-meta{display:flex;align-items:center;gap:7px;margin-bottom:4px}
+.news-tag{font-family:var(--mono);font-size:7px;padding:2px 6px;border-radius:2px;letter-spacing:.08em}
+.tag-mbs{background:var(--cyan-dim);color:var(--cyan);border:1px solid #0a3a50}
+.tag-fed{background:var(--amber-dim);color:var(--amber);border:1px solid #3a2510}
+.tag-eco{background:var(--blue-dim);color:var(--blue);border:1px solid #1a3060}
+.tag-mkts{background:#1a0a2a;color:#9060d0;border:1px solid #2a1a40}
+.news-time{font-family:var(--mono);font-size:8px;color:var(--text-dim)}
+.news-ai-badge{font-family:var(--mono);font-size:7px;color:#6040c0;background:#12091e;border:1px solid #2a1a40;padding:2px 5px;border-radius:2px;letter-spacing:.06em}
+.news-headline{font-family:var(--body);font-size:12px;color:var(--text-pri);line-height:1.4}
+.news-summary{font-family:var(--body);font-size:11px;color:var(--text-sec);margin-top:2px;line-height:1.4}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;max-width:490px;width:92%;padding:24px;position:relative}
+.modal-close{position:absolute;top:12px;right:14px;font-family:var(--mono);font-size:10px;color:var(--text-sec);cursor:pointer;background:none;border:none;letter-spacing:.1em}
+.modal-close:hover{color:#fff}
+.modal-title{font-family:var(--cond);font-size:18px;font-weight:600;color:#fff;letter-spacing:.1em;margin-bottom:4px}
+.modal-sub{font-family:var(--mono);font-size:9px;color:var(--cyan);letter-spacing:.14em;text-transform:uppercase;margin-bottom:14px}
+.modal-body{font-family:var(--body);font-size:13px;color:var(--text-sec);line-height:1.7}
+.modal-body strong{color:var(--text-pri);font-weight:500}
+.modal-body ul{margin:8px 0 8px 16px}
+.modal-body ul li{margin-bottom:3px}
+.modal-divider{height:1px;background:var(--border);margin:12px 0}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-wrap">
+    <div class="logo-mbsgoat">MBS<span>GOAT</span></div>
+    <div class="logo-lockiq"><span class="lock">Lock</span><span class="iq">IQ</span><span class="beta">BETA</span></div>
+  </div>
+  <div class="topbar-center">
+    <div class="nav-pill active">Market Pulse</div>
+    <div class="nav-pill">Pipeline</div>
+    <div class="nav-pill">Reprice Watch</div>
+  </div>
+  <div class="topbar-right">
+    <div class="stale-chip" id="staleChip">⚠ DATA DELAYED</div>
+    <div class="fed-chip" id="fedChip">Next Fed: Jun 18</div>
+    <div class="status-chip"><div class="pulse"></div><span id="clockEl">LIVE · --:--:-- ET</span></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- DIALS -->
+  <div>
+    <div class="sec-header"><div class="sec-title">Market Dials</div><div class="sec-line"></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="timeframe-bar" style="margin-bottom:0">
+        <span class="tf-label">Δ From:</span>
+        <button class="tf-btn active" data-tf="open">Market Open</button>
+        <button class="tf-btn" data-tf="prev_close">Prev Close</button>
+        <button class="tf-btn" data-tf="10am" id="tf-10am">10:00 AM</button>
+        <button class="tf-btn" data-tf="12pm" id="tf-12pm">12:00 PM</button>
+        <button class="tf-btn" data-tf="2pm"  id="tf-2pm">2:00 PM</button>
+        <button class="tf-btn" data-tf="4pm"  id="tf-4pm">4:00 PM</button>
+      </div>
+      <div class="freshness-bar" id="freshnessBar" style="margin-bottom:0">
+        <div class="freshness-dot" id="freshDot"></div>
+        <span id="freshLabel">Fetching data...</span>
+      </div>
+    </div>
+    <div class="dials-grid" id="dialsGrid"></div>
+  </div>
+
+  <!-- EQUITIES -->
+  <div>
+    <div class="sec-header"><div class="sec-title">Equities</div><div class="sec-line"></div></div>
+    <div class="equities-grid" id="equitiesGrid"></div>
+  </div>
+
+  <!-- RATES -->
+  <div>
+    <div class="sec-header"><div class="sec-title">Mortgage Rates</div><div class="sec-line"></div></div>
+    <div class="rates-grid">
+      <div class="rate-block">
+        <div class="rate-block-header">
+          <div>
+            <div class="rate-block-title">Market Composite Rates</div>
+            <div class="rate-block-sub">FRED · OBMMI · Daily Market Benchmark</div>
+          </div>
+          <button class="info-btn" onclick="openModal('mcr')">ⓘ Source</button>
+        </div>
+        <div class="rate-cards-grid" id="mcrGrid"></div>
+      </div>
+      <div class="rate-block">
+        <div class="rate-block-header">
+          <div>
+            <div class="rate-block-title">Broker Pricing Index</div>
+            <div class="rate-block-sub">Live Rate Sheets · Par + 100bps Comp · 760 FICO · 75 LTV</div>
+          </div>
+          <button class="info-btn" onclick="openModal('bpi')">ⓘ Source</button>
+        </div>
+        <div class="rate-cards-grid" id="bpiGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bottom-grid">
+    <div class="econ-block">
+      <div class="block-header">
+        <div class="block-title">Economic Calendar</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:.1em">Next 14 days</div>
+      </div>
+      <div id="econList"></div>
+    </div>
+    <div class="news-block">
+      <div class="block-header">
+        <div class="block-title">Market Intelligence</div>
+        <div class="news-ai-badge">AI Digest</div>
+      </div>
+      <div id="newsList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕ CLOSE</button>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const MONO="'Share Tech Mono',monospace";
+
+/* ── CLOCK ── */
+function tick(){
+  const et=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const h=String(et.getHours()).padStart(2,'0'),m=String(et.getMinutes()).padStart(2,'0'),s=String(et.getSeconds()).padStart(2,'0');
+  document.getElementById('clockEl').textContent=`LIVE · ${h}:${m}:${s} ET`;
+}
+tick(); setInterval(tick,1000);
+
+/* ── FED COUNTDOWN ── */
+(function(){
+  const days=Math.ceil((new Date('2025-06-18T14:00:00-04:00')-new Date())/864e5);
+  document.getElementById('fedChip').textContent=`Next Fed: Jun 18 · ${days>0?days+' days':'Today'}`;
+})();
+
+/* ── DISABLE FUTURE TF BUTTONS ── */
+(function(){
+  const et=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const hhmm=et.getHours()*100+et.getMinutes();
+  [['tf-10am',1000],['tf-12pm',1200],['tf-2pm',1400],['tf-4pm',1600]].forEach(([id,cut])=>{
+    const b=document.getElementById(id);
+    if(b&&hhmm<cut) b.disabled=true;
+  });
+})();
+
+/* ── COLOR HELPERS ── */
+function lerp3(stops,t){
+  t=Math.max(0,Math.min(1,t));
+  const n=stops.length-1,i=Math.min(Math.floor(t*n),n-1),lt=t*n-i;
+  const x=s=>[parseInt(s.slice(1,3),16),parseInt(s.slice(3,5),16),parseInt(s.slice(5,7),16)];
+  const[r1,g1,b1]=x(stops[i]),[r2,g2,b2]=x(stops[i+1]);
+  return`rgb(${Math.round(r1+(r2-r1)*lt)},${Math.round(g1+(g2-g1)*lt)},${Math.round(b1+(b2-b1)*lt)})`;
+}
+const RED_S=['#ff9944','#e85520','#c02010','#8a0a0a'];
+const GRN_S=['#44dd88','#00bb55','#008833','#005522'];
+const AMB='#d4880a';
+function needleCol(rawPct,flipArc){
+  const ep=flipArc?(1-rawPct):rawPct;
+  if(Math.abs(ep-.5)<.03) return AMB;
+  if(ep>.5) return lerp3(GRN_S,Math.min(1,(ep-.5)*2*1.4));
+  return lerp3(RED_S,Math.min(1,(.5-ep)*2*1.4));
+}
+
+/* ── LIVE DATA STATE ── */
+let liveData=null;
+let activeTf='open';
+
+const DIAL_CFGS=[
+  {id:'umbs',label:'UMBS 5.0',min:-50,max:50,flipArc:false,
+   fmtMain:v=>(v>=0?'+':'')+v.toFixed(1)+' bps',
+   fmtPrice:v=>{const b=v,w=Math.floor(b),t=Math.round((b-w)*32);return w+'-'+String(t).padStart(2,'0')},
+   priceLabel:'Price',priceKey:'currentFmt'},
+  {id:'t10y',label:'10-Yr Yield',min:-12,max:12,flipArc:true,
+   fmtMain:v=>(v>=0?'+':'')+v.toFixed(1)+' bps',
+   fmtPrice:v=>v.toFixed(3)+'%',
+   priceLabel:'Yield',priceKey:'current'},
+  {id:'zn',label:'ZN1! Futures',min:-48,max:48,flipArc:false,
+   fmtMain:v=>{const s=v<0?'-':'+',a=Math.abs(v),w=Math.floor(a/32),r=Math.round(a%32);return s+w+'-'+String(r).padStart(2,'0')},
+   fmtPrice:v=>{const b=v,w=Math.floor(b),t=Math.round((b-w)*32);return w+'-'+String(t).padStart(2,'0')},
+   priceLabel:'Price',priceKey:'currentFmt'},
+  {id:'pts',label:'$ / $100k Loan',min:-1500,max:1500,flipArc:false,isEst:true,
+   fmtMain:v=>(v>=0?'+$':'-$')+Math.abs(Math.round(v)),
+   fmtPrice:v=>v>=0?'Est. lender credit':'Est. points cost',
+   priceLabel:'Est.',priceKey:null},
+];
+
+/* ── EXTRACT DIAL VALUES FROM LIVE DATA ── */
+function getDialValues(tf){
+  if(!liveData) return null;
+  const d=liveData;
+
+  // For now open and prev_close use Firestore open fields
+  // Intraday timeframes will use snapshot data once implemented
+  const useOpen=(tf==='open'||tf==='prev_close');
+
+  const umbs={
+    delta: d.umbs50.delta,
+    hi:    d.umbs50.hiTicks,
+    lo:    d.umbs50.loTicks,
+    refVal:d.umbs50.openFmt,
+    currentPrice: d.umbs50.current,
+  };
+  const t10y={
+    delta: d.t10y.delta,
+    hi:    null,
+    lo:    null,
+    refVal:d.t10y.openFmt,
+    currentPrice: d.t10y.current,
+  };
+  const zn={
+    delta: d.zn.delta,
+    hi:    d.zn.hiTicks,
+    lo:    d.zn.loTicks,
+    refVal:d.zn.openFmt,
+    currentPrice: d.zn.current,
+  };
+  const pts={
+    delta: d.est_per100k,
+    hi:    null,
+    lo:    null,
+    refVal:'UMBS 5.0',
+    currentPrice: d.est_per100k,
+  };
+
+  // Note: for 10AM/12PM/2PM/4PM, delta will be same as open until
+  // intraday snapshots are implemented (Phase 2)
+  if(!useOpen){
+    umbs.refVal='Snapshot pending';
+    t10y.refVal='Snapshot pending';
+    zn.refVal='Snapshot pending';
+  }
+
+  return{umbs,t10y,zn,pts};
+}
+
+/* ── BUILD DIAL SVG ── */
+function buildDialSVG(cfg,delta,hi,lo){
+  const W=174,H=106,cx=87,cy=97,trackR=72;
+  const NS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(NS,'svg');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('width','100%');
+  function pt(a,r){return{x:cx+r*Math.cos(a),y:cy-r*Math.sin(a)}}
+  function arcD(a1,a2,r){
+    const s=pt(a1,r),e=pt(a2,r);
+    const big=(Math.abs(a1-a2))>Math.PI?1:0;
+    return`M${s.x.toFixed(2)} ${s.y.toFixed(2)}A${r} ${r} 0 ${big} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
+  }
+  function dToA(d){
+    const pct=(d-cfg.min)/(cfg.max-cfg.min);
+    const ep=cfg.flipArc?(1-pct):pct;
+    return Math.PI-ep*Math.PI;
+  }
+
+  const rim=document.createElementNS(NS,'path');
+  rim.setAttribute('d',arcD(Math.PI,0,trackR));
+  rim.setAttribute('fill','none');rim.setAttribute('stroke','#0d1820');rim.setAttribute('stroke-width','24');rim.setAttribute('stroke-linecap','round');
+  svg.appendChild(rim);
+
+  for(let i=0;i<=100;i++){
+    const rp=i/100,arcA=Math.PI-rp*Math.PI;
+    const isR=rp>.5,lp=isR?(rp-.5)*2:(.5-rp)*2;
+    const col=isR?lerp3(GRN_S,Math.min(1,lp*1.4)):lerp3(RED_S,Math.min(1,lp*1.4));
+    const a1=Math.PI-(rp-.006)*Math.PI,a2=Math.PI-(rp+.006)*Math.PI;
+    const s=pt(a1,trackR),e=pt(a2,trackR);
+    const seg=document.createElementNS(NS,'path');
+    seg.setAttribute('d',`M${s.x.toFixed(2)} ${s.y.toFixed(2)}A${trackR} ${trackR} 0 0 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`);
+    seg.setAttribute('fill','none');seg.setAttribute('stroke',col);seg.setAttribute('stroke-width','18');
+    svg.appendChild(seg);
+  }
+
+  const dv=document.createElementNS(NS,'line');
+  const dt=pt(Math.PI/2,trackR-15),db=pt(Math.PI/2,trackR+15);
+  dv.setAttribute('x1',dt.x);dv.setAttribute('y1',dt.y);dv.setAttribute('x2',db.x);dv.setAttribute('y2',db.y);
+  dv.setAttribute('stroke','#060a0f');dv.setAttribute('stroke-width','3');
+  svg.appendChild(dv);
+
+  [0,.25,.5,.75,1].forEach(f=>{
+    const a=Math.PI-f*Math.PI,to=pt(a,trackR+16),ti=pt(a,trackR+10);
+    const tk=document.createElementNS(NS,'line');
+    tk.setAttribute('x1',ti.x);tk.setAttribute('y1',ti.y);tk.setAttribute('x2',to.x);tk.setAttribute('y2',to.y);
+    tk.setAttribute('stroke','#1a3050');tk.setAttribute('stroke-width',f===.5?'2':'1');
+    svg.appendChild(tk);
+  });
+
+  if(hi!==null&&lo!==null){
+    const cHi=Math.max(cfg.min,Math.min(cfg.max,hi));
+    const cLo=Math.max(cfg.min,Math.min(cfg.max,lo));
+    const aHi=dToA(cHi),aLo=dToA(cLo);
+    const aS=Math.max(aHi,aLo),aE=Math.min(aHi,aLo);
+    [[30,'rgba(150,205,255,0.30)'],[20,'rgba(170,215,255,0.22)'],[10,'rgba(210,235,255,0.15)']].forEach(([sw,col])=>{
+      const f=document.createElementNS(NS,'path');
+      f.setAttribute('d',arcD(aS,aE,trackR));
+      f.setAttribute('fill','none');f.setAttribute('stroke',col);f.setAttribute('stroke-width',sw);f.setAttribute('stroke-linecap','round');
+      svg.appendChild(f);
+    });
+    [[aHi,'H'],[aLo,'L']].forEach(([a,lbl])=>{
+      const tO=pt(a,trackR+19),tI=pt(a,trackR-16);
+      const tl=document.createElementNS(NS,'line');
+      tl.setAttribute('x1',tI.x);tl.setAttribute('y1',tI.y);tl.setAttribute('x2',tO.x);tl.setAttribute('y2',tO.y);
+      tl.setAttribute('stroke','rgba(140,195,255,0.65)');tl.setAttribute('stroke-width','1.5');
+      svg.appendChild(tl);
+      const tp=pt(a,trackR+27);
+      const tx=document.createElementNS(NS,'text');
+      tx.setAttribute('x',tp.x.toFixed(1));tx.setAttribute('y',(tp.y+3).toFixed(1));
+      tx.setAttribute('text-anchor','middle');tx.setAttribute('fill','rgba(120,175,240,0.8)');
+      tx.setAttribute('font-size','7');tx.setAttribute('font-family',MONO);tx.textContent=lbl;
+      svg.appendChild(tx);
+    });
+  }
+
+  const clamp=Math.max(cfg.min,Math.min(cfg.max,delta));
+  const na=dToA(clamp);
+  const rawPct=(clamp-cfg.min)/(cfg.max-cfg.min);
+  const nc=needleCol(rawPct,cfg.flipArc);
+  const nTip=pt(na,trackR-2),nB1=pt(na+Math.PI/2,6.5),nB2=pt(na-Math.PI/2,6.5),nBase=pt(na+Math.PI,11);
+  const pts2=p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+  const nSh=document.createElementNS(NS,'polygon');
+  nSh.setAttribute('points',[{x:nTip.x+1.5,y:nTip.y+1.5},{x:nB1.x+1,y:nB1.y+1},{x:nBase.x+1,y:nBase.y+1},{x:nB2.x+1,y:nB2.y+1}].map(pts2).join(' '));
+  nSh.setAttribute('fill','rgba(0,0,0,.65)');
+  svg.appendChild(nSh);
+  const ndl=document.createElementNS(NS,'polygon');
+  ndl.setAttribute('points',[nTip,nB1,nBase,nB2].map(pts2).join(' '));
+  ndl.setAttribute('fill',nc);
+  svg.appendChild(ndl);
+  const hubR=document.createElementNS(NS,'circle');
+  hubR.setAttribute('cx',cx);hubR.setAttribute('cy',cy);hubR.setAttribute('r','9');
+  hubR.setAttribute('fill','#0d1520');hubR.setAttribute('stroke','#253545');hubR.setAttribute('stroke-width','1.5');
+  svg.appendChild(hubR);
+  const hubD=document.createElementNS(NS,'circle');
+  hubD.setAttribute('cx',cx);hubD.setAttribute('cy',cy);hubD.setAttribute('r','4');
+  hubD.setAttribute('fill',nc);
+  svg.appendChild(hubD);
+
+  const lp2=pt(Math.PI,trackR-2),rp2=pt(0,trackR-2);
+  const leftLbl=cfg.flipArc?'+'+cfg.max:String(cfg.min);
+  const rightLbl=cfg.flipArc?String(cfg.min):'+'+cfg.max;
+  [[lp2,leftLbl,'start'],[rp2,rightLbl,'end']].forEach(([pos,lbl,anch])=>{
+    const el=document.createElementNS(NS,'text');
+    el.setAttribute('x',anch==='start'?pos.x+8:pos.x-8);
+    el.setAttribute('y',(pos.y+4).toFixed(1));
+    el.setAttribute('text-anchor',anch);el.setAttribute('fill','#1c2e3e');
+    el.setAttribute('font-size','7.5');el.setAttribute('font-family',MONO);el.textContent=lbl;
+    svg.appendChild(el);
+  });
+  return{svg,nc};
+}
+
+/* ── RENDER DIALS ── */
+function renderDials(tf){
+  const grid=document.getElementById('dialsGrid');
+  grid.innerHTML='';
+  const vals=getDialValues(tf);
+  const tfLabels={open:'Open',prev_close:'Prev Close','10am':'10:00 AM','12pm':'12:00 PM','2pm':'2:00 PM','4pm':'4:00 PM'};
+
+  DIAL_CFGS.forEach(cfg=>{
+    const v=vals?vals[cfg.id]:{delta:0,hi:null,lo:null,refVal:'—',currentPrice:0};
+    const card=document.createElement('div');card.className='dial-card';
+
+    if(cfg.isEst){
+      const eb=document.createElement('div');eb.className='est-badge';eb.textContent='~ ESTIMATED';
+      card.appendChild(eb);
+    }
+    const lbl=document.createElement('div');lbl.className='dial-top-label';lbl.textContent=cfg.label;
+    card.appendChild(lbl);
+
+    const cw=document.createElement('div');cw.className='dial-canvas-wrap';
+    const{svg,nc}=buildDialSVG(cfg,v.delta,v.hi,v.lo);
+    cw.appendChild(svg);card.appendChild(cw);
+
+    const mv=document.createElement('div');mv.className='dial-delta-main';mv.style.color=nc;
+    mv.textContent=cfg.fmtMain(v.delta);
+    card.appendChild(mv);
+
+    const ps=document.createElement('div');ps.className='dial-price-sub';
+    let priceStr='—';
+    if(cfg.id==='umbs'&&vals) priceStr=liveData.umbs50.currentFmt;
+    else if(cfg.id==='t10y'&&vals) priceStr=liveData.t10y.current.toFixed(3)+'%';
+    else if(cfg.id==='zn'&&vals) priceStr=liveData.zn.currentFmt;
+    else if(cfg.id==='pts'&&vals) priceStr=v.delta>=0?'Est. lender credit':'Est. points cost';
+    ps.textContent=cfg.priceLabel+': '+priceStr;
+    card.appendChild(ps);
+
+    if(v.hi!==null&&v.lo!==null){
+      const hl=document.createElement('div');hl.className='dial-hl-row';
+      const ls=document.createElement('span');ls.textContent='L '+cfg.fmtMain(v.lo);
+      const hs=document.createElement('span');hs.textContent='H '+cfg.fmtMain(v.hi);
+      hl.appendChild(ls);hl.appendChild(hs);card.appendChild(hl);
+    }
+
+    const or=document.createElement('div');or.className='dial-ref-row';
+    const ol=document.createElement('div');ol.className='dial-ref-lbl';ol.textContent=tfLabels[tf]||'Open';
+    const ov=document.createElement('div');ov.className='dial-ref-val';ov.textContent=v.refVal;
+    or.appendChild(ol);or.appendChild(ov);card.appendChild(or);
+
+    grid.appendChild(card);
+  });
+}
+
+/* ── FETCH LIVE DATA ── */
+async function fetchMarketData(){
+  try{
+    const res=await fetch('/.netlify/functions/getMarketData');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    liveData=data;
+
+    // Freshness check — warn if data > 5 min old
+    const lastUp=new Date(data.last_updated.replace(' ','T')+'-04:00');
+    const ageMins=Math.round((Date.now()-lastUp)/60000);
+    const dot=document.getElementById('freshDot');
+    const lbl=document.getElementById('freshLabel');
+    const stale=document.getElementById('staleChip');
+
+    if(ageMins<3){
+      dot.className='freshness-dot';
+      lbl.textContent=`Updated ${ageMins<1?'just now':ageMins+'m ago'} · ${data.scraper_status.bonds_scraper}`;
+      stale.classList.remove('visible');
+    } else if(ageMins<10){
+      dot.className='freshness-dot warn';
+      lbl.textContent=`Updated ${ageMins}m ago · checking...`;
+      stale.classList.remove('visible');
+    } else {
+      dot.className='freshness-dot stale';
+      lbl.textContent=`Last update ${ageMins}m ago · scraper may be down`;
+      stale.classList.add('visible');
+    }
+
+    renderDials(activeTf);
+
+  } catch(err){
+    console.error('Fetch error:',err);
+    document.getElementById('freshLabel').textContent='Connection error — retrying...';
+    document.getElementById('freshDot').className='freshness-dot stale';
+  }
+}
+
+// Initial fetch + refresh every 90s
+fetchMarketData();
+setInterval(fetchMarketData, 90000);
+
+/* ── TIMEFRAME BUTTONS ── */
+document.querySelectorAll('.tf-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    if(this.disabled) return;
+    document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+    activeTf=this.dataset.tf;
+    renderDials(activeTf);
+  });
+});
+
+/* ── EQUITIES (static placeholder — wire to Finnhub separately) ── */
+const EQ=[
+  {label:'S&P 500',pct:+0.62},{label:'Dow',pct:+0.41},{label:'Nasdaq',pct:+1.13},
+  {label:'MBB',pct:-0.18},{label:'TLT',pct:+0.33},{label:'VIX',pct:-2.10},
+];
+(function(){
+  const grid=document.getElementById('equitiesGrid');
+  EQ.forEach(eq=>{
+    const card=document.createElement('div');card.className='eq-card';
+    const lbl=document.createElement('div');lbl.className='eq-label';lbl.textContent=eq.label;
+    const pct=document.createElement('div');
+    pct.className='eq-pct '+(eq.pct>0?'pos':eq.pct<0?'neg':'neu');
+    pct.textContent=(eq.pct>0?'+':'')+eq.pct.toFixed(2)+'%';
+    const bar=document.createElement('div');bar.className='eq-bar';
+    const fill=document.createElement('div');fill.className='eq-bar-fill';
+    fill.style.width=Math.min(100,Math.abs(eq.pct)/3*100)+'%';
+    fill.style.background=eq.pct>0?'#00a855':eq.pct<0?'#cc3300':'#444';
+    bar.appendChild(fill);
+    card.appendChild(lbl);card.appendChild(pct);card.appendChild(bar);
+    grid.appendChild(card);
+  });
+})();
+
+/* ── RATES (static placeholder — wire to FRED separately) ── */
+const MCR_RATES=[
+  {label:'30Y Conv',rate:6.375,change:-0.125,source:'OBMMI'},
+  {label:'30Y FHA',rate:5.990,change:-0.090,source:'OBMMI'},
+  {label:'30Y VA',rate:6.010,change:-0.011,source:'OBMMI'},
+  {label:'30Y Jumbo',rate:6.875,change:+0.070,source:'OBMMI'},
+  {label:'15Y Conv',rate:5.625,change:-0.095,source:'OBMMI'},
+];
+const BPI_RATES=[
+  {label:'30Y Conv',rate:6.375,change:-0.125,tag:'PAR'},
+  {label:'30Y FHA',rate:5.990,change:-0.090,tag:'PAR'},
+  {label:'30Y VA',rate:6.010,change:-0.011,tag:'PAR'},
+  {label:'30Y Jumbo',rate:6.875,change:+0.070,tag:'PAR'},
+  {label:'15Y Conv',rate:5.625,change:-0.095,tag:'PAR'},
+  {label:'30Y Cashout',rate:6.750,change:-0.063,tag:'CASHOUT'},
+  {label:'30Y Invest',rate:7.125,change:+0.045,tag:'INVEST'},
+];
+(function(){
+  function mkCard(r,showTag){
+    const card=document.createElement('div');card.className='rate-card';
+    const lbl=document.createElement('div');lbl.className='rate-card-label';lbl.textContent=r.label;
+    const main=document.createElement('div');main.className='rate-card-main';
+    main.innerHTML=r.rate.toFixed(3)+'<span>%</span>';
+    const chg=document.createElement('div');
+    chg.className='rate-card-change '+(r.change>0?'pos':r.change<0?'neg':'neu');
+    chg.textContent=(r.change>0?'▲ +':r.change<0?'▼ ':'')+(r.change>0?'+':'')+r.change.toFixed(3);
+    const src=document.createElement('div');src.className='rate-card-source';src.textContent=r.source||r.tag||'';
+    card.appendChild(lbl);card.appendChild(main);card.appendChild(chg);card.appendChild(src);
+    if(showTag&&r.tag&&r.tag!=='PAR'){
+      const tag=document.createElement('div');tag.className='rate-card-tag';tag.textContent=r.tag;
+      card.appendChild(tag);
+    }
+    return card;
+  }
+  MCR_RATES.forEach(r=>document.getElementById('mcrGrid').appendChild(mkCard(r,false)));
+  BPI_RATES.forEach(r=>document.getElementById('bpiGrid').appendChild(mkCard(r,true)));
+})();
+
+/* ── ECON ── */
+(function(){
+  const ECON=[
+    {date:'Apr 16',event:'Retail Sales MoM',prev:'0.2%',impact:'high'},
+    {date:'Apr 17',event:'Initial Jobless Claims',prev:'223K',impact:'med'},
+    {date:'Apr 23',event:'S&P Global PMI Flash',prev:'52.7',impact:'med'},
+    {date:'Apr 25',event:'Core PCE Price Index',prev:'0.3%',impact:'high'},
+    {date:'Apr 30',event:'FOMC Meeting Begins',prev:'—',impact:'high'},
+    {date:'May 1', event:'FOMC Rate Decision',prev:'4.25-4.50%',impact:'high'},
+    {date:'May 2', event:'Nonfarm Payrolls',prev:'228K',impact:'high'},
+    {date:'May 7', event:'Consumer Credit',prev:'$15.1B',impact:'low'},
+    {date:'May 13',event:'CPI MoM',prev:'0.2%',impact:'high'},
+    {date:'May 14',event:'PPI Final Demand',prev:'0.2%',impact:'med'},
+  ];
+  const list=document.getElementById('econList');
+  ECON.forEach(e=>{
+    const row=document.createElement('div');row.className='econ-row';
+    ['econ-date|'+e.date,'econ-event|'+e.event,'econ-prev|'+e.prev].forEach(s=>{
+      const[cls,txt]=s.split('|');const d=document.createElement('div');d.className=cls;d.textContent=txt;row.appendChild(d);
+    });
+    const imp=document.createElement('div');imp.className='econ-impact impact-'+e.impact;imp.textContent=e.impact.toUpperCase();
+    row.appendChild(imp);list.appendChild(row);
+  });
+})();
+
+/* ── NEWS ── */
+(function(){
+  const NEWS=[
+    {tag:'MBS',tc:'tag-mbs',time:'8:42 AM',hl:'MBS prices open firmer as 10Y yields pull back from overnight highs',sm:'UMBS 5.0 opened +4/32 on lighter-than-expected CPI print. Reprices higher expected at open for most lenders.'},
+    {tag:'FED',tc:'tag-fed',time:'7:15 AM',hl:'Fed speakers signal patience on rate cuts, data-dependent stance intact',sm:'Three Fed officials reiterated no urgency to cut in May. Market pricing holds at 62% probability of June hold.'},
+    {tag:'ECO',tc:'tag-eco',time:'6:50 AM',hl:'Retail sales beat expectations, adding upside pressure to yields',sm:'March retail sales +0.7% vs +0.3% expected. Core control group up 1.1%. Bond markets reacting modestly.'},
+    {tag:'MKTS',tc:'tag-mkts',time:'Yesterday',hl:'Spread between broker pricing and OBMMI narrows to tightest since January',sm:'30Y Conv spread compressed to +0.055 pts as lender competition increases ahead of spring buying season.'},
+    {tag:'MBS',tc:'tag-mbs',time:'Yesterday',hl:'UMBS coupon stack: 5.0 remains TBA cheapest-to-deliver as convexity profile shifts',sm:'Servicers hedging activity elevated. Net supply pressure from originator pipelines expected to weigh on 5.0s.'},
+  ];
+  const list=document.getElementById('newsList');
+  NEWS.forEach(n=>{
+    const row=document.createElement('div');row.className='news-row';
+    const meta=document.createElement('div');meta.className='news-meta';
+    const tag=document.createElement('span');tag.className='news-tag '+n.tc;tag.textContent=n.tag;
+    const time=document.createElement('span');time.className='news-time';time.textContent=n.time;
+    const ai=document.createElement('span');ai.className='news-ai-badge';ai.textContent='AI';
+    meta.appendChild(tag);meta.appendChild(time);meta.appendChild(ai);
+    const hl=document.createElement('div');hl.className='news-headline';hl.textContent=n.hl;
+    const sm=document.createElement('div');sm.className='news-summary';sm.textContent=n.sm;
+    row.appendChild(meta);row.appendChild(hl);row.appendChild(sm);list.appendChild(row);
+  });
+})();
+
+/* ── MODALS ── */
+const MODAL_CONTENT={
+  mcr:{title:'Market Composite Rates',sub:'Data Source & Methodology',
+    body:`<strong>About these rates</strong><br>These rates reflect aggregated mortgage pricing across multiple lenders and are designed to show overall market trends. They are not tied to a specific borrower scenario or lender and should be used as a general benchmark rather than a quote.<div class="modal-divider"></div><strong>Source</strong><br>Federal Reserve Bank of St. Louis (FRED), based on aggregated lender pricing data via the Optimal Blue Mortgage Market Indices (OBMMI). Updated daily on business days.<div class="modal-divider"></div><strong>Use case</strong><br>Best used to track directional rate movement and compare against broker-specific pricing. Not appropriate for quoting borrowers.`},
+  bpi:{title:'Broker Pricing Index',sub:'Rate Assumptions & Methodology',
+    body:`<strong>About these rates</strong><br>These rates are built from live lender pricing and reflect what a borrower could realistically expect when working with a mortgage broker. Unlike surveys or averages, this index is based on actual rate sheets, defined loan assumptions, and includes typical broker compensation.<div class="modal-divider"></div><strong>Rate Assumptions</strong><ul><li>Loan Type: Conventional 30-Year Fixed</li><li>Occupancy: Primary Residence</li><li>Property Type: Single Family Residence</li><li>LTV: 75%</li><li>Credit Score: 760</li><li>Loan Amount: Conforming range</li><li>Pricing: Par (0 points)</li><li>Includes: Broker compensation of 100 bps</li></ul><div class="modal-divider"></div><strong>Note:</strong> Loan-level price adjustments (LLPAs) are applied based on this scenario and are consistent across all lenders used in the index.`}
+};
+function openModal(k){const m=MODAL_CONTENT[k];document.getElementById('modalTitle').textContent=m.title;document.getElementById('modalSub').textContent=m.sub;document.getElementById('modalBody').innerHTML=m.body;document.getElementById('modal').classList.add('open');}
+function closeModal(e){if(e.target===document.getElementById('modal'))document.getElementById('modal').classList.remove('open');}
+</script>
+</body>
+</html>
