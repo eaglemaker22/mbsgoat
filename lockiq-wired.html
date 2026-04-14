@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LockIQ Beta · MBSGOAT Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:wght@300;400;500&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#020508;--bg1:#070d14;--bg2:#0b1420;--bg3:#101c2c;
+  --border:#182840;--border2:#203550;--border-hi:#2e4e6e;
+  --mono:'Share Tech Mono',monospace;
+  --cond:'Barlow Condensed',sans-serif;
+  --body:'Barlow',sans-serif;
+  --display:'Rajdhani',sans-serif;
+  --blue:#3a8be8;--blue-dim:#0c1e3c;
+  --cyan:#00deff;--cyan-mid:#00aac8;--cyan-dim:#040f18;
+  --green:#00e87a;--green-mid:#00b855;--green-dim:#021408;
+  --red:#ff3311;--red-dim:#180400;
+  --amber:#f0a800;--amber-dim:#160c00;
+  --text-pri:#c8dcea;--text-sec:#3e6882;--text-dim:#172a3a;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg0);color:var(--text-pri);font-family:var(--body);
+  font-size:17px;line-height:1.45;min-height:100vh;
+  background-image:radial-gradient(ellipse 70% 40% at 50% 0%,rgba(0,120,200,.07) 0%,transparent 60%);
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:radial-gradient(circle,rgba(30,65,100,.1) 1px,transparent 1px);
+  background-size:32px 32px;pointer-events:none;z-index:0;
+}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.topbar,.main{position:relative;z-index:1}
+
+/* ── TOPBAR ──────────────────────────────────────── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:66px;
+  background:linear-gradient(180deg,#0e1828 0%,#070d18 100%);
+  border-bottom:1px solid var(--border2);
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 32px rgba(0,0,0,.7),0 1px 0 rgba(0,222,255,.05);
+}
+.topbar::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent 0%,var(--cyan-mid) 25%,var(--amber) 60%,transparent 100%);
+}
+.logo-wrap{display:flex;flex-direction:column;line-height:1;gap:2px}
+.logo-mbsgoat{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:.1em;color:#fff;line-height:1;text-shadow:0 0 28px rgba(0,222,255,.35)}
+.logo-mbsgoat span{color:var(--cyan)}
+.logo-lockiq{font-family:var(--cond);font-size:13px;font-weight:600;letter-spacing:.3em;line-height:1;text-transform:uppercase}
+.logo-lockiq .lock{color:var(--amber)}.logo-lockiq .iq{color:var(--cyan)}
+.logo-lockiq .beta{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:.14em;margin-left:6px;vertical-align:middle;border:1px solid var(--text-dim);padding:1px 4px;border-radius:2px}
+.topbar-center{display:flex;align-items:center;gap:6px}
+.nav-pill{font-family:var(--mono);font-size:13px;letter-spacing:.12em;color:var(--text-sec);padding:7px 16px;border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all .2s;text-transform:uppercase;position:relative;background:transparent}
+.nav-pill:hover{color:var(--text-pri);border-color:var(--border2);background:rgba(255,255,255,.025)}
+.nav-pill.active{color:var(--cyan);border-color:var(--cyan-mid);background:rgba(0,222,255,.06);box-shadow:0 0 18px rgba(0,222,255,.1),inset 0 0 10px rgba(0,222,255,.04)}
+.nav-pill.active::after{content:'';position:absolute;bottom:-1px;left:25%;right:25%;height:2px;background:var(--cyan);border-radius:1px;box-shadow:0 0 8px var(--cyan)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.status-chip{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:13px;color:var(--green);letter-spacing:.1em}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 9px var(--green)}50%{opacity:.2;box-shadow:none}}
+.fed-chip{font-family:var(--mono);font-size:13px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(240,168,0,.22);padding:5px 12px;border-radius:4px;letter-spacing:.08em}
+.stale-chip{font-family:var(--mono);font-size:12px;color:#cc6600;background:#160c00;border:1px solid #4a2800;padding:4px 10px;border-radius:4px;letter-spacing:.06em;display:none}
+.stale-chip.visible{display:block}
+
+/* ── MAIN ─────────────────────────────────────────── */
+.main{padding:8px 16px;display:flex;flex-direction:column;gap:8px}
+.sec-header{display:flex;align-items:center;margin-bottom:5px;gap:10px}
+.sec-title{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.32em;color:var(--cyan);text-transform:uppercase;white-space:nowrap}
+.sec-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent)}
+
+/* ── FRESHNESS + TIMEFRAME ──────────────────────────── */
+.freshness-bar{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:13px;color:var(--text-dim);letter-spacing:.06em}
+.freshness-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green)}
+.freshness-dot.warn{background:var(--amber);box-shadow:0 0 7px var(--amber)}
+.freshness-dot.stale{background:var(--red);box-shadow:0 0 7px var(--red)}
+.timeframe-bar{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.tf-label{font-family:var(--mono);font-size:12px;color:var(--text-dim);letter-spacing:.14em;margin-right:4px;text-transform:uppercase}
+.tf-btn{font-family:var(--mono);font-size:13px;letter-spacing:.1em;color:var(--text-sec);padding:5px 12px;border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all .2s;background:transparent;text-transform:uppercase}
+.tf-btn:hover{color:var(--text-pri);border-color:var(--border2)}
+.tf-btn.active{color:var(--amber);border-color:rgba(240,168,0,.3);background:rgba(240,168,0,.07);box-shadow:0 0 12px rgba(240,168,0,.1)}
+.tf-btn:disabled{opacity:.18;cursor:not-allowed}
+
+/* ── DIALS ────────────────────────────────────────── */
+.dials-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.dial-card{
+  background:linear-gradient(170deg,#0c1826 0%,#070d16 100%);
+  border:1px solid var(--border2);border-radius:10px;
+  padding:6px 6px 8px;
+  display:flex;flex-direction:column;align-items:center;
+  position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s;
+  box-shadow:0 4px 20px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.03);
+}
+.dial-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,var(--cyan-mid) 45%,rgba(46,78,110,.4) 100%);border-radius:10px 10px 0 0}
+.dial-card:hover{border-color:var(--border-hi);box-shadow:0 4px 28px rgba(0,0,0,.6),0 0 20px rgba(0,222,255,.05)}
+.dial-top-label{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--text-sec);text-transform:uppercase;margin-bottom:2px}
+.dial-canvas-wrap{width:100%}
+.dial-delta-main{font-family:var(--display);font-size:38px;font-weight:600;line-height:1;text-align:center;margin-top:2px;letter-spacing:.02em;transition:color .4s;text-shadow:0 0 28px currentColor}
+.dial-price-sub{font-family:var(--mono);font-size:14px;color:var(--text-sec);text-align:center;margin-top:2px;letter-spacing:.06em}
+.dial-ref-row{display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 4px 0;border-top:1px solid var(--border);margin-top:4px}
+.dial-ref-lbl{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:.1em}
+.dial-ref-val{font-family:var(--mono);font-size:12px;color:var(--text-sec)}
+.dial-hl-row{display:flex;justify-content:space-between;width:100%;padding:4px 4px 0;border-top:1px solid var(--border);margin-top:4px}
+.dial-hl-row span{font-family:var(--mono);font-size:11px;color:var(--text-dim)}
+.est-badge{font-family:var(--mono);font-size:11px;color:rgba(240,168,0,.5);background:var(--amber-dim);border:1px solid rgba(240,168,0,.18);padding:2px 8px;border-radius:3px;letter-spacing:.1em;align-self:flex-start;margin-bottom:4px}
+
+/* ── EQUITIES ─────────────────────────────────────── */
+.equities-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.eq-card{background:linear-gradient(160deg,var(--bg2) 0%,var(--bg1) 100%);border:1px solid var(--border);border-radius:8px;padding:8px 8px 7px;text-align:center;transition:border-color .2s}
+.eq-card:hover{border-color:var(--border2)}
+.eq-label{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--text-sec);text-transform:uppercase;margin-bottom:4px}
+.eq-pct{font-family:var(--display);font-size:30px;font-weight:600;line-height:1}
+.eq-pct.pos{color:var(--green);text-shadow:0 0 22px rgba(0,232,122,.3)}
+.eq-pct.neg{color:var(--red);text-shadow:0 0 22px rgba(255,51,17,.3)}
+.eq-pct.neu{color:var(--text-sec)}
+.eq-bar{height:3px;border-radius:2px;margin-top:8px;background:var(--border)}
+.eq-bar-fill{height:100%;border-radius:2px}
+
+/* ── RATES ────────────────────────────────────────── */
+/* 3 columns: BPI (widest) | MCR | Freddie (narrowest, right) */
+.rates-3col{display:grid;grid-template-columns:1fr 1fr 0.52fr;gap:8px}
+
+.rate-panel{background:var(--bg1);border:1px solid var(--border2);border-radius:10px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.3);display:flex;flex-direction:column}
+.rate-panel-header{padding:7px 12px;background:linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 100%);border-bottom:1px solid var(--border2);position:relative}
+.rate-panel-header::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:10px 10px 0 0}
+.rate-panel.bpi .rate-panel-header::before{background:linear-gradient(90deg,transparent,var(--cyan-mid),transparent)}
+.rate-panel.mcr .rate-panel-header::before{background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.rate-panel.freddie .rate-panel-header::before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+
+.rate-panel-source{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.rate-panel.bpi .rate-panel-source{color:var(--cyan)}
+.rate-panel.mcr .rate-panel-source{color:var(--blue)}
+.rate-panel.freddie .rate-panel-source{color:var(--amber)}
+
+.rate-panel-meta{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.06em;margin-top:1px;line-height:1.4}
+.rate-panel-info{display:flex;align-items:center;justify-content:space-between}
+.info-btn{font-family:var(--mono);font-size:10px;color:var(--text-sec);background:rgba(255,255,255,.04);border:1px solid var(--border);padding:2px 8px;border-radius:3px;cursor:pointer;letter-spacing:.08em;transition:all .2s;white-space:nowrap}
+.info-btn:hover{color:var(--text-pri);border-color:var(--border2)}
+
+.rate-panel-body{flex:1}
+
+.rate-row{padding:6px 12px;border-bottom:1px solid var(--border);transition:background .15s;display:flex;flex-direction:column;gap:1px}
+.rate-row:last-child{border-bottom:none}
+.rate-row:hover{background:rgba(255,255,255,.02)}
+.rate-row-product{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--text-sec);text-transform:uppercase}
+.rate-row-main{display:flex;align-items:baseline;gap:4px}
+.rate-row-val{font-family:var(--display);font-size:32px;font-weight:600;line-height:1;color:#fff}
+.rate-row-pct{font-family:var(--display);font-size:18px;font-weight:400;color:var(--text-sec)}
+.rate-row-change{font-family:var(--mono);font-size:12px;letter-spacing:.04em}
+.rate-row-change.pos{color:var(--green)}.rate-row-change.neg{color:var(--red)}.rate-row-change.neu{color:var(--text-sec)}
+
+.rate-panel.freddie .rate-row{padding:10px 12px}
+.rate-panel.freddie .rate-row-val{font-size:36px}
+.rate-panel.freddie .rate-row-product{font-size:12px}
+.rate-panel.freddie .rate-row-change{font-size:13px}
+
+.rate-row-tag{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(58,139,232,.2);padding:1px 6px;border-radius:3px;letter-spacing:.08em;display:inline-block;margin-top:1px;align-self:flex-start}
+
+/* ── BOTTOM ────────────────────────────────────────── */
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.econ-block,.news-block{background:var(--bg1);border:1px solid var(--border2);border-radius:10px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.block-header{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 100%);border-bottom:1px solid var(--border2)}
+.block-title{font-family:var(--display);font-size:16px;font-weight:600;letter-spacing:.14em;color:#fff;text-transform:uppercase}
+.block-sub{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:.1em}
+.econ-row{display:grid;grid-template-columns:70px 1fr 76px 64px;gap:8px;align-items:center;padding:6px 14px;border-bottom:1px solid var(--border);transition:background .15s}
+.econ-row:hover{background:var(--bg2)}.econ-row:last-child{border-bottom:none}
+.econ-date{font-family:var(--mono);font-size:12px;color:var(--text-sec)}
+.econ-event{font-family:var(--body);font-size:14px;color:var(--text-pri)}
+.econ-prev{font-family:var(--mono);font-size:12px;color:var(--text-dim);text-align:right}
+.econ-impact{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 5px;border-radius:3px;text-align:center;letter-spacing:.08em}
+.impact-high{background:#1c0402;color:#ff4422;border:1px solid #4a0e08}
+.impact-med{background:#160e00;color:var(--amber);border:1px solid #3a2808}
+.impact-low{background:#040a14;color:#2e5a80;border:1px solid #0c1e34}
+.news-row{padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.news-row:hover{background:var(--bg2)}.news-row:last-child{border-bottom:none}
+.news-meta{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.news-tag{font-family:var(--mono);font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;letter-spacing:.12em}
+.tag-mbs{background:rgba(0,222,255,.07);color:var(--cyan);border:1px solid rgba(0,222,255,.18)}
+.tag-fed{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(240,168,0,.18)}
+.tag-eco{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(58,139,232,.18)}
+.tag-mkts{background:#100820;color:#a070e0;border:1px solid rgba(136,85,204,.2)}
+.news-time{font-family:var(--mono);font-size:11px;color:var(--text-dim)}
+.news-ai-badge{font-family:var(--mono);font-size:10px;color:#7050c8;background:#0c0816;border:1px solid rgba(112,80,200,.22);padding:2px 7px;border-radius:3px;letter-spacing:.08em}
+.news-headline{font-family:var(--body);font-size:14px;color:var(--text-pri);line-height:1.4;font-weight:500}
+.news-summary{font-family:var(--body);font-size:12px;color:var(--text-sec);margin-top:2px;line-height:1.4}
+
+/* ── MODAL ─────────────────────────────────────────── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.84);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.modal-overlay.open{display:flex}
+.modal-box{background:linear-gradient(160deg,var(--bg3) 0%,var(--bg2) 100%);border:1px solid var(--border2);border-radius:12px;max-width:530px;width:92%;padding:30px;position:relative;box-shadow:0 28px 70px rgba(0,0,0,.75)}
+.modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan-mid),transparent);border-radius:12px 12px 0 0}
+.modal-close{position:absolute;top:14px;right:16px;font-family:var(--mono);font-size:13px;color:var(--text-sec);cursor:pointer;background:rgba(255,255,255,.04);border:1px solid var(--border);padding:4px 10px;border-radius:4px;letter-spacing:.1em;transition:all .2s}
+.modal-close:hover{color:#fff;border-color:var(--border2)}
+.modal-title{font-family:var(--display);font-size:24px;font-weight:600;color:#fff;letter-spacing:.1em;margin-bottom:4px;text-transform:uppercase}
+.modal-sub{font-family:var(--mono);font-size:13px;color:var(--cyan);letter-spacing:.16em;text-transform:uppercase;margin-bottom:18px}
+.modal-body{font-family:var(--body);font-size:17px;color:var(--text-sec);line-height:1.75}
+.modal-body strong{color:var(--text-pri);font-weight:500}
+.modal-body ul{margin:10px 0 10px 20px}
+.modal-body ul li{margin-bottom:5px}
+.modal-divider{height:1px;background:var(--border);margin:14px 0}
+</style>
+</head>
+<body>
+
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <filter id="hub-glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+</svg>
+
+<div class="topbar">
+  <div class="logo-wrap">
+    <div class="logo-mbsgoat">MBS<span>GOAT</span></div>
+    <div class="logo-lockiq"><span class="lock">Lock</span><span class="iq">IQ</span><span class="beta">BETA</span></div>
+  </div>
+  <div class="topbar-center">
+    <div class="nav-pill active">Market Pulse</div>
+    <div class="nav-pill">Pipeline</div>
+    <div class="nav-pill">Reprice Watch</div>
+  </div>
+  <div class="topbar-right">
+    <div class="stale-chip" id="staleChip">⚠ DATA DELAYED</div>
+    <div class="fed-chip" id="fedChip">Next Fed: May 7</div>
+    <div class="status-chip"><div class="pulse"></div><span id="clockEl">LIVE · --:--:-- ET</span></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- DIALS -->
+  <div>
+    <div class="sec-header"><div class="sec-title">Market Dials</div><div class="sec-line"></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="timeframe-bar">
+        <span class="tf-label">Δ From:</span>
+        <button class="tf-btn active" data-tf="open">Market Open</button>
+        <button class="tf-btn" data-tf="prev_close">Prev Close</button>
+        <button class="tf-btn" data-tf="10am" id="tf-10am">10:00 AM</button>
+        <button class="tf-btn" data-tf="12pm" id="tf-12pm">12:00 PM</button>
+        <button class="tf-btn" data-tf="2pm"  id="tf-2pm">2:00 PM</button>
+        <button class="tf-btn" data-tf="4pm"  id="tf-4pm">4:00 PM</button>
+      </div>
+      <div class="freshness-bar" id="freshnessBar">
+        <div class="freshness-dot" id="freshDot"></div>
+        <span id="freshLabel">Fetching data...</span>
+      </div>
+    </div>
+    <div class="dials-grid" id="dialsGrid"></div>
+  </div>
+
+  <!-- EQUITIES -->
+  <div>
+    <div class="sec-header"><div class="sec-title">Equities</div><div class="sec-line"></div></div>
+    <div class="equities-grid" id="equitiesGrid"></div>
+  </div>
+
+  <!-- RATES: BPI | MCR | Freddie -->
+  <div>
+    <div class="sec-header"><div class="sec-title">Mortgage Rates</div><div class="sec-line"></div></div>
+    <div class="rates-3col">
+
+      <!-- BPI -->
+      <div class="rate-panel bpi">
+        <div class="rate-panel-header">
+          <div class="rate-panel-info">
+            <div class="rate-panel-source">BROKER PRICE INDEX</div>
+            <button class="info-btn" onclick="openModal('bpi')">ⓘ Source</button>
+          </div>
+          <div class="rate-panel-meta">Live Rate Sheets · Par + 100bps Comp · 760 FICO · 75 LTV</div>
+        </div>
+        <div class="rate-panel-body" id="bpiPanel"></div>
+      </div>
+
+      <!-- MCR -->
+      <div class="rate-panel mcr">
+        <div class="rate-panel-header">
+          <div class="rate-panel-info">
+            <div class="rate-panel-source">MARKET COMPOSITE INDEX</div>
+            <button class="info-btn" onclick="openModal('mcr')">ⓘ Source</button>
+          </div>
+          <div class="rate-panel-meta">FRED · Optimal Blue MMI · Daily Market Benchmark</div>
+        </div>
+        <div class="rate-panel-body" id="mcrPanel"></div>
+      </div>
+
+      <!-- Freddie Mac (right, narrower) -->
+      <div class="rate-panel freddie">
+        <div class="rate-panel-header">
+          <div class="rate-panel-info">
+            <div class="rate-panel-source">Freddie Mac</div>
+            <button class="info-btn" onclick="openModal('pmms')">ⓘ Source</button>
+          </div>
+          <div class="rate-panel-meta">PMMS · Weekly Survey<br>as of Apr 10, 2025</div>
+        </div>
+        <div class="rate-panel-body" id="freddiePanel"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bottom-grid">
+    <div class="econ-block">
+      <div class="block-header">
+        <div class="block-title">Economic Calendar</div>
+        <div class="block-sub">Next 14 days</div>
+      </div>
+      <div id="econList"></div>
+    </div>
+    <div class="news-block">
+      <div class="block-header">
+        <div class="block-title">Market Intelligence</div>
+        <div class="news-ai-badge">AI Digest</div>
+      </div>
+      <div id="newsList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕ CLOSE</button>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const MONO="'Share Tech Mono',monospace";
+
+/* CLOCK */
+function tick(){
+  const et=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const h=String(et.getHours()).padStart(2,'0'),m=String(et.getMinutes()).padStart(2,'0'),s=String(et.getSeconds()).padStart(2,'0');
+  document.getElementById('clockEl').textContent=`LIVE · ${h}:${m}:${s} ET`;
+}
+tick(); setInterval(tick,1000);
+
+(function(){
+  const days=Math.ceil((new Date('2026-05-07T14:00:00-04:00')-new Date())/864e5);
+  document.getElementById('fedChip').textContent=`Next Fed: May 7 · ${days>0?days+' days':'Today'}`;
+})();
+
+(function(){
+  const et=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const hhmm=et.getHours()*100+et.getMinutes();
+  [['tf-10am',1000],['tf-12pm',1200],['tf-2pm',1400],['tf-4pm',1600]].forEach(([id,cut])=>{
+    const b=document.getElementById(id);
+    if(b&&hhmm<cut) b.disabled=true;
+  });
+})();
+
+/* COLOR HELPERS */
+function lerp3(stops,t){
+  t=Math.max(0,Math.min(1,t));
+  const n=stops.length-1,i=Math.min(Math.floor(t*n),n-1),lt=t*n-i;
+  const x=s=>[parseInt(s.slice(1,3),16),parseInt(s.slice(3,5),16),parseInt(s.slice(5,7),16)];
+  const[r1,g1,b1]=x(stops[i]),[r2,g2,b2]=x(stops[i+1]);
+  return`rgb(${Math.round(r1+(r2-r1)*lt)},${Math.round(g1+(g2-g1)*lt)},${Math.round(b1+(b2-b1)*lt)})`;
+}
+const RED_S=['#ff9944','#e85520','#c02010','#8a0a0a'];
+const GRN_S=['#44dd88','#00bb55','#008833','#005522'];
+const AMB='#f0a800';
+function needleCol(rawPct,flipArc){
+  const ep=flipArc?(1-rawPct):rawPct;
+  if(Math.abs(ep-.5)<.03) return AMB;
+  if(ep>.5) return lerp3(GRN_S,Math.min(1,(ep-.5)*2*1.4));
+  return lerp3(RED_S,Math.min(1,(.5-ep)*2*1.4));
+}
+
+let liveData=null,activeTf='open';
+
+const DIAL_CFGS=[
+  {id:'umbs',label:'UMBS 5.0',min:-50,max:50,flipArc:false,
+   fmtMain:v=>(v>=0?'+':'')+v.toFixed(1)+' bps',
+   fmtPrice:v=>{const w=Math.floor(v),t=Math.round((v-w)*32);return w+'-'+String(t).padStart(2,'0')},
+   priceLabel:'Price'},
+  {id:'t10y',label:'10-Yr Yield',min:-12,max:12,flipArc:true,
+   fmtMain:v=>(v>=0?'+':'')+v.toFixed(1)+' bps',
+   fmtPrice:v=>v.toFixed(3)+'%',
+   priceLabel:'Yield'},
+  {id:'zn',label:'ZN1! Futures',min:-48,max:48,flipArc:false,
+   fmtMain:v=>{const s=v<0?'-':'+',a=Math.abs(v),w=Math.floor(a/32),r=Math.round(a%32);return s+w+'-'+String(r).padStart(2,'0')},
+   fmtPrice:v=>{const w=Math.floor(v),t=Math.round((v-w)*32);return w+'-'+String(t).padStart(2,'0')},
+   priceLabel:'Price'},
+  {id:'pts',label:'$ / $100k Loan',min:-1500,max:1500,flipArc:false,isEst:true,
+   fmtMain:v=>(v>=0?'+$':'-$')+Math.abs(Math.round(v)),
+   fmtPrice:v=>v>=0?'Est. lender credit':'Est. points cost',
+   priceLabel:'Est.'},
+];
+
+function getDialValues(tf){
+  if(!liveData) return null;
+  const d=liveData;
+  const useOpen=(tf==='open'||tf==='prev_close');
+  const umbs={delta:d.umbs50.delta,hi:d.umbs50.hiTicks,lo:d.umbs50.loTicks,refVal:d.umbs50.openFmt,currentPrice:d.umbs50.current};
+  const t10y={delta:d.t10y.delta,hi:null,lo:null,refVal:d.t10y.openFmt,currentPrice:d.t10y.current};
+  const zn={delta:d.zn.delta,hi:d.zn.hiTicks,lo:d.zn.loTicks,refVal:d.zn.openFmt,currentPrice:d.zn.current};
+  const pts={delta:d.est_per100k,hi:null,lo:null,refVal:'UMBS 5.0',currentPrice:d.est_per100k};
+  if(!useOpen){umbs.refVal='Snapshot pending';t10y.refVal='Snapshot pending';zn.refVal='Snapshot pending';}
+  return{umbs,t10y,zn,pts};
+}
+
+/* ── DIAL SVG ─────────────────────────────────────── */
+function buildDialSVG(cfg,delta,hi,lo){
+  const W=240,H=148,cx=120,cy=136,trackR=102;
+  const NS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(NS,'svg');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('width','100%');
+  function pt(a,r){return{x:cx+r*Math.cos(a),y:cy-r*Math.sin(a)}}
+  function arcD(a1,a2,r){
+    const s=pt(a1,r),e=pt(a2,r);
+    const big=Math.abs(a1-a2)>Math.PI?1:0;
+    return`M${s.x.toFixed(2)} ${s.y.toFixed(2)}A${r} ${r} 0 ${big} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
+  }
+  function dToA(d){
+    const pct=(d-cfg.min)/(cfg.max-cfg.min);
+    const ep=cfg.flipArc?(1-pct):pct;
+    return Math.PI-ep*Math.PI;
+  }
+  /* bezel arc */
+  const bezel=document.createElementNS(NS,'path');
+  bezel.setAttribute('d',arcD(Math.PI+.04,-.04,trackR+14));
+  bezel.setAttribute('fill','none');bezel.setAttribute('stroke','#1a3050');bezel.setAttribute('stroke-width','1.5');bezel.setAttribute('stroke-linecap','butt');
+  svg.appendChild(bezel);
+  /* groove */
+  const groove=document.createElementNS(NS,'path');
+  groove.setAttribute('d',arcD(Math.PI,0,trackR));
+  groove.setAttribute('fill','none');groove.setAttribute('stroke','#04090f');groove.setAttribute('stroke-width','28');groove.setAttribute('stroke-linecap','butt');
+  svg.appendChild(groove);
+  const rimShadow=document.createElementNS(NS,'path');
+  rimShadow.setAttribute('d',arcD(Math.PI,0,trackR));
+  rimShadow.setAttribute('fill','none');rimShadow.setAttribute('stroke','#07101a');rimShadow.setAttribute('stroke-width','24');rimShadow.setAttribute('stroke-linecap','butt');
+  svg.appendChild(rimShadow);
+  /* colored arc */
+  for(let i=0;i<=140;i++){
+    const rp=i/140;
+    const isR=rp>.5,lp=isR?(rp-.5)*2:(.5-rp)*2;
+    const col=isR?lerp3(GRN_S,Math.min(1,lp*1.4)):lerp3(RED_S,Math.min(1,lp*1.4));
+    const a1=Math.PI-(rp-.0045)*Math.PI,a2=Math.PI-(rp+.0045)*Math.PI;
+    const s=pt(a1,trackR),e=pt(a2,trackR);
+    const seg=document.createElementNS(NS,'path');
+    seg.setAttribute('d',`M${s.x.toFixed(2)} ${s.y.toFixed(2)}A${trackR} ${trackR} 0 0 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`);
+    seg.setAttribute('fill','none');seg.setAttribute('stroke',col);seg.setAttribute('stroke-width','18');
+    svg.appendChild(seg);
+  }
+  /* zero divider */
+  const zero=document.createElementNS(NS,'line');
+  const zt=pt(Math.PI/2,trackR-11),zb=pt(Math.PI/2,trackR+11);
+  zero.setAttribute('x1',zt.x);zero.setAttribute('y1',zt.y);zero.setAttribute('x2',zb.x);zero.setAttribute('y2',zb.y);
+  zero.setAttribute('stroke','rgba(255,255,255,.55)');zero.setAttribute('stroke-width','2.5');
+  svg.appendChild(zero);
+  /* aviation ticks */
+  [0,.125,.25,.375,.5,.625,.75,.875,1].forEach(f=>{
+    const major=[0,.25,.5,.75,1].includes(f);
+    const a=Math.PI-f*Math.PI;
+    const r1=trackR+(major?12:7),r2=trackR+(major?24:18);
+    const ti=pt(a,r1),to=pt(a,r2);
+    const tk=document.createElementNS(NS,'line');
+    tk.setAttribute('x1',ti.x);tk.setAttribute('y1',ti.y);tk.setAttribute('x2',to.x);tk.setAttribute('y2',to.y);
+    tk.setAttribute('stroke',major?'#2a4a6e':'#152030');
+    tk.setAttribute('stroke-width',major?'2.2':'1.4');
+    svg.appendChild(tk);
+  });
+  /* H/L band */
+  if(hi!==null&&lo!==null){
+    const cHi=Math.max(cfg.min,Math.min(cfg.max,hi));
+    const cLo=Math.max(cfg.min,Math.min(cfg.max,lo));
+    const aHi=dToA(cHi),aLo=dToA(cLo);
+    const aS=Math.max(aHi,aLo),aE=Math.min(aHi,aLo);
+    [[32,'rgba(140,200,255,.15)'],[20,'rgba(170,218,255,.11)'],[10,'rgba(210,235,255,.08)']].forEach(([sw,col])=>{
+      const f=document.createElementNS(NS,'path');
+      f.setAttribute('d',arcD(aS,aE,trackR));
+      f.setAttribute('fill','none');f.setAttribute('stroke',col);f.setAttribute('stroke-width',sw);f.setAttribute('stroke-linecap','round');
+      svg.appendChild(f);
+    });
+    [[aHi,'H'],[aLo,'L']].forEach(([a,lbl])=>{
+      const tO=pt(a,trackR+26),tI=pt(a,trackR-14);
+      const tl=document.createElementNS(NS,'line');
+      tl.setAttribute('x1',tI.x);tl.setAttribute('y1',tI.y);tl.setAttribute('x2',tO.x);tl.setAttribute('y2',tO.y);
+      tl.setAttribute('stroke','rgba(140,200,255,.7)');tl.setAttribute('stroke-width','1.5');
+      svg.appendChild(tl);
+      const tp=pt(a,trackR+37);
+      const tx=document.createElementNS(NS,'text');
+      tx.setAttribute('x',tp.x.toFixed(1));tx.setAttribute('y',(tp.y+4).toFixed(1));
+      tx.setAttribute('text-anchor','middle');tx.setAttribute('fill','rgba(120,180,245,.9)');
+      tx.setAttribute('font-size','11');tx.setAttribute('font-family',MONO);tx.textContent=lbl;
+      svg.appendChild(tx);
+    });
+  }
+  /* needle */
+  const clamp=Math.max(cfg.min,Math.min(cfg.max,delta));
+  const na=dToA(clamp);
+  const rawPct=(clamp-cfg.min)/(cfg.max-cfg.min);
+  const nc=needleCol(rawPct,cfg.flipArc);
+  const nTip=pt(na,trackR-5),nB1=pt(na+Math.PI/2,7),nB2=pt(na-Math.PI/2,7),nBase=pt(na+Math.PI,16);
+  const pts2=p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+  const nSh=document.createElementNS(NS,'polygon');
+  nSh.setAttribute('points',[{x:nTip.x+2,y:nTip.y+2},{x:nB1.x+1.5,y:nB1.y+1.5},{x:nBase.x+1.5,y:nBase.y+1.5},{x:nB2.x+1.5,y:nB2.y+1.5}].map(pts2).join(' '));
+  nSh.setAttribute('fill','rgba(0,0,0,.75)');
+  svg.appendChild(nSh);
+  const ndl=document.createElementNS(NS,'polygon');
+  ndl.setAttribute('points',[nTip,nB1,nBase,nB2].map(pts2).join(' '));
+  ndl.setAttribute('fill',nc);
+  svg.appendChild(ndl);
+  const spineS=pt(na,trackR-7),spineE=pt(na+Math.PI,13);
+  const spine=document.createElementNS(NS,'line');
+  spine.setAttribute('x1',spineS.x);spine.setAttribute('y1',spineS.y);spine.setAttribute('x2',spineE.x);spine.setAttribute('y2',spineE.y);
+  spine.setAttribute('stroke','rgba(255,255,255,.65)');spine.setAttribute('stroke-width','1');
+  svg.appendChild(spine);
+  /* hub */
+  const hubOuter=document.createElementNS(NS,'circle');
+  hubOuter.setAttribute('cx',cx);hubOuter.setAttribute('cy',cy);hubOuter.setAttribute('r','14');
+  hubOuter.setAttribute('fill','#0a1520');hubOuter.setAttribute('stroke','#1e3852');hubOuter.setAttribute('stroke-width','2');
+  svg.appendChild(hubOuter);
+  const hubInner=document.createElementNS(NS,'circle');
+  hubInner.setAttribute('cx',cx);hubInner.setAttribute('cy',cy);hubInner.setAttribute('r','8');
+  hubInner.setAttribute('fill','#050c16');hubInner.setAttribute('stroke',nc);hubInner.setAttribute('stroke-width','1.5');
+  svg.appendChild(hubInner);
+  const hubDot=document.createElementNS(NS,'circle');
+  hubDot.setAttribute('cx',cx);hubDot.setAttribute('cy',cy);hubDot.setAttribute('r','4');
+  hubDot.setAttribute('fill',nc);hubDot.setAttribute('filter','url(#hub-glow)');
+  svg.appendChild(hubDot);
+  /* end labels */
+  const lp2=pt(Math.PI,trackR-2),rp2=pt(0,trackR-2);
+  const leftLbl=cfg.flipArc?'+'+cfg.max:String(cfg.min);
+  const rightLbl=cfg.flipArc?String(cfg.min):'+'+cfg.max;
+  [[lp2,leftLbl,'start'],[rp2,rightLbl,'end']].forEach(([pos,lbl,anch])=>{
+    const el=document.createElementNS(NS,'text');
+    el.setAttribute('x',anch==='start'?pos.x+12:pos.x-12);
+    el.setAttribute('y',(pos.y+4).toFixed(1));
+    el.setAttribute('text-anchor',anch);el.setAttribute('fill','#263e58');
+    el.setAttribute('font-size','11');el.setAttribute('font-family',MONO);el.textContent=lbl;
+    svg.appendChild(el);
+  });
+  return{svg,nc};
+}
+
+function renderDials(tf){
+  const grid=document.getElementById('dialsGrid');
+  grid.innerHTML='';
+  const vals=getDialValues(tf);
+  const tfLabels={open:'Open',prev_close:'Prev Close','10am':'10:00 AM','12pm':'12:00 PM','2pm':'2:00 PM','4pm':'4:00 PM'};
+  DIAL_CFGS.forEach(cfg=>{
+    const v=vals?vals[cfg.id]:{delta:0,hi:null,lo:null,refVal:'—',currentPrice:0};
+    const card=document.createElement('div');card.className='dial-card';
+    if(cfg.isEst){const eb=document.createElement('div');eb.className='est-badge';eb.textContent='~ ESTIMATED';card.appendChild(eb)}
+    const lbl=document.createElement('div');lbl.className='dial-top-label';lbl.textContent=cfg.label;card.appendChild(lbl);
+    const cw=document.createElement('div');cw.className='dial-canvas-wrap';
+    const{svg,nc}=buildDialSVG(cfg,v.delta,v.hi,v.lo);
+    cw.appendChild(svg);card.appendChild(cw);
+    const mv=document.createElement('div');mv.className='dial-delta-main';mv.style.color=nc;mv.textContent=cfg.fmtMain(v.delta);card.appendChild(mv);
+    const ps=document.createElement('div');ps.className='dial-price-sub';
+    let priceStr='—';
+    if(cfg.id==='umbs'&&vals) priceStr=liveData.umbs50.currentFmt;
+    else if(cfg.id==='t10y'&&vals) priceStr=liveData.t10y.current.toFixed(3)+'%';
+    else if(cfg.id==='zn'&&vals) priceStr=liveData.zn.currentFmt;
+    else if(cfg.id==='pts'&&vals) priceStr=v.delta>=0?'Est. lender credit':'Est. points cost';
+    ps.textContent=cfg.priceLabel+': '+priceStr;card.appendChild(ps);
+    if(v.hi!==null&&v.lo!==null){
+      const hl=document.createElement('div');hl.className='dial-hl-row';
+      const ls=document.createElement('span');ls.textContent='L '+cfg.fmtMain(v.lo);
+      const hs=document.createElement('span');hs.textContent='H '+cfg.fmtMain(v.hi);
+      hl.appendChild(ls);hl.appendChild(hs);card.appendChild(hl);
+    }
+    const or=document.createElement('div');or.className='dial-ref-row';
+    const ol=document.createElement('div');ol.className='dial-ref-lbl';ol.textContent=tfLabels[tf]||'Open';
+    const ov=document.createElement('div');ov.className='dial-ref-val';ov.textContent=v.refVal;
+    or.appendChild(ol);or.appendChild(ov);card.appendChild(or);
+    grid.appendChild(card);
+  });
+}
+
+async function fetchMarketData(){
+  try{
+    const res=await fetch('/.netlify/functions/getMarketData');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    liveData=data;
+    const lastUp=new Date(data.last_updated.replace(' ','T')+'-04:00');
+    const ageMins=Math.round((Date.now()-lastUp)/60000);
+    const dot=document.getElementById('freshDot'),lbl=document.getElementById('freshLabel'),stale=document.getElementById('staleChip');
+    if(ageMins<3){dot.className='freshness-dot';lbl.textContent=`Updated ${ageMins<1?'just now':ageMins+'m ago'} · ${data.scraper_status.bonds_scraper}`;stale.classList.remove('visible')}
+    else if(ageMins<10){dot.className='freshness-dot warn';lbl.textContent=`Updated ${ageMins}m ago · checking...`;stale.classList.remove('visible')}
+    else{dot.className='freshness-dot stale';lbl.textContent=`Last update ${ageMins}m ago · scraper may be down`;stale.classList.add('visible')}
+    renderDials(activeTf);
+  } catch(err){
+    console.error('Fetch error:',err);
+    document.getElementById('freshLabel').textContent='Connection error — retrying...';
+    document.getElementById('freshDot').className='freshness-dot stale';
+  }
+}
+renderDials(activeTf);
+fetchMarketData();
+setInterval(fetchMarketData,90000);
+
+document.querySelectorAll('.tf-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    if(this.disabled) return;
+    document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');activeTf=this.dataset.tf;renderDials(activeTf);
+  });
+});
+
+/* EQUITIES */
+const EQ=[
+  {label:'S&P 500',pct:+0.62},{label:'Dow',pct:+0.41},{label:'Nasdaq',pct:+1.13},
+  {label:'MBB',pct:-0.18},{label:'TLT',pct:+0.33},{label:'VIX',pct:-2.10},
+];
+(function(){
+  const grid=document.getElementById('equitiesGrid');
+  EQ.forEach(eq=>{
+    const card=document.createElement('div');card.className='eq-card';
+    const lbl=document.createElement('div');lbl.className='eq-label';lbl.textContent=eq.label;
+    const pct=document.createElement('div');pct.className='eq-pct '+(eq.pct>0?'pos':eq.pct<0?'neg':'neu');
+    pct.textContent=(eq.pct>0?'+':'')+eq.pct.toFixed(2)+'%';
+    const bar=document.createElement('div');bar.className='eq-bar';
+    const fill=document.createElement('div');fill.className='eq-bar-fill';
+    fill.style.width=Math.min(100,Math.abs(eq.pct)/3*100)+'%';
+    fill.style.background=eq.pct>0?'#00b855':eq.pct<0?'#cc2200':'#444';
+    bar.appendChild(fill);card.appendChild(lbl);card.appendChild(pct);card.appendChild(bar);grid.appendChild(card);
+  });
+})();
+
+/* RATES */
+const BPI_RATES=[
+  {product:'30Y CONV', rate:6.375, change:-0.125},
+  {product:'30Y FHA',  rate:5.990, change:-0.090},
+  {product:'30Y VA',   rate:6.010, change:-0.011},
+  {product:'30Y JUMBO',rate:6.875, change:+0.070},
+  {product:'15Y CONV', rate:5.625, change:-0.095},
+  {product:'30Y CASHOUT',rate:6.750,change:-0.063,tag:'CASHOUT'},
+  {product:'30Y INVEST', rate:7.125,change:+0.045,tag:'INVEST'},
+];
+const MCR_RATES=[
+  {product:'30Y CONV', rate:6.375, change:-0.125},
+  {product:'30Y FHA',  rate:5.990, change:-0.090},
+  {product:'30Y VA',   rate:6.010, change:-0.011},
+  {product:'30Y JUMBO',rate:6.875, change:+0.070},
+  {product:'15Y CONV', rate:5.625, change:-0.095},
+];
+const FREDDIE_RATES=[
+  {product:'30Y CONV', rate:6.640, change:-0.010},
+  {product:'15Y CONV', rate:5.820, change:-0.040},
+];
+
+function buildRatePanel(rates,containerId,showTag){
+  const container=document.getElementById(containerId);
+  rates.forEach(r=>{
+    const row=document.createElement('div');row.className='rate-row';
+    const prod=document.createElement('div');prod.className='rate-row-product';prod.textContent=r.product;
+    const main=document.createElement('div');main.className='rate-row-main';
+    const val=document.createElement('span');val.className='rate-row-val';val.textContent=r.rate.toFixed(3);
+    const pct=document.createElement('span');pct.className='rate-row-pct';pct.textContent='%';
+    main.appendChild(val);main.appendChild(pct);
+    const chg=document.createElement('div');
+    chg.className='rate-row-change '+(r.change>0?'pos':r.change<0?'neg':'neu');
+    chg.textContent=(r.change>0?'▲ +':r.change<0?'▼ ':'')+r.change.toFixed(3);
+    row.appendChild(prod);row.appendChild(main);row.appendChild(chg);
+    if(showTag&&r.tag){const t=document.createElement('div');t.className='rate-row-tag';t.textContent=r.tag;row.appendChild(t)}
+    container.appendChild(row);
+  });
+}
+buildRatePanel(BPI_RATES,'bpiPanel',true);
+buildRatePanel(MCR_RATES,'mcrPanel',false);
+buildRatePanel(FREDDIE_RATES,'freddiePanel',false);
+
+/* ECON */
+(function(){
+  const ECON=[
+    {date:'Apr 16',event:'Retail Sales MoM',prev:'0.2%',impact:'high'},
+    {date:'Apr 17',event:'Initial Jobless Claims',prev:'223K',impact:'med'},
+    {date:'Apr 23',event:'S&P Global PMI Flash',prev:'52.7',impact:'med'},
+    {date:'Apr 25',event:'Core PCE Price Index',prev:'0.3%',impact:'high'},
+    {date:'Apr 30',event:'FOMC Meeting Begins',prev:'—',impact:'high'},
+    {date:'May 1', event:'FOMC Rate Decision',prev:'4.25-4.50%',impact:'high'},
+    {date:'May 2', event:'Nonfarm Payrolls',prev:'228K',impact:'high'},
+    {date:'May 7', event:'Consumer Credit',prev:'$15.1B',impact:'low'},
+    {date:'May 13',event:'CPI MoM',prev:'0.2%',impact:'high'},
+    {date:'May 14',event:'PPI Final Demand',prev:'0.2%',impact:'med'},
+  ];
+  const list=document.getElementById('econList');
+  ECON.forEach(e=>{
+    const row=document.createElement('div');row.className='econ-row';
+    const d=document.createElement('div');d.className='econ-date';d.textContent=e.date;
+    const ev=document.createElement('div');ev.className='econ-event';ev.textContent=e.event;
+    const pv=document.createElement('div');pv.className='econ-prev';pv.textContent=e.prev;
+    const imp=document.createElement('div');imp.className='econ-impact impact-'+e.impact;imp.textContent=e.impact.toUpperCase();
+    row.appendChild(d);row.appendChild(ev);row.appendChild(pv);row.appendChild(imp);list.appendChild(row);
+  });
+})();
+
+/* NEWS */
+(function(){
+  const NEWS=[
+    {tag:'MBS',tc:'tag-mbs',time:'8:42 AM',hl:'MBS prices open firmer as 10Y yields pull back from overnight highs',sm:'UMBS 5.0 opened +4/32 on lighter-than-expected CPI print. Reprices higher expected at open for most lenders.'},
+    {tag:'FED',tc:'tag-fed',time:'7:15 AM',hl:'Fed speakers signal patience on rate cuts, data-dependent stance intact',sm:'Three Fed officials reiterated no urgency to cut in May. Market pricing holds at 62% probability of June hold.'},
+    {tag:'ECO',tc:'tag-eco',time:'6:50 AM',hl:'Retail sales beat expectations, adding upside pressure to yields',sm:'March retail sales +0.7% vs +0.3% expected. Core control group up 1.1%. Bond markets reacting modestly.'},
+    {tag:'MKTS',tc:'tag-mkts',time:'Yesterday',hl:'Spread between broker pricing and OBMMI narrows to tightest since January',sm:'30Y Conv spread compressed to +0.055 pts as lender competition increases ahead of spring buying season.'},
+    {tag:'MBS',tc:'tag-mbs',time:'Yesterday',hl:'UMBS coupon stack: 5.0 remains TBA cheapest-to-deliver as convexity profile shifts',sm:'Servicers hedging activity elevated. Net supply pressure from originator pipelines expected to weigh on 5.0s.'},
+  ];
+  const list=document.getElementById('newsList');
+  NEWS.forEach(n=>{
+    const row=document.createElement('div');row.className='news-row';
+    const meta=document.createElement('div');meta.className='news-meta';
+    const tag=document.createElement('span');tag.className='news-tag '+n.tc;tag.textContent=n.tag;
+    const time=document.createElement('span');time.className='news-time';time.textContent=n.time;
+    const ai=document.createElement('span');ai.className='news-ai-badge';ai.textContent='AI';
+    meta.appendChild(tag);meta.appendChild(time);meta.appendChild(ai);
+    const hl=document.createElement('div');hl.className='news-headline';hl.textContent=n.hl;
+    const sm=document.createElement('div');sm.className='news-summary';sm.textContent=n.sm;
+    row.appendChild(meta);row.appendChild(hl);row.appendChild(sm);list.appendChild(row);
+  });
+})();
+
+/* MODALS */
+const MODAL_CONTENT={
+  pmms:{title:'Freddie Mac PMMS',sub:'Primary Mortgage Market Survey',
+    body:`<strong>About this survey</strong><br>The Freddie Mac PMMS is the longest-running weekly mortgage rate survey in the US, published every Thursday. It reflects average rates offered to creditworthy borrowers on conventional conforming mortgages.<div class="modal-divider"></div><strong>Products surveyed</strong><ul><li>30-Year Fixed-Rate Mortgage</li><li>15-Year Fixed-Rate Mortgage</li></ul><div class="modal-divider"></div><strong>Use case</strong><br>The authoritative weekly benchmark. Widely cited in media. Updated weekly — not a real-time or daily measure. Best used as macro context, not for intraday pricing decisions.`},
+  mcr:{title:'Market Composite Rates',sub:'Data Source & Methodology',
+    body:`<strong>About these rates</strong><br>These rates reflect aggregated mortgage pricing across multiple lenders and are designed to show overall market trends. Not tied to a specific borrower scenario or lender — use as a directional benchmark only.<div class="modal-divider"></div><strong>Source</strong><br>Federal Reserve Bank of St. Louis (FRED) via Optimal Blue Mortgage Market Indices (OBMMI). Updated daily on business days.<div class="modal-divider"></div><strong>Use case</strong><br>Track directional rate movement, compare against live broker pricing. Not appropriate for quoting borrowers.`},
+  bpi:{title:'Broker Pricing Index',sub:'Rate Assumptions & Methodology',
+    body:`<strong>About these rates</strong><br>Built from live lender pricing. Reflects realistic borrower expectations when working with a mortgage broker — actual rate sheets, defined loan assumptions, broker compensation included.<div class="modal-divider"></div><strong>Rate Assumptions</strong><ul><li>Loan Type: Conventional 30-Year Fixed</li><li>Occupancy: Primary Residence</li><li>Property Type: Single Family Residence</li><li>LTV: 75% · Credit Score: 760</li><li>Loan Amount: Conforming range</li><li>Pricing: Par (0 points)</li><li>Broker compensation: 100 bps</li></ul><div class="modal-divider"></div><strong>Note:</strong> LLPAs applied consistently across all lenders in the index.`}
+};
+function openModal(k){
+  const m=MODAL_CONTENT[k];
+  document.getElementById('modalTitle').textContent=m.title;
+  document.getElementById('modalSub').textContent=m.sub;
+  document.getElementById('modalBody').innerHTML=m.body;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(e){
+  if(e.target===document.getElementById('modal'))document.getElementById('modal').classList.remove('open');
+}
+</script>
+</body>
+</html>
