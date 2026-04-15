@@ -4,7 +4,7 @@ const FRED_SERIES = [
   { id: 'OBMMIC30YF',      product: '30Y CONV'  },
   { id: 'OBMMIFHA30YF',    product: '30Y FHA'   },
   { id: 'OBMMIVA30YF',     product: '30Y VA'    },
-  { id: 'OBMMIC30YJUMBO',  product: '30Y JUMBO' },
+  { id: 'OBMMIJUMBO30YF',  product: '30Y JUMBO' },
   { id: 'OBMMIC15YF',      product: '15Y CONV'  },
 ];
 
