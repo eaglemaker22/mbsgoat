@@ -589,7 +589,7 @@ async function fetchMarketData(){
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data=await res.json();
     liveData=data;
-    const lastUp=new Date(data.last_updated.replace(' ','T')+'-04:00');
+    const lastUp=new Date(data.last_updated.replace(' ','T')+'-07:00');
     const ageMins=Math.round((Date.now()-lastUp)/60000);
     const dot=document.getElementById('freshDot'),lbl=document.getElementById('freshLabel'),stale=document.getElementById('staleChip');
     if(ageMins<3){dot.className='freshness-dot';lbl.textContent=`Updated ${ageMins<1?'just now':ageMins+'m ago'} · ${data.scraper_status.bonds_scraper}`;stale.classList.remove('visible')}
