@@ -8,12 +8,5 @@
   directory = "functions"
   node_bundler = "esbuild"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  conditions = {Role = ["public"]}
-  force = false
-
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"
