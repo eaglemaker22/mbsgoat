@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LockIQ Impact · MBSGOAT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/lockiq-impact.css" />
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-main">MBS<span>GOAT</span></div>
+        <div class="brand-sub"><span>Lock</span><b>IQ</b><em>BETA</em></div>
+      </div>
+
+      <div class="control-row">
+        <label class="control">
+          <span>Timezone</span>
+          <select id="timezoneSelect">
+            <option value="America/New_York">ET</option>
+            <option value="America/Chicago">CT</option>
+            <option value="America/Denver">MT</option>
+            <option value="America/Phoenix">AZ</option>
+            <option value="America/Los_Angeles">PT</option>
+          </select>
+        </label>
+
+        <label class="control control-wide">
+          <span>Price Impact Since</span>
+          <select id="anchorSelect">
+            <optgroup label="Previous Day">
+              <option value="yesterday_open">Yesterday Open</option>
+              <option value="yesterday_close">Yesterday Close</option>
+            </optgroup>
+            <optgroup label="Today">
+              <option value="today_open" selected>Today Open</option>
+              <option value="0700">7:00 AM</option>
+              <option value="0800">8:00 AM</option>
+              <option value="0900">9:00 AM</option>
+              <option value="1000">10:00 AM</option>
+              <option value="1100">11:00 AM</option>
+              <option value="1200">12:00 PM</option>
+              <option value="1300">1:00 PM</option>
+              <option value="1400">2:00 PM</option>
+              <option value="1500">3:00 PM</option>
+              <option value="1600">4:00 PM</option>
+              <option value="today_close">Today Close</option>
+            </optgroup>
+          </select>
+        </label>
+      </div>
+
+      <div class="status-stack">
+        <div id="dataStatus" class="status-pill loading"><span></span>CONNECTING</div>
+        <div id="clockEl" class="clock">--:--:-- ET</div>
+      </div>
+    </header>
+
+    <main>
+      <section class="impact-hero">
+        <div class="hero-left">
+          <div class="eyebrow">LockIQ Price Impact</div>
+          <div class="impact-line">
+            <span id="impactValue" class="impact-value">—</span>
+            <span class="impact-unit">/ $100k loan</span>
+          </div>
+          <div id="signalBadge" class="signal-badge neutral">CALCULATING</div>
+        </div>
+
+        <div class="hero-right">
+          <div class="meta-row"><span>Anchor</span><strong id="anchorLabel">Today Open</strong></div>
+          <div class="meta-row"><span>Last Update</span><strong id="lastUpdated">—</strong></div>
+          <div class="meta-row"><span>Primary Driver</span><strong id="primaryDriver">UMBS 5.5</strong></div>
+          <p id="marketSummary" class="market-summary">Fetching market data and calculating pricing impact.</p>
+        </div>
+      </section>
+
+      <section class="signal-grid">
+        <article class="signal-card" id="repriceCard">
+          <div class="card-label">Reprice Risk</div>
+          <div class="card-value" id="repriceRisk">—</div>
+          <div class="card-note" id="repriceNote">Based on MBS move from selected anchor.</div>
+        </article>
+
+        <article class="signal-card" id="pressureCard">
+          <div class="card-label">Market Pressure</div>
+          <div class="card-value" id="marketPressure">—</div>
+          <div class="card-note" id="pressureNote">MBS and Treasury direction.</div>
+        </article>
+
+        <article class="signal-card" id="confirmCard">
+          <div class="card-label">Confirmation</div>
+          <div class="card-value" id="confirmation">—</div>
+          <div class="card-note" id="confirmNote">Treasuries, futures, and MBB alignment.</div>
+        </article>
+
+        <article class="signal-card" id="volCard">
+          <div class="card-label">Volatility</div>
+          <div class="card-value" id="volatility">—</div>
+          <div class="card-note" id="volNote">Measured from intraday move size.</div>
+        </article>
+      </section>
+
+      <section class="data-grid">
+        <article class="data-panel">
+          <div class="panel-head"><h2>MBS Stack</h2><span id="mbsAsOf">—</span></div>
+          <div id="mbsRows" class="rows"></div>
+        </article>
+
+        <article class="data-panel">
+          <div class="panel-head"><h2>Treasuries + MBB</h2><span id="bondAsOf">—</span></div>
+          <div id="treasuryRows" class="rows"></div>
+        </article>
+
+        <article class="data-panel">
+          <div class="panel-head"><h2>Futures</h2><span>Ticks / handle move</span></div>
+          <div id="futureRows" class="rows"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script src="/assets/lockiq-impact.js" defer></script>
+</body>
+</html>
