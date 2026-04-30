@@ -1,95 +1,78 @@
-// LOCKIQ IMPACT V2 — DATA FLOW VERSION
+// LOCKIQ IMPACT V2 — FIXED RENDER VERSION
 
 const API = '/.netlify/functions/getMarketData';
 
-// ===== STATE =====
-let marketData = null;
-
 // ===== HELPERS =====
-function fmtTicks(val) {
+function fmt(val, type) {
   if (val === null || val === undefined) return '—';
-  return (val >= 0 ? '+' : '') + val.toFixed(1) + ' ticks';
+
+  if (type === 'ticks') return (val >= 0 ? '+' : '') + val.toFixed(1) + ' ticks';
+  if (type === 'bps') return (val >= 0 ? '+' : '') + val.toFixed(1) + ' bps';
+  if (type === 'pts') return (val >= 0 ? '+' : '') + val.toFixed(2) + ' pts';
+
+  return val;
 }
 
-function fmtBps(val) {
-  if (val === null || val === undefined) return '—';
-  return (val >= 0 ? '+' : '') + val.toFixed(1) + ' bps';
+function row(name, val, type) {
+  let cls = 'row-delta neu';
+  if (val > 0) cls = 'row-delta good';
+  if (val < 0) cls = 'row-delta bad';
+
+  return `
+    <div class="data-row">
+      <div class="row-name">${name}</div>
+      <div class="row-delta ${cls}">${fmt(val, type)}</div>
+    </div>
+  `;
 }
 
-function fmtPts(val) {
-  if (val === null || val === undefined) return '—';
-  return (val >= 0 ? '+' : '') + val.toFixed(2) + ' pts';
-}
-
-// ===== MAIN FETCH =====
+// ===== MAIN =====
 async function loadData() {
   try {
     const res = await fetch(API);
     const data = await res.json();
 
-    console.log('LOCKIQ DATA:', data);
-
-    marketData = data;
+    console.log('DATA:', data);
 
     if (!data.instruments) {
       console.warn('No instruments found');
       return;
     }
 
-    renderAll(data);
+    render(data.instruments);
 
   } catch (err) {
-    console.error('Fetch error:', err);
+    console.error(err);
   }
 }
 
-// ===== RENDER ALL =====
-function renderAll(data) {
-  const inst = data.instruments;
+// ===== RENDER =====
+function render(inst) {
 
-  renderMBS(inst);
-  renderTreasuries(inst);
-  renderFutures(inst);
-}
+  // ===== MBS =====
+  document.getElementById('mbsRows').innerHTML = `
+    ${row('UMBS 5.0', inst.umbs50?.delta, 'ticks')}
+    ${row('UMBS 5.5', inst.umbs55?.delta, 'ticks')}
+    ${row('UMBS 6.0', inst.umbs60?.delta, 'ticks')}
+    ${row('GNMA 5.0', inst.gnma50?.delta, 'ticks')}
+    ${row('GNMA 5.5', inst.gnma55?.delta, 'ticks')}
+    ${row('GNMA 6.0', inst.gnma60?.delta, 'ticks')}
+  `;
 
-// ===== MBS STACK =====
-function renderMBS(inst) {
-  setValue('umbs50', fmtTicks(inst.umbs50?.delta));
-  setValue('umbs55', fmtTicks(inst.umbs55?.delta));
-  setValue('umbs60', fmtTicks(inst.umbs60?.delta));
+  // ===== TREASURIES =====
+  document.getElementById('treasuryRows').innerHTML = `
+    ${row('US10Y', inst.us10y?.delta, 'bps')}
+    ${row('US30Y', inst.us30y?.delta, 'bps')}
+    ${row('MBB', inst.mbb?.delta, 'pts')}
+  `;
 
-  setValue('gnma50', fmtTicks(inst.gnma50?.delta));
-  setValue('gnma55', fmtTicks(inst.gnma55?.delta));
-  setValue('gnma60', fmtTicks(inst.gnma60?.delta));
-}
-
-// ===== TREASURIES =====
-function renderTreasuries(inst) {
-  setValue('us10y', fmtBps(inst.us10y?.delta));
-  setValue('us30y', fmtBps(inst.us30y?.delta));
-  setValue('mbb', fmtPts(inst.mbb?.delta));
-}
-
-// ===== FUTURES =====
-function renderFutures(inst) {
-  setValue('zn', fmtTicks(inst.zn?.delta));
-  setValue('zb', fmtTicks(inst.zb?.delta));
-  setValue('zf', fmtTicks(inst.zf?.delta));
-  setValue('zt', fmtTicks(inst.zt?.delta));
-}
-
-// ===== DOM HELPER =====
-function setValue(id, val) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = val || '—';
-
-  el.classList.remove('pos', 'neg');
-
-  if (!val || val === '—') return;
-
-  if (val.includes('+')) el.classList.add('pos');
-  if (val.includes('-')) el.classList.add('neg');
+  // ===== FUTURES =====
+  document.getElementById('futureRows').innerHTML = `
+    ${row('ZN', inst.zn?.delta, 'ticks')}
+    ${row('ZB', inst.zb?.delta, 'ticks')}
+    ${row('ZF', inst.zf?.delta, 'ticks')}
+    ${row('ZT', inst.zt?.delta, 'ticks')}
+  `;
 }
 
 // ===== INIT =====
