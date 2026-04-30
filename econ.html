@@ -1,14 +1,25 @@
-<div id="econ-calendar-widget">
+<section id="econ-calendar-widget" class="terminal-section econ-terminal">
+  <div class="terminal-header">
+    <div class="title">MBSGOAT :: ECON CALENDAR</div>
+    <div class="status">
+      <span class="username">MARKET_FEED</span>
+      <span class="access">ACTIVE</span>
+      <span class="cursor">█</span>
+    </div>
+  </div>
+
   <div class="econ-controls">
     <button data-view="today" class="active">Today</button>
     <button data-view="upcoming">Upcoming</button>
-    <button data-sort="time">Sort by Time</button>
-    <button data-sort="impact">Sort by Impact</button>
+    <button data-sort="time">Sort: Time</button>
+    <button data-sort="impact">Sort: Impact</button>
   </div>
 
-  <div id="econ-status">Loading economic calendar...</div>
+  <div id="econ-status" class="econ-status">Loading economic calendar...</div>
+
+  <h2 id="econ-section-title">Today’s Mortgage-Relevant Reports</h2>
   <div id="econ-events"></div>
-</div>
+</section>
 
 <script>
   const ENDPOINT_TODAY = "/.netlify/functions/getEconCalendar";
@@ -20,6 +31,7 @@
 
   const statusEl = document.getElementById("econ-status");
   const eventsEl = document.getElementById("econ-events");
+  const titleEl = document.getElementById("econ-section-title");
 
   function safe(value) {
     return value && String(value).trim() ? value : "—";
@@ -31,65 +43,105 @@
 
   function sortEvents(events) {
     return [...events].sort((a, b) => {
+      if (a.just_released && !b.just_released) return -1;
+      if (!a.just_released && b.just_released) return 1;
+
       if (currentSort === "impact") {
-        return impactRank(b) - impactRank(a) || Number(a.sort_timestamp || 0) - Number(b.sort_timestamp || 0);
+        return impactRank(b) - impactRank(a)
+          || Number(a.sort_timestamp || 0) - Number(b.sort_timestamp || 0);
       }
+
       return Number(a.sort_timestamp || 0) - Number(b.sort_timestamp || 0);
     });
   }
 
+  function statusClass(status) {
+    const s = String(status || "").toLowerCase();
+    if (s === "released") return "positive";
+    if (s === "pending") return "warning";
+    return "neutral";
+  }
+
+  function impactClass(label) {
+    const l = String(label || "").toLowerCase();
+    if (l.includes("high")) return "negative";
+    if (l.includes("medium")) return "warning";
+    return "neutral";
+  }
+
+  function cleanDate(dateStr) {
+    if (!dateStr) return "—";
+    return dateStr;
+  }
+
+  function parseNumber(value) {
+    if (!value) return NaN;
+    const cleaned = String(value).replace(/[,%KMB$]/gi, "").trim();
+    return parseFloat(cleaned);
+  }
+
   function getReaction(event) {
-    const actual = safe(event.actual);
-    const forecast = safe(event.forecast);
+    const actual = parseNumber(event.actual);
+    const forecast = parseNumber(event.forecast);
 
-    if (actual === "—" || forecast === "—") return "No actual yet";
+    if (safe(event.actual) === "—") return "Waiting for actual release.";
+    if (isNaN(actual) || isNaN(forecast)) return "Actual posted. Compare market reaction in bonds/MBS.";
 
-    return `Actual: ${actual} vs Forecast: ${forecast}`;
+    if (actual > forecast) {
+      return `Hotter than forecast. Usual bias: ${safe(event.bond_bias_if_hot)}.`;
+    }
+
+    if (actual < forecast) {
+      return `Cooler than forecast. Usual bias: ${safe(event.bond_bias_if_cool)}.`;
+    }
+
+    return "In line with forecast. Watch bonds/MBS for confirmation.";
   }
 
   function renderEvent(event, index) {
     const impact = safe(event.impact_label);
-    const justReleased = event.just_released ? `<span class="tag just">JUST RELEASED</span>` : "";
-    const released = event.release_status === "released"
-      ? `<span class="tag released">Released</span>`
-      : `<span class="tag upcoming">Upcoming</span>`;
+    const releaseStatus = safe(event.release_status);
+    const reaction = getReaction(event);
+
+    const justReleasedTag = event.just_released
+      ? `<span class="econ-tag just-released">JUST RELEASED</span>`
+      : "";
 
     return `
-      <div class="econ-event impact-${impact.toLowerCase()}">
-        <div class="event-top">
-          <span class="tag impact">${impact} Impact</span>
-          <span class="tag group">${safe(event.display_group)}</span>
-          ${released}
-          ${justReleased}
+      <article class="econ-event">
+        <div class="econ-event-top">
+          <span class="econ-tag ${impactClass(impact)}">${impact.toUpperCase()} IMPACT</span>
+          <span class="econ-tag">${safe(event.display_group)}</span>
+          <span class="econ-tag ${statusClass(releaseStatus)}">${releaseStatus.toUpperCase()}</span>
+          ${justReleasedTag}
         </div>
 
-        <div class="event-main">
-          <div class="event-time">${safe(event.date)} • ${safe(event.time)} ET</div>
-          <h3>${safe(event.event)}</h3>
+        <div class="econ-event-main">
+          <div class="econ-time">${cleanDate(event.date)} • ${safe(event.time)} ET</div>
+          <div class="econ-title">${safe(event.event)}</div>
         </div>
 
-        <div class="event-data">
-          <div><strong>Actual:</strong> ${safe(event.actual)}</div>
-          <div><strong>Forecast:</strong> ${safe(event.forecast)}</div>
-          <div><strong>Previous:</strong> ${safe(event.previous)}</div>
+        <div class="econ-data-grid">
+          <div><span>ACTUAL</span><strong>${safe(event.actual)}</strong></div>
+          <div><span>FORECAST</span><strong>${safe(event.forecast)}</strong></div>
+          <div><span>PREVIOUS</span><strong>${safe(event.previous)}</strong></div>
+          <div><span>SCORE</span><strong>${safe(event.mortgage_impact_score)}/5</strong></div>
         </div>
 
-        <div class="event-bias">
-          <div><strong>Hot read:</strong> ${safe(event.bond_bias_if_hot)}</div>
-          <div><strong>Cool read:</strong> ${safe(event.bond_bias_if_cool)}</div>
+        <div class="econ-bias">
+          <span>HOT: <strong>${safe(event.bond_bias_if_hot)}</strong></span>
+          <span>COOL: <strong>${safe(event.bond_bias_if_cool)}</strong></span>
         </div>
 
-        <button class="why-btn" onclick="toggleWhy(${index})">
-          Why it matters
-        </button>
+        <button class="why-btn" onclick="toggleWhy(${index})">Why it matters</button>
 
         <div class="why-box" id="why-${index}" style="display:none;">
           <p><strong>Mortgage relevance:</strong> ${safe(event.explanation)}</p>
-          <p><strong>Current read:</strong> ${getReaction(event)}</p>
-          <p><strong>Impact score:</strong> ${safe(event.mortgage_impact_score)} / 5</p>
+          <p><strong>Current read:</strong> ${reaction}</p>
+          <p><strong>Category:</strong> ${safe(event.display_group)}</p>
           <p><strong>Source:</strong> ${safe(event.source)}</p>
         </div>
-      </div>
+      </article>
     `;
   }
 
@@ -97,7 +149,7 @@
     const events = sortEvents(currentEvents);
 
     if (!events.length) {
-      eventsEl.innerHTML = `<div class="econ-empty">No events found.</div>`;
+      eventsEl.innerHTML = `<div class="econ-empty">No mortgage-relevant events found.</div>`;
       return;
     }
 
@@ -112,6 +164,10 @@
 
   async function loadCalendar(view = "today") {
     currentView = view;
+    titleEl.textContent = view === "today"
+      ? "Today’s Mortgage-Relevant Reports"
+      : "Upcoming Mortgage-Relevant Reports";
+
     statusEl.textContent = "Loading economic calendar...";
 
     const endpoint = view === "upcoming" ? ENDPOINT_UPCOMING : ENDPOINT_TODAY;
@@ -123,7 +179,9 @@
       const data = await response.json();
       currentEvents = data.events || [];
 
-      statusEl.textContent = `Loaded ${currentEvents.length} ${view} events. Updated: ${safe(data.last_updated || data.last_run)}`;
+      statusEl.textContent =
+        `Loaded ${currentEvents.length} ${view} events | Updated: ${safe(data.last_updated)}`;
+
       render();
 
     } catch (error) {
@@ -152,77 +210,177 @@
 </script>
 
 <style>
-  #econ-calendar-widget {
-    font-family: Arial, sans-serif;
+  .econ-terminal {
+    font-family: 'IBM Plex Mono', monospace;
+    background: #000;
+    color: #f0f0f0;
+    padding: 20px;
   }
 
   .econ-controls {
     display: flex;
-    gap: 8px;
     flex-wrap: wrap;
-    margin-bottom: 12px;
+    gap: 8px;
+    margin: 12px 0 14px;
   }
 
   .econ-controls button,
   .why-btn {
+    background: #050505;
+    color: #00FF66;
+    border: 1px solid #333;
+    padding: 7px 10px;
+    font-family: inherit;
     cursor: pointer;
-    padding: 8px 10px;
   }
 
+  .econ-controls button:hover,
+  .why-btn:hover,
   .econ-controls .active {
-    font-weight: bold;
+    border-color: #00FF66;
+    background: #071107;
   }
 
-  #econ-status {
-    margin-bottom: 12px;
-    font-size: 14px;
+  .econ-status {
+    color: #888;
+    font-size: 0.85em;
+    margin-bottom: 14px;
   }
 
   .econ-event {
-    border: 1px solid #444;
-    padding: 14px;
+    border: 1px solid #333;
+    background: #050505;
+    padding: 12px;
     margin-bottom: 12px;
-    border-radius: 8px;
   }
 
-  .event-top {
+  .econ-event:hover {
+    background: #0b0b0b;
+    border-color: #555;
+  }
+
+  .econ-event-top {
     display: flex;
-    gap: 6px;
     flex-wrap: wrap;
+    gap: 6px;
     margin-bottom: 8px;
   }
 
-  .tag {
-    border: 1px solid #777;
-    padding: 3px 6px;
-    border-radius: 999px;
-    font-size: 12px;
+  .econ-tag {
+    border: 1px solid #555;
+    color: #aaa;
+    padding: 2px 6px;
+    font-size: 0.75em;
+    text-transform: uppercase;
   }
 
-  .just {
+  .econ-tag.positive {
+    color: #00FF66;
+    border-color: #00FF66;
+  }
+
+  .econ-tag.negative {
+    color: #FF5555;
+    border-color: #FF5555;
+  }
+
+  .econ-tag.warning {
+    color: #FFD700;
+    border-color: #FFD700;
+  }
+
+  .econ-tag.just-released {
+    color: #000;
+    background: #FFD700;
+    border-color: #FFD700;
     font-weight: bold;
   }
 
-  .event-time {
-    font-size: 13px;
-    opacity: 0.8;
+  .econ-time {
+    color: #888;
+    font-size: 0.82em;
+    margin-bottom: 3px;
   }
 
-  .event-main h3 {
-    margin: 5px 0 10px;
+  .econ-title {
+    color: #fff;
+    font-size: 1.05em;
+    font-weight: bold;
+    margin-bottom: 10px;
   }
 
-  .event-data,
-  .event-bias {
+  .econ-data-grid {
     display: grid;
-    gap: 6px;
+    grid-template-columns: repeat(4, minmax(120px, 1fr));
+    gap: 8px;
     margin: 10px 0;
+  }
+
+  .econ-data-grid div {
+    border: 1px solid #222;
+    padding: 7px;
+    background: #020202;
+  }
+
+  .econ-data-grid span {
+    display: block;
+    color: #777;
+    font-size: 0.72em;
+    margin-bottom: 3px;
+  }
+
+  .econ-data-grid strong {
+    color: #f0f0f0;
+    font-size: 0.95em;
+  }
+
+  .econ-bias {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    color: #aaa;
+    font-size: 0.85em;
+    margin: 8px 0 10px;
+  }
+
+  .econ-bias strong {
+    color: #fff;
   }
 
   .why-box {
     margin-top: 10px;
     padding: 10px;
-    border: 1px dashed #777;
-    border-radius: 8px;
+    border: 1px dashed #555;
+    color: #ccc;
+    background: #030303;
+    font-size: 0.88em;
+  }
+
+  .why-box p {
+    margin-bottom: 6px;
+  }
+
+  .econ-empty,
+  .econ-error {
+    border: 1px solid #333;
+    padding: 12px;
+    color: #aaa;
+  }
+
+  .econ-error {
+    color: #FF5555;
+    border-color: #FF5555;
+  }
+
+  @media (max-width: 750px) {
+    .econ-data-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .econ-data-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
