@@ -1,0 +1,228 @@
+<div id="econ-calendar-widget">
+  <div class="econ-controls">
+    <button data-view="today" class="active">Today</button>
+    <button data-view="upcoming">Upcoming</button>
+    <button data-sort="time">Sort by Time</button>
+    <button data-sort="impact">Sort by Impact</button>
+  </div>
+
+  <div id="econ-status">Loading economic calendar...</div>
+  <div id="econ-events"></div>
+</div>
+
+<script>
+  const ENDPOINT_TODAY = "/.netlify/functions/getEconCalendar";
+  const ENDPOINT_UPCOMING = "/.netlify/functions/getEconCalendarUpcoming";
+
+  let currentView = "today";
+  let currentSort = "time";
+  let currentEvents = [];
+
+  const statusEl = document.getElementById("econ-status");
+  const eventsEl = document.getElementById("econ-events");
+
+  function safe(value) {
+    return value && String(value).trim() ? value : "—";
+  }
+
+  function impactRank(event) {
+    return Number(event.mortgage_impact_score || 0);
+  }
+
+  function sortEvents(events) {
+    return [...events].sort((a, b) => {
+      if (currentSort === "impact") {
+        return impactRank(b) - impactRank(a) || Number(a.sort_timestamp || 0) - Number(b.sort_timestamp || 0);
+      }
+      return Number(a.sort_timestamp || 0) - Number(b.sort_timestamp || 0);
+    });
+  }
+
+  function getReaction(event) {
+    const actual = safe(event.actual);
+    const forecast = safe(event.forecast);
+
+    if (actual === "—" || forecast === "—") return "No actual yet";
+
+    return `Actual: ${actual} vs Forecast: ${forecast}`;
+  }
+
+  function renderEvent(event, index) {
+    const impact = safe(event.impact_label);
+    const justReleased = event.just_released ? `<span class="tag just">JUST RELEASED</span>` : "";
+    const released = event.release_status === "released"
+      ? `<span class="tag released">Released</span>`
+      : `<span class="tag upcoming">Upcoming</span>`;
+
+    return `
+      <div class="econ-event impact-${impact.toLowerCase()}">
+        <div class="event-top">
+          <span class="tag impact">${impact} Impact</span>
+          <span class="tag group">${safe(event.display_group)}</span>
+          ${released}
+          ${justReleased}
+        </div>
+
+        <div class="event-main">
+          <div class="event-time">${safe(event.date)} • ${safe(event.time)} ET</div>
+          <h3>${safe(event.event)}</h3>
+        </div>
+
+        <div class="event-data">
+          <div><strong>Actual:</strong> ${safe(event.actual)}</div>
+          <div><strong>Forecast:</strong> ${safe(event.forecast)}</div>
+          <div><strong>Previous:</strong> ${safe(event.previous)}</div>
+        </div>
+
+        <div class="event-bias">
+          <div><strong>Hot read:</strong> ${safe(event.bond_bias_if_hot)}</div>
+          <div><strong>Cool read:</strong> ${safe(event.bond_bias_if_cool)}</div>
+        </div>
+
+        <button class="why-btn" onclick="toggleWhy(${index})">
+          Why it matters
+        </button>
+
+        <div class="why-box" id="why-${index}" style="display:none;">
+          <p><strong>Mortgage relevance:</strong> ${safe(event.explanation)}</p>
+          <p><strong>Current read:</strong> ${getReaction(event)}</p>
+          <p><strong>Impact score:</strong> ${safe(event.mortgage_impact_score)} / 5</p>
+          <p><strong>Source:</strong> ${safe(event.source)}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function render() {
+    const events = sortEvents(currentEvents);
+
+    if (!events.length) {
+      eventsEl.innerHTML = `<div class="econ-empty">No events found.</div>`;
+      return;
+    }
+
+    eventsEl.innerHTML = events.map(renderEvent).join("");
+  }
+
+  function toggleWhy(index) {
+    const box = document.getElementById(`why-${index}`);
+    if (!box) return;
+    box.style.display = box.style.display === "none" ? "block" : "none";
+  }
+
+  async function loadCalendar(view = "today") {
+    currentView = view;
+    statusEl.textContent = "Loading economic calendar...";
+
+    const endpoint = view === "upcoming" ? ENDPOINT_UPCOMING : ENDPOINT_TODAY;
+
+    try {
+      const response = await fetch(endpoint);
+      if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+      const data = await response.json();
+      currentEvents = data.events || [];
+
+      statusEl.textContent = `Loaded ${currentEvents.length} ${view} events. Updated: ${safe(data.last_updated || data.last_run)}`;
+      render();
+
+    } catch (error) {
+      console.error(error);
+      statusEl.textContent = "Could not load economic calendar.";
+      eventsEl.innerHTML = `<div class="econ-error">${error.message}</div>`;
+    }
+  }
+
+  document.querySelectorAll("[data-view]").forEach(button => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll("[data-view]").forEach(b => b.classList.remove("active"));
+      button.classList.add("active");
+      loadCalendar(button.dataset.view);
+    });
+  });
+
+  document.querySelectorAll("[data-sort]").forEach(button => {
+    button.addEventListener("click", () => {
+      currentSort = button.dataset.sort;
+      render();
+    });
+  });
+
+  loadCalendar("today");
+</script>
+
+<style>
+  #econ-calendar-widget {
+    font-family: Arial, sans-serif;
+  }
+
+  .econ-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .econ-controls button,
+  .why-btn {
+    cursor: pointer;
+    padding: 8px 10px;
+  }
+
+  .econ-controls .active {
+    font-weight: bold;
+  }
+
+  #econ-status {
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+
+  .econ-event {
+    border: 1px solid #444;
+    padding: 14px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+  }
+
+  .event-top {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .tag {
+    border: 1px solid #777;
+    padding: 3px 6px;
+    border-radius: 999px;
+    font-size: 12px;
+  }
+
+  .just {
+    font-weight: bold;
+  }
+
+  .event-time {
+    font-size: 13px;
+    opacity: 0.8;
+  }
+
+  .event-main h3 {
+    margin: 5px 0 10px;
+  }
+
+  .event-data,
+  .event-bias {
+    display: grid;
+    gap: 6px;
+    margin: 10px 0;
+  }
+
+  .why-box {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px dashed #777;
+    border-radius: 8px;
+  }
+</style>
