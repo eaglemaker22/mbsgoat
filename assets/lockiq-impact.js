@@ -1,80 +1,246 @@
-// LOCKIQ IMPACT V2 — FIXED RENDER VERSION
-
 const API = '/.netlify/functions/getMarketData';
 
-// ===== HELPERS =====
-function fmt(val, type) {
+function fmtBps(val) {
   if (val === null || val === undefined) return '—';
-
-  if (type === 'ticks') return (val >= 0 ? '+' : '') + val.toFixed(1) + ' ticks';
-  if (type === 'bps') return (val >= 0 ? '+' : '') + val.toFixed(1) + ' bps';
-  if (type === 'pts') return (val >= 0 ? '+' : '') + val.toFixed(2) + ' pts';
-
-  return val;
+  return (val >= 0 ? '+' : '') + Number(val).toFixed(1) + ' bps';
 }
 
-function row(name, val, type) {
-  let cls = 'row-delta neu';
-  if (val > 0) cls = 'row-delta good';
-  if (val < 0) cls = 'row-delta bad';
+function deltaClass(val, inverse = false) {
+  if (val === null || val === undefined || Number(val) === 0) return 'neu';
+
+  const n = Number(val);
+
+  // For yields, higher is bad. For MBS/MBB/futures, higher is good.
+  if (inverse) {
+    return n > 0 ? 'bad' : 'good';
+  }
+
+  return n > 0 ? 'good' : 'bad';
+}
+
+function row(name, val, inverse = false) {
+  const cls = deltaClass(val, inverse);
 
   return `
     <div class="data-row">
       <div class="row-name">${name}</div>
-      <div class="row-delta ${cls}">${fmt(val, type)}</div>
+      <div class="row-current"></div>
+      <div class="row-delta ${cls}">${fmtBps(val)}</div>
     </div>
   `;
 }
 
-// ===== MAIN =====
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function setStatus(state, text) {
+  const el = document.getElementById('dataStatus');
+  if (!el) return;
+
+  el.className = `status-pill ${state}`;
+  el.innerHTML = `<span></span>${text}`;
+}
+
+function formatUpdate(lastUpdated) {
+  if (!lastUpdated) return '—';
+
+  if (typeof lastUpdated === 'string') return lastUpdated;
+
+  const values = Object.values(lastUpdated).filter(Boolean);
+  return values[0] || '—';
+}
+
+function calculateImpact(inst) {
+  // Primary driver for now: UMBS 5.5 bps
+  const mbs = inst.umbs55?.delta;
+
+  if (mbs === null || mbs === undefined) {
+    return {
+      impact: null,
+      signal: 'CALCULATING',
+      signalClass: 'neutral',
+      summary: 'Waiting for UMBS 5.5 data to calculate pricing impact.',
+      repriceRisk: '—',
+      marketPressure: '—',
+      confirmation: '—',
+      volatility: '—',
+    };
+  }
+
+  // Rough pricing estimate: +100 bps price = +$1,000 per $100k
+  const dollarsPer100k = Math.round(mbs * 10);
+
+  let signal = 'CAUTION';
+  let signalClass = 'caution';
+
+  if (mbs >= 10) {
+    signal = 'FLOAT BIAS';
+    signalClass = 'float';
+  } else if (mbs <= -10) {
+    signal = 'LOCK BIAS';
+    signalClass = 'lock';
+  }
+
+  const abs = Math.abs(mbs);
+
+  const repriceRisk =
+    abs >= 25 ? 'HIGH' :
+    abs >= 10 ? 'MEDIUM' :
+    'LOW';
+
+  const marketPressure =
+    mbs > 5 ? 'IMPROVING' :
+    mbs < -5 ? 'WORSENING' :
+    'MIXED';
+
+  const confirmations = [
+    inst.us10y?.delta !== null && inst.us10y?.delta !== undefined
+      ? (mbs > 0 && inst.us10y.delta < 0) || (mbs < 0 && inst.us10y.delta > 0)
+      : null,
+
+    inst.zn?.delta !== null && inst.zn?.delta !== undefined
+      ? (mbs > 0 && inst.zn.delta > 0) || (mbs < 0 && inst.zn.delta < 0)
+      : null,
+
+    inst.mbb?.delta !== null && inst.mbb?.delta !== undefined
+      ? (mbs > 0 && inst.mbb.delta > 0) || (mbs < 0 && inst.mbb.delta < 0)
+      : null,
+  ].filter(v => v !== null);
+
+  const confirmCount = confirmations.filter(Boolean).length;
+
+  const confirmation =
+    confirmations.length === 0 ? '—' :
+    confirmCount >= 2 ? 'STRONG' :
+    confirmCount === 1 ? 'MIXED' :
+    'WEAK';
+
+  const volatility =
+    abs >= 30 ? 'HIGH' :
+    abs >= 12 ? 'MODERATE' :
+    'LOW';
+
+  const summary =
+    `UMBS 5.5 is ${fmtBps(mbs)} from the selected anchor. ` +
+    `10Y is ${fmtBps(inst.us10y?.delta)} and ZN is ${fmtBps(inst.zn?.delta)}.`;
+
+  return {
+    impact: dollarsPer100k,
+    signal,
+    signalClass,
+    summary,
+    repriceRisk,
+    marketPressure,
+    confirmation,
+    volatility,
+  };
+}
+
+function render(data) {
+  const inst = data.instruments || {};
+
+  // timestamps
+  const last = formatUpdate(data.last_updated);
+
+  setText('lastUpdated', last);
+  setText('mbsAsOf', data.last_updated?.mbs || '—');
+  setText('bondAsOf', data.last_updated?.shadow_bonds || '—');
+
+  // MBS panel
+  const mbsRows = document.getElementById('mbsRows');
+  if (mbsRows) {
+    mbsRows.innerHTML = `
+      ${row('UMBS 5.0', inst.umbs50?.delta)}
+      ${row('UMBS 5.5', inst.umbs55?.delta)}
+      ${row('UMBS 6.0', inst.umbs60?.delta)}
+      ${row('GNMA 5.0', inst.gnma50?.delta)}
+      ${row('GNMA 5.5', inst.gnma55?.delta)}
+      ${row('GNMA 6.0', inst.gnma60?.delta)}
+    `;
+  }
+
+  // Treasuries + MBB panel
+  const treasuryRows = document.getElementById('treasuryRows');
+  if (treasuryRows) {
+    treasuryRows.innerHTML = `
+      ${row('US10Y', inst.us10y?.delta, true)}
+      ${row('US30Y', inst.us30y?.delta, true)}
+      ${row('MBB', inst.mbb?.delta)}
+    `;
+  }
+
+  // Futures panel
+  const futureRows = document.getElementById('futureRows');
+  if (futureRows) {
+    futureRows.innerHTML = `
+      ${row('ZN', inst.zn?.delta)}
+      ${row('ZB', inst.zb?.delta)}
+      ${row('ZF', inst.zf?.delta)}
+      ${row('ZT', inst.zt?.delta)}
+    `;
+  }
+
+  // Hero signal
+  const calc = calculateImpact(inst);
+
+  const impactValue = document.getElementById('impactValue');
+  if (impactValue) {
+    if (calc.impact === null) {
+      impactValue.textContent = '—';
+      impactValue.className = 'impact-value neutral';
+    } else {
+      impactValue.textContent =
+        (calc.impact >= 0 ? '+$' : '-$') +
+        Math.abs(calc.impact).toLocaleString();
+
+      impactValue.className =
+        'impact-value ' +
+        (calc.impact > 0 ? 'positive' : calc.impact < 0 ? 'negative' : 'neutral');
+    }
+  }
+
+  const signalBadge = document.getElementById('signalBadge');
+  if (signalBadge) {
+    signalBadge.textContent = calc.signal;
+    signalBadge.className = `signal-badge ${calc.signalClass}`;
+  }
+
+  setText('marketSummary', calc.summary);
+  setText('repriceRisk', calc.repriceRisk);
+  setText('marketPressure', calc.marketPressure);
+  setText('confirmation', calc.confirmation);
+  setText('volatility', calc.volatility);
+
+  setStatus('live', 'LIVE DATA');
+}
+
 async function loadData() {
   try {
-    const res = await fetch(API);
+    setStatus('loading', 'CONNECTING');
+
+    const res = await fetch(API + '?t=' + Date.now());
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
     const data = await res.json();
 
-    console.log('DATA:', data);
-
     if (!data.instruments) {
-      console.warn('No instruments found');
-      return;
+      throw new Error('No instruments in backend response');
     }
 
-    render(data.instruments);
-
+    render(data);
   } catch (err) {
-    console.error(err);
+    console.error('LockIQ load error:', err);
+
+    setStatus('stale', 'DATA ERROR');
+    setText(
+      'marketSummary',
+      'Could not load current market data. Check getMarketData function response.'
+    );
   }
 }
 
-// ===== RENDER =====
-function render(inst) {
-
-  // ===== MBS =====
-  document.getElementById('mbsRows').innerHTML = `
-    ${row('UMBS 5.0', inst.umbs50?.delta, 'ticks')}
-    ${row('UMBS 5.5', inst.umbs55?.delta, 'ticks')}
-    ${row('UMBS 6.0', inst.umbs60?.delta, 'ticks')}
-    ${row('GNMA 5.0', inst.gnma50?.delta, 'ticks')}
-    ${row('GNMA 5.5', inst.gnma55?.delta, 'ticks')}
-    ${row('GNMA 6.0', inst.gnma60?.delta, 'ticks')}
-  `;
-
-  // ===== TREASURIES =====
-  document.getElementById('treasuryRows').innerHTML = `
-    ${row('US10Y', inst.us10y?.delta, 'bps')}
-    ${row('US30Y', inst.us30y?.delta, 'bps')}
-    ${row('MBB', inst.mbb?.delta, 'pts')}
-  `;
-
-  // ===== FUTURES =====
-  document.getElementById('futureRows').innerHTML = `
-    ${row('ZN', inst.zn?.delta, 'ticks')}
-    ${row('ZB', inst.zb?.delta, 'ticks')}
-    ${row('ZF', inst.zf?.delta, 'ticks')}
-    ${row('ZT', inst.zt?.delta, 'ticks')}
-  `;
-}
-
-// ===== INIT =====
 loadData();
 setInterval(loadData, 60000);
