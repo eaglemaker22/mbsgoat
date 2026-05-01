@@ -1,219 +1,128 @@
-const API = '/.netlify/functions/getMarketData';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LockIQ Impact · MBSGOAT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/lockiq-impact.css" />
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-main">MBS<span>GOAT</span></div>
+        <div class="brand-sub"><span>Lock</span><b>IQ</b><em>BETA</em></div>
+      </div>
 
-function fmtBps(val) {
-  if (val === null || val === undefined) return '—';
-  return (val >= 0 ? '+' : '') + Number(val).toFixed(1) + ' bps';
-}
+      <div class="control-row">
+        <label class="control">
+          <span>Timezone</span>
+          <select id="timezoneSelect">
+            <option value="America/New_York">ET</option>
+            <option value="America/Chicago">CT</option>
+            <option value="America/Denver">MT</option>
+            <option value="America/Phoenix">AZ</option>
+            <option value="America/Los_Angeles">PT</option>
+          </select>
+        </label>
 
-function deltaClass(val, inverse = false) {
-  if (val === null || val === undefined || Number(val) === 0) return 'neu';
+        <label class="control control-wide">
+          <span>Price Impact Since</span>
+          <select id="anchorSelect">
+            <optgroup label="Previous Day">
+              <option value="yesterday_open">Yesterday Open</option>
+              <option value="yesterday_close">Yesterday Close</option>
+            </optgroup>
+            <optgroup label="Today">
+              <option value="today_open" selected>Today Open</option>
+              <option value="0700">7:00 AM</option>
+              <option value="0800">8:00 AM</option>
+              <option value="0900">9:00 AM</option>
+              <option value="1000">10:00 AM</option>
+              <option value="1100">11:00 AM</option>
+              <option value="1200">12:00 PM</option>
+              <option value="1300">1:00 PM</option>
+              <option value="1400">2:00 PM</option>
+              <option value="1500">3:00 PM</option>
+              <option value="1600">4:00 PM</option>
+              <option value="today_close">Today Close</option>
+            </optgroup>
+          </select>
+        </label>
+      </div>
 
-  const n = Number(val);
+      <div class="status-stack">
+        <div id="dataStatus" class="status-pill loading"><span></span>CONNECTING</div>
+        <div id="clockEl" class="clock">--:--:-- ET</div>
+      </div>
+    </header>
 
-  // For yields, higher is bad. For MBS/MBB/futures, higher is good.
-  if (inverse) {
-    return n > 0 ? 'bad' : 'good';
-  }
+    <main>
+      <section class="impact-hero">
+        <div class="hero-left">
+          <div class="eyebrow">LockIQ Price Impact</div>
+          <div class="impact-line">
+            <span id="impactValue" class="impact-value">—</span>
+            <span class="impact-unit">/ $100k loan</span>
+          </div>
+          <div id="signalBadge" class="signal-badge neutral">CALCULATING</div>
+        </div>
 
-  return n > 0 ? 'good' : 'bad';
-}
+        <div class="hero-right">
+          <div class="meta-row"><span>Anchor</span><strong id="anchorLabel">Today Open</strong></div>
+          <div class="meta-row"><span>Last Update</span><strong id="lastUpdated">—</strong></div>
+          <div class="meta-row"><span>Primary Driver</span><strong id="primaryDriver">UMBS 5.5</strong></div>
+          <p id="marketSummary" class="market-summary">Fetching market data and calculating pricing impact.</p>
+        </div>
+      </section>
 
-function row(name, val, inverse = false) {
-  const cls = deltaClass(val, inverse);
+      <section class="signal-grid">
+        <article class="signal-card" id="repriceCard">
+          <div class="card-label">Reprice Risk</div>
+          <div class="card-value" id="repriceRisk">—</div>
+          <div class="card-note" id="repriceNote">Based on MBS move from selected anchor.</div>
+        </article>
 
-  return `
-    <div class="data-row">
-      <div class="row-name">${name}</div>
-      <div class="row-current"></div>
-      <div class="row-delta ${cls}">${fmtBps(val)}</div>
-    </div>
-  `;
-}
+        <article class="signal-card" id="pressureCard">
+          <div class="card-label">Market Pressure</div>
+          <div class="card-value" id="marketPressure">—</div>
+          <div class="card-note" id="pressureNote">MBS and Treasury direction.</div>
+        </article>
 
-function setText(id, value) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = value;
-}
+        <article class="signal-card" id="confirmCard">
+          <div class="card-label">Confirmation</div>
+          <div class="card-value" id="confirmation">—</div>
+          <div class="card-note" id="confirmNote">Treasuries, futures, and MBB alignment.</div>
+        </article>
 
-function setStatus(state, text) {
-  const el = document.getElementById('dataStatus');
-  if (!el) return;
+        <article class="signal-card" id="volCard">
+          <div class="card-label">Volatility</div>
+          <div class="card-value" id="volatility">—</div>
+          <div class="card-note" id="volNote">Measured from intraday move size.</div>
+        </article>
+      </section>
 
-  el.className = `status-pill ${state}`;
-  el.innerHTML = `<span></span>${text}`;
-}
+      <section class="data-grid">
+        <article class="data-panel">
+          <div class="panel-head"><h2>MBS Stack</h2><span id="mbsAsOf">—</span></div>
+          <div id="mbsRows" class="rows"></div>
+        </article>
 
-function formatUpdate(lastUpdated) {
-  if (!lastUpdated) return '—';
+        <article class="data-panel">
+          <div class="panel-head"><h2>Treasuries + MBB</h2><span id="bondAsOf">—</span></div>
+          <div id="treasuryRows" class="rows"></div>
+        </article>
 
-  if (typeof lastUpdated === 'string') return lastUpdated;
+        <article class="data-panel">
+          <div class="panel-head"><h2>Futures</h2><span>Ticks / handle move</span></div>
+          <div id="futureRows" class="rows"></div>
+        </article>
+      </section>
+    </main>
+  </div>
 
-  const values = Object.values(lastUpdated).filter(Boolean);
-  return values[0] || '—';
-}
-
-function calculateImpact(inst) {
-  // Primary driver for now: UMBS 5.5 bps
-  const mbs = inst.umbs55?.delta;
-
-  if (mbs === null || mbs === undefined) {
-    return {
-      impact: null,
-      signal: 'CALCULATING',
-      signalClass: 'neutral',
-      summary: 'Waiting for UMBS 5.5 data to calculate pricing impact.',
-      repriceRisk: '—',
-      marketPressure: '—',
-      confirmation: '—',
-      volatility: '—',
-    };
-  }
-
-  // Rough pricing estimate: +100 bps price = +$1,000 per $100k
-  const dollarsPer100k = Math.round(mbs * 10);
-
-  let signal = 'CAUTION';
-  let signalClass = 'caution';
-
-  if (mbs >= 10) {
-    signal = 'FLOAT BIAS';
-    signalClass = 'float';
-  } else if (mbs <= -10) {
-    signal = 'LOCK BIAS';
-    signalClass = 'lock';
-  }
-
-  const abs = Math.abs(mbs);
-
-  const repriceRisk =
-    abs >= 25 ? 'HIGH' :
-    abs >= 10 ? 'MEDIUM' :
-    'LOW';
-
-  const marketPressure =
-    mbs > 5 ? 'IMPROVING' :
-    mbs < -5 ? 'WORSENING' :
-    'MIXED';
-
-  const confirmations = [
-    inst.us10y?.delta !== null && inst.us10y?.delta !== undefined
-      ? (mbs > 0 && inst.us10y.delta < 0) || (mbs < 0 && inst.us10y.delta > 0)
-      : null,
-    inst.zn?.delta !== null && inst.zn?.delta !== undefined
-      ? (mbs > 0 && inst.zn.delta > 0) || (mbs < 0 && inst.zn.delta < 0)
-      : null,
-    inst.mbb?.delta !== null && inst.mbb?.delta !== undefined
-      ? (mbs > 0 && inst.mbb.delta > 0) || (mbs < 0 && inst.mbb.delta < 0)
-      : null,
-  ].filter(v => v !== null);
-
-  const confirmCount = confirmations.filter(Boolean).length;
-  const confirmation =
-    confirmations.length === 0 ? '—' :
-    confirmCount >= 2 ? 'STRONG' :
-    confirmCount === 1 ? 'MIXED' :
-    'WEAK';
-
-  const volatility =
-    abs >= 30 ? 'HIGH' :
-    abs >= 12 ? 'MODERATE' :
-    'LOW';
-
-  const summary = `UMBS 5.5 is ${fmtBps(mbs)} from the selected anchor. 10Y is ${fmtBps(inst.us10y?.delta)} and ZN is ${fmtBps(inst.zn?.delta)}.`;
-
-  return {
-    impact: dollarsPer100k,
-    signal,
-    signalClass,
-    summary,
-    repriceRisk,
-    marketPressure,
-    confirmation,
-    volatility,
-  };
-}
-
-function render(data) {
-  const inst = data.instruments || {};
-
-  // timestamps
-  const last = formatUpdate(data.last_updated);
-  setText('lastUpdated', last);
-  setText('mbsAsOf', data.last_updated?.mbs || '—');
-  setText('bondAsOf', data.last_updated?.shadow_bonds || '—');
-
-  // main panels
-  document.getElementById('mbsRows').innerHTML = `
-    ${row('UMBS 5.0', inst.umbs50?.delta)}
-    ${row('UMBS 5.5', inst.umbs55?.delta)}
-    ${row('UMBS 6.0', inst.umbs60?.delta)}
-    ${row('GNMA 5.0', inst.gnma50?.delta)}
-    ${row('GNMA 5.5', inst.gnma55?.delta)}
-    ${row('GNMA 6.0', inst.gnma60?.delta)}
-  `;
-
-  document.getElementById('treasuryRows').innerHTML = `
-    ${row('US10Y', inst.us10y?.delta, true)}
-    ${row('US30Y', inst.us30y?.delta, true)}
-    ${row('MBB', inst.mbb?.delta)}
-  `;
-
-  document.getElementById('futureRows').innerHTML = `
-    ${row('ZN', inst.zn?.delta)}
-    ${row('ZB', inst.zb?.delta)}
-    ${row('ZF', inst.zf?.delta)}
-    ${row('ZT', inst.zt?.delta)}
-  `;
-
-  // hero signal
-  const calc = calculateImpact(inst);
-
-  const impactValue = document.getElementById('impactValue');
-  if (impactValue) {
-    if (calc.impact === null) {
-      impactValue.textContent = '—';
-      impactValue.className = 'impact-value neutral';
-    } else {
-      impactValue.textContent = (calc.impact >= 0 ? '+$' : '-$') + Math.abs(calc.impact).toLocaleString();
-      impactValue.className =
-        'impact-value ' + (calc.impact > 0 ? 'positive' : calc.impact < 0 ? 'negative' : 'neutral');
-    }
-  }
-
-  const signalBadge = document.getElementById('signalBadge');
-  if (signalBadge) {
-    signalBadge.textContent = calc.signal;
-    signalBadge.className = `signal-badge ${calc.signalClass}`;
-  }
-
-  setText('marketSummary', calc.summary);
-  setText('repriceRisk', calc.repriceRisk);
-  setText('marketPressure', calc.marketPressure);
-  setText('confirmation', calc.confirmation);
-  setText('volatility', calc.volatility);
-
-  setStatus('live', 'LIVE DATA');
-}
-
-async function loadData() {
-  try {
-    setStatus('loading', 'CONNECTING');
-
-    const res = await fetch(API + '?t=' + Date.now());
-
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-
-    const data = await res.json();
-
-    if (!data.instruments) throw new Error('No instruments in backend response');
-
-    render(data);
-  } catch (err) {
-    console.error('LockIQ load error:', err);
-    setStatus('stale', 'DATA ERROR');
-    setText('marketSummary', 'Could not load current market data. Check getMarketData function response.');
-  }
-}
-
-loadData();
-setInterval(loadData, 60000);
+  <script src="/assets/lockiq-impact.js" defer></script>
+</body>
+</html>
