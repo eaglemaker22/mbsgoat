@@ -1123,7 +1123,7 @@ function setRateChartRange(range) {
   rateChartActiveRange = range;
 
   // Update button styles
-  ['3m','6m','1y'].forEach(r => {
+  ['1m','3m','6m','1y'].forEach(r => {
     const btn = document.getElementById('rcBtn' + r);
     if (btn) btn.classList.toggle('active', r === range);
   });
