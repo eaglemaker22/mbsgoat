@@ -67,7 +67,7 @@ exports.handler = async function (event) {
 
       // Observations are oldest-first from the scraper.
       // Trim to last 30 data points for the chart.
-      const obs = entry.observations.slice(-30);
+      const obs = entry.observations;
 
       series[chartKey] = {
         label:        entry.label || seriesId,
