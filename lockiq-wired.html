@@ -1117,7 +1117,7 @@ function fmtRateDate(dateStr) {
 }
 
 // Range counts — OB is daily so 3M≈63, 6M≈126; Freddie is weekly so all ranges show all data
-const RANGE_COUNTS = { '3m': 63, '6m': 126, '1y': 999 };
+const RANGE_COUNTS = { '1m': 21, '3m': 63, '6m': 126, '1y': 999 };
 
 function setRateChartRange(range) {
   rateChartActiveRange = range;
