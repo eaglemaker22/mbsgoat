@@ -386,13 +386,7 @@ body::before{
     <button class="modal-close" onclick="closeRateChart()">✕ CLOSE</button>
     <div class="modal-title" id="rateChartTitle"></div>
     <div class="modal-sub" id="rateChartSub"></div>
-    <div style="display:flex;gap:6px;margin:10px 0 4px">
-      <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:.12em;align-self:center;margin-right:4px">RANGE</span>
-      <button class="tf-btn" id="rcBtn3m"  onclick="setRateChartRange('3m')"  >3M</button>
-      <button class="tf-btn" id="rcBtn6m"  onclick="setRateChartRange('6m')"  >6M</button>
-      <button class="tf-btn active" id="rcBtn1y" onclick="setRateChartRange('1y')">1Y</button>
-    </div>
-    <div style="position:relative;height:260px;margin:10px 0">
+    <div style="position:relative;height:260px;margin:14px 0">
       <canvas id="rateChartCanvas"></canvas>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border)">
@@ -401,6 +395,18 @@ body::before{
     </div>
   </div>
 </div>
+
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕ CLOSE</button>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const MONO="'Share Tech Mono',monospace";
 
 /* CLOCK */
 function tick(){
@@ -1059,8 +1065,12 @@ loadIntradayChart();
 setInterval(loadIntradayChart, 5 * 60 * 1000);
 
 /* ── RATE HISTORY CHARTS ─────────────────────────── */
-let rateChartInstance = null;
-let rateHistoryCache  = null; // populated once on page load
+let rateChartInstance    = null;
+let rateHistoryCache     = null;
+let rateChartAllPoints   = [];
+let rateChartAllLabels   = [];
+let rateChartActiveRange = '3m';
+let rateChartCurrentCol  = null;
 
 // Seed fallback — used only if Firestore history unavailable
 const RATE_HISTORY_SEED = {
@@ -1073,14 +1083,12 @@ const RATE_HISTORY_SEED = {
   'bpi:30Y INVEST':  [7.625,7.625,7.500,7.500,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375],
 };
 
-// Color per source — unchanged
 const SOURCE_COLORS = {
   bpi:     { line:'#00deff', fill:'rgba(0,222,255,.07)',   title:'Broker Price Index'     },
   mcr:     { line:'#3a8be8', fill:'rgba(58,139,232,.07)',  title:'Market Composite Rates' },
   freddie: { line:'#f0a800', fill:'rgba(240,168,0,.07)',   title:'Freddie Mac PMMS'       },
 };
 
-// Fetch and cache rate history from Firestore on page load
 async function prefetchRateHistory() {
   try {
     const res = await fetch('/.netlify/functions/getRateHistory');
@@ -1094,12 +1102,47 @@ async function prefetchRateHistory() {
   }
 }
 
-// Format FRED date string (YYYY-MM-DD) to short label (Apr 30)
 function fmtRateDate(dateStr) {
   if (!dateStr) return '';
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const [, m, d] = dateStr.split('-').map(Number);
   return months[m - 1] + ' ' + d;
+}
+
+// Range counts — OB is daily so 3M≈63, 6M≈126; Freddie is weekly so all ranges show all data
+const RANGE_COUNTS = { '3m': 63, '6m': 126, '1y': 999 };
+
+function setRateChartRange(range) {
+  rateChartActiveRange = range;
+
+  // Update button styles
+  ['3m','6m','1y'].forEach(r => {
+    const btn = document.getElementById('rcBtn' + r);
+    if (btn) btn.classList.toggle('active', r === range);
+  });
+
+  if (!rateChartInstance || rateChartAllPoints.length === 0) return;
+
+  const n      = RANGE_COUNTS[range] || 999;
+  const points = rateChartAllPoints.slice(-n);
+  const labels = rateChartAllLabels.slice(-n);
+
+  const valid = points.filter(p => p !== null);
+  const min   = valid.length ? Math.min(...valid) - 0.15 : 5;
+  const max   = valid.length ? Math.max(...valid) + 0.15 : 8;
+
+  rateChartInstance.data.labels                              = labels;
+  rateChartInstance.data.datasets[0].data                   = points;
+  rateChartInstance.data.datasets[0].pointRadius            = points.map((_, i) => i === points.length - 1 ? 5 : 2);
+  rateChartInstance.data.datasets[0].pointBackgroundColor   = points.map((_, i) =>
+    i === points.length - 1 ? (rateChartCurrentCol ? rateChartCurrentCol.line : '#00deff') : '#0b1420'
+  );
+  rateChartInstance.options.scales.y.min = min;
+  rateChartInstance.options.scales.y.max = max;
+  rateChartInstance.update();
+
+  document.getElementById('rateChartSub').textContent =
+    rateChartInstance.data.datasets[0].label.toUpperCase() + ' · ' + points.length + ' OBSERVATIONS';
 }
 
 async function openRateChart(product, source) {
@@ -1111,15 +1154,21 @@ async function openRateChart(product, source) {
 
   const col = SOURCE_COLORS[source] || SOURCE_COLORS.bpi;
   const key = source + ':' + product;
+  rateChartCurrentCol = col;
 
-  // Show modal immediately so user gets feedback
   modal.classList.add('open');
   title.textContent = col.title;
-  sub.textContent   = product.toUpperCase() + ' · 30-DAY RATE HISTORY';
+  sub.textContent   = product.toUpperCase() + ' · RATE HISTORY';
   meta.textContent  = 'Loading...';
   curEl.textContent = '';
 
-  // Get current live rate from liveData if available
+  // Sync range buttons to current active range
+  ['3m','6m','1y'].forEach(r => {
+    const btn = document.getElementById('rcBtn' + r);
+    if (btn) btn.classList.toggle('active', r === rateChartActiveRange);
+  });
+
+  // Get current live rate
   let currentRate = null;
   if (liveData) {
     if (source === 'bpi' && liveData.bpi && liveData.bpi.rates)
@@ -1130,9 +1179,7 @@ async function openRateChart(product, source) {
 
   let labels = [];
   let points = [];
-  let usingRealData = false;
 
-  // BPI — no Firestore history yet, use seed
   if (source === 'bpi') {
     const seed = RATE_HISTORY_SEED[key] || [];
     points = [...seed];
@@ -1140,32 +1187,26 @@ async function openRateChart(product, source) {
     meta.textContent = '20-day seed data · live broker history coming soon';
 
   } else {
-    // MCR + Freddie — use Firestore history, fall back to seed
     const cached = rateHistoryCache && rateHistoryCache[key];
 
     if (cached && cached.values && cached.values.length > 0) {
-      points = cached.values.map(v => v === 0 ? null : v); // treat zeros as gaps
+      points = cached.values.map(v => v === 0 ? null : v);
       labels = cached.dates.map(fmtRateDate);
 
-      // Patch last point with live rate if available and fresher
       if (currentRate && points.length > 0) {
         points[points.length - 1] = currentRate;
-        labels[labels.length - 1]  = 'Today';
+        labels[labels.length - 1] = 'Today';
       }
 
-      const isWeekly = source === 'freddie';
+      const isWeekly   = source === 'freddie';
       const lastUpdated = cached.last_updated && cached.last_updated !== 'manual_backfill'
-        ? cached.last_updated
-        : 'today';
+        ? cached.last_updated : 'today';
 
-      meta.textContent = points.length + ' observations · '
+      meta.textContent = points.length + ' total observations · '
         + (isWeekly ? 'weekly survey · ' : 'daily · ')
         + 'updated ' + lastUpdated;
 
-      usingRealData = true;
-
     } else {
-      // Fallback to seed if cache miss
       const seed = RATE_HISTORY_SEED[key];
       if (seed) {
         points = [...seed];
@@ -1182,35 +1223,45 @@ async function openRateChart(product, source) {
     curEl.style.color = col.line;
   }
 
-  // Draw chart
+  // Store full arrays so range buttons can re-slice without refetching
+  rateChartAllPoints = [...points];
+  rateChartAllLabels = [...labels];
+
+  // Apply current range
+  const n = RANGE_COUNTS[rateChartActiveRange] || 999;
+  points  = points.slice(-n);
+  labels  = labels.slice(-n);
+
+  sub.textContent = product.toUpperCase() + ' · ' + points.length + ' OBSERVATIONS';
+
   const canvas = document.getElementById('rateChartCanvas');
   if (!canvas || points.length === 0) return;
 
   const ctx = canvas.getContext('2d');
   if (rateChartInstance) rateChartInstance.destroy();
 
-  const validPoints = points.filter(p => p !== null);
-  const min = validPoints.length ? Math.min(...validPoints) - 0.15 : 5;
-  const max = validPoints.length ? Math.max(...validPoints) + 0.15 : 8;
+  const valid = points.filter(p => p !== null);
+  const min   = valid.length ? Math.min(...valid) - 0.15 : 5;
+  const max   = valid.length ? Math.max(...valid) + 0.15 : 8;
 
   rateChartInstance = new Chart(ctx, {
     type: 'line',
     data: {
       labels,
       datasets: [{
-        label:              product,
-        data:               points,
-        borderColor:        col.line,
-        backgroundColor:    col.fill,
-        borderWidth:        2,
-        pointRadius:        points.map((_, i) => i === points.length - 1 ? 5 : 2),
+        label:                product,
+        data:                 points,
+        borderColor:          col.line,
+        backgroundColor:      col.fill,
+        borderWidth:          2,
+        pointRadius:          points.map((_, i) => i === points.length - 1 ? 5 : 2),
         pointBackgroundColor: points.map((_, i) => i === points.length - 1 ? col.line : '#0b1420'),
-        pointBorderColor:   col.line,
-        pointBorderWidth:   1.5,
-        pointHoverRadius:   6,
-        tension:            0.3,
-        fill:               true,
-        spanGaps:           true, // connect across zero/null gaps
+        pointBorderColor:     col.line,
+        pointBorderWidth:     1.5,
+        pointHoverRadius:     6,
+        tension:              0.3,
+        fill:                 true,
+        spanGaps:             true,
       }],
     },
     options: {
@@ -1257,10 +1308,8 @@ function closeRateChart() {
   if (rateChartInstance) { rateChartInstance.destroy(); rateChartInstance = null; }
 }
 
-// Pre-load history on page load so charts open instantly
 prefetchRateHistory();
 
-// Keep old aliases working
 function openBpiChart()  { openRateChart('30Y CONV', 'bpi'); }
 function closeBpiModal() { closeRateChart(); }
 function openModal(k){
