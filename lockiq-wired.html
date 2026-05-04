@@ -1170,7 +1170,7 @@ async function openRateChart(product, source) {
   curEl.textContent = '';
 
   // Sync range buttons to current active range
-  ['1m''3m','6m','1y'].forEach(r => {
+  ['1m','3m','6m','1y'].forEach(r => {
     const btn = document.getElementById('rcBtn' + r);
     if (btn) btn.classList.toggle('active', r === rateChartActiveRange);
   });
