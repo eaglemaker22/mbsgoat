@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LockIQ Terminal | MBSGOAT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════════
+       DESIGN TOKENS
+    ═══════════════════════════════════════════════ */
+    :root {
+      --bg:          #0a0c0f;
+      --bg-panel:    #0e1117;
+      --bg-card:     #141820;
+      --bg-row:      #111419;
+      --bg-row-alt:  #0e1117;
+      --border:      #1e2530;
+      --border-dim:  #161c24;
+
+      --text:        #d8dde6;
+      --text-dim:    #6b7585;
+      --text-muted:  #3d4654;
+
+      --green:       #00d18c;
+      --green-dim:   rgba(0, 209, 140, 0.12);
+      --red:         #f04060;
+      --red-dim:     rgba(240, 64, 96, 0.12);
+      --amber:       #f5a623;
+      --amber-dim:   rgba(245, 166, 35, 0.12);
+      --blue:        #3d8ef0;
+      --blue-dim:    rgba(61, 142, 240, 0.08);
+
+      --accent:      #00d18c;
+      --accent2:     #3d8ef0;
+
+      --mono:        'Share Tech Mono', monospace;
+      --cond:        'Barlow Condensed', sans-serif;
+      --sans:        'Barlow', sans-serif;
+
+      --radius:      4px;
+      --radius-lg:   8px;
+    }
+
+    [data-theme="light"] {
+      --bg:          #f0f2f5;
+      --bg-panel:    #e8eaed;
+      --bg-card:     #ffffff;
+      --bg-row:      #f8f9fb;
+      --bg-row-alt:  #f0f2f5;
+      --border:      #d0d5de;
+      --border-dim:  #e0e4eb;
+      --text:        #1a2030;
+      --text-dim:    #5a6477;
+      --text-muted:  #a0aab8;
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESET + BASE
+    ═══════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 14px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-weight: 400;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ═══════════════════════════════════════════════
+       HEADER BAR
+    ═══════════════════════════════════════════════ */
+    #header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 52px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      font-family: var(--cond);
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo span.goat { color: var(--accent); }
+    .logo-divider {
+      width: 1px;
+      height: 18px;
+      background: var(--border);
+    }
+    .logo-sub {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 0.12em;
+    }
+
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Live clock */
+    #clock {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+    }
+    #clock .date-part {
+      color: var(--text-muted);
+      margin-right: 6px;
+    }
+    #clock .time-part {
+      color: var(--text);
+    }
+    #clock .tz-part {
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      margin-left: 4px;
+    }
+
+    /* Timezone selector */
+    #tz-select {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      border-radius: var(--radius);
+      padding: 3px 6px;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    #tz-select:hover { border-color: var(--accent); color: var(--text); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Data freshness indicator */
+    .freshness-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: background 0.4s;
+      flex-shrink: 0;
+    }
+    .freshness-dot.fresh { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse-green 2.5s infinite; }
+    .freshness-dot.warn  { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+    .freshness-dot.stale { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+
+    .freshness-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    /* Theme toggle */
+    #theme-toggle {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px 8px;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    #theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+
+    /* Refresh button */
+    #refresh-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px 8px;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+      transition: border-color 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    #refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+    #refresh-btn.spinning svg { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ═══════════════════════════════════════════════
+       MAIN LAYOUT
+    ═══════════════════════════════════════════════ */
+    #main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px 20px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       SECTION HEADERS
+    ═══════════════════════════════════════════════ */
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-family: var(--cond);
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .section-rule {
+      flex: 1;
+      height: 1px;
+      background: var(--border-dim);
+    }
+    .section-timestamp {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* ═══════════════════════════════════════════════
+       MBS STRIP — top-of-page live coupons
+    ═══════════════════════════════════════════════ */
+    #mbs-strip {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+    }
+
+    .mbs-strip-label {
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      font-family: var(--cond);
+      font-weight: 600;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-right: 1px solid var(--border);
+      background: var(--bg-card);
+      white-space: nowrap;
+    }
+
+    .mbs-strip-items {
+      display: flex;
+      flex: 1;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .mbs-strip-items::-webkit-scrollbar { display: none; }
+
+    .mbs-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-right: 1px solid var(--border-dim);
+      min-width: 120px;
+      flex-shrink: 0;
+    }
+    .mbs-item:last-child { border-right: none; }
+
+    .mbs-item-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
+    }
+    .mbs-item-price {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .mbs-item-delta {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+    }
+
+    /* ═══════════════════════════════════════════════
+       BOND ROW — ZN, 10Y, 30Y
+    ═══════════════════════════════════════════════ */
+    #bond-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .bond-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .bond-card-label {
+      font-family: var(--cond);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .bond-card-value {
+      font-family: var(--mono);
+      font-size: 1.35rem;
+      color: var(--text);
+      line-height: 1;
+    }
+    .bond-card-delta {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      margin-top: 2px;
+    }
+    .bond-card-sub {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    /* Predicted UMBS card accent */
+    .bond-card.predicted {
+      border-color: rgba(0, 209, 140, 0.25);
+      background: linear-gradient(135deg, var(--bg-card) 0%, rgba(0,209,140,0.04) 100%);
+    }
+    .bond-card.predicted .bond-card-label { color: var(--accent); }
+
+    /* ═══════════════════════════════════════════════
+       TWO-COLUMN MID SECTION
+    ═══════════════════════════════════════════════ */
+    #mid-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       RATE PANEL (BPI / OBMMI / PMMS)
+    ═══════════════════════════════════════════════ */
+    .rate-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .rate-panel-header {
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .rate-panel-title {
+      font-family: var(--cond);
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+    .rate-panel-sub {
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      color: var(--text-muted);
+    }
+
+    .rate-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .rate-table tr { border-bottom: 1px solid var(--border-dim); }
+    .rate-table tr:last-child { border-bottom: none; }
+    .rate-table tr:nth-child(odd)  td { background: var(--bg-row); }
+    .rate-table tr:nth-child(even) td { background: var(--bg-row-alt); }
+    .rate-table tr:hover td { background: var(--blue-dim); }
+
+    .rate-table td {
+      padding: 8px 14px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+    .rate-table td.col-label {
+      color: var(--text-dim);
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 400;
+      width: 55%;
+    }
+    .rate-table td.col-value {
+      color: var(--text);
+      font-weight: 600;
+      text-align: right;
+    }
+    .rate-table td.col-badge {
+      width: 56px;
+      text-align: right;
+    }
+
+    /* ═══════════════════════════════════════════════
+       GOAT MATRIX — LO product rates table
+    ═══════════════════════════════════════════════ */
+    #goat-matrix {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .matrix-header {
+      padding: 10px 16px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .matrix-title {
+      font-family: var(--cond);
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+    .matrix-title span { color: var(--accent); }
+    .matrix-as-of {
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      color: var(--text-muted);
+    }
+
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .matrix-table thead tr {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+    }
+    .matrix-table th {
+      padding: 7px 14px;
+      font-family: var(--cond);
+      font-weight: 600;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: left;
+    }
+    .matrix-table th:not(:first-child) { text-align: right; }
+    .matrix-table tbody tr { border-bottom: 1px solid var(--border-dim); }
+    .matrix-table tbody tr:last-child { border-bottom: none; }
+    .matrix-table tbody tr:nth-child(odd)  td { background: var(--bg-row); }
+    .matrix-table tbody tr:nth-child(even) td { background: var(--bg-row-alt); }
+    .matrix-table tbody tr:hover td { background: var(--blue-dim); }
+    .matrix-table td {
+      padding: 9px 14px;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+    }
+    .matrix-table td.col-product {
+      font-family: var(--cond);
+      font-weight: 500;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+    .matrix-table td.col-rate  { text-align: right; font-weight: 600; color: var(--text); }
+    .matrix-table td.col-pts   { text-align: right; color: var(--text-dim); }
+    .matrix-table td.col-trend { text-align: right; }
+
+    /* ═══════════════════════════════════════════════
+       REPRICE SIGNAL BANNER
+    ═══════════════════════════════════════════════ */
+    #reprice-banner {
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      padding: 11px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .reprice-signal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .reprice-signal-label {
+      font-family: var(--cond);
+      font-weight: 700;
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .reprice-signal-text {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+    .reprice-signal-caveat {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      color: var(--text-muted);
+      text-align: right;
+      max-width: 300px;
+      line-height: 1.4;
+    }
+
+    /* ═══════════════════════════════════════════════
+       DELTA / BADGE COLORS
+    ═══════════════════════════════════════════════ */
+    .pos { color: var(--green); }
+    .neg { color: var(--red); }
+    .neu { color: var(--text-dim); }
+
+    .badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      border-radius: 3px;
+      padding: 1px 5px;
+      letter-spacing: 0.03em;
+    }
+    .badge-green { background: var(--green-dim); color: var(--green); }
+    .badge-red   { background: var(--red-dim);   color: var(--red); }
+    .badge-amber { background: var(--amber-dim); color: var(--amber); }
+    .badge-dim   { background: var(--bg-row);    color: var(--text-muted); border: 1px solid var(--border-dim); }
+
+    /* ═══════════════════════════════════════════════
+       LOADING / ERROR STATES
+    ═══════════════════════════════════════════════ */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-row) 25%, var(--bg-card) 50%, var(--bg-row) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 3px;
+      color: transparent !important;
+      user-select: none;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
+    .val-placeholder { display: inline-block; min-width: 60px; }
+
+    .error-inline {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--red);
+    }
+
+    /* ═══════════════════════════════════════════════
+       LAST UPDATED BAR
+    ═══════════════════════════════════════════════ */
+    #status-bar {
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-align: center;
+      padding: 4px 0;
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      #bond-row { grid-template-columns: repeat(2, 1fr); }
+      #mid-section { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      #header { padding: 0 12px; }
+      #main   { padding: 10px 12px 30px; }
+      #bond-row { grid-template-columns: repeat(2, 1fr); }
+      .header-center { display: none; }
+      .reprice-signal-caveat { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════ -->
+<header id="header">
+  <div class="header-left">
+    <div class="logo">
+      MBS<span class="goat">GOAT</span>
+      <div class="logo-divider"></div>
+      <span class="logo-sub">LOCKIQ TERMINAL</span>
+    </div>
+  </div>
+
+  <div class="header-center">
+    <div id="clock">
+      <span class="date-part" id="clock-date">--/--/----</span>
+      <span class="time-part" id="clock-time">--:--:--</span>
+      <span class="tz-part" id="clock-tz">ET</span>
+    </div>
+    <select id="tz-select" title="Select display timezone">
+      <option value="America/New_York">ET</option>
+      <option value="America/Chicago">CT</option>
+      <option value="America/Denver">MT</option>
+      <option value="America/Phoenix" selected>AZ</option>
+      <option value="America/Los_Angeles">PT</option>
+    </select>
+  </div>
+
+  <div class="header-right">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="freshness-dot" id="freshness-dot"></div>
+      <span class="freshness-label" id="freshness-label">—</span>
+    </div>
+    <button id="refresh-btn" title="Refresh data">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M1.5 8A6.5 6.5 0 0 1 8 1.5a6.47 6.47 0 0 1 4.6 1.9L11 5h4V1l-1.4 1.4A8 8 0 1 0 16 8h-1.5A6.5 6.5 0 0 1 1.5 8z"/>
+      </svg>
+      REFRESH
+    </button>
+    <button id="theme-toggle">☀ LIGHT</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════ -->
+<main id="main">
+
+  <!-- MBS STRIP -->
+  <div id="mbs-strip">
+    <div class="mbs-strip-label">MBS</div>
+    <div class="mbs-strip-items" id="mbs-strip-items">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- BOND ROW -->
+  <div id="bond-row">
+    <div class="bond-card" id="card-zn">
+      <div class="bond-card-label">ZN1! Futures</div>
+      <div class="bond-card-value skeleton val-placeholder" id="zn-price">—</div>
+      <div class="bond-card-delta skeleton val-placeholder" id="zn-delta">—</div>
+      <div class="bond-card-sub">10-Yr T-Note Future</div>
+    </div>
+    <div class="bond-card" id="card-10y">
+      <div class="bond-card-label">US 10Y Yield</div>
+      <div class="bond-card-value skeleton val-placeholder" id="us10y-value">—</div>
+      <div class="bond-card-delta skeleton val-placeholder" id="us10y-delta">—</div>
+      <div class="bond-card-sub">Treasury Benchmark</div>
+    </div>
+    <div class="bond-card" id="card-30y">
+      <div class="bond-card-label">US 30Y Yield</div>
+      <div class="bond-card-value skeleton val-placeholder" id="us30y-value">—</div>
+      <div class="bond-card-delta skeleton val-placeholder" id="us30y-delta">—</div>
+      <div class="bond-card-sub">Long Bond</div>
+    </div>
+    <div class="bond-card predicted" id="card-pred">
+      <div class="bond-card-label">Predicted UMBS 5.5 Δ</div>
+      <div class="bond-card-value skeleton val-placeholder" id="pred-delta">—</div>
+      <div class="bond-card-delta" id="pred-ticks">—</div>
+      <div class="bond-card-sub">Regression Model</div>
+    </div>
+  </div>
+
+  <!-- REPRICE SIGNAL BANNER -->
+  <div id="reprice-banner">
+    <div class="reprice-signal-dot" id="reprice-dot" style="background:var(--text-muted)"></div>
+    <div>
+      <div class="reprice-signal-label" id="reprice-label">COMPUTING…</div>
+      <div class="reprice-signal-text" id="reprice-text">Waiting for market data</div>
+    </div>
+    <div class="reprice-signal-caveat">
+      Model covers market-driven reprices only. Lender-driven adverse reprices (e.g. capacity, hedge) cannot be predicted.
+    </div>
+  </div>
+
+  <!-- MID SECTION: RATE PANELS -->
+  <div id="mid-section">
+
+    <!-- LEFT: BPI + OBMMI -->
+    <div>
+      <!-- BPI -->
+      <div class="section-header">
+        <span class="section-title">Broker Price Index</span>
+        <div class="section-rule"></div>
+        <span class="section-timestamp" id="bpi-timestamp">—</span>
+      </div>
+      <div class="rate-panel">
+        <div class="rate-panel-header">
+          <span class="rate-panel-title">Today's LO Best-Ex Rates</span>
+          <span class="rate-panel-sub">UWM + Rocket avg · w/ LLPA</span>
+        </div>
+        <table class="rate-table" id="bpi-table">
+          <tbody>
+            <tr><td class="col-label">Conv 30-Year</td>
+                <td class="col-value skeleton val-placeholder" id="bpi-conv30">—</td>
+                <td class="col-badge" id="bpi-conv30-badge"></td></tr>
+            <tr><td class="col-label">Conv 15-Year</td>
+                <td class="col-value skeleton val-placeholder" id="bpi-conv15">—</td>
+                <td class="col-badge" id="bpi-conv15-badge"></td></tr>
+            <tr><td class="col-label">FHA 30-Year</td>
+                <td class="col-value skeleton val-placeholder" id="bpi-fha30">—</td>
+                <td class="col-badge" id="bpi-fha30-badge"></td></tr>
+            <tr><td class="col-label">VA 30-Year</td>
+                <td class="col-value skeleton val-placeholder" id="bpi-va30">—</td>
+                <td class="col-badge" id="bpi-va30-badge"></td></tr>
+            <tr><td class="col-label">Jumbo 30-Year</td>
+                <td class="col-value skeleton val-placeholder" id="bpi-jumbo30">—</td>
+                <td class="col-badge" id="bpi-jumbo30-badge"></td></tr>
+            <tr><td class="col-label">Cash-Out Refi 30</td>
+                <td class="col-value skeleton val-placeholder" id="bpi-cashout30">—</td>
+                <td class="col-badge" id="bpi-cashout30-badge"></td></tr>
+            <tr><td class="col-label">Investment 30-Year</td>
+                <td class="col-value skeleton val-placeholder" id="bpi-inv30">—</td>
+                <td class="col-badge" id="bpi-inv30-badge"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- OBMMI -->
+      <div class="section-header" style="margin-top:16px;">
+        <span class="section-title">OBMMI · Optimal Blue</span>
+        <div class="section-rule"></div>
+        <span class="section-timestamp" id="obmmi-timestamp">—</span>
+      </div>
+      <div class="rate-panel">
+        <div class="rate-panel-header">
+          <span class="rate-panel-title">Market Composite Rates</span>
+          <span class="rate-panel-sub">FRED via Optimal Blue · daily</span>
+        </div>
+        <table class="rate-table">
+          <tbody>
+            <tr><td class="col-label">Conventional 30-Year</td>
+                <td class="col-value skeleton val-placeholder" id="obmmi-conv30">—</td>
+                <td class="col-badge"></td></tr>
+            <tr><td class="col-label">Conventional 15-Year</td>
+                <td class="col-value skeleton val-placeholder" id="obmmi-conv15">—</td>
+                <td class="col-badge"></td></tr>
+            <tr><td class="col-label">FHA 30-Year</td>
+                <td class="col-value skeleton val-placeholder" id="obmmi-fha30">—</td>
+                <td class="col-badge"></td></tr>
+            <tr><td class="col-label">VA 30-Year</td>
+                <td class="col-value skeleton val-placeholder" id="obmmi-va30">—</td>
+                <td class="col-badge"></td></tr>
+            <tr><td class="col-label">Jumbo 30-Year</td>
+                <td class="col-value skeleton val-placeholder" id="obmmi-jumbo30">—</td>
+                <td class="col-badge"></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RIGHT: PMMS + GOAT MATRIX -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- PMMS -->
+      <div>
+        <div class="section-header">
+          <span class="section-title">Freddie Mac PMMS</span>
+          <div class="section-rule"></div>
+          <span class="section-timestamp" id="pmms-timestamp">—</span>
+        </div>
+        <div class="rate-panel">
+          <div class="rate-panel-header">
+            <span class="rate-panel-title">Primary Mortgage Market Survey</span>
+            <span class="rate-panel-sub">Weekly · Thursday release</span>
+          </div>
+          <table class="rate-table">
+            <tbody>
+              <tr><td class="col-label">30-Year Fixed (MORTGAGE30US)</td>
+                  <td class="col-value skeleton val-placeholder" id="pmms-30">—</td>
+                  <td class="col-badge"></td></tr>
+              <tr><td class="col-label">15-Year Fixed (MORTGAGE15US)</td>
+                  <td class="col-value skeleton val-placeholder" id="pmms-15">—</td>
+                  <td class="col-badge"></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- GOAT MATRIX -->
+      <div>
+        <div class="section-header">
+          <span class="section-title">GOAT Matrix</span>
+          <div class="section-rule"></div>
+          <span class="section-timestamp" id="matrix-timestamp">—</span>
+        </div>
+        <div id="goat-matrix">
+          <div class="matrix-header">
+            <span class="matrix-title"><span>GOAT</span> MATRIX · Live LO Rates</span>
+            <span class="matrix-as-of" id="matrix-as-of">Rate sheet: —</span>
+          </div>
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Rate</th>
+                <th>Points</th>
+                <th>Signal</th>
+              </tr>
+            </thead>
+            <tbody id="matrix-tbody">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /mid-section -->
+
+  <!-- STATUS BAR -->
+  <div id="status-bar">Last fetched: <span id="status-fetched-at">—</span> · Next refresh in <span id="status-countdown">60s</span></div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────────
+   CONFIG
+───────────────────────────────────────────── */
+const API_URL      = "/.netlify/functions/getMarketData";
+const REFRESH_MS   = 60_000;   // 60s auto-refresh
+
+// Reprice threshold: ~3.3 ticks = 0.102 pts on UMBS 5.5
+const REPRICE_WARN_TICKS  = 2.5;
+const REPRICE_FIRE_TICKS  = 3.3;
+const REPRICE_ADVERSE_TICKS = -3.3;
+
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+let selectedTZ  = "America/Phoenix";
+let lastData    = null;
+let countdown   = REFRESH_MS / 1000;
+let refreshTimer, countdownTimer;
+
+/* ─────────────────────────────────────────────
+   CLOCK
+───────────────────────────────────────────── */
+function tickClock() {
+  const now = new Date();
+  const opts = { timeZone: selectedTZ, hour12: false };
+  const date = now.toLocaleDateString("en-US", { ...opts, month: "2-digit", day: "2-digit", year: "numeric" });
+  const time = now.toLocaleTimeString("en-US", { ...opts, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const tzAbbr = new Intl.DateTimeFormat("en-US", { ...opts, timeZoneName: "short" })
+    .formatToParts(now).find(p => p.type === "timeZoneName")?.value ?? selectedTZ;
+  document.getElementById("clock-date").textContent = date;
+  document.getElementById("clock-time").textContent = time;
+  document.getElementById("clock-tz").textContent   = tzAbbr;
+}
+
+document.getElementById("tz-select").addEventListener("change", e => {
+  selectedTZ = e.target.value;
+  tickClock();
+});
+setInterval(tickClock, 1000);
+tickClock();
+
+/* ─────────────────────────────────────────────
+   THEME TOGGLE
+───────────────────────────────────────────── */
+const themeBtn = document.getElementById("theme-toggle");
+let isDark = true;
+themeBtn.addEventListener("click", () => {
+  isDark = !isDark;
+  document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+  themeBtn.textContent = isDark ? "☀ LIGHT" : "☾ DARK";
+});
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function fmt(val, decimals = 3) {
+  if (val === null || val === undefined || isNaN(+val)) return "—";
+  return (+val).toFixed(decimals);
+}
+
+function fmtRate(val) {
+  if (val === null || val === undefined || isNaN(+val)) return "—";
+  return (+val).toFixed(3) + "%";
+}
+
+function fmtDelta(val, unit = "") {
+  if (val === null || val === undefined || isNaN(+val)) return "—";
+  const n = +val;
+  const sign = n > 0 ? "+" : "";
+  return `${sign}${n.toFixed(3)}${unit}`;
+}
+
+function deltaClass(val) {
+  if (val === null || isNaN(+val)) return "neu";
+  return +val > 0 ? "pos" : +val < 0 ? "neg" : "neu";
+}
+
+// For bond yields: up = bad for rates (red), down = good (green)
+function yieldDeltaClass(val) {
+  if (val === null || isNaN(+val)) return "neu";
+  return +val > 0 ? "neg" : +val < 0 ? "pos" : "neu";
+}
+
+// For MBS prices: up = good (green), down = bad (red)
+function mbsDeltaClass(val) {
+  return deltaClass(val);
+}
+
+function clearSkeleton(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove("skeleton", "val-placeholder");
+}
+
+function setVal(id, html) {
+  const el = document.getElementById(id);
+  if (el) { el.innerHTML = html; el.classList.remove("skeleton", "val-placeholder"); }
+}
+
+function fmtTimestamp(ts) {
+  if (!ts) return "—";
+  const d = ts._seconds ? new Date(ts._seconds * 1000)
+          : typeof ts === "string" ? new Date(ts)
+          : null;
+  if (!d || isNaN(d)) return "—";
+  return d.toLocaleTimeString("en-US", { timeZone: selectedTZ, hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+}
+
+function staleBadge(status) {
+  if (status === "fresh")   return '<span class="badge badge-green">LIVE</span>';
+  if (status === "warn")    return '<span class="badge badge-amber">~LIVE</span>';
+  if (status === "stale")   return '<span class="badge badge-red">STALE</span>';
+  return '<span class="badge badge-dim">?</span>';
+}
+
+/* ─────────────────────────────────────────────
+   MBS STRIP
+───────────────────────────────────────────── */
+function renderMbsStrip(mbs) {
+  const items = [
+    { label: "UMBS 5.0", price: mbs?.umbs50, delta: mbs?.umbs50_delta },
+    { label: "UMBS 5.5", price: mbs?.umbs55, delta: mbs?.umbs55_delta },
+    { label: "UMBS 6.0", price: mbs?.umbs60, delta: mbs?.umbs60_delta },
+    { label: "GNMA 5.0", price: mbs?.gnma50, delta: mbs?.gnma50_delta },
+    { label: "GNMA 5.5", price: mbs?.gnma55, delta: mbs?.gnma55_delta },
+    { label: "GNMA 6.0", price: mbs?.gnma60, delta: mbs?.gnma60_delta },
+  ];
+
+  const html = items.map(i => {
+    const cls = mbsDeltaClass(i.delta);
+    const dSign = i.delta > 0 ? "+" : "";
+    const dStr = i.delta !== null && !isNaN(+i.delta)
+      ? `<span class="${cls}">${dSign}${(+i.delta).toFixed(3)}</span>`
+      : '<span class="neu">—</span>';
+    return `<div class="mbs-item">
+      <div>
+        <div class="mbs-item-label">${i.label}</div>
+        <div class="mbs-item-price">${fmt(i.price)}</div>
+      </div>
+      <div class="mbs-item-delta">${dStr}</div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("mbs-strip-items").innerHTML = html;
+}
+
+/* ─────────────────────────────────────────────
+   BOND CARDS
+───────────────────────────────────────────── */
+function renderBondCards(sb) {
+  // ZN
+  const znPrice = sb?.zn_price;
+  const znDelta = sb?.zn_delta;
+  setVal("zn-price", fmt(znPrice));
+  setVal("zn-delta", `<span class="${yieldDeltaClass(-znDelta)}">${fmtDelta(znDelta, " pts")}</span>`);
+
+  // 10Y
+  const y10 = sb?.us10y;
+  const d10 = sb?.us10y_delta;
+  setVal("us10y-value", fmt(y10, 3) + "%");
+  setVal("us10y-delta", `<span class="${yieldDeltaClass(d10)}">${fmtDelta(d10, " bps")}</span>`);
+
+  // 30Y
+  const y30 = sb?.us30y;
+  const d30 = sb?.us30y_delta;
+  setVal("us30y-value", fmt(y30, 3) + "%");
+  setVal("us30y-delta", `<span class="${yieldDeltaClass(d30)}">${fmtDelta(d30, " bps")}</span>`);
+
+  // Predicted UMBS 5.5
+  const predDelta = sb?.predicted_umbs55_delta;
+  const ticks = predDelta !== null ? (+predDelta / (1/32)).toFixed(1) : null;
+  setVal("pred-delta", `<span class="${mbsDeltaClass(predDelta)}">${fmtDelta(predDelta, " pts")}</span>`);
+  setVal("pred-ticks", ticks !== null ? `<span class="${mbsDeltaClass(predDelta)}">${ticks > 0 ? "+" : ""}${ticks} ticks</span>` : "—");
+}
+
+/* ─────────────────────────────────────────────
+   REPRICE SIGNAL
+───────────────────────────────────────────── */
+function renderRepriceSignal(sb, mbs) {
+  const dot   = document.getElementById("reprice-dot");
+  const label = document.getElementById("reprice-label");
+  const text  = document.getElementById("reprice-text");
+
+  const predDelta = sb?.predicted_umbs55_delta;
+  const actualDelta = mbs?.umbs55_delta;
+  const useDelta = actualDelta !== null ? +actualDelta : (predDelta !== null ? +predDelta : null);
+
+  if (useDelta === null) {
+    dot.style.background = "var(--text-muted)";
+    label.textContent = "AWAITING DATA";
+    text.textContent = "No market signal available";
+    return;
+  }
+
+  const ticks = useDelta / (1/32);
+  const source = actualDelta !== null ? "MBS Live" : "Regression model";
+
+  if (ticks >= REPRICE_FIRE_TICKS) {
+    dot.style.cssText = "background:var(--red);box-shadow:0 0 8px var(--red)";
+    label.innerHTML = '<span style="color:var(--red)">⚠ ADVERSE REPRICE RISK</span>';
+    text.textContent = `UMBS 5.5 ${fmtDelta(useDelta, " pts")} (${ticks.toFixed(1)} ticks) · ${source}. Rates likely to worsen intraday.`;
+  } else if (ticks <= REPRICE_ADVERSE_TICKS) {
+    dot.style.cssText = "background:var(--green);box-shadow:0 0 8px var(--green)";
+    label.innerHTML = '<span style="color:var(--green)">✓ POSITIVE REPRICE POSSIBLE</span>';
+    text.textContent = `UMBS 5.5 ${fmtDelta(useDelta, " pts")} (${ticks.toFixed(1)} ticks) · ${source}. Watch for lender improvements.`;
+  } else if (Math.abs(ticks) >= REPRICE_WARN_TICKS) {
+    dot.style.cssText = "background:var(--amber);box-shadow:0 0 6px var(--amber)";
+    label.innerHTML = '<span style="color:var(--amber)">↗ APPROACHING THRESHOLD</span>';
+    text.textContent = `UMBS 5.5 ${fmtDelta(useDelta, " pts")} (${ticks.toFixed(1)} ticks) · ${source}. Monitor closely.`;
+  } else {
+    dot.style.cssText = "background:var(--green)";
+    label.innerHTML = '<span style="color:var(--green)">✓ STABLE</span>';
+    text.textContent = `UMBS 5.5 ${fmtDelta(useDelta, " pts")} (${ticks.toFixed(1)} ticks) · ${source}. No reprice signal.`;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   BPI TABLE
+───────────────────────────────────────────── */
+function renderBPI(br) {
+  const fields = [
+    ["bpi-conv30",   br?.conv30,   "Conv 30"],
+    ["bpi-conv15",   br?.conv15,   "Conv 15"],
+    ["bpi-fha30",    br?.fha30,    "FHA 30"],
+    ["bpi-va30",     br?.va30,     "VA 30"],
+    ["bpi-jumbo30",  br?.jumbo30,  "Jumbo 30"],
+    ["bpi-cashout30",br?.cashout30,"CashOut 30"],
+    ["bpi-inv30",    br?.inv30,    "Inv 30"],
+  ];
+  for (const [id, val] of fields) {
+    setVal(id, fmtRate(val));
+  }
+  document.getElementById("bpi-timestamp").textContent = br?.as_of
+    ? `as of ${fmtTimestamp(br.as_of)}`
+    : "—";
+}
+
+/* ─────────────────────────────────────────────
+   OBMMI
+───────────────────────────────────────────── */
+function renderOBMMI(fc) {
+  setVal("obmmi-conv30",  fmtRate(fc?.obmmic30yf));
+  setVal("obmmi-conv15",  fmtRate(fc?.obmmic15yf));
+  setVal("obmmi-fha30",   fmtRate(fc?.obmmifha30yf));
+  setVal("obmmi-va30",    fmtRate(fc?.obmmiva30yf));
+  setVal("obmmi-jumbo30", fmtRate(fc?.obmmijumbo30yf));
+  document.getElementById("obmmi-timestamp").textContent = fc?.as_of
+    ? `as of ${fmtTimestamp(fc.as_of)}`
+    : "daily";
+}
+
+/* ─────────────────────────────────────────────
+   PMMS
+───────────────────────────────────────────── */
+function renderPMMS(fc) {
+  setVal("pmms-30", fmtRate(fc?.mortgage30us));
+  setVal("pmms-15", fmtRate(fc?.mortgage15us));
+  document.getElementById("pmms-timestamp").textContent = "weekly · Thursdays";
+}
+
+/* ─────────────────────────────────────────────
+   GOAT MATRIX
+───────────────────────────────────────────── */
+const PRODUCT_LABELS = {
+  conv30:   "Conventional 30-Year",
+  conv15:   "Conventional 15-Year",
+  fha30:    "FHA 30-Year",
+  va30:     "VA 30-Year",
+  jumbo30:  "Jumbo 30-Year",
+  cashout30:"Cash-Out Refi 30",
+  inv30:    "Investment 30-Year",
+};
+
+function renderMatrix(br, mbs) {
+  const tbody = document.getElementById("matrix-tbody");
+  if (!br) {
+    tbody.innerHTML = '<tr><td colspan="4" class="error-inline" style="padding:12px 14px">Rate sheet not loaded</td></tr>';
+    return;
+  }
+
+  // Use UMBS 5.5 delta for trend signal (proxy for rate direction)
+  const umbsDelta = mbs?.umbs55_delta;
+  const trendSignal = umbsDelta !== null && !isNaN(+umbsDelta)
+    ? (+umbsDelta > 0.02 ? "↓ IMPR" : +umbsDelta < -0.02 ? "↑ WORS" : "→ FLAT")
+    : "—";
+  const trendClass = umbsDelta > 0.02 ? "pos" : umbsDelta < -0.02 ? "neg" : "neu";
+
+  const rows = Object.entries(PRODUCT_LABELS).map(([key, label]) => {
+    const rate = br[key];
+    const rateStr = fmtRate(rate);
+    // Par-range visual hint — flag rates near 7.0% as near-par (rough heuristic)
+    const nearPar = rate !== null && Math.abs(+rate - 7.0) < 0.5;
+    return `<tr>
+      <td class="col-product">${label}${nearPar ? ' <span class="badge badge-dim" style="font-size:0.58rem">~PAR</span>' : ""}</td>
+      <td class="col-rate">${rateStr}</td>
+      <td class="col-pts" style="color:var(--text-muted)">—</td>
+      <td class="col-trend"><span class="${trendClass}">${trendSignal}</span></td>
+    </tr>`;
+  }).join("");
+
+  tbody.innerHTML = rows;
+
+  document.getElementById("matrix-as-of").textContent = br?.as_of
+    ? `Rate sheet: ${fmtTimestamp(br.as_of)}`
+    : "Rate sheet: pending";
+  document.getElementById("matrix-timestamp").textContent = br?.as_of
+    ? fmtTimestamp(br.as_of)
+    : "—";
+}
+
+/* ─────────────────────────────────────────────
+   FRESHNESS INDICATOR
+───────────────────────────────────────────── */
+function updateFreshness(data) {
+  const dot   = document.getElementById("freshness-dot");
+  const label = document.getElementById("freshness-label");
+
+  const statuses = [
+    data.shadowBonds?.status,
+    data.mbsProducts?.status,
+  ].filter(Boolean);
+
+  const worst = statuses.includes("stale") ? "stale"
+              : statuses.includes("warn")  ? "warn"
+              : statuses.includes("fresh") ? "fresh"
+              : "unknown";
+
+  dot.className = `freshness-dot ${worst}`;
+  label.textContent = worst === "fresh"  ? "LIVE"
+                    : worst === "warn"   ? "DELAYED"
+                    : worst === "stale"  ? "STALE"
+                    : "—";
+}
+
+/* ─────────────────────────────────────────────
+   RENDER ALL
+───────────────────────────────────────────── */
+function renderAll(data) {
+  const sb  = data.shadowBonds;
+  const mbs = data.mbsProducts;
+  const br  = data.brokerRates;
+  const fc  = data.fredCache;
+
+  renderMbsStrip(mbs);
+  renderBondCards(sb);
+  renderRepriceSignal(sb, mbs);
+  renderBPI(br);
+  renderOBMMI(fc);
+  renderPMMS(fc);
+  renderMatrix(br, mbs);
+  updateFreshness(data);
+
+  document.getElementById("status-fetched-at").textContent =
+    new Date(data.fetchedAt).toLocaleTimeString("en-US", { timeZone: selectedTZ });
+}
+
+/* ─────────────────────────────────────────────
+   FETCH
+───────────────────────────────────────────── */
+async function fetchData() {
+  const btn = document.getElementById("refresh-btn");
+  btn.classList.add("spinning");
+
+  try {
+    const res  = await fetch(API_URL);
+    const data = await res.json();
+    lastData   = data;
+    renderAll(data);
+  } catch (err) {
+    console.error("LockIQ fetch error:", err);
+    document.getElementById("freshness-label").textContent = "ERR";
+    document.getElementById("freshness-dot").className = "freshness-dot stale";
+  } finally {
+    btn.classList.remove("spinning");
+  }
+}
+
+/* ─────────────────────────────────────────────
+   COUNTDOWN + AUTO-REFRESH
+───────────────────────────────────────────── */
+function startCountdown() {
+  clearInterval(countdownTimer);
+  countdown = REFRESH_MS / 1000;
+  countdownTimer = setInterval(() => {
+    countdown--;
+    document.getElementById("status-countdown").textContent = `${countdown}s`;
+    if (countdown <= 0) {
+      clearInterval(countdownTimer);
+      fetchData().then(startCountdown);
+    }
+  }, 1000);
+}
+
+document.getElementById("refresh-btn").addEventListener("click", () => {
+  clearInterval(countdownTimer);
+  fetchData().then(startCountdown);
+});
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+fetchData().then(startCountdown);
+</script>
+
+</body>
+</html>
