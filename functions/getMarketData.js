@@ -173,8 +173,16 @@ exports.handler = async function (event) {
     };
 
     // ── FRED Cache (OBMMI + PMMS) ─────────────────────────────────────────────
-    // Try both UPPER and lower case — field name may vary by scraper version
-    const fc = (key) => num(fred[key]) ?? num(fred[key.toLowerCase()]) ?? null;
+    // Each FRED series is stored as a nested object: { latest, latestDate, prev, change }
+    // Try both UPPER and lower case keys
+    const fc = (key) => {
+      const obj = fred[key] ?? fred[key.toLowerCase()];
+      if (!obj) return null;
+      // Nested object from lockiq_FRED.py
+      if (typeof obj === 'object' && obj.latest !== undefined) return num(obj.latest);
+      // Flat value fallback
+      return num(obj);
+    };
     const fredCache = {
       obmmic30yf:     fc('OBMMIC30YF'),
       obmmic15yf:     fc('OBMMIC15YF'),
