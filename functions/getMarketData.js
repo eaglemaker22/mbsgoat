@@ -1,214 +1,223 @@
-const { initializeApp, getApps, cert } = require("firebase-admin/app");
-const { getFirestore } = require("firebase-admin/firestore");
+const admin = require('firebase-admin');
 
-// Initialize Firebase Admin once
-function getDb() {
-  if (!getApps().length) {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    initializeApp({ credential: cert(serviceAccount) });
-  }
-  return getFirestore();
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId:   process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey:  process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
 }
 
-// Today's date in YYYY-MM-DD (Arizona local time, MST = UTC-7)
+const db = admin.firestore();
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+const num = (v) => {
+  if (v === null || v === undefined || v === '' || v === 'N/A') return null;
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+// Delta in points (MBS price units — keeps ticks math clean on frontend)
+const delta = (cur, open) => {
+  const c = num(cur);
+  const o = num(open);
+  if (c === null || o === null) return null;
+  return Math.round((c - o) * 10000) / 10000;
+};
+
+// Delta in basis points (for yields)
+const deltaBps = (cur, open) => {
+  const c = num(cur);
+  const o = num(open);
+  if (c === null || o === null) return null;
+  return Math.round((c - o) * 1000) / 10;
+};
+
+// Today's date YYYY-MM-DD in Arizona local time (scraper timezone, MST = UTC-7)
 function todayAZ() {
   const now = new Date();
-  const az = new Date(now.getTime() - 7 * 60 * 60 * 1000);
+  const az  = new Date(now.getTime() - 7 * 60 * 60 * 1000);
   return az.toISOString().slice(0, 10);
 }
 
-exports.handler = async function (event, context) {
-  // CORS preflight
-  if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-      },
-      body: "",
-    };
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const HEADERS = {
+  'Access-Control-Allow-Origin':  '*',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Content-Type':                 'application/json',
+  'Cache-Control':                'no-store',
+};
+
+// ── Handler ──────────────────────────────────────────────────────────────────
+
+exports.handler = async function (event) {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers: HEADERS, body: '' };
   }
 
   try {
-    const db = getDb();
+    const today = todayAZ();
 
-    // Fetch all docs in parallel
-    const docPaths = [
-      "market_data/shadow_bonds",
-      "market_data/treasury_futures",
-      "market_data/mbs_products",
-      "market_data/broker_rates",
-      "market_data/fred_cache",
-      `daily_anchors/${todayAZ()}`,
-    ];
+    const [mbsSnap, shadowSnap, us30ySnap, futuresSnap, brokerSnap, fredSnap, anchorSnap] =
+      await Promise.all([
+        db.collection('market_data').doc('mbs_products').get(),
+        db.collection('market_data').doc('shadow_bonds').get(),
+        db.collection('market_data').doc('us30y_current').get(),
+        db.collection('market_data').doc('treasury_futures').get(),
+        db.collection('market_data').doc('broker_rates').get(),
+        db.collection('market_data').doc('fred_cache').get(),
+        db.collection('daily_anchors').doc(today).get(),
+      ]);
 
-    const snapshots = await Promise.all(
-      docPaths.map((path) => db.doc(path).get())
-    );
+    const mbs     = mbsSnap.exists     ? mbsSnap.data()     : {};
+    const shadow  = shadowSnap.exists  ? shadowSnap.data()  : {};
+    const us30y   = us30ySnap.exists   ? us30ySnap.data()   : {};
+    const futures = futuresSnap.exists ? futuresSnap.data() : {};
+    const broker  = brokerSnap.exists  ? brokerSnap.data()  : {};
+    const fred    = fredSnap.exists    ? fredSnap.data()    : {};
+    const anchor  = anchorSnap.exists  ? anchorSnap.data()  : {};
 
-    const [
-      shadowBonds,
-      treasuryFutures,
-      mbsProducts,
-      brokerRates,
-      fredCache,
-      dailyAnchor,
-    ] = snapshots.map((snap) => (snap.exists ? snap.data() : null));
+    // ── MBS Products ─────────────────────────────────────────────────────────
+    const mbsProducts = {
+      umbs50_price: num(mbs.UMBS_5_0_Current),
+      umbs50_open:  num(mbs.UMBS_5_0_Open),
+      umbs50_delta: delta(mbs.UMBS_5_0_Current, mbs.UMBS_5_0_Open),
 
-    // Build staleness flags — scraper writes Arizona local time timestamps
-    const now = Date.now();
-    function staleMs(tsField) {
-      if (!tsField) return null;
-      const ts =
-        tsField._seconds
-          ? tsField._seconds * 1000
-          : typeof tsField === "string"
-          ? new Date(tsField).getTime()
-          : null;
-      return ts ? now - ts : null;
-    }
+      umbs55_price: num(mbs.UMBS_5_5_Current),
+      umbs55_open:  num(mbs.UMBS_5_5_Open),
+      umbs55_delta: delta(mbs.UMBS_5_5_Current, mbs.UMBS_5_5_Open),
 
-    const STALE_WARN_MS = 5 * 60 * 1000; // 5 min
-    const STALE_ERROR_MS = 15 * 60 * 1000; // 15 min
+      umbs60_price: num(mbs.UMBS_6_0_Current),
+      umbs60_open:  num(mbs.UMBS_6_0_Open),
+      umbs60_delta: delta(mbs.UMBS_6_0_Current, mbs.UMBS_6_0_Open),
 
-    function stalenessStatus(tsField) {
-      const age = staleMs(tsField);
-      if (age === null) return "unknown";
-      if (age < STALE_WARN_MS) return "fresh";
-      if (age < STALE_ERROR_MS) return "warn";
-      return "stale";
-    }
+      gnma50_price: num(mbs.GNMA_5_0_Current),
+      gnma50_open:  num(mbs.GNMA_5_0_Open),
+      gnma50_delta: delta(mbs.GNMA_5_0_Current, mbs.GNMA_5_0_Open),
 
-    const payload = {
-      fetchedAt: new Date().toISOString(),
-      date: todayAZ(),
+      gnma55_price: num(mbs.GNMA_5_5_Current),
+      gnma55_open:  num(mbs.GNMA_5_5_Open),
+      gnma55_delta: delta(mbs.GNMA_5_5_Current, mbs.GNMA_5_5_Open),
 
-      // ── Shadow Bonds (ZN, 10Y, 30Y, MBB, predicted UMBS delta) ──
-      shadowBonds: shadowBonds
-        ? {
-            zn_price: shadowBonds.zn_price ?? null,
-            zn_delta: shadowBonds.zn_delta ?? null,
-            us10y: shadowBonds.us10y ?? shadowBonds.us10y_yield ?? null,
-            us10y_delta: shadowBonds.us10y_delta ?? null,
-            us30y: shadowBonds.us30y ?? shadowBonds.us30y_yield ?? null,
-            us30y_delta: shadowBonds.us30y_delta ?? null,
-            mbb: shadowBonds.mbb ?? null,
-            mbb_delta: shadowBonds.mbb_delta ?? null,
-            predicted_umbs55_delta:
-              shadowBonds.predicted_umbs55_delta ??
-              shadowBonds.regression_predicted_umbs55_delta ??
-              null,
-            timestamp: shadowBonds.timestamp ?? shadowBonds.updated_at ?? null,
-            status: stalenessStatus(
-              shadowBonds.timestamp ?? shadowBonds.updated_at
-            ),
-          }
-        : null,
+      gnma60_price: num(mbs.GNMA_6_0_Current),
+      gnma60_open:  num(mbs.GNMA_6_0_Open),
+      gnma60_delta: delta(mbs.GNMA_6_0_Current, mbs.GNMA_6_0_Open),
 
-      // ── Treasury Futures (ZN raw — may be separate doc or in shadow_bonds) ──
-      treasuryFutures: treasuryFutures
-        ? {
-            zn_price: treasuryFutures.zn_price ?? null,
-            zn_delta: treasuryFutures.zn_delta ?? null,
-            timestamp: treasuryFutures.timestamp ?? null,
-            status: stalenessStatus(treasuryFutures.timestamp),
-          }
-        : null,
-
-      // ── MBS Products (UMBS + GNMA coupons) ──
-      mbsProducts: mbsProducts
-        ? {
-            umbs50: mbsProducts.umbs50 ?? mbsProducts["UMBS 5.0"] ?? null,
-            umbs55: mbsProducts.umbs55 ?? mbsProducts["UMBS 5.5"] ?? null,
-            umbs60: mbsProducts.umbs60 ?? mbsProducts["UMBS 6.0"] ?? null,
-            gnma50: mbsProducts.gnma50 ?? mbsProducts["GNMA 5.0"] ?? null,
-            gnma55: mbsProducts.gnma55 ?? mbsProducts["GNMA 5.5"] ?? null,
-            gnma60: mbsProducts.gnma60 ?? mbsProducts["GNMA 6.0"] ?? null,
-            umbs50_delta: mbsProducts.umbs50_delta ?? null,
-            umbs55_delta: mbsProducts.umbs55_delta ?? null,
-            umbs60_delta: mbsProducts.umbs60_delta ?? null,
-            gnma50_delta: mbsProducts.gnma50_delta ?? null,
-            gnma55_delta: mbsProducts.gnma55_delta ?? null,
-            gnma60_delta: mbsProducts.gnma60_delta ?? null,
-            timestamp: mbsProducts.timestamp ?? mbsProducts.updated_at ?? null,
-            status: stalenessStatus(
-              mbsProducts.timestamp ?? mbsProducts.updated_at
-            ),
-          }
-        : null,
-
-      // ── Broker Rates (pipeline output — averaged LO rates) ──
-      brokerRates: brokerRates
-        ? {
-            conv30: brokerRates.conv30 ?? null,
-            conv15: brokerRates.conv15 ?? null,
-            fha30: brokerRates.fha30 ?? null,
-            va30: brokerRates.va30 ?? null,
-            jumbo30: brokerRates.jumbo30 ?? null,
-            cashout30: brokerRates.cashout30 ?? null,
-            inv30: brokerRates.inv30 ?? null,
-            as_of: brokerRates.as_of ?? null,
-            status: stalenessStatus(brokerRates.as_of),
-          }
-        : null,
-
-      // ── FRED Cache (OBMMI + PMMS series) ──
-      fredCache: fredCache
-        ? {
-            // OBMMI
-            obmmic30yf:
-              fredCache.obmmic30yf ?? fredCache.OBMMIC30YF ?? null,
-            obmmic15yf:
-              fredCache.obmmic15yf ?? fredCache.OBMMIC15YF ?? null,
-            obmmifha30yf:
-              fredCache.obmmifha30yf ?? fredCache.OBMMIFHA30YF ?? null,
-            obmmiva30yf:
-              fredCache.obmmiva30yf ?? fredCache.OBMMIVA30YF ?? null,
-            obmmijumbo30yf:
-              fredCache.obmmijumbo30yf ?? fredCache.OBMMIJUMBO30YF ?? null,
-            // PMMS
-            mortgage30us:
-              fredCache.mortgage30us ?? fredCache.MORTGAGE30US ?? null,
-            mortgage15us:
-              fredCache.mortgage15us ?? fredCache.MORTGAGE15US ?? null,
-            // Metadata
-            as_of: fredCache.as_of ?? fredCache.fetched_at ?? null,
-            status: stalenessStatus(fredCache.as_of ?? fredCache.fetched_at),
-          }
-        : null,
-
-      // ── Daily Anchor (opening prices, AM brief, etc.) ──
-      dailyAnchor: dailyAnchor
-        ? {
-            open_umbs55: dailyAnchor.open_umbs55 ?? null,
-            open_zn: dailyAnchor.open_zn ?? null,
-            open_10y: dailyAnchor.open_10y ?? null,
-            am_brief: dailyAnchor.am_brief ?? null,
-            lock_signal: dailyAnchor.lock_signal ?? null,
-            created_at: dailyAnchor.created_at ?? null,
-          }
-        : null,
+      last_updated:     mbs.last_updated     || null,
+      trading_day_date: mbs.trading_day_date || null,
     };
 
+    // ── Shadow Bonds (10Y, MBB, regression prediction) ───────────────────────
+    const shadowBonds = {
+      us10y_current: num(shadow.US10Y_Current),
+      us10y_open:    num(shadow.US10Y_Open),
+      us10y_delta:   deltaBps(shadow.US10Y_Current, shadow.US10Y_Open),
+
+      mbb_current: num(shadow.MBB_Current),
+      mbb_open:    num(shadow.MBB_Open),
+      mbb_delta:   delta(shadow.MBB_Current, shadow.MBB_Open),
+
+      // Regression-predicted UMBS 5.5 delta written by lockiq_TV_FH.py
+      predicted_umbs55_delta: num(shadow.predicted_umbs55_delta)
+                           ?? num(shadow.regression_predicted_umbs55_delta)
+                           ?? null,
+
+      last_updated:     shadow.last_updated     || null,
+      trading_day_date: shadow.trading_day_date || null,
+    };
+
+    // ── US 30Y (separate doc) ─────────────────────────────────────────────────
+    const us30yData = {
+      us30y_current: num(us30y.US30Y_Current),
+      us30y_open:    num(us30y.US30Y_Open),
+      us30y_delta:   deltaBps(us30y.US30Y_Current, us30y.US30Y_Open),
+      last_updated:  us30y.last_updated || null,
+    };
+
+    // ── Treasury Futures ──────────────────────────────────────────────────────
+    const treasuryFutures = {
+      zn_current: num(futures.ZN1_Current),
+      zn_open:    num(futures.ZN1_Open),
+      zn_delta:   delta(futures.ZN1_Current, futures.ZN1_Open),
+
+      zb_current: num(futures.ZB1_Current),
+      zb_open:    num(futures.ZB1_Open),
+      zb_delta:   delta(futures.ZB1_Current, futures.ZB1_Open),
+
+      zf_current: num(futures.ZF1_Current),
+      zf_open:    num(futures.ZF1_Open),
+      zf_delta:   delta(futures.ZF1_Current, futures.ZF1_Open),
+
+      zt_current: num(futures.ZT1_Current),
+      zt_open:    num(futures.ZT1_Open),
+      zt_delta:   delta(futures.ZT1_Current, futures.ZT1_Open),
+
+      last_updated:     futures.last_updated     || null,
+      trading_day_date: futures.trading_day_date || null,
+    };
+
+    // ── Broker Rates (rate sheet pipeline output) ─────────────────────────────
+    const brokerRates = {
+      conv30:    num(broker.conv30),
+      conv15:    num(broker.conv15),
+      fha30:     num(broker.fha30),
+      va30:      num(broker.va30),
+      jumbo30:   num(broker.jumbo30),
+      cashout30: num(broker.cashout30),
+      inv30:     num(broker.inv30),
+      as_of:     broker.as_of || null,
+    };
+
+    // ── FRED Cache (OBMMI + PMMS) ─────────────────────────────────────────────
+    // Try both UPPER and lower case — field name may vary by scraper version
+    const fc = (key) => num(fred[key]) ?? num(fred[key.toLowerCase()]) ?? null;
+    const fredCache = {
+      obmmic30yf:     fc('OBMMIC30YF'),
+      obmmic15yf:     fc('OBMMIC15YF'),
+      obmmifha30yf:   fc('OBMMIFHA30YF'),
+      obmmiva30yf:    fc('OBMMIVA30YF'),
+      obmmijumbo30yf: fc('OBMMIJUMBO30YF'),
+      mortgage30us:   fc('MORTGAGE30US'),
+      mortgage15us:   fc('MORTGAGE15US'),
+      as_of:          fred.as_of || fred.fetched_at || null,
+    };
+
+    // ── Daily Anchor ──────────────────────────────────────────────────────────
+    const dailyAnchor = anchorSnap.exists ? {
+      open_umbs55: num(anchor.open_umbs55),
+      open_zn:     num(anchor.open_zn),
+      open_10y:    num(anchor.open_10y),
+      am_brief:    anchor.am_brief    || null,
+      lock_signal: anchor.lock_signal || null,
+      created_at:  anchor.created_at  || null,
+    } : null;
+
+    // ── Response ──────────────────────────────────────────────────────────────
     return {
       statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        "Cache-Control": "no-store",
-      },
-      body: JSON.stringify(payload),
+      headers: HEADERS,
+      body: JSON.stringify({
+        fetchedAt: new Date().toISOString(),
+        date:      today,
+        mbsProducts,
+        shadowBonds,
+        us30y:     us30yData,
+        treasuryFutures,
+        brokerRates,
+        fredCache,
+        dailyAnchor,
+      }),
     };
+
   } catch (err) {
-    console.error("getMarketData error:", err);
+    console.error('getMarketData error:', err);
     return {
       statusCode: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers: HEADERS,
       body: JSON.stringify({ error: err.message }),
     };
   }
