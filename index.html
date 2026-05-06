@@ -83,6 +83,7 @@ body::before {
 .tb-tz-btn.active { color:var(--cyan); background:rgba(0,222,255,.08); }
 .tb-clock-wrap { display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
 .tb-clock { font-family:var(--mono); font-size:18px; color:var(--text-pri); letter-spacing:.08em; font-variant-numeric:tabular-nums; line-height:1; }
+.tb-ampm  { font-family:var(--mono); font-size:11px; color:var(--text-sec); letter-spacing:.08em; line-height:1; }
 .tb-date  { font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:.12em; }
 @media (max-width:520px) {
   .topbar { height:auto; padding:8px 12px; flex-wrap:wrap; gap:6px; }
@@ -97,18 +98,19 @@ body::before {
 .sec-title { font-family:var(--mono); font-size:13px; font-weight:700; letter-spacing:.28em; color:var(--cyan); text-transform:uppercase; white-space:nowrap; }
 .sec-line { flex:1; height:1px; background:linear-gradient(90deg,var(--border2),transparent); }
 
-/* ═══════════════════════════════════════════ COMPACT MARKET BLOCK — 40% sidebar */
+/* ═══════════════════════════════════════════ PAGE LAYOUT — fixed narrow sidebar */
 .page-layout {
   display:grid;
-  grid-template-columns:minmax(0,2fr) minmax(0,3fr);
+  grid-template-columns:260px 1fr;
   gap:8px; align-items:start;
 }
 .page-sidebar { display:flex; flex-direction:column; gap:8px; }
-.page-main    { display:flex; flex-direction:column; gap:8px; }
+.page-main    { display:flex; flex-direction:column; gap:8px; min-width:0; }
 @media (max-width:1000px) {
   .page-layout { grid-template-columns:1fr; }
 }
 
+/* ═══════════════════════════════════════════ COMPACT MARKET BLOCK */
 .mkt-block {
   background:var(--bg1); border:1px solid var(--border2); border-radius:10px;
   overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.3);
@@ -121,45 +123,52 @@ body::before {
   display:flex; align-items:stretch; border-bottom:1px solid var(--border);
 }
 .mkt-row:last-child { border-bottom:none; }
-.mkt-row-mid { background:rgba(58,139,232,.015); }
+.mkt-row-mid { background:rgba(58,139,232,.018); }
 .mkt-row-label {
   display:flex; align-items:center; justify-content:center;
-  width:32px; flex-shrink:0;
+  width:28px; flex-shrink:0;
   border-right:1px solid var(--border); background:var(--bg0);
 }
 .mkt-row-tag {
-  font-family:var(--mono); font-size:8px; letter-spacing:.12em;
+  font-family:var(--mono); font-size:7px; letter-spacing:.1em;
   writing-mode:vertical-rl; text-orientation:mixed; text-transform:uppercase;
   padding:4px 0;
 }
 .mkt-row-tag-cyan  { color:var(--cyan); }
 .mkt-row-tag-blue  { color:var(--blue); }
 .mkt-row-tag-amber { color:var(--amber); }
+/* tiles: 2-column grid for sidebar width */
 .mkt-tiles { display:grid; flex:1; }
-.mkt-tiles-6 { grid-template-columns:repeat(6,1fr); }
-.mkt-tiles-5 { grid-template-columns:repeat(5,1fr); }
-.mkt-tiles-4 { grid-template-columns:repeat(4,1fr); }
+.mkt-tiles-6 { grid-template-columns:repeat(3,1fr); }  /* 2 rows of 3 */
+.mkt-tiles-5 { grid-template-columns:repeat(3,1fr); }  /* wraps naturally */
+.mkt-tiles-4 { grid-template-columns:repeat(2,1fr); }
 .mkt-tile {
-  padding:5px 8px 4px; border-right:1px solid var(--border);
+  padding:6px 8px 5px; border-right:1px solid var(--border); border-bottom:1px solid var(--border);
   display:flex; flex-direction:column; gap:0; min-width:0;
 }
-.mkt-tile:last-child { border-right:none; }
-.mkt-tile:hover { background:rgba(255,255,255,.02); }
-.mkt-label { font-family:var(--mono); font-size:8px; letter-spacing:.1em; color:var(--text-sec); text-transform:uppercase; white-space:nowrap; }
-.mkt-price { font-family:var(--display); font-size:17px; font-weight:600; line-height:1.1; white-space:nowrap; }
-.mkt-delta { font-family:var(--mono); font-size:9px; letter-spacing:.03em; white-space:nowrap; }
-.mkt-divider { border-right:2px solid var(--border2) !important; }
-.mkt-mbb { border-left:1px solid rgba(0,222,255,.14); }
+.mkt-tiles-6 .mkt-tile:nth-child(3n) { border-right:none; }
+.mkt-tiles-5 .mkt-tile:nth-child(3n) { border-right:none; }
+.mkt-tiles-4 .mkt-tile:nth-child(2n) { border-right:none; }
+/* remove bottom border on last row */
+.mkt-tiles-6 .mkt-tile:nth-child(n+4) { border-bottom:none; }
+.mkt-tiles-5 .mkt-tile:nth-child(n+4) { border-bottom:none; }
+.mkt-tiles-4 .mkt-tile:nth-child(n+3) { border-bottom:none; }
+.mkt-tile:hover { background:rgba(255,255,255,.025); }
+.mkt-label { font-family:var(--mono); font-size:9px; letter-spacing:.08em; color:var(--text-sec); text-transform:uppercase; white-space:nowrap; margin-bottom:2px; }
+.mkt-price { font-family:var(--display); font-size:20px; font-weight:600; line-height:1; white-space:nowrap; }
+.mkt-delta { font-family:var(--mono); font-size:10px; letter-spacing:.03em; white-space:nowrap; margin-top:1px; }
+.mkt-divider { /* not used in 2-col layout */ }
+.mkt-mbb { border-left:none; }
 
-/* ═══════════════════════════════════════════ GOAT + RATES TWO-COLUMN */
+/* ═══════════════════════════════════════════ GOAT + RATES — GOAT narrower */
 .goat-rates-grid {
-  display:grid; grid-template-columns:minmax(0,2fr) minmax(0,3fr); gap:8px; align-items:start;
+  display:grid; grid-template-columns:380px 1fr; gap:8px; align-items:start; min-width:0;
 }
 @media (max-width:1100px) {
   .goat-rates-grid { grid-template-columns:1fr; }
 }
 
-/* ═══════════════════════════════════════════ RATES PANEL (inside right column) */
+/* ═══════════════════════════════════════════ RATES PANEL */
 .rates-3col { display:grid; grid-template-columns:1fr 1fr 0.52fr; gap:8px; }
 
 /* color helpers used across strips */
@@ -431,7 +440,10 @@ body::before {
 
     <!-- Clock -->
     <div class="tb-clock-wrap">
-      <div class="tb-clock" id="tbClock">--:--:--</div>
+      <div style="display:flex;align-items:baseline;gap:5px">
+        <div class="tb-clock" id="tbClock">--:--:--</div>
+        <div class="tb-ampm" id="tbAmPm">--</div>
+      </div>
       <div class="tb-date"  id="tbDate">--- -- ----</div>
     </div>
   </div>
@@ -443,7 +455,7 @@ body::before {
 
   <!-- ══ LEFT SIDEBAR: MARKET DATA (MBS + TSY + FUT) ══ -->
   <div class="page-sidebar">
-    <div class="sec-header"><div class="sec-title">Live Market</div><div class="sec-line"></div></div>
+    <div class="sec-header" style="margin-bottom:5px"><div class="sec-title">Live Market</div><div class="sec-line"></div></div>
     <div class="mkt-block">
     <!-- MBS Row -->
     <div class="mkt-row">
@@ -466,7 +478,7 @@ body::before {
           <div class="mkt-price val-flat">—</div>
           <div class="mkt-delta val-flat">—</div>
         </div>
-        <div class="mkt-tile mkt-divider" id="tile-gnma50">
+        <div class="mkt-tile" id="tile-gnma50">
           <div class="mkt-label">GNMA 5.0</div>
           <div class="mkt-price val-flat">—</div>
           <div class="mkt-delta val-flat">—</div>
@@ -509,7 +521,7 @@ body::before {
           <div class="mkt-price val-flat">—</div>
           <div class="mkt-delta val-flat">—</div>
         </div>
-        <div class="mkt-tile mkt-mbb" id="tile-mbb">
+        <div class="mkt-tile" id="tile-mbb">
           <div class="mkt-label">MBB</div>
           <div class="mkt-price val-flat">—</div>
           <div class="mkt-delta val-flat">—</div>
@@ -797,11 +809,13 @@ function setTZ(btn) {
 
 function tick() {
   const now = new Date();
-  const timeFmt = new Intl.DateTimeFormat('en-US', { timeZone:selectedTZ, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+  const timeFmt = new Intl.DateTimeFormat('en-US', { timeZone:selectedTZ, hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true });
   const dateFmt = new Intl.DateTimeFormat('en-US', { timeZone:selectedTZ, weekday:'short', month:'short', day:'numeric', year:'numeric' });
   const tp = timeFmt.formatToParts(now);
-  const g  = t => tp.find(p=>p.type===t)?.value||'00';
-  document.getElementById('tbClock').textContent = `${g('hour')}:${g('minute')}:${g('second')}`;
+  const g  = t => tp.find(p=>p.type===t)?.value||'';
+  const h = g('hour'), m = g('minute'), s = g('second'), ampm = g('dayPeriod');
+  document.getElementById('tbClock').textContent = `${h}:${m}:${s}`;
+  document.getElementById('tbAmPm').textContent  = ampm.toUpperCase();
   const dp = dateFmt.formatToParts(now);
   const gd = t => dp.find(p=>p.type===t)?.value||'';
   document.getElementById('tbDate').textContent = `${gd('weekday').toUpperCase()} ${gd('month').toUpperCase()} ${gd('day')} ${gd('year')}`;
