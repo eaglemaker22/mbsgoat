@@ -59,12 +59,6 @@ body::before {
 .tb-logo-sub { font-family:var(--cond); font-size:11px; font-weight:600; letter-spacing:.28em; color:var(--text-sec); text-transform:uppercase; }
 .tb-logo-sub .hi { color:var(--amber); }
 .tb-right { display:flex; align-items:center; gap:14px; flex-shrink:0; }
-.tb-freshness { display:flex; flex-direction:column; gap:2px; }
-.tb-fresh-row { display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:.08em; }
-.tb-fresh-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
-.fresh-ok   { background:var(--green); }
-.fresh-warn { background:var(--amber); }
-.fresh-dead { background:var(--red); }
 .tb-market-pill {
   display:flex; align-items:center; gap:5px;
   font-family:var(--mono); font-size:10px; letter-spacing:.1em;
@@ -95,7 +89,6 @@ body::before {
   .tb-right { gap:8px; }
   .tb-tz-btn { padding:4px 7px; font-size:10px; }
   .tb-clock { font-size:15px; }
-  .tb-freshness { display:none; }
 }
 
 /* ═══════════════════════════════════════════ MAIN / SECTION */
@@ -104,75 +97,59 @@ body::before {
 .sec-title { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.32em; color:var(--cyan); text-transform:uppercase; white-space:nowrap; }
 .sec-line { flex:1; height:1px; background:linear-gradient(90deg,var(--border2),transparent); }
 
-/* ═══════════════════════════════════════════ MBS STRIP */
-.mbs-strip {
+/* ═══════════════════════════════════════════ COMPACT MARKET BLOCK */
+.mkt-block {
   background:var(--bg1); border:1px solid var(--border2); border-radius:10px;
   overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.3);
 }
-.mbs-strip::before {
+.mkt-block::before {
   content:''; display:block; height:2px;
-  background:linear-gradient(90deg,transparent,var(--cyan-mid),transparent);
+  background:linear-gradient(90deg,transparent,var(--cyan-mid),var(--blue),var(--amber),transparent);
 }
-.mbs-strip-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:5px 14px; background:linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 100%);
-  border-bottom:1px solid var(--border);
+.mkt-row {
+  display:flex; align-items:stretch; border-bottom:1px solid var(--border);
 }
-.mbs-strip-title { font-family:var(--mono); font-size:10px; letter-spacing:.22em; color:var(--cyan); text-transform:uppercase; }
-.mbs-strip-meta  { font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:.08em; }
-.mbs-tiles { display:grid; grid-template-columns:repeat(6,1fr); gap:0; }
-.mbs-tile {
-  padding:8px 10px; border-right:1px solid var(--border);
-  display:flex; flex-direction:column; gap:2px; position:relative;
+.mkt-row:last-child { border-bottom:none; }
+.mkt-row-mid { background:rgba(58,139,232,.015); }
+.mkt-row-label {
+  display:flex; align-items:center; justify-content:center;
+  width:38px; flex-shrink:0;
+  border-right:1px solid var(--border); background:var(--bg0);
 }
-.mbs-tile:last-child { border-right:none; }
-.mbs-tile-label { font-family:var(--mono); font-size:9px; letter-spacing:.14em; color:var(--text-sec); text-transform:uppercase; }
-.mbs-tile-price { font-family:var(--display); font-size:20px; font-weight:600; line-height:1; color:#fff; }
-.mbs-tile-delta { font-family:var(--mono); font-size:10px; letter-spacing:.04em; }
-.mbs-tile-open  { font-family:var(--mono); font-size:8px; color:var(--text-dim); letter-spacing:.06em; margin-top:1px; }
-.mbs-divider { grid-column:4 / span 1; border-right:2px solid var(--border2) !important; }
-@media (max-width:700px) {
-  .mbs-tiles { grid-template-columns:repeat(3,1fr); }
-  .mbs-divider { border-right:1px solid var(--border) !important; }
+.mkt-row-tag {
+  font-family:var(--mono); font-size:8px; letter-spacing:.12em;
+  writing-mode:vertical-rl; text-orientation:mixed; text-transform:uppercase;
+  padding:6px 0;
+}
+.mkt-row-tag-cyan  { color:var(--cyan); }
+.mkt-row-tag-blue  { color:var(--blue); }
+.mkt-row-tag-amber { color:var(--amber); }
+.mkt-tiles { display:grid; flex:1; }
+.mkt-tiles-6 { grid-template-columns:repeat(6,1fr); }
+.mkt-tiles-5 { grid-template-columns:repeat(5,1fr); }
+.mkt-tiles-4 { grid-template-columns:repeat(4,1fr); }
+.mkt-tile {
+  padding:6px 10px 5px; border-right:1px solid var(--border);
+  display:flex; flex-direction:column; gap:1px; min-width:0;
+}
+.mkt-tile:last-child { border-right:none; }
+.mkt-tile:hover { background:rgba(255,255,255,.02); }
+.mkt-label { font-family:var(--mono); font-size:9px; letter-spacing:.12em; color:var(--text-sec); text-transform:uppercase; white-space:nowrap; }
+.mkt-price { font-family:var(--display); font-size:22px; font-weight:600; line-height:1; white-space:nowrap; }
+.mkt-delta { font-family:var(--mono); font-size:10px; letter-spacing:.04em; white-space:nowrap; }
+.mkt-divider { border-right:2px solid var(--border2) !important; }
+.mkt-mbb { border-left:1px solid rgba(0,222,255,.14); }
+
+/* ═══════════════════════════════════════════ GOAT + RATES TWO-COLUMN */
+.goat-rates-grid {
+  display:grid; grid-template-columns:minmax(300px,2fr) 3fr; gap:8px; align-items:start;
+}
+@media (max-width:1100px) {
+  .goat-rates-grid { grid-template-columns:1fr; }
 }
 
-/* ═══════════════════════════════════════════ BOND / FUTURES STRIPS */
-.market-strip {
-  background:var(--bg1); border:1px solid var(--border2); border-radius:10px;
-  overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.3);
-}
-.market-strip::before {
-  content:''; display:block; height:2px;
-}
-.strip-treasury::before { background:linear-gradient(90deg,transparent,var(--blue),transparent); }
-.strip-futures::before  { background:linear-gradient(90deg,transparent,var(--amber),transparent); }
-.market-strip-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:5px 14px; background:linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 100%);
-  border-bottom:1px solid var(--border);
-}
-.strip-treasury .market-strip-title { color:var(--blue); }
-.strip-futures  .market-strip-title { color:var(--amber); }
-.market-strip-title { font-family:var(--mono); font-size:10px; letter-spacing:.22em; text-transform:uppercase; }
-.market-strip-meta  { font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:.08em; }
-.bond-tiles { display:grid; gap:0; }
-.bond-tiles-5 { grid-template-columns:repeat(5,1fr); }
-.bond-tiles-4 { grid-template-columns:repeat(4,1fr); }
-.bond-tile {
-  padding:8px 12px; border-right:1px solid var(--border);
-  display:flex; flex-direction:column; gap:2px;
-}
-.bond-tile:last-child { border-right:none; }
-.bond-tile-label { font-family:var(--mono); font-size:9px; letter-spacing:.14em; color:var(--text-sec); text-transform:uppercase; }
-.bond-tile-val   { font-family:var(--display); font-size:20px; font-weight:600; line-height:1; color:#fff; }
-.bond-tile-delta { font-family:var(--mono); font-size:10px; letter-spacing:.04em; }
-.bond-tile-open  { font-family:var(--mono); font-size:8px; color:var(--text-dim); letter-spacing:.06em; margin-top:1px; }
-/* MBB gets a special left-border accent */
-.bond-tile.mbb-tile { border-left:2px solid rgba(0,222,255,.18); }
-@media (max-width:700px) {
-  .bond-tiles-5 { grid-template-columns:repeat(3,1fr); }
-  .bond-tiles-4 { grid-template-columns:repeat(2,1fr); }
-}
+/* ═══════════════════════════════════════════ RATES PANEL (inside right column) */
+.rates-3col { display:grid; grid-template-columns:1fr 1fr 0.52fr; gap:8px; }
 
 /* color helpers used across strips */
 .val-up   { color:var(--green); }
@@ -226,8 +203,7 @@ body::before {
 .chart-body  { padding:10px 14px 12px; position:relative; height:190px; }
 .chart-empty { display:flex; align-items:center; justify-content:center; height:100%; font-family:var(--mono); font-size:12px; color:var(--text-dim); letter-spacing:.1em; }
 
-/* ═══════════════════════════════════════════ RATES PANEL */
-.rates-3col { display:grid; grid-template-columns:1fr 1fr 0.52fr; gap:8px; }
+/* rates-3col is defined in the GOAT+RATES section above */
 .rate-panel { background:var(--bg1); border:1px solid var(--border2); border-radius:10px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.3); display:flex; flex-direction:column; }
 .rate-panel-header { padding:7px 12px; background:linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 100%); border-bottom:1px solid var(--border2); position:relative; }
 .rate-panel-header::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; border-radius:10px 10px 0 0; }
@@ -422,13 +398,6 @@ input[type=range].goat-slider { flex:1; height:3px; accent-color:var(--amber); c
   </div>
 
   <div class="tb-right">
-    <!-- Freshness indicators -->
-    <div class="tb-freshness">
-      <div class="tb-fresh-row"><div class="tb-fresh-dot fresh-ok" id="dotMbs"></div><span id="ageMbs">MBS --</span></div>
-      <div class="tb-fresh-row"><div class="tb-fresh-dot fresh-ok" id="dotBonds"></div><span id="ageBonds">BONDS --</span></div>
-      <div class="tb-fresh-row"><div class="tb-fresh-dot fresh-ok" id="dotRates"></div><span id="ageRates">RATES --</span></div>
-    </div>
-
     <!-- Market status -->
     <div class="tb-market-pill pill-closed" id="marketPill">
       <div class="pill-dot dot-closed" id="marketDot"></div>
@@ -454,340 +423,277 @@ input[type=range].goat-slider { flex:1; height:3px; accent-color:var(--amber); c
 <!-- ══════════════════════════════════════════ MAIN -->
 <div class="main">
 
-  <!-- ── MBS COUPON STRIP ── -->
-  <div>
-    <div class="sec-header"><div class="sec-title">MBS Prices</div><div class="sec-line"></div></div>
-    <div class="mbs-strip">
-      <div class="mbs-strip-header">
-        <div class="mbs-strip-title">UMBS &amp; GNMA Coupon Stack · Live</div>
-        <div class="mbs-strip-meta" id="mbsStripMeta">--</div>
+  <!-- ── MARKET DATA BLOCK: MBS + TREASURIES + FUTURES ── -->
+  <div class="mkt-block">
+    <!-- MBS Row -->
+    <div class="mkt-row">
+      <div class="mkt-row-label">
+        <span class="mkt-row-tag mkt-row-tag-cyan">MBS</span>
       </div>
-      <div class="mbs-tiles">
-        <div class="mbs-tile" id="tile-umbs50">
-          <div class="mbs-tile-label">UMBS 5.0</div>
-          <div class="mbs-tile-price val-flat">—</div>
-          <div class="mbs-tile-delta val-flat">— bps</div>
-          <div class="mbs-tile-open">Open: —</div>
+      <div class="mkt-tiles mkt-tiles-6">
+        <div class="mkt-tile" id="tile-umbs50">
+          <div class="mkt-label">UMBS 5.0</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
         </div>
-        <div class="mbs-tile" id="tile-umbs55">
-          <div class="mbs-tile-label">UMBS 5.5</div>
-          <div class="mbs-tile-price val-flat">—</div>
-          <div class="mbs-tile-delta val-flat">— bps</div>
-          <div class="mbs-tile-open">Open: —</div>
+        <div class="mkt-tile" id="tile-umbs55">
+          <div class="mkt-label">UMBS 5.5</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
         </div>
-        <div class="mbs-tile" id="tile-umbs60">
-          <div class="mbs-tile-label">UMBS 6.0</div>
-          <div class="mbs-tile-price val-flat">—</div>
-          <div class="mbs-tile-delta val-flat">— bps</div>
-          <div class="mbs-tile-open">Open: —</div>
+        <div class="mkt-tile" id="tile-umbs60">
+          <div class="mkt-label">UMBS 6.0</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
         </div>
-        <div class="mbs-tile mbs-divider" id="tile-gnma50">
-          <div class="mbs-tile-label">GNMA 5.0</div>
-          <div class="mbs-tile-price val-flat">—</div>
-          <div class="mbs-tile-delta val-flat">— bps</div>
-          <div class="mbs-tile-open">Open: —</div>
+        <div class="mkt-tile mkt-divider" id="tile-gnma50">
+          <div class="mkt-label">GNMA 5.0</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
         </div>
-        <div class="mbs-tile" id="tile-gnma55">
-          <div class="mbs-tile-label">GNMA 5.5</div>
-          <div class="mbs-tile-price val-flat">—</div>
-          <div class="mbs-tile-delta val-flat">— bps</div>
-          <div class="mbs-tile-open">Open: —</div>
+        <div class="mkt-tile" id="tile-gnma55">
+          <div class="mkt-label">GNMA 5.5</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
         </div>
-        <div class="mbs-tile" id="tile-gnma60">
-          <div class="mbs-tile-label">GNMA 6.0</div>
-          <div class="mbs-tile-price val-flat">—</div>
-          <div class="mbs-tile-delta val-flat">— bps</div>
-          <div class="mbs-tile-open">Open: —</div>
+        <div class="mkt-tile" id="tile-gnma60">
+          <div class="mkt-label">GNMA 6.0</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
+        </div>
+      </div>
+    </div>
+    <!-- Treasury Row -->
+    <div class="mkt-row mkt-row-mid">
+      <div class="mkt-row-label">
+        <span class="mkt-row-tag mkt-row-tag-blue">TSY</span>
+      </div>
+      <div class="mkt-tiles mkt-tiles-5">
+        <div class="mkt-tile" id="tile-us2y">
+          <div class="mkt-label">US 2Y</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
+        </div>
+        <div class="mkt-tile" id="tile-us5y">
+          <div class="mkt-label">US 5Y</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
+        </div>
+        <div class="mkt-tile" id="tile-us10y">
+          <div class="mkt-label">US 10Y</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
+        </div>
+        <div class="mkt-tile" id="tile-us30y">
+          <div class="mkt-label">US 30Y</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
+        </div>
+        <div class="mkt-tile mkt-mbb" id="tile-mbb">
+          <div class="mkt-label">MBB</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
+        </div>
+      </div>
+    </div>
+    <!-- Futures Row -->
+    <div class="mkt-row">
+      <div class="mkt-row-label">
+        <span class="mkt-row-tag mkt-row-tag-amber">FUT</span>
+      </div>
+      <div class="mkt-tiles mkt-tiles-4">
+        <div class="mkt-tile" id="tile-zn">
+          <div class="mkt-label">ZN · 10Y</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
+        </div>
+        <div class="mkt-tile" id="tile-zb">
+          <div class="mkt-label">ZB · 30Y</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
+        </div>
+        <div class="mkt-tile" id="tile-zf">
+          <div class="mkt-label">ZF · 5Y</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
+        </div>
+        <div class="mkt-tile" id="tile-zt">
+          <div class="mkt-label">ZT · 2Y</div>
+          <div class="mkt-price val-flat">—</div>
+          <div class="mkt-delta val-flat">—</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ── TREASURY YIELDS + MBB ── -->
-  <div>
-    <div class="sec-header"><div class="sec-title">Treasuries &amp; MBB</div><div class="sec-line"></div></div>
-    <div class="market-strip strip-treasury">
-      <div class="market-strip-header">
-        <div class="market-strip-title">US Treasury Yields &amp; MBB ETF · Live</div>
-        <div class="market-strip-meta" id="bondStripMeta">--</div>
-      </div>
-      <div class="bond-tiles bond-tiles-5">
-        <div class="bond-tile" id="tile-us2y">
-          <div class="bond-tile-label">US 2Y</div>
-          <div class="bond-tile-val val-flat">—</div>
-          <div class="bond-tile-delta val-flat">— bps</div>
-          <div class="bond-tile-open">Open: —</div>
-        </div>
-        <div class="bond-tile" id="tile-us5y">
-          <div class="bond-tile-label">US 5Y</div>
-          <div class="bond-tile-val val-flat">—</div>
-          <div class="bond-tile-delta val-flat">— bps</div>
-          <div class="bond-tile-open">Open: —</div>
-        </div>
-        <div class="bond-tile" id="tile-us10y">
-          <div class="bond-tile-label">US 10Y</div>
-          <div class="bond-tile-val val-flat">—</div>
-          <div class="bond-tile-delta val-flat">— bps</div>
-          <div class="bond-tile-open">Open: —</div>
-        </div>
-        <div class="bond-tile" id="tile-us30y">
-          <div class="bond-tile-label">US 30Y</div>
-          <div class="bond-tile-val val-flat">—</div>
-          <div class="bond-tile-delta val-flat">— bps</div>
-          <div class="bond-tile-open">Open: —</div>
-        </div>
-        <div class="bond-tile mbb-tile" id="tile-mbb">
-          <div class="bond-tile-label">MBB ETF</div>
-          <div class="bond-tile-val val-flat">—</div>
-          <div class="bond-tile-delta val-flat">— pts</div>
-          <div class="bond-tile-open">Open: —</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- ── TWO-COLUMN: GOAT LEFT · RATES RIGHT ── -->
+  <div class="goat-rates-grid">
 
-  <!-- ── TREASURY FUTURES ── -->
-  <div>
-    <div class="sec-header"><div class="sec-title">Treasury Futures</div><div class="sec-line"></div></div>
-    <div class="market-strip strip-futures">
-      <div class="market-strip-header">
-        <div class="market-strip-title">Treasury Futures · Continuous Contracts</div>
-        <div class="market-strip-meta" id="futStripMeta">--</div>
-      </div>
-      <div class="bond-tiles bond-tiles-4">
-        <div class="bond-tile" id="tile-zn">
-          <div class="bond-tile-label">ZN · 10Y Note</div>
-          <div class="bond-tile-val val-flat">—</div>
-          <div class="bond-tile-delta val-flat">—</div>
-          <div class="bond-tile-open">Open: —</div>
-        </div>
-        <div class="bond-tile" id="tile-zb">
-          <div class="bond-tile-label">ZB · 30Y Bond</div>
-          <div class="bond-tile-val val-flat">—</div>
-          <div class="bond-tile-delta val-flat">—</div>
-          <div class="bond-tile-open">Open: —</div>
-        </div>
-        <div class="bond-tile" id="tile-zf">
-          <div class="bond-tile-label">ZF · 5Y Note</div>
-          <div class="bond-tile-val val-flat">—</div>
-          <div class="bond-tile-delta val-flat">—</div>
-          <div class="bond-tile-open">Open: —</div>
-        </div>
-        <div class="bond-tile" id="tile-zt">
-          <div class="bond-tile-label">ZT · 2Y Note</div>
-          <div class="bond-tile-val val-flat">—</div>
-          <div class="bond-tile-delta val-flat">—</div>
-          <div class="bond-tile-open">Open: —</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── REPRICE BANNER ── -->
-  <div class="reprice-banner state-stable" id="repriceBanner">
-    <div class="reprice-inner">
-      <div class="rp-dot stable" id="rpDot"></div>
-      <div class="rp-label stable" id="rpLabel">AWAITING DATA</div>
-      <div class="rp-detail" id="rpDetail">Initializing reprice signal engine...</div>
-      <div class="rp-caveat">Signal based on UMBS 5.5 delta from open. Threshold: 3.3 ticks (~0.103 pts). Lender-driven reprices are not market-predictable.</div>
-    </div>
-  </div>
-
-  <!-- ── INTRADAY CHART ── -->
-  <div>
-    <div class="sec-header"><div class="sec-title">Intraday</div><div class="sec-line"></div></div>
-    <div class="chart-block">
-      <div class="chart-header">
-        <div class="chart-title-wrap">
-          <div class="chart-title">Price Movement</div>
-          <div class="chart-meta" id="chartMeta">Loading...</div>
-        </div>
-        <div class="chart-header-right">
-          <div class="chart-legend">
-            <div class="chart-legend-item"><div class="chart-legend-swatch" style="background:#00deff"></div>UMBS 5.5</div>
-            <div class="chart-legend-item"><div class="chart-legend-swatch" style="background:#f0a800"></div>Predicted</div>
-            <div class="chart-legend-item"><div class="chart-legend-swatch" style="background:#3a8be8;opacity:.7"></div>10Y</div>
-          </div>
-          <div class="chart-series-btns">
-            <button class="chart-series-btn active" id="btnUMBS" onclick="toggleSeries(this,'umbs')">UMBS</button>
-            <button class="chart-series-btn active" id="btnPred" onclick="toggleSeries(this,'pred')">Predicted</button>
-            <button class="chart-series-btn"        id="btn10Y"  onclick="toggleSeries(this,'t10y')">10Y</button>
-          </div>
-        </div>
-      </div>
-      <div class="chart-body">
-        <canvas id="intradayChart"></canvas>
-        <div class="chart-empty" id="chartEmpty" style="display:none">No intraday data — check back during market hours</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── RATES PANEL: BPI | OBMMI | PMMS ── -->
-  <div>
-    <div class="sec-header"><div class="sec-title">Mortgage Rates</div><div class="sec-line"></div></div>
-    <div class="rates-3col">
-
-      <!-- BPI -->
-      <div class="rate-panel bpi">
-        <div class="rate-panel-header">
-          <div class="rate-panel-info">
-            <div class="rate-panel-source">Broker Price Index</div>
-            <button class="info-btn" onclick="openModal('bpi')">ⓘ Source</button>
-          </div>
-          <div class="rate-panel-meta">Live Rate Sheets · UWM &amp; Rocket Pro TPO<br><span id="bpiUpdated" style="color:var(--text-sec)">—</span></div>
-        </div>
-        <!-- Hero: live Conv 30A -->
-        <div class="bpi-hero">
-          <div class="bpi-hero-tag">BPI · LIVE · 30Y CONV · 760+ FICO · 75 LTV</div>
-          <div class="bpi-hero-num">
-            <div class="bpi-hero-rate" id="bpiHeroRate">—<sup>%</sup></div>
-            <div class="bpi-hero-delta-wrap">
-              <div class="bpi-hero-delta val-flat" id="bpiHeroDelta">—</div>
-              <div class="bpi-hero-delta-lbl">VS YESTERDAY</div>
+    <!-- LEFT COLUMN: GOAT MATRIX -->
+    <div>
+      <div class="sec-header"><div class="sec-title">GOAT Matrix · Rate Change</div><div class="sec-line"></div></div>
+      <div class="goat-wrap">
+        <div class="goat-header">
+          <div class="goat-title">⬡ LOCKIQ · RATE CHANGE MATRIX</div>
+          <div class="goat-controls">
+            <div class="prod-toggle">
+              <button class="prod-btn active" id="gBtn-CONV" onclick="setGoatProduct('CONV')">CONV 30</button>
+              <button class="prod-btn"        id="gBtn-FHA"  onclick="setGoatProduct('FHA')">FHA 30</button>
+              <button class="prod-btn"        id="gBtn-VA"   onclick="setGoatProduct('VA')">VA 30</button>
+            </div>
+            <div class="since-wrap">
+              <span class="since-lbl">SINCE</span>
+              <select class="since-sel" id="goatSince" onchange="renderGoat()">
+                <option value="yopen">YESTERDAY OPEN</option>
+                <option value="yclose" selected>YESTERDAY CLOSE</option>
+                <option value="t0500">TODAY OPEN (5AM)</option>
+                <option value="t0530">5:30 AM ET</option>
+                <option value="t0600">6:00 AM ET</option>
+                <option value="t0700">7:00 AM ET</option>
+                <option value="t0800">8:00 AM ET</option>
+                <option value="t0900">9:00 AM ET</option>
+                <option value="t1000">10:00 AM ET</option>
+                <option value="t1030">10:30 AM ET</option>
+                <option value="t1200">12:00 PM ET</option>
+                <option value="t1400">2:00 PM ET</option>
+                <option value="t1600">4:00 PM ET</option>
+              </select>
             </div>
           </div>
         </div>
-        <!-- YOU SAVE vs OBMMI + PMMS -->
-        <div class="bpi-vs-strip">
-          <div class="bpi-vs-block">
-            <div class="bpi-vs-src">VS OBMMI</div>
-            <div class="bpi-vs-delta val-flat" id="vsObmmiDelta">—</div>
-            <div class="bpi-vs-they" id="vsObmmiThey">they: —</div>
-            <div class="bpi-vs-save" id="vsObmmiSave">—</div>
-          </div>
-          <div class="bpi-vs-block">
-            <div class="bpi-vs-src">VS FREDDIE</div>
-            <div class="bpi-vs-delta val-flat" id="vsPmmsDelta">—</div>
-            <div class="bpi-vs-they" id="vsPmmsThey">they: —</div>
-            <div class="bpi-vs-save" id="vsPmmsSave">—</div>
-          </div>
-        </div>
-        <!-- A/B tier header -->
-        <div class="bpi-tier-header">
-          <div class="bpi-tier-cell">
-            <div class="bpi-tier-badge badge-a">A · BEST QUALIFIED</div>
-            <div class="bpi-tier-desc">760+ FICO · 75 LTV · SFR PRIMARY</div>
-          </div>
-          <div style="width:1px;background:var(--border)"></div>
-          <div class="bpi-tier-cell">
-            <div class="bpi-tier-badge badge-b">B · AVERAGE BORROWER</div>
-            <div class="bpi-tier-desc">720 FICO · 80 LTV · SFR PRIMARY</div>
-          </div>
-        </div>
-        <div class="bpi-col-header">
-          <div class="bpi-col-lbl">PRODUCT</div>
-          <div class="bpi-col-lbl r">RATE A</div>
-          <div class="bpi-col-lbl r">Δ</div>
-          <div></div>
-          <div class="bpi-col-lbl r">RATE B</div>
-          <div class="bpi-col-lbl r">Δ</div>
-        </div>
-        <div class="rate-panel-body" id="bpiRows"></div>
-      </div>
 
-      <!-- OBMMI -->
-      <div class="rate-panel mcr">
-        <div class="rate-panel-header">
-          <div class="rate-panel-info">
-            <div class="rate-panel-source">Market Composite</div>
-            <button class="info-btn" onclick="openModal('mcr')">ⓘ Source</button>
-          </div>
-          <div class="rate-panel-meta">Optimal Blue MMI · Nightly<br><span id="mcrUpdated" style="color:var(--text-sec)">—</span></div>
-        </div>
-        <div class="rp-tf-row">
-          <span class="rp-tf-lbl">RANGE</span>
-          <button class="rp-tf-btn active" id="rpTf1d" onclick="setRpTf('1d')">1D</button>
-          <button class="rp-tf-btn" id="rpTf1w" onclick="setRpTf('1w')" disabled>1W</button>
-          <button class="rp-tf-btn" id="rpTf1m" onclick="setRpTf('1m')" disabled>1M</button>
-          <button class="rp-tf-btn" id="rpTf3m" onclick="setRpTf('3m')" disabled>3M</button>
-        </div>
-        <div class="rate-panel-body" id="mcrPanel"></div>
-      </div>
-
-      <!-- Freddie PMMS -->
-      <div class="rate-panel freddie">
-        <div class="rate-panel-header">
-          <div class="rate-panel-info">
-            <div class="rate-panel-source">Freddie Mac</div>
-            <button class="info-btn" onclick="openModal('pmms')">ⓘ Source</button>
-          </div>
-          <div class="rate-panel-meta">PMMS · Weekly Survey<br><span id="pmmsUpdated" style="color:var(--text-sec)">—</span></div>
-        </div>
-        <div class="rate-panel-body" id="freddiePanel"></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ── GOAT MATRIX ── -->
-  <div>
-    <div class="sec-header"><div class="sec-title">GOAT Matrix · Live Rate Change</div><div class="sec-line"></div></div>
-    <div class="goat-wrap">
-      <div class="goat-header">
-        <div class="goat-title">⬡ LOCKIQ · RATE CHANGE MATRIX</div>
-        <div class="goat-controls">
-          <div class="prod-toggle">
-            <button class="prod-btn active" id="gBtn-CONV" onclick="setGoatProduct('CONV')">CONV 30</button>
-            <button class="prod-btn"        id="gBtn-FHA"  onclick="setGoatProduct('FHA')">FHA 30</button>
-            <button class="prod-btn"        id="gBtn-VA"   onclick="setGoatProduct('VA')">VA 30</button>
-          </div>
-          <div class="since-wrap">
-            <span class="since-lbl">SINCE</span>
-            <select class="since-sel" id="goatSince" onchange="renderGoat()">
-              <option value="yopen">YESTERDAY OPEN</option>
-              <option value="yclose" selected>YESTERDAY CLOSE</option>
-              <option value="t0500">TODAY OPEN (5AM)</option>
-              <option value="t0530">5:30 AM ET</option>
-              <option value="t0600">6:00 AM ET</option>
-              <option value="t0700">7:00 AM ET</option>
-              <option value="t0800">8:00 AM ET</option>
-              <option value="t0900">9:00 AM ET</option>
-              <option value="t1000">10:00 AM ET</option>
-              <option value="t1030">10:30 AM ET</option>
-              <option value="t1200">12:00 PM ET</option>
-              <option value="t1400">2:00 PM ET</option>
-              <option value="t1600">4:00 PM ET</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="goat-hero">
-        <div>
-          <div class="goat-hero-label">PAR RATE CREDIT OR COST / $100K LOAN</div>
-          <div class="goat-hero-left">
-            <div class="goat-hero-num val-flat" id="goatHeroNum">$0</div>
-            <div>
-              <div class="goat-hero-unit" id="goatHeroDir">per $100k</div>
-              <div class="goat-hero-meta val-flat" id="goatHeroTicks">0.0 bps UMBS 5.0</div>
+        <div class="goat-hero">
+          <div>
+            <div class="goat-hero-label">PAR RATE CREDIT OR COST / $100K LOAN</div>
+            <div class="goat-hero-left">
+              <div class="goat-hero-num val-flat" id="goatHeroNum">$0</div>
+              <div>
+                <div class="goat-hero-unit" id="goatHeroDir">per $100k</div>
+                <div class="goat-hero-meta val-flat" id="goatHeroTicks">0.0 bps UMBS 5.0</div>
+              </div>
             </div>
           </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <div class="goat-signal signal-flat" id="goatSignal">FLAT</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)" id="goatSinceNote">VS YESTERDAY CLOSE</div>
+          </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <div class="goat-signal signal-flat" id="goatSignal">FLAT</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim)" id="goatSinceNote">VS YESTERDAY CLOSE</div>
+
+        <div class="goat-col-header">
+          <div class="goat-col-lbl">RATE</div>
+          <div class="goat-col-lbl r">PASS%</div>
+          <div class="goat-col-lbl r">BPS CHG</div>
+          <div class="goat-col-lbl r">$ / 100K</div>
         </div>
-      </div>
+        <div class="goat-table" id="goatRows"></div>
 
-      <div class="goat-col-header">
-        <div class="goat-col-lbl">RATE</div>
-        <div class="goat-col-lbl r">PASS%</div>
-        <div class="goat-col-lbl r">BPS CHG</div>
-        <div class="goat-col-lbl r">$ / 100K</div>
-      </div>
-      <div class="goat-table" id="goatRows"></div>
-
-      <div class="goat-slider-row">
-        <span class="goat-slider-lbl">SHOW RANGE</span>
-        <input type="range" class="goat-slider" id="goatLow"  min="0" max="27" value="4"  step="1" oninput="clampGoatSliders('lo');renderGoat()">
-        <span class="goat-slider-val" id="goatLowVal">—</span>
-        <span class="goat-slider-lbl" style="color:var(--border2)">—</span>
-        <span class="goat-slider-val" id="goatHighVal">—</span>
-        <input type="range" class="goat-slider" id="goatHigh" min="0" max="27" value="14" step="1" oninput="clampGoatSliders('hi');renderGoat()">
-        <span class="goat-slider-lbl">▲▼</span>
+        <div class="goat-slider-row">
+          <span class="goat-slider-lbl">SHOW RANGE</span>
+          <input type="range" class="goat-slider" id="goatLow"  min="0" max="27" value="4"  step="1" oninput="clampGoatSliders('lo');renderGoat()">
+          <span class="goat-slider-val" id="goatLowVal">—</span>
+          <span class="goat-slider-lbl" style="color:var(--border2)">—</span>
+          <span class="goat-slider-val" id="goatHighVal">—</span>
+          <input type="range" class="goat-slider" id="goatHigh" min="0" max="27" value="14" step="1" oninput="clampGoatSliders('hi');renderGoat()">
+          <span class="goat-slider-lbl">▲▼</span>
+        </div>
       </div>
     </div>
-  </div>
+
+    <!-- RIGHT COLUMN: MORTGAGE RATES -->
+    <div>
+      <div class="sec-header"><div class="sec-title">Mortgage Rates</div><div class="sec-line"></div></div>
+      <div class="rates-3col">
+
+        <!-- BPI -->
+        <div class="rate-panel bpi">
+          <div class="rate-panel-header">
+            <div class="rate-panel-info">
+              <div class="rate-panel-source">Broker Price Index</div>
+              <button class="info-btn" onclick="openModal('bpi')">ⓘ Source</button>
+            </div>
+            <div class="rate-panel-meta">Live Rate Sheets · UWM &amp; Rocket Pro TPO<br><span id="bpiUpdated" style="color:var(--text-sec)">—</span></div>
+          </div>
+          <div class="bpi-hero">
+            <div class="bpi-hero-tag">BPI · LIVE · 30Y CONV · 760+ FICO · 75 LTV</div>
+            <div class="bpi-hero-num">
+              <div class="bpi-hero-rate" id="bpiHeroRate">—<sup>%</sup></div>
+              <div class="bpi-hero-delta-wrap">
+                <div class="bpi-hero-delta val-flat" id="bpiHeroDelta">—</div>
+                <div class="bpi-hero-delta-lbl">VS YESTERDAY</div>
+              </div>
+            </div>
+          </div>
+          <div class="bpi-vs-strip">
+            <div class="bpi-vs-block">
+              <div class="bpi-vs-src">VS OBMMI</div>
+              <div class="bpi-vs-delta val-flat" id="vsObmmiDelta">—</div>
+              <div class="bpi-vs-they" id="vsObmmiThey">they: —</div>
+              <div class="bpi-vs-save" id="vsObmmiSave">—</div>
+            </div>
+            <div class="bpi-vs-block">
+              <div class="bpi-vs-src">VS FREDDIE</div>
+              <div class="bpi-vs-delta val-flat" id="vsPmmsDelta">—</div>
+              <div class="bpi-vs-they" id="vsPmmsThey">they: —</div>
+              <div class="bpi-vs-save" id="vsPmmsSave">—</div>
+            </div>
+          </div>
+          <div class="bpi-tier-header">
+            <div class="bpi-tier-cell">
+              <div class="bpi-tier-badge badge-a">A · BEST QUALIFIED</div>
+              <div class="bpi-tier-desc">760+ FICO · 75 LTV · SFR PRIMARY</div>
+            </div>
+            <div style="width:1px;background:var(--border)"></div>
+            <div class="bpi-tier-cell">
+              <div class="bpi-tier-badge badge-b">B · AVERAGE BORROWER</div>
+              <div class="bpi-tier-desc">720 FICO · 80 LTV · SFR PRIMARY</div>
+            </div>
+          </div>
+          <div class="bpi-col-header">
+            <div class="bpi-col-lbl">PRODUCT</div>
+            <div class="bpi-col-lbl r">RATE A</div>
+            <div class="bpi-col-lbl r">Δ</div>
+            <div></div>
+            <div class="bpi-col-lbl r">RATE B</div>
+            <div class="bpi-col-lbl r">Δ</div>
+          </div>
+          <div class="rate-panel-body" id="bpiRows"></div>
+        </div>
+
+        <!-- OBMMI -->
+        <div class="rate-panel mcr">
+          <div class="rate-panel-header">
+            <div class="rate-panel-info">
+              <div class="rate-panel-source">Market Composite</div>
+              <button class="info-btn" onclick="openModal('mcr')">ⓘ Source</button>
+            </div>
+            <div class="rate-panel-meta">Optimal Blue MMI · Nightly<br><span id="mcrUpdated" style="color:var(--text-sec)">—</span></div>
+          </div>
+          <div class="rp-tf-row">
+            <span class="rp-tf-lbl">RANGE</span>
+            <button class="rp-tf-btn active" id="rpTf1d" onclick="setRpTf('1d')">1D</button>
+            <button class="rp-tf-btn" id="rpTf1w" onclick="setRpTf('1w')" disabled>1W</button>
+            <button class="rp-tf-btn" id="rpTf1m" onclick="setRpTf('1m')" disabled>1M</button>
+            <button class="rp-tf-btn" id="rpTf3m" onclick="setRpTf('3m')" disabled>3M</button>
+          </div>
+          <div class="rate-panel-body" id="mcrPanel"></div>
+        </div>
+
+        <!-- Freddie PMMS -->
+        <div class="rate-panel freddie">
+          <div class="rate-panel-header">
+            <div class="rate-panel-info">
+              <div class="rate-panel-source">Freddie Mac</div>
+              <button class="info-btn" onclick="openModal('pmms')">ⓘ Source</button>
+            </div>
+            <div class="rate-panel-meta">PMMS · Weekly Survey<br><span id="pmmsUpdated" style="color:var(--text-sec)">—</span></div>
+          </div>
+          <div class="rate-panel-body" id="freddiePanel"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /goat-rates-grid -->
 
   <!-- ── EQUITIES ── -->
   <div>
@@ -864,6 +770,7 @@ function setTZ(btn) {
   document.querySelectorAll('.tb-tz-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   selectedTZ = btn.dataset.tz;
+  tick(); // immediately update clock to new timezone
 }
 
 function tick() {
@@ -910,20 +817,18 @@ function ageDotCls(s) { return s<180?'fresh-ok':s<600?'fresh-warn':'fresh-dead';
 function setTile(id, price, delta, open, isYield) {
   const el = document.getElementById('tile-'+id);
   if (!el) return;
-  const priceEl = el.querySelector('.mbs-tile-price,.bond-tile-val');
-  const deltaEl = el.querySelector('.mbs-tile-delta,.bond-tile-delta');
-  const openEl  = el.querySelector('.mbs-tile-open,.bond-tile-open');
-  const p = n4(price), d = n4(delta), o = n4(open);
+  const priceEl = el.querySelector('.mkt-price');
+  const deltaEl = el.querySelector('.mkt-delta');
+  const p = n4(price), d = n4(delta);
   if (priceEl) {
     priceEl.textContent = p !== null ? p.toFixed(3) + (isYield ? '%' : '') : '—';
-    priceEl.className = priceEl.className.replace(/val-\w+/g,'') + ' ' + chgCls(d);
+    priceEl.className = 'mkt-price ' + chgCls(d);
   }
   if (deltaEl) {
     const unit = isYield ? ' bps' : id==='mbb' ? ' pts' : ' bps';
-    deltaEl.textContent = d !== null ? (d>0?'▲ +':d<0?'▼ ':'') + Math.abs(d).toFixed(2) + unit : '— bps';
-    deltaEl.className = deltaEl.className.replace(/val-\w+/g,'') + ' ' + chgCls(d);
+    deltaEl.textContent = d !== null ? (d>0?'▲ +':d<0?'▼ ':'') + Math.abs(d).toFixed(2) + unit : '—';
+    deltaEl.className = 'mkt-delta ' + chgCls(d);
   }
-  if (openEl) openEl.textContent = 'Open: '+(o !== null ? o.toFixed(3)+(isYield?'%':'') : '—');
 }
 
 /* ═══════════════════════════════════════════════════════ RENDER MBS STRIP */
@@ -1329,7 +1234,6 @@ async function fetchData() {
     renderReprice(data.shadowBonds, data.mbsProducts);
     renderRatesPanel(data);
     if (data.goat_anchors || data.brokerRates) renderGoat();
-    updateFreshness(data);
 
   } catch(err) {
     console.error('Fetch error:', err);
