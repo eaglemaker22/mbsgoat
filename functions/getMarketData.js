@@ -20,7 +20,6 @@ const num = (v) => {
   return Number.isFinite(n) ? n : null;
 };
 
-// Delta in points (MBS price units — keeps ticks math clean on frontend)
 const delta = (cur, open) => {
   const c = num(cur);
   const o = num(open);
@@ -28,7 +27,6 @@ const delta = (cur, open) => {
   return Math.round((c - o) * 10000) / 10000;
 };
 
-// Delta in basis points (for yields)
 const deltaBps = (cur, open) => {
   const c = num(cur);
   const o = num(open);
@@ -36,11 +34,42 @@ const deltaBps = (cur, open) => {
   return Math.round((c - o) * 1000) / 10;
 };
 
-// Today's date YYYY-MM-DD in Arizona local time (scraper timezone, MST = UTC-7)
 function todayAZ() {
   const now = new Date();
   const az  = new Date(now.getTime() - 7 * 60 * 60 * 1000);
   return az.toISOString().slice(0, 10);
+}
+
+// Extract latest value from a FRED series using all possible storage formats:
+//   1. fred_cache nested object: { latest, latestDate, prev, change }
+//   2. fred_cache flat value: 6.85
+//   3. fred_history observations array: [{ date, value }, ...] — take last entry
+function fredVal(cache, hist, key) {
+  // Try cache first (fresher — written intraday by scheduled runs)
+  const cacheObj = cache[key] ?? cache[key.toLowerCase()];
+  if (cacheObj !== undefined && cacheObj !== null) {
+    if (typeof cacheObj === 'object' && cacheObj.latest !== undefined) return num(cacheObj.latest);
+    const flat = num(cacheObj);
+    if (flat !== null) return flat;
+  }
+  // Fall back to fred_history (written at 4:30pm, always populated)
+  const histObj = hist[key] ?? hist[key.toLowerCase()];
+  if (histObj && Array.isArray(histObj.observations) && histObj.observations.length > 0) {
+    const last = histObj.observations[histObj.observations.length - 1];
+    return num(last.value);
+  }
+  return null;
+}
+
+// Latest date for a FRED series (for as_of display)
+function fredDate(cache, hist, key) {
+  const cacheObj = cache[key] ?? cache[key.toLowerCase()];
+  if (cacheObj && typeof cacheObj === 'object' && cacheObj.latestDate) return cacheObj.latestDate;
+  const histObj = hist[key] ?? hist[key.toLowerCase()];
+  if (histObj && Array.isArray(histObj.observations) && histObj.observations.length > 0) {
+    return histObj.observations[histObj.observations.length - 1].date;
+  }
+  return null;
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -62,24 +91,28 @@ exports.handler = async function (event) {
   try {
     const today = todayAZ();
 
-    const [mbsSnap, shadowSnap, us30ySnap, futuresSnap, brokerSnap, fredSnap, anchorSnap] =
-      await Promise.all([
-        db.collection('market_data').doc('mbs_products').get(),
-        db.collection('market_data').doc('shadow_bonds').get(),
-        db.collection('market_data').doc('us30y_current').get(),
-        db.collection('market_data').doc('treasury_futures').get(),
-        db.collection('market_data').doc('broker_rates').get(),
-        db.collection('market_data').doc('fred_cache').get(),
-        db.collection('daily_anchors').doc(today).get(),
-      ]);
+    const [
+      mbsSnap, shadowSnap, us30ySnap, futuresSnap,
+      brokerSnap, fredSnap, fredHistSnap, anchorSnap
+    ] = await Promise.all([
+      db.collection('market_data').doc('mbs_products').get(),
+      db.collection('market_data').doc('shadow_bonds').get(),
+      db.collection('market_data').doc('us30y_current').get(),
+      db.collection('market_data').doc('treasury_futures').get(),
+      db.collection('market_data').doc('broker_rates').get(),
+      db.collection('market_data').doc('fred_cache').get(),
+      db.collection('market_data').doc('fred_history').get(),
+      db.collection('daily_anchors').doc(today).get(),
+    ]);
 
-    const mbs     = mbsSnap.exists     ? mbsSnap.data()     : {};
-    const shadow  = shadowSnap.exists  ? shadowSnap.data()  : {};
-    const us30y   = us30ySnap.exists   ? us30ySnap.data()   : {};
-    const futures = futuresSnap.exists ? futuresSnap.data() : {};
-    const broker  = brokerSnap.exists  ? brokerSnap.data()  : {};
-    const fred    = fredSnap.exists    ? fredSnap.data()    : {};
-    const anchor  = anchorSnap.exists  ? anchorSnap.data()  : {};
+    const mbs      = mbsSnap.exists      ? mbsSnap.data()      : {};
+    const shadow   = shadowSnap.exists   ? shadowSnap.data()   : {};
+    const us30y    = us30ySnap.exists    ? us30ySnap.data()    : {};
+    const futures  = futuresSnap.exists  ? futuresSnap.data()  : {};
+    const broker   = brokerSnap.exists   ? brokerSnap.data()   : {};
+    const fred     = fredSnap.exists     ? fredSnap.data()     : {};
+    const fredHist = fredHistSnap.exists ? fredHistSnap.data() : {};
+    const anchor   = anchorSnap.exists   ? anchorSnap.data()   : {};
 
     // ── MBS Products ─────────────────────────────────────────────────────────
     const mbsProducts = {
@@ -111,7 +144,7 @@ exports.handler = async function (event) {
       trading_day_date: mbs.trading_day_date || null,
     };
 
-    // ── Shadow Bonds (10Y, MBB, regression prediction) ───────────────────────
+    // ── Shadow Bonds ─────────────────────────────────────────────────────────
     const shadowBonds = {
       us10y_current: num(shadow.US10Y_Current),
       us10y_open:    num(shadow.US10Y_Open),
@@ -121,7 +154,6 @@ exports.handler = async function (event) {
       mbb_open:    num(shadow.MBB_Open),
       mbb_delta:   delta(shadow.MBB_Current, shadow.MBB_Open),
 
-      // Regression-predicted UMBS 5.5 delta written by lockiq_TV_FH.py
       predicted_umbs55_delta: num(shadow.predicted_umbs55_delta)
                            ?? num(shadow.regression_predicted_umbs55_delta)
                            ?? null,
@@ -130,7 +162,7 @@ exports.handler = async function (event) {
       trading_day_date: shadow.trading_day_date || null,
     };
 
-    // ── US 30Y (separate doc) ─────────────────────────────────────────────────
+    // ── US 30Y ────────────────────────────────────────────────────────────────
     const us30yData = {
       us30y_current: num(us30y.US30Y_Current),
       us30y_open:    num(us30y.US30Y_Open),
@@ -160,7 +192,7 @@ exports.handler = async function (event) {
       trading_day_date: futures.trading_day_date || null,
     };
 
-    // ── Broker Rates (rate sheet pipeline output) ─────────────────────────────
+    // ── Broker Rates ──────────────────────────────────────────────────────────
     const brokerRates = {
       conv30:    num(broker.conv30),
       conv15:    num(broker.conv15),
@@ -172,26 +204,24 @@ exports.handler = async function (event) {
       as_of:     broker.as_of || null,
     };
 
-    // ── FRED Cache (OBMMI + PMMS) ─────────────────────────────────────────────
-    // Each FRED series is stored as a nested object: { latest, latestDate, prev, change }
-    // Try both UPPER and lower case keys
-    const fc = (key) => {
-      const obj = fred[key] ?? fred[key.toLowerCase()];
-      if (!obj) return null;
-      // Nested object from lockiq_FRED.py
-      if (typeof obj === 'object' && obj.latest !== undefined) return num(obj.latest);
-      // Flat value fallback
-      return num(obj);
-    };
+    // ── FRED Rates ────────────────────────────────────────────────────────────
+    // Primary: fred_cache (intraday scheduled writes)
+    // Fallback: fred_history observations array (written 4:30pm daily, always populated)
+    const fv = (key) => fredVal(fred, fredHist, key);
+    const fd = (key) => fredDate(fred, fredHist, key);
+
     const fredCache = {
-      obmmic30yf:     fc('OBMMIC30YF'),
-      obmmic15yf:     fc('OBMMIC15YF'),
-      obmmifha30yf:   fc('OBMMIFHA30YF'),
-      obmmiva30yf:    fc('OBMMIVA30YF'),
-      obmmijumbo30yf: fc('OBMMIJUMBO30YF'),
-      mortgage30us:   fc('MORTGAGE30US'),
-      mortgage15us:   fc('MORTGAGE15US'),
-      as_of:          fred.as_of || fred.fetched_at || null,
+      obmmic30yf:     fv('OBMMIC30YF'),
+      obmmic15yf:     fv('OBMMIC15YF'),
+      obmmifha30yf:   fv('OBMMIFHA30YF'),
+      obmmiva30yf:    fv('OBMMIVA30YF'),
+      obmmijumbo30yf: fv('OBMMIJUMBO30YF'),
+      mortgage30us:   fv('MORTGAGE30US'),
+      mortgage15us:   fv('MORTGAGE15US'),
+      // Per-series dates so UI can show "as of YYYY-MM-DD" accurately
+      obmmic30yf_date:     fd('OBMMIC30YF'),
+      mortgage30us_date:   fd('MORTGAGE30US'),
+      as_of: fred.last_updated || fred.as_of || fred.fetched_at || null,
     };
 
     // ── Daily Anchor ──────────────────────────────────────────────────────────
@@ -204,7 +234,6 @@ exports.handler = async function (event) {
       created_at:  anchor.created_at  || null,
     } : null;
 
-    // ── Response ──────────────────────────────────────────────────────────────
     return {
       statusCode: 200,
       headers: HEADERS,
