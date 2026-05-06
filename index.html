@@ -94,10 +94,21 @@ body::before {
 /* ═══════════════════════════════════════════ MAIN / SECTION */
 .main { padding:8px 16px; display:flex; flex-direction:column; gap:8px; }
 .sec-header { display:flex; align-items:center; margin-bottom:5px; gap:10px; }
-.sec-title { font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.32em; color:var(--cyan); text-transform:uppercase; white-space:nowrap; }
+.sec-title { font-family:var(--mono); font-size:13px; font-weight:700; letter-spacing:.28em; color:var(--cyan); text-transform:uppercase; white-space:nowrap; }
 .sec-line { flex:1; height:1px; background:linear-gradient(90deg,var(--border2),transparent); }
 
-/* ═══════════════════════════════════════════ COMPACT MARKET BLOCK */
+/* ═══════════════════════════════════════════ COMPACT MARKET BLOCK — 40% sidebar */
+.page-layout {
+  display:grid;
+  grid-template-columns:minmax(0,2fr) minmax(0,3fr);
+  gap:8px; align-items:start;
+}
+.page-sidebar { display:flex; flex-direction:column; gap:8px; }
+.page-main    { display:flex; flex-direction:column; gap:8px; }
+@media (max-width:1000px) {
+  .page-layout { grid-template-columns:1fr; }
+}
+
 .mkt-block {
   background:var(--bg1); border:1px solid var(--border2); border-radius:10px;
   overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.3);
@@ -113,13 +124,13 @@ body::before {
 .mkt-row-mid { background:rgba(58,139,232,.015); }
 .mkt-row-label {
   display:flex; align-items:center; justify-content:center;
-  width:38px; flex-shrink:0;
+  width:32px; flex-shrink:0;
   border-right:1px solid var(--border); background:var(--bg0);
 }
 .mkt-row-tag {
   font-family:var(--mono); font-size:8px; letter-spacing:.12em;
   writing-mode:vertical-rl; text-orientation:mixed; text-transform:uppercase;
-  padding:6px 0;
+  padding:4px 0;
 }
 .mkt-row-tag-cyan  { color:var(--cyan); }
 .mkt-row-tag-blue  { color:var(--blue); }
@@ -129,20 +140,20 @@ body::before {
 .mkt-tiles-5 { grid-template-columns:repeat(5,1fr); }
 .mkt-tiles-4 { grid-template-columns:repeat(4,1fr); }
 .mkt-tile {
-  padding:6px 10px 5px; border-right:1px solid var(--border);
-  display:flex; flex-direction:column; gap:1px; min-width:0;
+  padding:5px 8px 4px; border-right:1px solid var(--border);
+  display:flex; flex-direction:column; gap:0; min-width:0;
 }
 .mkt-tile:last-child { border-right:none; }
 .mkt-tile:hover { background:rgba(255,255,255,.02); }
-.mkt-label { font-family:var(--mono); font-size:9px; letter-spacing:.12em; color:var(--text-sec); text-transform:uppercase; white-space:nowrap; }
-.mkt-price { font-family:var(--display); font-size:22px; font-weight:600; line-height:1; white-space:nowrap; }
-.mkt-delta { font-family:var(--mono); font-size:10px; letter-spacing:.04em; white-space:nowrap; }
+.mkt-label { font-family:var(--mono); font-size:8px; letter-spacing:.1em; color:var(--text-sec); text-transform:uppercase; white-space:nowrap; }
+.mkt-price { font-family:var(--display); font-size:17px; font-weight:600; line-height:1.1; white-space:nowrap; }
+.mkt-delta { font-family:var(--mono); font-size:9px; letter-spacing:.03em; white-space:nowrap; }
 .mkt-divider { border-right:2px solid var(--border2) !important; }
 .mkt-mbb { border-left:1px solid rgba(0,222,255,.14); }
 
 /* ═══════════════════════════════════════════ GOAT + RATES TWO-COLUMN */
 .goat-rates-grid {
-  display:grid; grid-template-columns:minmax(300px,2fr) 3fr; gap:8px; align-items:start;
+  display:grid; grid-template-columns:minmax(0,2fr) minmax(0,3fr); gap:8px; align-items:start;
 }
 @media (max-width:1100px) {
   .goat-rates-grid { grid-template-columns:1fr; }
@@ -289,43 +300,49 @@ body::before {
 /* ═══════════════════════════════════════════ GOAT MATRIX */
 .goat-wrap { background:var(--bg1); border:1px solid var(--border2); border-radius:10px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.3); }
 .goat-wrap::before { content:''; display:block; height:2px; background:linear-gradient(90deg,transparent,var(--amber),var(--cyan-mid),transparent); }
-.goat-header { display:flex; align-items:center; justify-content:space-between; padding:8px 14px; background:linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 100%); border-bottom:1px solid var(--border2); flex-wrap:wrap; gap:6px; }
-.goat-title { font-family:var(--mono); font-size:11px; letter-spacing:.2em; color:var(--amber); text-transform:uppercase; }
+.goat-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 100%); border-bottom:1px solid var(--border2); flex-wrap:wrap; gap:6px; }
+.goat-title { font-family:var(--cond); font-size:18px; font-weight:700; letter-spacing:.16em; color:var(--amber); text-transform:uppercase; }
 .goat-controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .prod-toggle { display:flex; border:1px solid var(--border2); border-radius:4px; overflow:hidden; }
-.prod-btn { font-family:var(--mono); font-size:10px; letter-spacing:.1em; background:transparent; border:none; border-right:1px solid var(--border2); color:var(--text-sec); padding:4px 12px; cursor:pointer; transition:all .15s; text-transform:uppercase; }
+.prod-btn { font-family:var(--mono); font-size:11px; letter-spacing:.1em; background:transparent; border:none; border-right:1px solid var(--border2); color:var(--text-sec); padding:5px 14px; cursor:pointer; transition:all .15s; text-transform:uppercase; }
 .prod-btn:last-child { border-right:none; }
 .prod-btn.active { background:rgba(240,168,0,.12); color:var(--amber); }
-.since-wrap { display:flex; align-items:center; gap:5px; }
-.since-lbl { font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:.12em; }
-.since-sel { font-family:var(--mono); font-size:10px; background:var(--bg2); border:1px solid var(--border2); border-radius:3px; color:var(--text-pri); padding:3px 7px; cursor:pointer; letter-spacing:.06em; }
-.goat-hero { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-bottom:1px solid var(--border); background:var(--bg0); flex-wrap:wrap; gap:8px; }
-.goat-hero-label { font-family:var(--mono); font-size:9px; color:var(--text-dim); letter-spacing:.14em; }
+.since-wrap { display:flex; align-items:center; gap:6px; }
+.since-lbl { font-family:var(--mono); font-size:11px; color:var(--text-sec); letter-spacing:.12em; }
+.since-sel { font-family:var(--mono); font-size:11px; background:var(--bg2); border:1px solid var(--border2); border-radius:3px; color:var(--text-pri); padding:4px 8px; cursor:pointer; letter-spacing:.06em; }
+.goat-hero { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg0); flex-wrap:wrap; gap:8px; }
+.goat-hero-label { font-family:var(--mono); font-size:11px; color:var(--text-sec); letter-spacing:.12em; margin-bottom:3px; }
 .goat-hero-left  { display:flex; align-items:baseline; gap:10px; }
-.goat-hero-num   { font-family:var(--display); font-size:42px; font-weight:700; line-height:1; }
-.goat-hero-unit  { font-family:var(--mono); font-size:11px; color:var(--text-sec); }
-.goat-hero-meta  { font-family:var(--mono); font-size:10px; }
-.goat-signal { font-family:var(--mono); font-size:11px; letter-spacing:.1em; padding:3px 10px; border-radius:3px; border:1px solid; }
+.goat-hero-num   { font-family:var(--display); font-size:52px; font-weight:700; line-height:1; }
+.goat-hero-unit  { font-family:var(--mono); font-size:13px; color:var(--text-sec); }
+.goat-hero-meta  { font-family:var(--mono); font-size:12px; margin-top:2px; }
+.goat-signal { font-family:var(--mono); font-size:12px; letter-spacing:.1em; padding:4px 12px; border-radius:3px; border:1px solid; }
 .signal-up   { color:var(--green); border-color:rgba(0,232,122,.3); background:rgba(0,232,122,.06); }
 .signal-dn   { color:var(--red);   border-color:rgba(255,51,17,.3);  background:rgba(255,51,17,.06); }
 .signal-flat { color:var(--text-sec); border-color:var(--border); background:transparent; }
-.goat-col-header { display:grid; grid-template-columns:80px 55px 70px 85px; padding:3px 0 3px 14px; background:var(--bg0); border-bottom:1px solid var(--border); }
-.goat-col-lbl { font-family:var(--mono); font-size:8px; color:var(--text-dim); letter-spacing:.12em; text-transform:uppercase; }
+.goat-col-header { display:grid; grid-template-columns:90px 60px 75px 90px; padding:5px 0 5px 14px; background:var(--bg0); border-bottom:1px solid var(--border); }
+.goat-col-lbl { font-family:var(--mono); font-size:10px; color:var(--text-sec); letter-spacing:.12em; text-transform:uppercase; }
 .goat-col-lbl.r { text-align:right; }
 .goat-table { overflow:hidden; }
-.goat-rate-row { display:grid; grid-template-columns:80px 55px 70px 85px; padding:5px 0 5px 14px; border-bottom:1px solid var(--border); align-items:center; transition:background .1s; cursor:pointer; }
+.goat-rate-row { display:grid; grid-template-columns:90px 60px 75px 90px; padding:7px 0 7px 14px; border-bottom:1px solid var(--border); align-items:center; transition:background .1s; cursor:pointer; }
 .goat-rate-row:last-child { border-bottom:none; }
-.goat-rate-row:hover { background:rgba(255,255,255,.02); }
-.goat-rate-row.par { background:rgba(240,168,0,.04); border-top:1px solid rgba(240,168,0,.15); border-bottom:1px solid rgba(240,168,0,.15); }
-.goat-rate-val  { font-family:var(--display); font-size:15px; font-weight:600; color:var(--text-pri); }
-.goat-rate-row.par .goat-rate-val { color:var(--amber); font-size:16px; }
-.goat-pass   { font-family:var(--mono); font-size:9px; color:var(--text-dim); text-align:right; padding-right:8px; }
-.goat-ticks  { font-family:var(--mono); font-size:11px; text-align:right; padding-right:6px; }
-.goat-dollar { font-family:var(--display); font-size:13px; font-weight:600; text-align:right; padding-right:14px; }
-.goat-slider-row { display:flex; align-items:center; gap:8px; padding:7px 14px; background:var(--bg0); border-top:1px solid var(--border); }
-.goat-slider-lbl { font-family:var(--mono); font-size:8px; color:var(--text-dim); letter-spacing:.12em; white-space:nowrap; }
-.goat-slider-val { font-family:var(--mono); font-size:9px; color:var(--text-sec); min-width:44px; text-align:center; }
-input[type=range].goat-slider { flex:1; height:3px; accent-color:var(--amber); cursor:pointer; }
+.goat-rate-row:hover { background:rgba(255,255,255,.03); }
+.goat-rate-row.par { background:rgba(240,168,0,.05); border-top:1px solid rgba(240,168,0,.2); border-bottom:1px solid rgba(240,168,0,.2); }
+.goat-rate-val  { font-family:var(--display); font-size:18px; font-weight:600; color:var(--text-pri); }
+.goat-rate-row.par .goat-rate-val { color:var(--amber); font-size:20px; }
+.goat-pass   { font-family:var(--mono); font-size:11px; color:var(--text-sec); text-align:right; padding-right:8px; }
+.goat-ticks  { font-family:var(--mono); font-size:13px; text-align:right; padding-right:6px; }
+.goat-dollar { font-family:var(--display); font-size:16px; font-weight:600; text-align:right; padding-right:14px; }
+/* Nav buttons — replace sliders */
+.goat-nav-row { display:flex; align-items:center; justify-content:space-between; padding:6px 12px; background:var(--bg0); border-top:1px solid var(--border); gap:8px; }
+.goat-nav-btn {
+  font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--text-sec);
+  background:var(--bg2); border:1px solid var(--border2); border-radius:4px;
+  padding:5px 16px; cursor:pointer; transition:all .15s; text-transform:uppercase;
+  flex-shrink:0;
+}
+.goat-nav-btn:hover { color:var(--amber); border-color:rgba(240,168,0,.4); background:rgba(240,168,0,.06); }
+.goat-nav-pos { font-family:var(--mono); font-size:11px; color:var(--text-sec); text-align:center; letter-spacing:.08em; flex:1; }
 
 /* ═══════════════════════════════════════════ EQUITIES */
 .equities-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
@@ -422,9 +439,12 @@ input[type=range].goat-slider { flex:1; height:3px; accent-color:var(--amber); c
 
 <!-- ══════════════════════════════════════════ MAIN -->
 <div class="main">
+<div class="page-layout">
 
-  <!-- ── MARKET DATA BLOCK: MBS + TREASURIES + FUTURES ── -->
-  <div class="mkt-block">
+  <!-- ══ LEFT SIDEBAR: MARKET DATA (MBS + TSY + FUT) ══ -->
+  <div class="page-sidebar">
+    <div class="sec-header"><div class="sec-title">Live Market</div><div class="sec-line"></div></div>
+    <div class="mkt-block">
     <!-- MBS Row -->
     <div class="mkt-row">
       <div class="mkt-row-label">
@@ -524,7 +544,11 @@ input[type=range].goat-slider { flex:1; height:3px; accent-color:var(--amber); c
         </div>
       </div>
     </div>
-  </div>
+    </div><!-- /mkt-block -->
+  </div><!-- /page-sidebar -->
+
+  <!-- ══ RIGHT MAIN: GOAT + RATES + EQUITIES + BOTTOM ══ -->
+  <div class="page-main">
 
   <!-- ── TWO-COLUMN: GOAT LEFT · RATES RIGHT ── -->
   <div class="goat-rates-grid">
@@ -587,14 +611,10 @@ input[type=range].goat-slider { flex:1; height:3px; accent-color:var(--amber); c
         </div>
         <div class="goat-table" id="goatRows"></div>
 
-        <div class="goat-slider-row">
-          <span class="goat-slider-lbl">SHOW RANGE</span>
-          <input type="range" class="goat-slider" id="goatLow"  min="0" max="27" value="4"  step="1" oninput="clampGoatSliders('lo');renderGoat()">
-          <span class="goat-slider-val" id="goatLowVal">—</span>
-          <span class="goat-slider-lbl" style="color:var(--border2)">—</span>
-          <span class="goat-slider-val" id="goatHighVal">—</span>
-          <input type="range" class="goat-slider" id="goatHigh" min="0" max="27" value="14" step="1" oninput="clampGoatSliders('hi');renderGoat()">
-          <span class="goat-slider-lbl">▲▼</span>
+        <div class="goat-nav-row">
+          <button class="goat-nav-btn" onclick="scrollGoat(-1)" title="Scroll up (lower rates)">▲ LOWER</button>
+          <div class="goat-nav-pos" id="goatNavPos">—</div>
+          <button class="goat-nav-btn" onclick="scrollGoat(1)" title="Scroll down (higher rates)">HIGHER ▼</button>
         </div>
       </div>
     </div>
@@ -719,6 +739,8 @@ input[type=range].goat-slider { flex:1; height:3px; accent-color:var(--amber); c
     </div>
   </div>
 
+  </div><!-- /page-main -->
+</div><!-- /page-layout -->
 </div><!-- /main -->
 
 <!-- ══════ RATE HISTORY CHART MODAL ══════ -->
@@ -1093,6 +1115,9 @@ function setRpTf(tf) {
 const ALL_RATES = [];
 for (let i=40; i<=60; i++) ALL_RATES.push(parseFloat((i/8).toFixed(3)));
 
+const WINDOW_SIZE = 9; // rows visible at once
+let goatOffset = 3;   // starting index (shows ~5.375 → 6.500 range by default)
+
 // Live par from brokerRates; fallback hardcoded
 const PAR_FALLBACK = { CONV:6.625, FHA:6.125, VA:6.125 };
 
@@ -1104,7 +1129,6 @@ const SINCE_LABELS = {
   t1400:'VS 2:00 PM', t1600:'VS 4:00 PM'
 };
 
-// Demo anchors — replaced by live goat_anchors from getMarketData once available
 const DEMO_ANCHORS = {
   yopen:+12, yclose:+8, t0500:+5, t0530:+4,
   t0600:+4, t0700:+3, t0800:+2, t0900:-1, t1000:-2, t1030:-2, t1200:-4, t1400:-1, t1600:0
@@ -1126,18 +1150,26 @@ function setGoatProduct(p) {
   renderGoat();
 }
 
-function clampGoatSliders(changed) {
-  const lo = document.getElementById('goatLow');
-  const hi = document.getElementById('goatHigh');
-  const MIN = 4;
-  if (changed==='lo' && +lo.value > +hi.value-MIN) lo.value = +hi.value-MIN;
-  if (changed==='hi' && +hi.value < +lo.value+MIN) hi.value = +lo.value+MIN;
+function scrollGoat(dir) {
+  const maxOffset = ALL_RATES.length - WINDOW_SIZE;
+  goatOffset = Math.max(0, Math.min(maxOffset, goatOffset + dir));
+  window._goatScrolled = true; // user has manually scrolled — stop auto-centering
+  renderGoat();
 }
+
+// Mouse wheel scroll on the rate table
+document.addEventListener('DOMContentLoaded', () => {
+  const tbl = document.getElementById('goatRows');
+  if (tbl) {
+    tbl.addEventListener('wheel', e => {
+      e.preventDefault();
+      scrollGoat(e.deltaY > 0 ? 1 : -1);
+    }, { passive: false });
+  }
+});
 
 function renderGoat() {
   const since  = document.getElementById('goatSince').value;
-  const loIdx  = +document.getElementById('goatLow').value;
-  const hiIdx  = +document.getElementById('goatHigh').value;
 
   // Get live par rate from data, fallback to static
   let livePar = PAR_FALLBACK[goatProduct];
@@ -1148,20 +1180,30 @@ function renderGoat() {
     if (goatProduct==='VA'   && br.va30)    livePar = br.va30;
   }
 
+  // Auto-center on par rate
+  const parIdx = ALL_RATES.findIndex(r => Math.abs(r - livePar) < 0.063);
+  if (parIdx >= 0 && !window._goatScrolled) {
+    goatOffset = Math.max(0, Math.min(ALL_RATES.length - WINDOW_SIZE, parIdx - Math.floor(WINDOW_SIZE/2)));
+  }
+
   // Get UMBS 5.0 bps change from anchor
   let umbsBps = DEMO_ANCHORS[since] || 0;
   if (liveData?.goat_anchors?.[since] !== undefined) umbsBps = liveData.goat_anchors[since];
-  // Also try to compute from live UMBS 5.0 delta if goat_anchors not available
   if (!liveData?.goat_anchors && liveData?.mbsProducts?.umbs50_delta) {
     if (since === 'yclose' || since === 'yopen') umbsBps = liveData.mbsProducts.umbs50_delta * 100;
   }
 
-  document.getElementById('goatLowVal').textContent  = ALL_RATES[loIdx].toFixed(3)+'%';
-  document.getElementById('goatHighVal').textContent = ALL_RATES[hiIdx].toFixed(3)+'%';
   document.getElementById('goatSinceNote').textContent = SINCE_LABELS[since] || '';
 
+  // Nav position display
+  const navPos = document.getElementById('goatNavPos');
+  const visRates = ALL_RATES.slice(goatOffset, goatOffset + WINDOW_SIZE);
+  if (navPos && visRates.length > 0) {
+    navPos.textContent = visRates[0].toFixed(3) + '% – ' + visRates[visRates.length-1].toFixed(3) + '%';
+  }
+
   // Hero
-  const parDollars = umbsBps * 10; // $10 per bp per $100k at par
+  const parDollars = umbsBps * 10;
   const heroEl  = document.getElementById('goatHeroNum');
   const dirEl   = document.getElementById('goatHeroDir');
   const ticksEl = document.getElementById('goatHeroTicks');
@@ -1174,18 +1216,17 @@ function renderGoat() {
   ticksEl.className   = 'goat-hero-meta '+(umbsBps>0?'val-up':umbsBps<0?'val-dn':'val-flat');
 
   const abs = Math.abs(umbsBps);
-  if      (abs < 2)  { sigEl.textContent='FLAT';                    sigEl.className='goat-signal signal-flat'; }
-  else if (abs < 5)  { sigEl.textContent=umbsBps>0?'IMPROVING':'WORSENING'; sigEl.className='goat-signal '+(umbsBps>0?'signal-up':'signal-dn'); }
-  else if (abs < 10) { sigEl.textContent=umbsBps>0?'BETTER':'ADVERSE';      sigEl.className='goat-signal '+(umbsBps>0?'signal-up':'signal-dn'); }
+  if      (abs < 2)  { sigEl.textContent='FLAT';                                sigEl.className='goat-signal signal-flat'; }
+  else if (abs < 5)  { sigEl.textContent=umbsBps>0?'IMPROVING':'WORSENING';    sigEl.className='goat-signal '+(umbsBps>0?'signal-up':'signal-dn'); }
+  else if (abs < 10) { sigEl.textContent=umbsBps>0?'BETTER':'ADVERSE';         sigEl.className='goat-signal '+(umbsBps>0?'signal-up':'signal-dn'); }
   else               { sigEl.textContent=umbsBps>0?'STRONGLY BETTER':'REPRICE RISK'; sigEl.className='goat-signal '+(umbsBps>0?'signal-up':'signal-dn'); }
 
-  // Rows
-  const visRates = ALL_RATES.slice(loIdx, hiIdx+1);
+  // Rate rows
   const tbody = document.getElementById('goatRows');
   tbody.innerHTML = '';
   visRates.forEach(rate => {
     const dist    = Math.abs(rate - livePar);
-    const isPar   = dist < 0.063; // closest to 1/8th step
+    const isPar   = dist < 0.063;
     const ratio   = passThroughRatio(dist);
     const adjBps  = umbsBps * ratio;
     const dollars = adjBps * 10;
