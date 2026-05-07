@@ -169,8 +169,8 @@ body:before{
 /* RATE TABLE */
 .rate-table{padding:4px 0}
 .rate-row{
-  display:grid;grid-template-columns:1fr 80px 56px;
-  align-items:center;padding:10px 18px;
+  display:grid;grid-template-columns:1fr 96px 64px;
+  align-items:center;padding:12px 18px;
   border-bottom:1px solid rgba(122,170,208,.05);
   cursor:pointer;transition:all .12s;position:relative;
 }
@@ -179,25 +179,28 @@ body:before{
 .rate-card.bpi .rate-row:hover{border-left:2px solid rgba(27,216,255,.4);padding-left:16px}
 .rate-card.obmmi .rate-row:hover{border-left:2px solid rgba(56,168,255,.4);padding-left:16px;background:rgba(56,168,255,.03)}
 .rate-card.freddie .rate-row:hover{border-left:2px solid rgba(255,189,39,.4);padding-left:16px;background:rgba(255,189,39,.03)}
-.rate-row-product{font:700 11px JetBrains Mono,monospace;letter-spacing:.1em;text-transform:uppercase;color:#c2d4df;display:flex;align-items:center;gap:7px}
+.rate-row-product{font:700 12px JetBrains Mono,monospace;letter-spacing:.1em;text-transform:uppercase;color:#c2d4df;display:flex;align-items:center;gap:7px}
 .rate-tag{font-size:8px;letter-spacing:.12em;padding:2px 5px;border-radius:3px;font-weight:700;text-transform:uppercase;opacity:.8}
 .rate-tag.cashout{background:rgba(255,189,39,.15);color:var(--amber);border:1px solid rgba(255,189,39,.25)}
 .rate-tag.invest{background:rgba(56,168,255,.15);color:var(--blue);border:1px solid rgba(56,168,255,.25)}
 .rate-row-right{text-align:right}
-.rate-val{font:700 17px JetBrains Mono,monospace;color:#eaf5fa}
-.rate-pct{font:700 11px JetBrains Mono,monospace;color:#8aabb8;margin-left:1px}
-.rate-chg{font:700 10px JetBrains Mono,monospace;letter-spacing:.06em;margin-top:2px}
+.rate-val{font:700 22px JetBrains Mono,monospace;color:#eaf5fa}
+.rate-pct{font:700 13px JetBrains Mono,monospace;color:#8aabb8;margin-left:1px}
+.rate-chg{font:700 11px JetBrains Mono,monospace;letter-spacing:.06em;margin-top:2px}
 .rate-chg.pos{color:var(--green)}
 .rate-chg.neg{color:var(--red)}
 .rate-chg.neu{color:#718698}
 .rate-hint{font-size:9px;opacity:.35;margin-left:3px}
 .rate-row-val-cell{text-align:right}
 .rate-row-chg-cell{text-align:right}
+/* BPI: hide change column — no prior day data available */
+.rate-card.bpi .rate-row{grid-template-columns:1fr 96px 0}
+.rate-card.bpi .rate-row-chg-cell{visibility:hidden;width:0;overflow:hidden;padding:0}
 
 /* COMPACT (2-product freddie) */
-.rate-card.freddie .rate-row{grid-template-columns:1fr 90px 60px;padding:14px 18px}
-.rate-card.freddie .rate-val{font-size:22px}
-.rate-card.freddie .rate-pct{font-size:13px}
+.rate-card.freddie .rate-row{grid-template-columns:1fr 110px 72px;padding:16px 18px}
+.rate-card.freddie .rate-val{font-size:26px}
+.rate-card.freddie .rate-pct{font-size:14px}
 
 /* SECTION LABELS */
 .section-divider{
@@ -700,7 +703,13 @@ function buildRateRow(r, source) {
   const change = r.change || 0;
   const chgCell = document.createElement('div');
   chgCell.className = 'rate-row-chg-cell';
-  chgCell.innerHTML = `<div class="rate-chg ${change>0?'pos':change<0?'neg':'neu'}">${change>0?'▲ +':change<0?'▼ ':''}${change.toFixed(3)}</div>`;
+  // BPI has no prior-day data yet — suppress the change column entirely
+  const isBpi = source === 'bpi' || source === 'bpi_b';
+  if (isBpi) {
+    chgCell.innerHTML = '';
+  } else {
+    chgCell.innerHTML = `<div class="rate-chg ${change>0?'pos':change<0?'neg':'neu'}">${change>0?'▲ +':change<0?'▼ ':''}${change.toFixed(3)}</div>`;
+  }
 
   row.appendChild(prodCell);
   row.appendChild(valCell);
