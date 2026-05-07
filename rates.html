@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LockIQ — Rates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg0:#03070d; --bg1:#07111c; --panel:#081522; --stroke:rgba(122,170,208,.16);
+  --strokeBright:rgba(69,255,130,.46); --white:#edf5f8; --soft:#b8c6d1; --muted:#6f8292;
+  --green:#42f36f; --cyan:#1bd8ff; --blue:#38a8ff; --amber:#ffbd27; --red:#ff4a43;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh; color:var(--white); font-family:Inter,system-ui,sans-serif; overflow-x:hidden;
+  background:
+    radial-gradient(900px 360px at 19% 24%, rgba(35,255,111,.12), transparent 62%),
+    radial-gradient(760px 320px at 80% 13%, rgba(25,174,255,.08), transparent 64%),
+    linear-gradient(180deg,#09131f 0%, #04080e 44%, #02050a 100%);
+}
+body:before{
+  content:""; position:fixed; inset:0; pointer-events:none; opacity:.55;
+  background:
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:34px 34px; mask-image:linear-gradient(to bottom,#000 0%,transparent 72%);
+}
+
+/* TOP BAR */
+.topbar{
+  height:86px; display:grid; grid-template-columns:220px 205px 1fr 260px 168px;
+  align-items:center; border-bottom:1px solid rgba(143,181,213,.13);
+  background:rgba(3,8,14,.72); backdrop-filter:blur(20px);
+  position:sticky; top:0; z-index:100;
+}
+.brand{height:100%;display:flex;flex-direction:column;justify-content:center;border-right:1px solid rgba(143,181,213,.11);padding-left:20px}
+.logo{font-weight:900;letter-spacing:.28em;font-size:28px;line-height:.9}
+.logo span{color:var(--cyan);text-shadow:0 0 22px rgba(27,216,255,.45)}
+.lock{margin-top:10px;font:11px JetBrains Mono,monospace;letter-spacing:.30em;color:#f1bd2a}
+.lock span{color:#58778f;margin-left:9px}
+.live{padding-left:22px;font:12px JetBrains Mono,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
+.live b{color:var(--green);font-weight:700}
+.live i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 15px var(--green);margin-right:10px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.live small{display:block;margin:7px 0 0 23px;color:#8395a3}
+.nav{justify-self:center;display:flex;gap:38px;height:100%;align-items:center}
+.nav a{height:100%;display:flex;align-items:center;color:#8793a1;text-decoration:none;text-transform:uppercase;font:12px JetBrains Mono,monospace;letter-spacing:.18em;position:relative;cursor:pointer}
+.nav a.active{color:#eaf7ff}
+.nav a.active:after{content:"";position:absolute;bottom:12px;left:0;right:0;height:2px;background:var(--cyan);box-shadow:0 0 20px var(--cyan)}
+.nav a:hover:not(.active){color:#c5d8e6}
+.timezone{
+  border-left:1px solid rgba(143,181,213,.11); padding-left:22px; height:100%;
+  display:flex; align-items:center; gap:9px; justify-content:flex-start; position:relative;
+}
+.tz-small{position:absolute;bottom:10px;left:23px;font:9px JetBrains Mono,monospace;letter-spacing:.13em;color:#70879a;text-transform:uppercase;white-space:nowrap}
+.tz-btn{font:11px JetBrains Mono,monospace;letter-spacing:.12em;color:#61798d;border:1px solid rgba(113,161,202,.18);background:rgba(20,45,70,.35);border-radius:6px;padding:7px 9px;cursor:pointer}
+.tz-btn.active{color:#051018;background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 18px rgba(27,216,255,.35)}
+.time{font:13px JetBrains Mono,monospace;letter-spacing:.13em;text-align:right;padding-right:20px}
+.time strong{display:block;font-size:18px;color:#edf6fc}
+.time span{display:block;margin-top:5px;color:#718698;font-size:11px}
+
+.shell{max-width:1600px;margin:0 auto;padding:0 20px 40px}
+
+.kicker{
+  display:flex;align-items:center;justify-content:space-between;margin:20px 0 16px;
+  color:#61778a;font:11px JetBrains Mono,monospace;letter-spacing:.18em;text-transform:uppercase;
+}
+.kicker .right{display:flex;align-items:center;gap:14px}
+.kicker .line{height:1px;flex:1;background:linear-gradient(90deg,rgba(27,216,255,.25),transparent);margin-left:16px}
+
+/* TF BUTTONS */
+.tf-pill-group{display:flex;gap:4px}
+.tf-pill{
+  font:600 10px JetBrains Mono,monospace;letter-spacing:.12em;text-transform:uppercase;
+  padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid rgba(113,161,202,.2);
+  background:rgba(20,45,70,.35);color:#6f8498;transition:all .15s;
+}
+.tf-pill.active{background:var(--amber);color:#06111e;border-color:var(--amber);box-shadow:0 0 14px rgba(255,189,39,.3)}
+.tf-pill:hover:not(.active){color:#c5d8e6;border-color:rgba(113,161,202,.4)}
+
+/* PAGE HEADER */
+.page-header{
+  margin-bottom:24px;
+}
+.page-title{font-size:26px;font-weight:800;letter-spacing:.04em;color:#edf5f8;margin-bottom:4px}
+.page-sub{font:12px JetBrains Mono,monospace;color:#647889;letter-spacing:.12em;text-transform:uppercase}
+
+/* HERO RATE BANNER */
+.rate-hero{
+  position:relative;border-radius:14px;overflow:hidden;margin-bottom:22px;
+  background:linear-gradient(135deg,rgba(8,22,36,.97),rgba(4,10,18,.98));
+  border:1px solid rgba(27,216,255,.2);
+  box-shadow:0 0 0 1px rgba(27,216,255,.05),0 0 60px rgba(27,216,255,.08),0 28px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.055);
+  padding:28px 32px 24px;
+  display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:0;
+}
+.rate-hero:before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+}
+.hero-stat{padding:0 28px;border-right:1px solid rgba(122,170,208,.1)}
+.hero-stat:first-child{padding-left:0}
+.hero-stat:last-child{border-right:none}
+.hero-stat-label{font:700 9px JetBrains Mono,monospace;letter-spacing:.2em;text-transform:uppercase;color:#5a7388;margin-bottom:8px}
+.hero-stat-val{font-size:38px;font-weight:900;letter-spacing:-.04em;line-height:1;color:#edf5f8}
+.hero-stat-val.cyan{color:var(--cyan);text-shadow:0 0 22px rgba(27,216,255,.35)}
+.hero-stat-meta{margin-top:6px;font:11px JetBrains Mono,monospace;color:#607283;letter-spacing:.08em}
+.hero-stat-chg{display:inline-block;margin-left:6px;font-weight:700}
+.hero-stat-chg.pos{color:var(--green)}
+.hero-stat-chg.neg{color:var(--red)}
+.hero-stat-chg.neu{color:#718698}
+
+/* RATES GRID */
+.rates-grid{
+  display:grid;
+  grid-template-columns:1.6fr 1.6fr 1fr 1fr;
+  gap:16px;
+  align-items:start;
+}
+
+/* RATE CARD */
+.rate-card{
+  position:relative;border-radius:14px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(10,25,40,.88),rgba(4,12,22,.96));
+  border:1px solid var(--stroke);
+  box-shadow:0 28px 80px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.045);
+}
+.rate-card:before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0;
+}
+.rate-card.bpi:before{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+.rate-card.obmmi:before{background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.rate-card.freddie:before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+
+.card-header{padding:16px 18px 12px;border-bottom:1px solid rgba(122,170,208,.08)}
+.card-header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.card-source{font:700 13px JetBrains Mono,monospace;letter-spacing:.16em;text-transform:uppercase}
+.rate-card.bpi .card-source{color:var(--cyan)}
+.rate-card.obmmi .card-source{color:var(--blue)}
+.rate-card.freddie .card-source{color:var(--amber)}
+.card-source-full{font:700 16px JetBrains Mono,monospace;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:2px}
+.card-meta{font:10px JetBrains Mono,monospace;color:#5a7388;letter-spacing:.08em;line-height:1.5}
+.info-btn{
+  font:600 9px JetBrains Mono,monospace;letter-spacing:.1em;color:#5a7388;
+  border:1px solid rgba(113,161,202,.18);background:rgba(15,35,55,.5);
+  border-radius:5px;padding:4px 8px;cursor:pointer;white-space:nowrap;
+  transition:all .15s;flex-shrink:0;
+}
+.info-btn:hover{color:#a0b8cc;border-color:rgba(113,161,202,.35)}
+.card-updated{font:10px JetBrains Mono,monospace;color:#48606f;margin-top:4px;letter-spacing:.07em}
+
+/* BPI TIER TABS */
+.bpi-tabs{display:flex;border-bottom:1px solid rgba(122,170,208,.08)}
+.bpi-tab{
+  flex:1;padding:9px 0;text-align:center;font:700 10px JetBrains Mono,monospace;
+  letter-spacing:.16em;text-transform:uppercase;cursor:pointer;color:#5a7388;
+  border-bottom:2px solid transparent;transition:all .15s;
+}
+.bpi-tab.active{color:var(--cyan);border-bottom-color:var(--cyan);background:rgba(27,216,255,.04)}
+.bpi-tab-b.active{color:#85d5ff;border-bottom-color:#85d5ff;background:rgba(27,216,255,.03)}
+.bpi-tab-sub{font-size:8px;letter-spacing:.1em;color:inherit;opacity:.7;display:block;margin-top:2px}
+
+/* RATE TABLE */
+.rate-table{padding:4px 0}
+.rate-row{
+  display:grid;grid-template-columns:1fr 80px 56px;
+  align-items:center;padding:10px 18px;
+  border-bottom:1px solid rgba(122,170,208,.05);
+  cursor:pointer;transition:all .12s;position:relative;
+}
+.rate-row:last-child{border-bottom:none}
+.rate-row:hover{background:rgba(27,216,255,.04)}
+.rate-card.bpi .rate-row:hover{border-left:2px solid rgba(27,216,255,.4);padding-left:16px}
+.rate-card.obmmi .rate-row:hover{border-left:2px solid rgba(56,168,255,.4);padding-left:16px;background:rgba(56,168,255,.03)}
+.rate-card.freddie .rate-row:hover{border-left:2px solid rgba(255,189,39,.4);padding-left:16px;background:rgba(255,189,39,.03)}
+.rate-row-product{font:700 11px JetBrains Mono,monospace;letter-spacing:.1em;text-transform:uppercase;color:#c2d4df;display:flex;align-items:center;gap:7px}
+.rate-tag{font-size:8px;letter-spacing:.12em;padding:2px 5px;border-radius:3px;font-weight:700;text-transform:uppercase;opacity:.8}
+.rate-tag.cashout{background:rgba(255,189,39,.15);color:var(--amber);border:1px solid rgba(255,189,39,.25)}
+.rate-tag.invest{background:rgba(56,168,255,.15);color:var(--blue);border:1px solid rgba(56,168,255,.25)}
+.rate-row-right{text-align:right}
+.rate-val{font:700 17px JetBrains Mono,monospace;color:#eaf5fa}
+.rate-pct{font:700 11px JetBrains Mono,monospace;color:#8aabb8;margin-left:1px}
+.rate-chg{font:700 10px JetBrains Mono,monospace;letter-spacing:.06em;margin-top:2px}
+.rate-chg.pos{color:var(--green)}
+.rate-chg.neg{color:var(--red)}
+.rate-chg.neu{color:#718698}
+.rate-hint{font-size:9px;opacity:.35;margin-left:3px}
+.rate-row-val-cell{text-align:right}
+.rate-row-chg-cell{text-align:right}
+
+/* COMPACT (2-product freddie) */
+.rate-card.freddie .rate-row{grid-template-columns:1fr 90px 60px;padding:14px 18px}
+.rate-card.freddie .rate-val{font-size:22px}
+.rate-card.freddie .rate-pct{font-size:13px}
+
+/* SECTION LABELS */
+.section-divider{
+  padding:6px 18px 4px;font:700 8px JetBrains Mono,monospace;letter-spacing:.2em;
+  text-transform:uppercase;color:#3e5565;
+  border-bottom:1px solid rgba(122,170,208,.05);
+  background:rgba(0,0,0,.15);
+}
+
+/* SOURCE BADGES */
+.source-dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
+.source-dot.cyan{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.source-dot.blue{background:var(--blue);box-shadow:0 0 8px var(--blue)}
+.source-dot.amber{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+
+/* FREQUENCY BADGE */
+.freq-badge{
+  font:600 8px JetBrains Mono,monospace;letter-spacing:.12em;text-transform:uppercase;
+  padding:3px 7px;border-radius:4px;
+}
+.freq-badge.live{background:rgba(66,243,111,.12);color:var(--green);border:1px solid rgba(66,243,111,.2)}
+.freq-badge.daily{background:rgba(56,168,255,.12);color:var(--blue);border:1px solid rgba(56,168,255,.2)}
+.freq-badge.weekly{background:rgba(255,189,39,.1);color:var(--amber);border:1px solid rgba(255,189,39,.18)}
+
+/* CARD FOOTER */
+.card-footer{
+  padding:10px 18px;border-top:1px solid rgba(122,170,208,.06);
+  font:10px JetBrains Mono,monospace;color:#445567;letter-spacing:.07em;
+  display:flex;justify-content:space-between;align-items:center;
+}
+
+/* COMPARISON STRIP */
+.compare-strip{
+  margin-bottom:22px;
+  position:relative;border-radius:12px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(8,20,32,.9),rgba(4,11,20,.97));
+  border:1px solid rgba(122,170,208,.1);
+  padding:16px 24px;
+}
+.compare-strip-title{font:700 9px JetBrains Mono,monospace;letter-spacing:.2em;text-transform:uppercase;color:#5a7388;margin-bottom:14px}
+.compare-table{display:grid;grid-template-columns:120px repeat(4,1fr);gap:0;font:11px JetBrains Mono,monospace}
+.compare-header{font:700 8px JetBrains Mono,monospace;letter-spacing:.16em;text-transform:uppercase;color:#4a6070;padding:6px 10px 8px;border-bottom:1px solid rgba(122,170,208,.08)}
+.compare-header:first-child{color:#617889;letter-spacing:.12em}
+.compare-cell{padding:7px 10px;border-bottom:1px solid rgba(122,170,208,.04);color:#b8c8d4;letter-spacing:.06em}
+.compare-cell:first-child{color:#8fa5b5;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.compare-cell.val{font-weight:700;color:#e0ecf4}
+.compare-cell.best{color:var(--green);font-weight:700}
+.compare-source-cyan{color:var(--cyan)}
+.compare-source-blue{color:var(--blue)}
+.compare-source-amber{color:var(--amber)}
+.compare-row:last-child .compare-cell{border-bottom:none}
+
+/* MODAL */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(2,6,12,.88);z-index:500;
+  align-items:center;justify-content:center;backdrop-filter:blur(6px);
+}
+.modal-overlay.open{display:flex}
+.modal-box{
+  background:linear-gradient(180deg,#0c1e32,#07111c);border:1px solid rgba(122,170,208,.2);
+  border-radius:14px;padding:28px 30px 24px;max-width:660px;width:94%;position:relative;
+  box-shadow:0 40px 120px rgba(0,0,0,.7);
+}
+.modal-close{
+  position:absolute;top:16px;right:16px;background:rgba(20,44,70,.6);border:1px solid rgba(113,161,202,.2);
+  color:#8aabb8;font:700 10px JetBrains Mono,monospace;letter-spacing:.15em;padding:6px 12px;
+  border-radius:6px;cursor:pointer;
+}
+.modal-close:hover{color:#edf5f8;border-color:rgba(113,161,202,.5)}
+.modal-title{font:700 16px JetBrains Mono,monospace;letter-spacing:.14em;text-transform:uppercase;color:#edf5f8;margin-bottom:4px}
+.modal-sub{font:12px JetBrains Mono,monospace;color:#5a7388;letter-spacing:.1em;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid rgba(122,170,208,.1)}
+.modal-body{font-size:14px;line-height:1.7;color:#b8cad6}
+.modal-body p{margin-bottom:12px}
+.modal-body strong{color:#edf5f8}
+.modal-chart-area{position:relative;height:260px;margin:14px 0}
+
+/* CHART RANGE BTNS */
+.range-btn-row{display:flex;gap:5px;margin:10px 0 4px;align-items:center}
+.range-label{font:700 9px JetBrains Mono,monospace;letter-spacing:.14em;color:#5a7388;margin-right:6px;text-transform:uppercase}
+.range-btn{
+  font:700 9px JetBrains Mono,monospace;letter-spacing:.1em;padding:5px 9px;border-radius:5px;
+  cursor:pointer;border:1px solid rgba(113,161,202,.2);background:rgba(15,35,55,.5);
+  color:#6f8498;transition:all .13s;
+}
+.range-btn.active{background:var(--cyan);color:#051018;border-color:var(--cyan);box-shadow:0 0 10px rgba(27,216,255,.3)}
+
+/* LOADING STATE */
+.rate-loading{
+  text-align:center;padding:28px 18px;
+  font:11px JetBrains Mono,monospace;letter-spacing:.12em;color:#40596a;
+  animation:fade .8s ease-in-out infinite alternate;
+}
+@keyframes fade{from{opacity:.4}to{opacity:1}}
+
+/* SCROLL */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:rgba(4,10,18,.8)}
+::-webkit-scrollbar-thumb{background:rgba(122,170,208,.18);border-radius:3px}
+
+/* ——— RESPONSIVE ——— */
+@media(max-width:1300px){
+  .rates-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}
+  .topbar{grid-template-columns:1fr;height:auto;padding:16px 20px;gap:10px}
+  .brand,.live,.timezone{border:0;padding:0}
+  .nav{display:none}
+  .time{text-align:left}
+}
+@media(max-width:700px){
+  .rates-grid{grid-template-columns:1fr}
+  .rate-hero{grid-template-columns:1fr 1fr}
+}
+
+/* SPREAD INDICATOR */
+.spread-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 18px;background:rgba(0,0,0,.2);border-bottom:1px solid rgba(122,170,208,.05);
+  font:10px JetBrains Mono,monospace;
+}
+.spread-label{color:#48606f;letter-spacing:.08em}
+.spread-val{font-weight:700;letter-spacing:.06em}
+.spread-val.pos{color:var(--green)}
+.spread-val.neg{color:var(--red)}
+.spread-val.neu{color:#718698}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="logo">MBS<span>GOAT</span></div><div class="lock">LOCKIQ <span>TERMINAL</span></div></div>
+  <div class="live"><i></i><b>LIVE MARKET</b><small id="marketHours">US Bond Market Open</small></div>
+  <nav class="nav">
+    <a href="index.html">Dashboard</a>
+    <a>Markets</a>
+    <a class="active">Rates</a>
+    <a>Analytics</a>
+    <a>Alerts</a>
+    <a>Tools</a>
+  </nav>
+  <div class="timezone">
+    <button class="tz-btn" data-tz="PT">PT</button>
+    <button class="tz-btn" data-tz="MT">MT</button>
+    <button class="tz-btn" data-tz="CT">CT</button>
+    <button class="tz-btn active" data-tz="ET">ET</button>
+    <div class="tz-small" id="tzSmall">Eastern Time</div>
+  </div>
+  <div class="time"><strong id="clock">—</strong><span id="dateLine">—</span></div>
+</header>
+
+<div class="shell">
+
+  <div class="kicker">
+    <span>Rate Intelligence · All Sources</span>
+    <div class="right">
+      <span style="font-size:10px;color:#48606f">Δ MEASURED FROM</span>
+      <div class="tf-pill-group" id="tfGroup">
+        <button class="tf-pill active" data-tf="1d">1D</button>
+        <button class="tf-pill" data-tf="1w">1W</button>
+        <button class="tf-pill" data-tf="1m">1M</button>
+        <button class="tf-pill" data-tf="3m">3M</button>
+      </div>
+    </div>
+    <div class="line"></div>
+  </div>
+
+  <!-- HERO BANNER -->
+  <div class="rate-hero">
+    <div class="hero-stat">
+      <div class="hero-stat-label">Best Execution · 30Y Conv</div>
+      <div class="hero-stat-val cyan" id="heroRate">6.625<span style="font-size:24px;opacity:.7">%</span></div>
+      <div class="hero-stat-meta">BPI · Option A · 760 FICO / 75 LTV<span class="hero-stat-chg neg" id="heroChg">▼ -0.125</span></div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-label">Market Avg · OBMMI</div>
+      <div class="hero-stat-val" id="heroMcr">6.255<span style="font-size:24px;opacity:.5">%</span></div>
+      <div class="hero-stat-meta">Optimal Blue MMI · Prior Day<span class="hero-stat-chg neg" id="heroMcrChg">▼ -0.024</span></div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-label">Broker vs Market Spread</div>
+      <div class="hero-stat-val" id="heroSpread" style="font-size:28px;padding-top:8px;color:#85d5ff">+0.370<span style="font-size:18px;opacity:.6">%</span></div>
+      <div class="hero-stat-meta" id="heroSpreadLabel">BPI vs OBMMI 30Y Conv · <span style="color:#42f36f">Tightening</span></div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-label">Freddie PMMS · Weekly</div>
+      <div class="hero-stat-val" id="heroFreddie">6.370<span style="font-size:24px;opacity:.5">%</span></div>
+      <div class="hero-stat-meta">30Y Fixed · Survey as of <span id="heroPmmsDate">Apr 9, 2026</span><span class="hero-stat-chg neg">▼ -0.090</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="rates-grid">
+
+    <!-- ═══ BPI OPTION A ═══ -->
+    <div class="rate-card bpi">
+      <div class="card-header">
+        <div class="card-header-top">
+          <div>
+            <span class="card-source-full card-source">Broker Price Index — A</span>
+            <div class="card-meta">Live Rate Sheets · UWM + Rocket Pro TPO · <strong style="color:#c5d3da">760+ FICO · 75 LTV</strong> · SFR Primary · 30-day Lock</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <span class="freq-badge live">● LIVE</span>
+            <button class="info-btn" onclick="openInfoModal('bpi')">ⓘ Source</button>
+          </div>
+        </div>
+        <div class="card-updated">as of <span id="bpiUpdated">—</span></div>
+      </div>
+
+      <div class="rate-table" id="bpiPanelA"></div>
+
+      <div class="card-footer">
+        <span>Par + 100bps comp · Click row to view history</span>
+        <span style="color:#3e5565">UWM / ROCKET AVG</span>
+      </div>
+    </div>
+
+    <!-- ═══ BPI OPTION B ═══ -->
+    <div class="rate-card bpi" style="border-color:rgba(133,213,255,.12)">
+      <div class="card-header" style="border-color:rgba(133,213,255,.06)">
+        <div class="card-header-top">
+          <div>
+            <span class="card-source-full" style="color:#85d5ff;display:block;font:700 16px JetBrains Mono,monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px">Broker Price Index — B</span>
+            <div class="card-meta">Live Rate Sheets · UWM + Rocket Pro TPO · <strong style="color:#c5d3da">720 FICO · 80 LTV</strong> · SFR Primary · 30-day Lock</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <span class="freq-badge live" style="background:rgba(133,213,255,.1);color:#85d5ff;border-color:rgba(133,213,255,.2)">● LIVE</span>
+            <button class="info-btn" onclick="openInfoModal('bpi_b')">ⓘ Source</button>
+          </div>
+        </div>
+        <div class="card-updated">as of <span id="bpiBUpdated">—</span></div>
+      </div>
+
+      <div class="rate-table" id="bpiPanelB"></div>
+
+      <div class="card-footer">
+        <span>Avg borrower scenario · Same lenders as Option A</span>
+        <span style="color:#3e5565">UWM / ROCKET AVG</span>
+      </div>
+    </div>
+
+    <!-- ═══ OBMMI ═══ -->
+    <div class="rate-card obmmi">
+      <div class="card-header">
+        <div class="card-header-top">
+          <div>
+            <span class="card-source-full" style="color:var(--blue);display:block;font:700 16px JetBrains Mono,monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px">OBMMI</span>
+            <div class="card-meta">Optimal Blue · Market-Wide MMI<br>Updated nightly · Prior business day</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <span class="freq-badge daily">◆ DAILY</span>
+            <button class="info-btn" onclick="openInfoModal('mcr')">ⓘ Source</button>
+          </div>
+        </div>
+        <div class="card-updated">as of <span id="mcrUpdated">—</span></div>
+      </div>
+
+      <div class="rate-table" id="mcrPanel"></div>
+
+      <div class="card-footer">
+        <span>Actual locked pricing · All lenders</span>
+        <span style="color:#3e5565">FRED / OPTIMAL BLUE</span>
+      </div>
+    </div>
+
+    <!-- ═══ FREDDIE PMMS ═══ -->
+    <div class="rate-card freddie">
+      <div class="card-header">
+        <div class="card-header-top">
+          <div>
+            <span class="card-source-full" style="color:var(--amber);display:block;font:700 16px JetBrains Mono,monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px">Freddie PMMS</span>
+            <div class="card-meta">Primary Mortgage Market Survey<br>Published Thursdays · Well-qualified borrowers</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <span class="freq-badge weekly">◉ WEEKLY</span>
+            <button class="info-btn" onclick="openInfoModal('freddie')">ⓘ Source</button>
+          </div>
+        </div>
+        <div class="card-updated">as of <span id="freddieUpdated">Apr 9, 2026</span></div>
+      </div>
+
+      <div class="rate-table" id="freddiePanel"></div>
+
+      <div class="card-footer">
+        <span>Widely cited by financial media</span>
+        <span style="color:#3e5565">FREDDIE MAC / FRED</span>
+      </div>
+    </div>
+
+  </div><!-- /rates-grid -->
+
+  <!-- SPREAD COMPARISON TABLE -->
+  <div class="compare-strip" style="margin-top:22px">
+    <div class="compare-strip-title">▸ Cross-Source Rate Comparison · 30Y Products</div>
+    <div class="compare-table" id="compareTable">
+      <div class="compare-header">PRODUCT</div>
+      <div class="compare-header compare-source-cyan">BPI (A)</div>
+      <div class="compare-header compare-source-cyan" style="color:#85d5ff">BPI (B)</div>
+      <div class="compare-header compare-source-blue">OBMMI</div>
+      <div class="compare-header compare-source-amber">PMMS</div>
+    </div>
+    <div id="compareRows"></div>
+  </div>
+
+</div><!-- /shell -->
+
+<!-- ═══ RATE HISTORY MODAL ═══ -->
+<div class="modal-overlay" id="rateChartModal" onclick="if(event.target===this)closeRateChart()">
+  <div class="modal-box" style="max-width:700px;width:96%">
+    <button class="modal-close" onclick="closeRateChart()">✕ CLOSE</button>
+    <div class="modal-title" id="rateChartTitle"></div>
+    <div class="modal-sub" id="rateChartSub"></div>
+    <div class="range-btn-row">
+      <span class="range-label">Range</span>
+      <button class="range-btn active" id="rcBtn1m" onclick="setRateChartRange('1m')">1M</button>
+      <button class="range-btn" id="rcBtn3m" onclick="setRateChartRange('3m')">3M</button>
+      <button class="range-btn" id="rcBtn6m" onclick="setRateChartRange('6m')">6M</button>
+      <button class="range-btn" id="rcBtn1y" onclick="setRateChartRange('1y')">1Y</button>
+      <span id="rateChartCurrent" style="margin-left:auto;font:700 13px JetBrains Mono,monospace"></span>
+    </div>
+    <div class="modal-chart-area">
+      <canvas id="rateChartCanvas"></canvas>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid rgba(122,170,208,.1)">
+      <div style="font:10px JetBrains Mono,monospace;color:#456070" id="rateChartMeta"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ INFO MODAL ═══ -->
+<div class="modal-overlay" id="infoModal" onclick="if(event.target===this)closeInfoModal()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeInfoModal()">✕ CLOSE</button>
+    <div class="modal-title" id="infoModalTitle"></div>
+    <div class="modal-sub" id="infoModalSub"></div>
+    <div class="modal-body" id="infoModalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ── CLOCK ── */
+const ianaZones={ET:"America/New_York",CT:"America/Chicago",MT:"America/Denver",PT:"America/Los_Angeles"};
+const tzNames={ET:"Eastern Time",CT:"Central Time",MT:"Mountain Time",PT:"Pacific Time"};
+let currentZone="ET";
+function tick(){
+  const d=new Date();
+  const parts=new Intl.DateTimeFormat("en-US",{timeZone:ianaZones[currentZone],hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true}).formatToParts(d);
+  const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+  document.getElementById("clock").textContent=`${p.hour}:${p.minute}:${p.second} ${p.dayPeriod} ${currentZone}`;
+  const dd=new Intl.DateTimeFormat("en-US",{timeZone:ianaZones[currentZone],weekday:"short",month:"short",day:"numeric",year:"numeric"}).format(d);
+  document.getElementById("dateLine").textContent=dd.toUpperCase();
+}
+tick(); setInterval(tick,1000);
+document.querySelectorAll(".tz-btn").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".tz-btn").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    currentZone=b.dataset.tz;
+    document.getElementById("tzSmall").textContent=tzNames[currentZone];
+    tick();
+  });
+});
+
+/* ── TIME FRAME ── */
+let activeTf='1d';
+document.querySelectorAll('.tf-pill').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.tf-pill').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    activeTf=b.dataset.tf;
+    // With live data, would re-render deltas from historical lookback
+    // For now just re-render with same data
+    renderAll();
+  });
+});
+
+/* ── DATA ── */
+let liveData = null;
+let rateHistoryCache = null;
+let rateChartInstance = null;
+let rateChartActiveRange = '3m';
+let rateChartAllPoints = [];
+let rateChartAllLabels = [];
+let rateChartCurrentCol = null;
+
+const RANGE_COUNTS = {'1m':21,'3m':63,'6m':126,'1y':999};
+
+const SOURCE_COLORS = {
+  bpi:     {line:'#1bd8ff', fill:'rgba(27,216,255,.07)',   title:'Broker Price Index'},
+  bpi_b:   {line:'#85d5ff', fill:'rgba(133,213,255,.06)',  title:'BPI — Option B'},
+  obmmi:   {line:'#38a8ff', fill:'rgba(56,168,255,.07)',   title:'OBMMI / Market Composite'},
+  mcr:     {line:'#38a8ff', fill:'rgba(56,168,255,.07)',   title:'Market Composite Rates'},
+  freddie: {line:'#ffbd27', fill:'rgba(255,189,39,.07)',   title:'Freddie Mac PMMS'},
+};
+
+/* ── FALLBACKS ── */
+const BPI_A_FALLBACK = [
+  {product:'30Y CONV',   rate:6.625, change:-0.125},
+  {product:'30Y FHA',    rate:6.125, change:-0.090},
+  {product:'30Y VA',     rate:6.125, change:-0.011},
+  {product:'30Y JUMBO',  rate:6.875, change:+0.045, tag:'JUMBO'},
+  {product:'15Y CONV',   rate:6.000, change:-0.095},
+  {product:'30Y CASHOUT',rate:6.875, change:-0.063, tag:'CASHOUT'},
+  {product:'30Y INVEST', rate:7.375, change:+0.045, tag:'INVEST'},
+];
+
+const BPI_B_FALLBACK = [
+  {product:'30Y CONV',   rate:6.875, change:-0.125},
+  {product:'30Y FHA',    rate:6.375, change:-0.090},
+  {product:'30Y VA',     rate:6.375, change:-0.011},
+  {product:'30Y JUMBO',  rate:7.125, change:+0.045, tag:'JUMBO'},
+  {product:'15Y CONV',   rate:6.250, change:-0.095},
+  {product:'30Y CASHOUT',rate:7.125, change:-0.063, tag:'CASHOUT'},
+  {product:'30Y INVEST', rate:7.625, change:+0.045, tag:'INVEST'},
+];
+
+const MCR_FALLBACK = [
+  {product:'30Y CONV',  rate:6.255, change:-0.024},
+  {product:'30Y FHA',   rate:6.073, change:-0.003},
+  {product:'30Y VA',    rate:5.781, change:-0.145},
+  {product:'30Y JUMBO', rate:6.431, change:-0.181},
+  {product:'15Y CONV',  rate:5.645, change:-0.044},
+];
+
+const FREDDIE_FALLBACK = [
+  {product:'30Y FIXED', rate:6.370, change:-0.090},
+  {product:'15Y FIXED', rate:5.740, change:-0.060},
+];
+
+/* ── RATE HISTORY SEED ── */
+const RATE_HISTORY_SEED = {
+  'bpi:30Y CONV':    [6.990,6.990,6.875,6.875,6.875,6.750,6.750,6.625,6.625,6.750,6.875,6.875,6.750,6.625,6.625,6.625,6.625,6.625,6.625,6.625],
+  'bpi:30Y FHA':     [6.490,6.490,6.375,6.375,6.250,6.250,6.125,6.125,6.125,6.250,6.250,6.375,6.250,6.125,6.125,6.125,6.125,6.125,6.125,6.125],
+  'bpi:30Y VA':      [6.375,6.375,6.250,6.250,6.125,6.125,6.125,6.125,6.125,6.250,6.250,6.250,6.125,6.125,6.125,6.125,6.125,6.125,6.125,6.125],
+  'bpi:30Y JUMBO':   [7.125,7.125,6.990,6.990,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875],
+  'bpi:15Y CONV':    [6.250,6.250,6.125,6.125,6.000,6.000,5.990,5.990,5.990,6.000,6.125,6.125,6.000,6.000,6.000,6.000,6.000,6.000,6.000,6.000],
+  'bpi:30Y CASHOUT': [7.125,7.125,6.990,6.990,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875,6.875],
+  'bpi:30Y INVEST':  [7.625,7.625,7.500,7.500,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375,7.375],
+};
+
+/* ── BUILD RATE ROW ── */
+function buildRateRow(r, source) {
+  const row = document.createElement('div');
+  row.className = 'rate-row';
+  row.title = 'Click to view rate history';
+  row.onclick = () => openRateChart(r.product, source);
+
+  const prodCell = document.createElement('div');
+  prodCell.className = 'rate-row-product';
+  prodCell.textContent = r.product;
+  if (r.tag) {
+    const tag = document.createElement('span');
+    tag.className = 'rate-tag ' + r.tag.toLowerCase().replace(/[^a-z]/g,'');
+    tag.textContent = r.tag;
+    prodCell.appendChild(tag);
+  }
+  const hint = document.createElement('span');
+  hint.className = 'rate-hint';
+  hint.textContent = '▶';
+  prodCell.appendChild(hint);
+
+  const valCell = document.createElement('div');
+  valCell.className = 'rate-row-val-cell';
+  valCell.innerHTML = `<span class="rate-val">${r.rate.toFixed(3)}</span><span class="rate-pct">%</span>`;
+
+  const change = r.change || 0;
+  const chgCell = document.createElement('div');
+  chgCell.className = 'rate-row-chg-cell';
+  chgCell.innerHTML = `<div class="rate-chg ${change>0?'pos':change<0?'neg':'neu'}">${change>0?'▲ +':change<0?'▼ ':''}${change.toFixed(3)}</div>`;
+
+  row.appendChild(prodCell);
+  row.appendChild(valCell);
+  row.appendChild(chgCell);
+  return row;
+}
+
+/* ── BUILD SECTION LABEL ── */
+function addDivider(container, label) {
+  const d = document.createElement('div');
+  d.className = 'section-divider';
+  d.textContent = label;
+  container.appendChild(d);
+}
+
+/* ── RENDER PANELS ── */
+function renderPanel(rates, containerId, source, dividers) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  if (!rates || rates.length === 0) {
+    el.innerHTML = '<div class="rate-loading">NO DATA</div>';
+    return;
+  }
+  rates.forEach((r, i) => {
+    if (dividers) {
+      if (i === 0) addDivider(el, '30Y PRODUCTS');
+      if (r.product === '15Y CONV' || r.product === '15Y FIXED') addDivider(el, '15Y PRODUCTS');
+    }
+    el.appendChild(buildRateRow(r, source));
+  });
+}
+
+/* ── HERO + SPREAD ── */
+function updateHero(bpiA, mcr, freddie) {
+  const conv30A = bpiA.find(r => r.product === '30Y CONV');
+  const conv30M = mcr.find(r => r.product === '30Y CONV');
+  const conv30F = freddie.find(r => r.product.includes('30Y'));
+
+  if (conv30A) {
+    document.getElementById('heroRate').innerHTML = conv30A.rate.toFixed(3) + '<span style="font-size:24px;opacity:.7">%</span>';
+    const chg = conv30A.change || 0;
+    const chgEl = document.getElementById('heroChg');
+    chgEl.className = 'hero-stat-chg ' + (chg > 0 ? 'pos' : chg < 0 ? 'neg' : 'neu');
+    chgEl.textContent = (chg > 0 ? '▲ +' : chg < 0 ? '▼ ' : '') + chg.toFixed(3);
+  }
+  if (conv30M) {
+    document.getElementById('heroMcr').innerHTML = conv30M.rate.toFixed(3) + '<span style="font-size:24px;opacity:.5">%</span>';
+    const chg = conv30M.change || 0;
+    const chgEl = document.getElementById('heroMcrChg');
+    chgEl.className = 'hero-stat-chg ' + (chg > 0 ? 'pos' : chg < 0 ? 'neg' : 'neu');
+    chgEl.textContent = (chg > 0 ? '▲ +' : chg < 0 ? '▼ ' : '') + chg.toFixed(3);
+  }
+  if (conv30A && conv30M) {
+    const spread = (conv30A.rate - conv30M.rate);
+    document.getElementById('heroSpread').innerHTML = (spread >= 0 ? '+' : '') + spread.toFixed(3) + '<span style="font-size:18px;opacity:.6">%</span>';
+  }
+  if (conv30F) {
+    document.getElementById('heroFreddie').innerHTML = conv30F.rate.toFixed(3) + '<span style="font-size:24px;opacity:.5">%</span>';
+  }
+}
+
+/* ── COMPARE TABLE ── */
+function buildCompareTable(bpiA, bpiB, mcr, freddie) {
+  const PRODUCTS = ['30Y CONV','30Y FHA','30Y VA','30Y JUMBO'];
+  const findRate = (arr, prod) => (arr.find(r => r.product === prod) || {}).rate;
+
+  const rowsEl = document.getElementById('compareRows');
+  rowsEl.innerHTML = '';
+
+  PRODUCTS.forEach(prod => {
+    const rA = findRate(bpiA, prod);
+    const rB = findRate(bpiB, prod);
+    const rM = findRate(mcr, prod);
+    const rF = findRate(freddie, prod.replace('CONV','FIXED').replace('FHA','').replace('VA','').replace('JUMBO',''));
+
+    const row = document.createElement('div');
+    row.className = 'compare-table compare-row';
+    row.style.cssText = 'cursor:default';
+
+    const vals = [rA, rB, rM].filter(v => v !== undefined);
+    const best = vals.length ? Math.min(...vals) : null;
+
+    row.innerHTML = `
+      <div class="compare-cell">${prod}</div>
+      <div class="compare-cell ${rA === best ? 'best' : 'val'}">${rA !== undefined ? rA.toFixed(3)+'%' : '—'}</div>
+      <div class="compare-cell ${rB !== undefined ? 'val' : ''}" style="color:#85d5ff">${rB !== undefined ? rB.toFixed(3)+'%' : '—'}</div>
+      <div class="compare-cell ${rM === best ? 'best' : 'val'}" style="${rM===best?'':'color:#85c2ff'}">${rM !== undefined ? rM.toFixed(3)+'%' : '—'}</div>
+      <div class="compare-cell" style="color:#c9a830">${rF !== undefined ? rF.toFixed(3)+'%' : '—'}</div>
+    `;
+    rowsEl.appendChild(row);
+  });
+}
+
+let currentBpiA = BPI_A_FALLBACK;
+let currentBpiB = BPI_B_FALLBACK;
+let currentMcr  = MCR_FALLBACK;
+let currentFred = FREDDIE_FALLBACK;
+
+function renderAll() {
+  renderPanel(currentBpiA, 'bpiPanelA', 'bpi', true);
+  renderPanel(currentBpiB, 'bpiPanelB', 'bpi_b', true);
+  renderPanel(currentMcr,  'mcrPanel',  'mcr',   true);
+  renderPanel(currentFred, 'freddiePanel', 'freddie', false);
+  updateHero(currentBpiA, currentMcr, currentFred);
+  buildCompareTable(currentBpiA, currentBpiB, currentMcr, currentFred);
+}
+
+/* ── LOAD LIVE DATA ── */
+async function loadData() {
+  try {
+    const res  = await fetch('/.netlify/functions/getMarketData');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    liveData = data;
+
+    if (data.bpi && data.bpi.rates && data.bpi.rates.length > 0) {
+      currentBpiA = data.bpi.rates;
+      const el = document.getElementById('bpiUpdated');
+      if (el && data.bpi.as_of) el.textContent = data.bpi.as_of;
+      document.getElementById('bpiBUpdated').textContent = data.bpi.as_of || '—';
+    }
+
+    // BPI B — from broker_rates _b fields
+    if (data.bpi && data.bpi.rates_b && data.bpi.rates_b.length > 0) {
+      currentBpiB = data.bpi.rates_b;
+    } else if (data.bpi && data.bpi.rates) {
+      // Estimate B-paper as A + fixed offset per product
+      const OFFSETS = {'30Y CONV':0.250,'30Y FHA':0.250,'30Y VA':0.250,'30Y JUMBO':0.250,'15Y CONV':0.250,'30Y CASHOUT':0.250,'30Y INVEST':0.250};
+      currentBpiB = currentBpiA.map(r => ({
+        ...r,
+        rate: +(r.rate + (OFFSETS[r.product] || 0.250)).toFixed(3),
+      }));
+    }
+
+    if (data.mcr && data.mcr.rates && data.mcr.rates.length > 0) {
+      currentMcr = data.mcr.rates;
+      const el = document.getElementById('mcrUpdated');
+      if (el && data.mcr.as_of) el.textContent = data.mcr.as_of;
+    }
+
+    if (data.freddie && data.freddie.rates && data.freddie.rates.length > 0) {
+      currentFred = data.freddie.rates;
+      const el = document.getElementById('freddieUpdated');
+      if (el && data.freddie.as_of) el.textContent = data.freddie.as_of;
+      const heroEl = document.getElementById('heroPmmsDate');
+      if (heroEl && data.freddie.as_of) heroEl.textContent = data.freddie.as_of;
+    }
+
+    renderAll();
+  } catch(e) {
+    console.warn('Live data unavailable, using fallbacks:', e.message);
+    renderAll();
+  }
+}
+
+/* ── PREFETCH RATE HISTORY ── */
+async function prefetchRateHistory() {
+  try {
+    const res = await fetch('/.netlify/functions/getRateHistory');
+    if (!res.ok) return;
+    const data = await res.json();
+    rateHistoryCache = data.series || {};
+  } catch(e) {
+    rateHistoryCache = {};
+  }
+}
+
+/* ── RATE CHART MODAL ── */
+function fmtRateDate(s) {
+  if (!s || s.length < 8) return s;
+  return s.slice(5,7) + '/' + s.slice(8,10);
+}
+
+async function openRateChart(product, source) {
+  const modal = document.getElementById('rateChartModal');
+  const title = document.getElementById('rateChartTitle');
+  const sub   = document.getElementById('rateChartSub');
+  const meta  = document.getElementById('rateChartMeta');
+  const curEl = document.getElementById('rateChartCurrent');
+
+  const colKey = source === 'bpi_b' ? 'bpi_b' : source;
+  const col    = SOURCE_COLORS[colKey] || SOURCE_COLORS.bpi;
+  rateChartCurrentCol = col;
+
+  modal.classList.add('open');
+  title.textContent = col.title;
+  sub.textContent   = product.toUpperCase() + ' · RATE HISTORY';
+  meta.textContent  = 'Loading...';
+  curEl.textContent = '';
+
+  ['1m','3m','6m','1y'].forEach(r => {
+    const btn = document.getElementById('rcBtn' + r);
+    if (btn) btn.classList.toggle('active', r === rateChartActiveRange);
+  });
+
+  let currentRate = null;
+  const srcArr = source === 'bpi' ? currentBpiA : source === 'bpi_b' ? currentBpiB : source === 'mcr' || source === 'obmmi' ? currentMcr : currentFred;
+  const found = (srcArr || []).find(r => r.product === product);
+  if (found) currentRate = found.rate;
+
+  let labels = [], points = [];
+  const cacheKey = (source === 'bpi' || source === 'bpi_b' ? 'bpi' : source) + ':' + product;
+
+  if (source === 'bpi' || source === 'bpi_b') {
+    const seed = RATE_HISTORY_SEED[cacheKey] || [];
+    points = [...seed];
+    labels = points.map((_,i) => i === points.length-1 ? 'Today' : 'D-'+(points.length-1-i));
+    meta.textContent = '20-day seed data · live broker history coming soon';
+  } else {
+    const cached = rateHistoryCache && rateHistoryCache[cacheKey];
+    if (cached && cached.values && cached.values.length > 0) {
+      points = cached.values.map(v => v === 0 ? null : v);
+      labels = cached.dates.map(fmtRateDate);
+      if (currentRate && points.length > 0) {
+        points[points.length-1] = currentRate;
+        labels[labels.length-1] = 'Today';
+      }
+      const isWeekly = source === 'freddie';
+      meta.textContent = points.length + ' observations · ' + (isWeekly ? 'weekly · ' : 'daily · ') + 'Optimal Blue / FRED';
+    } else {
+      const seed = RATE_HISTORY_SEED[cacheKey];
+      if (seed) {
+        points = [...seed];
+        labels = points.map((_,i) => i === points.length-1 ? 'Today' : 'D-'+(points.length-1-i));
+        meta.textContent = 'Seed data · history loading...';
+      } else {
+        meta.textContent = 'No history available';
+      }
+    }
+  }
+
+  if (currentRate) {
+    curEl.textContent = 'Current: ' + currentRate.toFixed(3) + '%';
+    curEl.style.color = col.line;
+  }
+
+  rateChartAllPoints = [...points];
+  rateChartAllLabels = [...labels];
+
+  const n = RANGE_COUNTS[rateChartActiveRange] || 999;
+  points = points.slice(-n);
+  labels = labels.slice(-n);
+  sub.textContent = product.toUpperCase() + ' · ' + points.length + ' OBSERVATIONS';
+
+  const canvas = document.getElementById('rateChartCanvas');
+  if (!canvas || points.length === 0) return;
+
+  if (rateChartInstance) { rateChartInstance.destroy(); rateChartInstance = null; }
+
+  const valid = points.filter(p => p !== null);
+  const mn = valid.length ? Math.min(...valid) - 0.15 : 5;
+  const mx = valid.length ? Math.max(...valid) + 0.15 : 8;
+
+  rateChartInstance = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: product,
+        data: points,
+        borderColor: col.line,
+        backgroundColor: col.fill,
+        borderWidth: 2,
+        pointRadius: points.map((_,i) => i === points.length-1 ? 5 : 2),
+        pointBackgroundColor: points.map((_,i) => i === points.length-1 ? col.line : '#0b1420'),
+        pointBorderColor: col.line,
+        pointBorderWidth: 1.5,
+        pointHoverRadius: 6,
+        tension: 0.3,
+        fill: true,
+        spanGaps: true,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {display:false},
+        tooltip: {
+          backgroundColor:'#0c1e32', borderColor:'#1e3a55', borderWidth:1,
+          titleColor:'#456070', bodyColor:'#c8dcea',
+          titleFont:{family:'JetBrains Mono,monospace',size:11},
+          bodyFont:{family:'JetBrains Mono,monospace',size:13},
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (v === null) return null;
+              return ' ' + product + ': ' + v.toFixed(3) + '%';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks:{color:'#456070',font:{family:'JetBrains Mono,monospace',size:10},maxRotation:45,maxTicksLimit:10},
+          grid:{color:'rgba(24,48,72,.6)'},
+          border:{color:'#182840'},
+        },
+        y: {
+          min:mn, max:mx,
+          ticks:{color:'#456070',font:{family:'JetBrains Mono,monospace',size:11},callback:v=>v.toFixed(3)+'%'},
+          grid:{color:'rgba(24,48,72,.6)'},
+          border:{color:'#182840'},
+        },
+      },
+    },
+  });
+}
+
+function setRateChartRange(range) {
+  rateChartActiveRange = range;
+  ['1m','3m','6m','1y'].forEach(r => {
+    const btn = document.getElementById('rcBtn' + r);
+    if (btn) btn.classList.toggle('active', r === range);
+  });
+  const n = RANGE_COUNTS[range] || 999;
+  const pts = rateChartAllPoints.slice(-n);
+  const lbs = rateChartAllLabels.slice(-n);
+  if (rateChartInstance) {
+    rateChartInstance.data.labels = lbs;
+    rateChartInstance.data.datasets[0].data = pts;
+    const valid = pts.filter(p => p !== null);
+    rateChartInstance.options.scales.y.min = valid.length ? Math.min(...valid) - 0.15 : 5;
+    rateChartInstance.options.scales.y.max = valid.length ? Math.max(...valid) + 0.15 : 8;
+    rateChartInstance.update();
+  }
+  document.getElementById('rateChartSub').textContent = (rateChartAllPoints.length ? rateChartAllPoints.slice(-n)[0] : '?') + ' — NOW · ' + pts.length + ' OBSERVATIONS';
+}
+
+function closeRateChart() {
+  document.getElementById('rateChartModal').classList.remove('open');
+  if (rateChartInstance) { rateChartInstance.destroy(); rateChartInstance = null; }
+}
+
+/* ── INFO MODAL ── */
+const INFO_CONTENT = {
+  bpi: {
+    title: 'Broker Price Index (BPI) — Option A',
+    sub:   'Live wholesale rate sheets · Best-qualified borrower scenario',
+    body: `
+      <p><strong>Source:</strong> UWM and Rocket Pro TPO wholesale rate sheets, parsed daily when lenders publish new pricing. Published 1–3x per trading day.</p>
+      <p><strong>Option A scenario:</strong> 760+ FICO · 75% LTV · Single Family Residence · Primary residence · Purchase · $375K loan amount ($900K for Jumbo) · 30-day lock period.</p>
+      <p><strong>Comp assumption:</strong> Standard 100bps (1 point) originator compensation included in target price selection.</p>
+      <p><strong>Rate selection:</strong> Closest match to target price on the actual rate ladder — no interpolation or multiplier approximations.</p>
+      <p><strong>Coverage:</strong> 30Y Conventional, 30Y FHA, 30Y VA, 30Y Jumbo, 15Y Conventional, 30Y Cash-Out Refi, 30Y Investment.</p>
+    `
+  },
+  bpi_b: {
+    title: 'Broker Price Index (BPI) — Option B',
+    sub:   'Live wholesale rate sheets · Average borrower scenario',
+    body: `
+      <p><strong>Source:</strong> Same UWM and Rocket Pro TPO rate sheets as Option A, applied to a different borrower scenario.</p>
+      <p><strong>Option B scenario:</strong> 720 FICO · 80% LTV · Single Family Residence · Primary residence · Purchase · $375K loan amount · 30-day lock period.</p>
+      <p><strong>Note:</strong> LLPAs for 720/80 vs 760/75 are applied per lender LLPA tables, resulting in higher rates reflecting average borrower qualification.</p>
+      <p><strong>Use case:</strong> Compare Option A vs B to estimate the LLPA premium for a typical borrower vs a best-qualified borrower on the same product.</p>
+    `
+  },
+  mcr: {
+    title: 'OBMMI — Optimal Blue Market Indices',
+    sub:   'Market-wide actual locked pricing · Prior business day',
+    body: `
+      <p><strong>Source:</strong> Optimal Blue Mortgage Market Indices (OBMMI), published nightly via FRED. Reflects actual rate lock pricing across thousands of lenders nationwide.</p>
+      <p><strong>Coverage:</strong> 30Y Conventional, 30Y FHA, 30Y VA, 30Y Jumbo, 15Y Conventional.</p>
+      <p><strong>Key distinction:</strong> OBMMI represents the broad market — retail, wholesale, and correspondent channels — not just wholesale broker pricing. Typically lower than BPI due to the mix of origination channels.</p>
+      <p><strong>Cadence:</strong> Updated nightly. The rate shown reflects the prior business day's locked loan pricing. Not a real-time signal.</p>
+      <p><strong>Use case:</strong> Benchmarking wholesale rates against where the full market is actually locking loans.</p>
+    `
+  },
+  freddie: {
+    title: 'Freddie Mac PMMS',
+    sub:   'Primary Mortgage Market Survey · Published Thursdays',
+    body: `
+      <p><strong>Source:</strong> Freddie Mac Primary Mortgage Market Survey (PMMS), the most widely cited weekly mortgage rate benchmark in financial media.</p>
+      <p><strong>Coverage:</strong> 30-year Fixed, 15-year Fixed only.</p>
+      <p><strong>Cadence:</strong> Published every Thursday. Reflects rates offered to well-qualified borrowers with 20% down payment. Lags the live market by several days.</p>
+      <p><strong>Key limitation:</strong> The PMMS is a survey of lender offerings, not actual locked loan rates. It tends to lag live market movements by 3–5 days and is smoothed relative to daily volatility.</p>
+      <p><strong>Use case:</strong> Understanding how PMMS relates to live pricing helps LOs explain to clients why the "advertised" rate they saw in the news may differ from today's rate sheet.</p>
+    `
+  },
+};
+
+function openInfoModal(key) {
+  const c = INFO_CONTENT[key];
+  if (!c) return;
+  document.getElementById('infoModalTitle').textContent = c.title;
+  document.getElementById('infoModalSub').textContent   = c.sub;
+  document.getElementById('infoModalBody').innerHTML    = c.body;
+  document.getElementById('infoModal').classList.add('open');
+}
+function closeInfoModal() {
+  document.getElementById('infoModal').classList.remove('open');
+}
+
+/* ── INIT ── */
+renderAll();
+loadData();
+prefetchRateHistory();
+setInterval(loadData, 300000); // refresh every 5 min
+</script>
+</body>
+</html>
