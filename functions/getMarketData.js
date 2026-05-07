@@ -72,6 +72,38 @@ function fredDate(cache, hist, key) {
   return null;
 }
 
+// Week-over-week change for a FRED series
+// Primary: fred_cache.change (computed by scraper)
+// Fallback: last two observations from fred_history
+function fredChange(cache, hist, key) {
+  const cacheObj = cache[key] ?? cache[key.toLowerCase()];
+  if (cacheObj && typeof cacheObj === 'object' && cacheObj.change !== undefined) {
+    return num(cacheObj.change);
+  }
+  const histObj = hist[key] ?? hist[key.toLowerCase()];
+  if (histObj && Array.isArray(histObj.observations) && histObj.observations.length >= 2) {
+    const obs = histObj.observations;
+    const latest = num(obs[obs.length - 1].value);
+    const prev   = num(obs[obs.length - 2].value);
+    if (latest !== null && prev !== null) return Math.round((latest - prev) * 10000) / 10000;
+  }
+  return null;
+}
+
+// Previous value for a FRED series
+function fredPrev(cache, hist, key) {
+  const cacheObj = cache[key] ?? cache[key.toLowerCase()];
+  if (cacheObj && typeof cacheObj === 'object' && cacheObj.prev !== undefined) {
+    return num(cacheObj.prev);
+  }
+  const histObj = hist[key] ?? hist[key.toLowerCase()];
+  if (histObj && Array.isArray(histObj.observations) && histObj.observations.length >= 2) {
+    const obs = histObj.observations;
+    return num(obs[obs.length - 2].value);
+  }
+  return null;
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const HEADERS = {
@@ -209,18 +241,47 @@ exports.handler = async function (event) {
     // Fallback: fred_history observations array (written 4:30pm daily, always populated)
     const fv = (key) => fredVal(fred, fredHist, key);
     const fd = (key) => fredDate(fred, fredHist, key);
+    const fc = (key) => fredChange(fred, fredHist, key);
+    const fp = (key) => fredPrev(fred, fredHist, key);
 
     const fredCache = {
-      obmmic30yf:     fv('OBMMIC30YF'),
-      obmmic15yf:     fv('OBMMIC15YF'),
-      obmmifha30yf:   fv('OBMMIFHA30YF'),
-      obmmiva30yf:    fv('OBMMIVA30YF'),
-      obmmijumbo30yf: fv('OBMMIJUMBO30YF'),
-      mortgage30us:   fv('MORTGAGE30US'),
-      mortgage15us:   fv('MORTGAGE15US'),
-      // Per-series dates so UI can show "as of YYYY-MM-DD" accurately
-      obmmic30yf_date:     fd('OBMMIC30YF'),
-      mortgage30us_date:   fd('MORTGAGE30US'),
+      // ── Optimal Blue ──────────────────────────────────────
+      obmmic30yf:            fv('OBMMIC30YF'),
+      obmmic30yf_prev:       fp('OBMMIC30YF'),
+      obmmic30yf_change:     fc('OBMMIC30YF'),
+      obmmic30yf_date:       fd('OBMMIC30YF'),
+
+      obmmic15yf:            fv('OBMMIC15YF'),
+      obmmic15yf_prev:       fp('OBMMIC15YF'),
+      obmmic15yf_change:     fc('OBMMIC15YF'),
+      obmmic15yf_date:       fd('OBMMIC15YF'),
+
+      obmmifha30yf:          fv('OBMMIFHA30YF'),
+      obmmifha30yf_prev:     fp('OBMMIFHA30YF'),
+      obmmifha30yf_change:   fc('OBMMIFHA30YF'),
+      obmmifha30yf_date:     fd('OBMMIFHA30YF'),
+
+      obmmiva30yf:           fv('OBMMIVA30YF'),
+      obmmiva30yf_prev:      fp('OBMMIVA30YF'),
+      obmmiva30yf_change:    fc('OBMMIVA30YF'),
+      obmmiva30yf_date:      fd('OBMMIVA30YF'),
+
+      obmmijumbo30yf:        fv('OBMMIJUMBO30YF'),
+      obmmijumbo30yf_prev:   fp('OBMMIJUMBO30YF'),
+      obmmijumbo30yf_change: fc('OBMMIJUMBO30YF'),
+      obmmijumbo30yf_date:   fd('OBMMIJUMBO30YF'),
+
+      // ── Freddie Mac PMMS ────────────────────────────────────
+      mortgage30us:          fv('MORTGAGE30US'),
+      mortgage30us_prev:     fp('MORTGAGE30US'),
+      mortgage30us_change:   fc('MORTGAGE30US'),
+      mortgage30us_date:     fd('MORTGAGE30US'),
+
+      mortgage15us:          fv('MORTGAGE15US'),
+      mortgage15us_prev:     fp('MORTGAGE15US'),
+      mortgage15us_change:   fc('MORTGAGE15US'),
+      mortgage15us_date:     fd('MORTGAGE15US'),
+
       as_of: fred.last_updated || fred.as_of || fred.fetched_at || null,
     };
 
