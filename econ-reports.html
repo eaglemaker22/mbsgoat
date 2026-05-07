@@ -41,23 +41,25 @@ body:before{
 .logo span{color:var(--cyan);text-shadow:0 0 22px rgba(27,216,255,.45)}
 .lock{margin-top:10px;font:11px JetBrains Mono,monospace;letter-spacing:.30em;color:#f1bd2a}
 .lock span{color:#58778f;margin-left:9px}
-.live{padding-left:22px;font:12px JetBrains Mono,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
-.live b{color:var(--green);font-weight:700}
-.live i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 15px var(--green);margin-right:10px;animation:blink 2s infinite}
+.live-block{padding-left:22px;font:12px JetBrains Mono,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
+.live-block b{color:var(--green);font-weight:700}
+.live-block.after b{color:var(--red)}
+.live-block.after i{background:var(--red);box-shadow:0 0 15px var(--red)}
+.live-block i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 15px var(--green);margin-right:10px;animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.live small{display:block;margin:7px 0 0 23px;color:#8395a3}
-.nav{justify-self:center;display:flex;gap:38px;height:100%;align-items:center}
+.live-block small{display:block;margin:7px 0 0 23px;color:#8395a3}
+.nav{justify-self:center;display:flex;gap:44px;height:100%;align-items:center}
 .nav a{height:100%;display:flex;align-items:center;color:#8793a1;text-decoration:none;text-transform:uppercase;font:12px JetBrains Mono,monospace;letter-spacing:.18em;position:relative;cursor:pointer;transition:color .15s}
 .nav a.active{color:#eaf7ff}
-.nav a.active:after{content:"";position:absolute;bottom:12px;left:0;right:0;height:2px;background:var(--amber);box-shadow:0 0 20px var(--amber)}
+.nav a.active:after{content:"";position:absolute;bottom:12px;left:0;right:0;height:2px;background:var(--cyan);box-shadow:0 0 20px var(--cyan)}
 .nav a:hover:not(.active){color:#c5d8e6}
 .timezone{border-left:1px solid rgba(143,181,213,.11);padding-left:22px;height:100%;display:flex;align-items:center;gap:9px;justify-content:flex-start;position:relative}
 .tz-small{position:absolute;bottom:10px;left:23px;font:9px JetBrains Mono,monospace;letter-spacing:.13em;color:#70879a;text-transform:uppercase;white-space:nowrap}
 .tz-btn{font:11px JetBrains Mono,monospace;letter-spacing:.12em;color:#61798d;border:1px solid rgba(113,161,202,.18);background:rgba(20,45,70,.35);border-radius:6px;padding:7px 9px;cursor:pointer;transition:all .15s}
 .tz-btn.active{color:#051018;background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 18px rgba(27,216,255,.35)}
-.time{font:13px JetBrains Mono,monospace;letter-spacing:.13em;text-align:right;padding-right:20px}
-.time strong{display:block;font-size:18px;color:#edf6fc}
-.time span{display:block;margin-top:5px;color:#718698;font-size:11px}
+.time-block{font:13px JetBrains Mono,monospace;letter-spacing:.13em;text-align:right;padding-right:20px}
+.time-block strong{display:block;font-size:18px;color:#edf6fc}
+.time-block span{display:block;margin-top:5px;color:#718698;font-size:11px}
 
 .shell{max-width:1600px;margin:0 auto;padding:0 20px 48px}
 
@@ -309,7 +311,7 @@ body:before{
   .sidebar{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .topbar{grid-template-columns:1fr;height:auto;padding:16px 20px;gap:10px}
   .brand,.live,.timezone{border:0;padding:0}
-  .nav{display:none}.time{text-align:left}
+  .nav{display:none}.time-block{text-align:left}
 }
 @media(max-width:700px){
   .sidebar{grid-template-columns:1fr}
@@ -322,14 +324,12 @@ body:before{
 
 <header class="topbar">
   <div class="brand"><div class="logo">MBS<span>GOAT</span></div><div class="lock">LOCKIQ <span>TERMINAL</span></div></div>
-  <div class="live"><i></i><b>LIVE MARKET</b><small>US Bond Market Open</small></div>
+  <div class="live-block"><i></i><b id="mktStatus">LIVE MARKET</b><small id="mktHours">US Bond Market Open</small></div>
   <nav class="nav">
     <a href="index.html">Dashboard</a>
-    <a>Markets</a>
+    <a href="markets.html">Markets</a>
     <a href="rates.html">Rates</a>
-    <a>Analytics</a>
-    <a class="active">Econ Calendar</a>
-    <a>Tools</a>
+    <a class="active" href="econ-reports.html">Econ Report</a>
   </nav>
   <div class="timezone">
     <button class="tz-btn" data-tz="PT">PT</button>
@@ -338,7 +338,7 @@ body:before{
     <button class="tz-btn active" data-tz="ET">ET</button>
     <div class="tz-small" id="tzSmall">Eastern Time</div>
   </div>
-  <div class="time"><strong id="clock">—</strong><span id="dateLine">—</span></div>
+  <div class="time-block"><strong id="clock">—</strong><span id="dateLine">—</span></div>
 </header>
 
 <div class="shell">
@@ -490,11 +490,40 @@ const tzNames={ET:"Eastern Time",CT:"Central Time",MT:"Mountain Time",PT:"Pacifi
 let currentZone="ET";
 function tick(){
   const d=new Date();
-  const parts=new Intl.DateTimeFormat("en-US",{timeZone:ianaZones[currentZone],hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true}).formatToParts(d);
+
+  const parts=new Intl.DateTimeFormat("en-US",{
+    timeZone:ianaZones[currentZone],
+    hour:"2-digit",
+    minute:"2-digit",
+    second:"2-digit",
+    hour12:true
+  }).formatToParts(d);
+
   const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
   document.getElementById("clock").textContent=`${p.hour}:${p.minute}:${p.second} ${p.dayPeriod} ${currentZone}`;
-  const dd=new Intl.DateTimeFormat("en-US",{timeZone:ianaZones[currentZone],weekday:"short",month:"short",day:"numeric",year:"numeric"}).format(d);
+
+  const dd=new Intl.DateTimeFormat("en-US",{
+    timeZone:ianaZones[currentZone],
+    weekday:"short",
+    month:"short",
+    day:"numeric",
+    year:"numeric"
+  }).format(d);
   document.getElementById("dateLine").textContent=dd.toUpperCase();
+
+  const etNow=new Date(d.toLocaleString("en-US",{timeZone:"America/New_York"}));
+  const day=etNow.getDay();
+  const hhmm=etNow.getHours()*100+etNow.getMinutes();
+  const isWeekday=day>=1&&day<=5;
+  const bondOpen=isWeekday&&hhmm>=800&&hhmm<1700;
+
+  const liveBlock=document.querySelector(".live-block");
+  if(liveBlock) liveBlock.classList.toggle("after",!bondOpen);
+
+  const status=document.getElementById("mktStatus");
+  const hours=document.getElementById("mktHours");
+  if(status) status.textContent=bondOpen ? "LIVE MARKET" : "AFTER HOURS";
+  if(hours) hours.textContent=bondOpen ? "US Bond Market Open" : "Market: 8:00 AM – 5:00 PM ET";
 }
 tick(); setInterval(tick,1000);
 document.querySelectorAll(".tz-btn").forEach(b=>{
