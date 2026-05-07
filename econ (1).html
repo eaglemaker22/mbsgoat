@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LockIQ — Econ Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#03070d; --bg1:#07111c; --panel:#081522; --stroke:rgba(122,170,208,.16);
+  --strokeBright:rgba(69,255,130,.46); --white:#edf5f8; --soft:#b8c6d1; --muted:#6f8292;
+  --green:#42f36f; --cyan:#1bd8ff; --blue:#38a8ff; --amber:#ffbd27; --red:#ff4a43;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh; color:var(--white); font-family:Inter,system-ui,sans-serif; overflow-x:hidden;
+  background:
+    radial-gradient(900px 360px at 19% 24%, rgba(255,189,39,.07), transparent 62%),
+    radial-gradient(760px 320px at 80% 13%, rgba(25,174,255,.08), transparent 64%),
+    linear-gradient(180deg,#09131f 0%, #04080e 44%, #02050a 100%);
+}
+body:before{
+  content:""; position:fixed; inset:0; pointer-events:none; opacity:.5;
+  background:
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:34px 34px; mask-image:linear-gradient(to bottom,#000 0%,transparent 72%);
+}
+
+/* ── TOP BAR ── */
+.topbar{
+  height:86px; display:grid; grid-template-columns:220px 205px 1fr 260px 168px;
+  align-items:center; border-bottom:1px solid rgba(143,181,213,.13);
+  background:rgba(3,8,14,.72); backdrop-filter:blur(20px);
+  position:sticky; top:0; z-index:100;
+}
+.brand{height:100%;display:flex;flex-direction:column;justify-content:center;border-right:1px solid rgba(143,181,213,.11);padding-left:20px}
+.logo{font-weight:900;letter-spacing:.28em;font-size:28px;line-height:.9}
+.logo span{color:var(--cyan);text-shadow:0 0 22px rgba(27,216,255,.45)}
+.lock{margin-top:10px;font:11px JetBrains Mono,monospace;letter-spacing:.30em;color:#f1bd2a}
+.lock span{color:#58778f;margin-left:9px}
+.live{padding-left:22px;font:12px JetBrains Mono,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
+.live b{color:var(--green);font-weight:700}
+.live i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 15px var(--green);margin-right:10px;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.live small{display:block;margin:7px 0 0 23px;color:#8395a3}
+.nav{justify-self:center;display:flex;gap:38px;height:100%;align-items:center}
+.nav a{height:100%;display:flex;align-items:center;color:#8793a1;text-decoration:none;text-transform:uppercase;font:12px JetBrains Mono,monospace;letter-spacing:.18em;position:relative;cursor:pointer;transition:color .15s}
+.nav a.active{color:#eaf7ff}
+.nav a.active:after{content:"";position:absolute;bottom:12px;left:0;right:0;height:2px;background:var(--amber);box-shadow:0 0 20px var(--amber)}
+.nav a:hover:not(.active){color:#c5d8e6}
+.timezone{border-left:1px solid rgba(143,181,213,.11);padding-left:22px;height:100%;display:flex;align-items:center;gap:9px;justify-content:flex-start;position:relative}
+.tz-small{position:absolute;bottom:10px;left:23px;font:9px JetBrains Mono,monospace;letter-spacing:.13em;color:#70879a;text-transform:uppercase;white-space:nowrap}
+.tz-btn{font:11px JetBrains Mono,monospace;letter-spacing:.12em;color:#61798d;border:1px solid rgba(113,161,202,.18);background:rgba(20,45,70,.35);border-radius:6px;padding:7px 9px;cursor:pointer;transition:all .15s}
+.tz-btn.active{color:#051018;background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 18px rgba(27,216,255,.35)}
+.time{font:13px JetBrains Mono,monospace;letter-spacing:.13em;text-align:right;padding-right:20px}
+.time strong{display:block;font-size:18px;color:#edf6fc}
+.time span{display:block;margin-top:5px;color:#718698;font-size:11px}
+
+.shell{max-width:1600px;margin:0 auto;padding:0 20px 48px}
+
+.kicker{
+  display:flex;align-items:center;justify-content:space-between;margin:20px 0 18px;
+  color:#61778a;font:11px JetBrains Mono,monospace;letter-spacing:.18em;text-transform:uppercase;
+}
+.kicker .line{height:1px;flex:1;background:linear-gradient(90deg,rgba(255,189,39,.25),transparent);margin-left:16px}
+.kicker .right{display:flex;align-items:center;gap:12px}
+
+/* ── FILTER PILLS ── */
+.filter-group{display:flex;gap:5px;align-items:center}
+.filter-label{font:700 9px JetBrains Mono,monospace;letter-spacing:.16em;color:#4a6070;text-transform:uppercase;margin-right:4px}
+.fpill{
+  font:600 9px JetBrains Mono,monospace;letter-spacing:.12em;text-transform:uppercase;
+  padding:5px 11px;border-radius:5px;cursor:pointer;border:1px solid rgba(113,161,202,.18);
+  background:rgba(15,35,55,.5);color:#6f8498;transition:all .15s;
+}
+.fpill.active-all{background:rgba(255,255,255,.08);color:#c5d8e6;border-color:rgba(255,255,255,.15)}
+.fpill.active-high{background:rgba(255,68,43,.15);color:#ff6654;border-color:rgba(255,68,43,.3)}
+.fpill.active-med{background:rgba(255,189,39,.13);color:var(--amber);border-color:rgba(255,189,39,.28)}
+.fpill.active-low{background:rgba(56,168,255,.12);color:var(--blue);border-color:rgba(56,168,255,.25)}
+.fpill:hover:not([class*='active']){color:#a0b8cc;border-color:rgba(113,161,202,.35)}
+
+/* ── LAYOUT ── */
+.page-layout{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
+
+/* ── CALENDAR CARD ── */
+.cal-card{
+  position:relative;border-radius:14px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(10,24,38,.9),rgba(4,12,22,.97));
+  border:1px solid var(--stroke);
+  box-shadow:0 28px 80px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.045);
+}
+.cal-card:before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--amber),transparent);
+}
+.cal-header{
+  padding:18px 22px 14px;border-bottom:1px solid rgba(122,170,208,.08);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.cal-title{font:700 13px JetBrains Mono,monospace;letter-spacing:.18em;text-transform:uppercase;color:#c2d4df}
+.cal-subtitle{font:10px JetBrains Mono,monospace;color:#496070;letter-spacing:.1em;margin-top:3px}
+.cal-meta{font:10px JetBrains Mono,monospace;color:#3e5565;text-align:right}
+
+/* ── WEEK GROUP HEADER ── */
+.week-header{
+  padding:8px 22px;background:rgba(0,0,0,.25);
+  border-bottom:1px solid rgba(122,170,208,.05);
+  display:flex;align-items:center;gap:12px;
+}
+.week-label{font:700 9px JetBrains Mono,monospace;letter-spacing:.2em;text-transform:uppercase;color:#ffbd27}
+.week-count{font:600 9px JetBrains Mono,monospace;letter-spacing:.1em;color:#455a6a;padding:2px 7px;border-radius:3px;background:rgba(255,189,39,.06);border:1px solid rgba(255,189,39,.1)}
+
+/* ── DAY GROUP ── */
+.day-group{border-bottom:1px solid rgba(122,170,208,.06)}
+.day-group:last-child{border-bottom:none}
+.day-header{
+  padding:8px 22px;
+  display:grid;grid-template-columns:100px 1fr auto;align-items:center;gap:12px;
+  background:rgba(255,255,255,.013);border-bottom:1px solid rgba(122,170,208,.04);
+}
+.day-label{font:700 11px JetBrains Mono,monospace;letter-spacing:.14em;text-transform:uppercase;color:#8a9fb0}
+.day-label.today{color:var(--cyan);text-shadow:0 0 12px rgba(27,216,255,.3)}
+.day-date-full{font:10px JetBrains Mono,monospace;color:#3e5565;letter-spacing:.1em}
+.day-impact-bar{display:flex;gap:3px;justify-content:flex-end}
+.day-dot{width:6px;height:6px;border-radius:50%}
+.day-dot.high{background:var(--red);box-shadow:0 0 6px var(--red)}
+.day-dot.med{background:var(--amber);box-shadow:0 0 5px var(--amber)}
+.day-dot.low{background:var(--blue)}
+
+/* ── EVENT ROW ── */
+.econ-row{
+  display:grid;
+  grid-template-columns:80px 36px 1fr 90px 80px 72px;
+  gap:0;align-items:center;
+  padding:10px 22px;
+  border-bottom:1px solid rgba(122,170,208,.04);
+  cursor:pointer;transition:background .12s;
+  position:relative;
+}
+.econ-row:last-child{border-bottom:none}
+.econ-row:hover{background:rgba(255,255,255,.025)}
+.econ-row.past{opacity:.45}
+.econ-row.today-row{
+  background:linear-gradient(90deg,rgba(27,216,255,.04),transparent);
+  border-left:2px solid rgba(27,216,255,.4);
+  padding-left:20px;
+}
+.econ-row.fomc-row{
+  background:linear-gradient(90deg,rgba(255,189,39,.06),transparent);
+  border-left:2px solid rgba(255,189,39,.45);
+  padding-left:20px;
+}
+
+.ev-time{font:600 10px JetBrains Mono,monospace;letter-spacing:.08em;color:#456070}
+.ev-time.et-time{font-size:9px}
+
+.ev-impact{display:flex;align-items:center;justify-content:center}
+.impact-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.impact-dot.high{background:var(--red);box-shadow:0 0 8px rgba(255,68,43,.6)}
+.impact-dot.med{background:var(--amber);box-shadow:0 0 6px rgba(255,189,39,.5)}
+.impact-dot.low{background:var(--blue);opacity:.7}
+
+.ev-name{font-size:13px;font-weight:500;color:#d4e2ec;padding:0 12px 0 8px;line-height:1.3}
+.ev-name small{display:block;font-size:10px;font-family:JetBrains Mono,monospace;letter-spacing:.08em;color:#496070;margin-top:2px}
+
+.ev-prev{font:600 11px JetBrains Mono,monospace;letter-spacing:.06em;color:#7a9ab0;text-align:right}
+.ev-prev span{display:block;font-size:9px;letter-spacing:.1em;color:#3e5565;font-weight:500;margin-top:1px;text-transform:uppercase}
+
+.ev-actual{font:700 12px JetBrains Mono,monospace;letter-spacing:.06em;text-align:right}
+.ev-actual.beat{color:var(--green)}
+.ev-actual.miss{color:var(--red)}
+.ev-actual.inline{color:#8a9fb0}
+.ev-actual.pending{color:#3e5565;font-size:10px}
+.ev-actual span{display:block;font-size:9px;letter-spacing:.1em;font-weight:500;margin-top:1px;text-transform:uppercase}
+
+.ev-impact-badge{text-align:right}
+.ibadge{
+  display:inline-block;font:700 9px JetBrains Mono,monospace;
+  letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:4px;
+}
+.ibadge.high{background:rgba(255,68,43,.12);color:#ff6654;border:1px solid rgba(255,68,43,.25)}
+.ibadge.med{background:rgba(255,189,39,.1);color:var(--amber);border:1px solid rgba(255,189,39,.2)}
+.ibadge.low{background:rgba(56,168,255,.08);color:#6aaee0;border:1px solid rgba(56,168,255,.16)}
+.ibadge.fomc{background:rgba(255,189,39,.18);color:var(--amber);border:1px solid rgba(255,189,39,.35)}
+
+/* ── COLUMN HEADERS ── */
+.cal-col-headers{
+  display:grid;grid-template-columns:80px 36px 1fr 90px 80px 72px;
+  gap:0;padding:6px 22px;
+  background:rgba(0,0,0,.3);border-bottom:1px solid rgba(122,170,208,.07);
+}
+.col-hdr{font:700 8px JetBrains Mono,monospace;letter-spacing:.18em;text-transform:uppercase;color:#374f60}
+.col-hdr.right{text-align:right}
+.col-hdr.center{text-align:center}
+
+/* ── EMPTY STATE ── */
+.empty-group{padding:20px 22px;font:11px JetBrains Mono,monospace;color:#2e4455;letter-spacing:.1em;text-align:center}
+
+/* ── SIDEBAR ── */
+.sidebar{display:flex;flex-direction:column;gap:16px}
+
+/* ── FOMC CARD ── */
+.fomc-card{
+  position:relative;border-radius:14px;overflow:hidden;
+  background:linear-gradient(135deg,rgba(10,20,10,.9),rgba(4,12,4,.97));
+  border:1px solid rgba(255,189,39,.18);
+  box-shadow:0 0 40px rgba(255,189,39,.06),0 28px 60px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.fomc-card:before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+.fomc-inner{padding:20px 20px 18px}
+.fomc-label{font:700 9px JetBrains Mono,monospace;letter-spacing:.22em;text-transform:uppercase;color:#8a6e20;margin-bottom:10px}
+.fomc-date{font-size:26px;font-weight:800;color:#ffbd27;letter-spacing:.02em;line-height:1}
+.fomc-sub{font:11px JetBrains Mono,monospace;color:#7a6020;letter-spacing:.1em;margin-top:5px}
+.fomc-countdown{
+  margin-top:14px;padding:10px 14px;border-radius:8px;
+  background:rgba(255,189,39,.07);border:1px solid rgba(255,189,39,.12);
+  font:700 22px JetBrains Mono,monospace;color:#ffbd27;text-align:center;
+  text-shadow:0 0 18px rgba(255,189,39,.4);
+}
+.fomc-countdown-label{font:600 9px JetBrains Mono,monospace;letter-spacing:.18em;color:#6a5515;text-transform:uppercase;text-align:center;margin-top:6px}
+.fomc-rate{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,189,39,.1)}
+.fomc-rate-label{font:10px JetBrains Mono,monospace;color:#6a5515;letter-spacing:.1em;text-transform:uppercase}
+.fomc-rate-val{font:700 18px JetBrains Mono,monospace;color:#c9a030;letter-spacing:.05em}
+.fomc-prob-row{margin-top:10px}
+.fomc-prob-label{font:9px JetBrains Mono,monospace;letter-spacing:.1em;color:#5a4510;text-transform:uppercase;margin-bottom:6px}
+.fomc-prob-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.06);overflow:hidden;margin-bottom:4px}
+.fomc-prob-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.fomc-prob-fill.hold{background:linear-gradient(90deg,#6a5515,#c9a030)}
+.fomc-prob-fill.cut25{background:linear-gradient(90deg,#0d3a1a,#42f36f)}
+.fomc-prob-vals{display:flex;justify-content:space-between;font:600 9px JetBrains Mono,monospace;letter-spacing:.08em;color:#5a6a5a}
+
+/* ── IMPACT LEGEND ── */
+.legend-card{
+  position:relative;border-radius:12px;overflow:hidden;
+  background:rgba(8,20,32,.85);border:1px solid rgba(122,170,208,.1);
+  padding:16px 18px;
+}
+.legend-title{font:700 9px JetBrains Mono,monospace;letter-spacing:.2em;text-transform:uppercase;color:#3e5565;margin-bottom:12px}
+.legend-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.legend-row:last-child{margin-bottom:0}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.legend-dot.high{background:var(--red);box-shadow:0 0 8px rgba(255,68,43,.5)}
+.legend-dot.med{background:var(--amber);box-shadow:0 0 5px rgba(255,189,39,.4)}
+.legend-dot.low{background:var(--blue);opacity:.7}
+.legend-text{font:10px JetBrains Mono,monospace;color:#6a8090;letter-spacing:.08em}
+.legend-text strong{color:#a0b8c5;font-weight:700;display:block}
+
+/* ── UPCOMING KEY DATES ── */
+.key-dates-card{
+  position:relative;border-radius:12px;overflow:hidden;
+  background:rgba(8,20,32,.85);border:1px solid rgba(122,170,208,.1);
+}
+.key-dates-card:before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(27,216,255,.3),transparent)}
+.key-dates-header{padding:14px 18px 10px;border-bottom:1px solid rgba(122,170,208,.07)}
+.key-dates-title{font:700 10px JetBrains Mono,monospace;letter-spacing:.18em;text-transform:uppercase;color:#6a8090}
+.key-date-row{
+  display:grid;grid-template-columns:60px 1fr auto;gap:8px;align-items:center;
+  padding:9px 18px;border-bottom:1px solid rgba(122,170,208,.04);
+}
+.key-date-row:last-child{border-bottom:none}
+.kd-date{font:700 10px JetBrains Mono,monospace;letter-spacing:.08em;color:#7a9ab0}
+.kd-event{font-size:12px;color:#b0c4d0;font-weight:500}
+.kd-badge{font:700 8px JetBrains Mono,monospace;letter-spacing:.1em;padding:2px 6px;border-radius:3px}
+.kd-badge.high{background:rgba(255,68,43,.12);color:#ff6654;border:1px solid rgba(255,68,43,.2)}
+.kd-badge.fomc{background:rgba(255,189,39,.15);color:var(--amber);border:1px solid rgba(255,189,39,.25)}
+
+/* ── QUICK STATS ── */
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-chip{
+  border-radius:10px;padding:12px 14px;text-align:center;
+  background:rgba(8,20,32,.85);border:1px solid rgba(122,170,208,.1);
+}
+.stat-chip-val{font:700 22px JetBrains Mono,monospace;line-height:1;margin-bottom:4px}
+.stat-chip-val.red{color:var(--red)}
+.stat-chip-val.amber{color:var(--amber)}
+.stat-chip-val.cyan{color:var(--cyan)}
+.stat-chip-val.green{color:var(--green)}
+.stat-chip-label{font:9px JetBrains Mono,monospace;letter-spacing:.14em;color:#3e5565;text-transform:uppercase}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(2,6,12,.88);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.modal-overlay.open{display:flex}
+.modal-box{background:linear-gradient(180deg,#0c1e32,#07111c);border:1px solid rgba(122,170,208,.2);border-radius:14px;padding:28px 30px 24px;max-width:580px;width:94%;position:relative;box-shadow:0 40px 120px rgba(0,0,0,.7)}
+.modal-close{position:absolute;top:16px;right:16px;background:rgba(20,44,70,.6);border:1px solid rgba(113,161,202,.2);color:#8aabb8;font:700 10px JetBrains Mono,monospace;letter-spacing:.15em;padding:6px 12px;border-radius:6px;cursor:pointer}
+.modal-close:hover{color:#edf5f8;border-color:rgba(113,161,202,.5)}
+.modal-title{font:700 18px JetBrains Mono,monospace;letter-spacing:.1em;color:#edf5f8;margin-bottom:4px}
+.modal-sub{font:11px JetBrains Mono,monospace;color:#5a7388;letter-spacing:.1em;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid rgba(122,170,208,.1)}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.modal-stat{padding:12px 14px;border-radius:8px;background:rgba(0,0,0,.3);border:1px solid rgba(122,170,208,.08)}
+.modal-stat-label{font:9px JetBrains Mono,monospace;letter-spacing:.14em;color:#3e5565;text-transform:uppercase;margin-bottom:5px}
+.modal-stat-val{font:700 16px JetBrains Mono,monospace;color:#c8dcea}
+.modal-stat-val.beat{color:var(--green)}
+.modal-stat-val.miss{color:var(--red)}
+.modal-stat-val.pending{color:#456070;font-size:12px}
+.modal-note{font:12px JetBrains Mono,monospace;color:#496070;letter-spacing:.06em;line-height:1.6;padding-top:12px;border-top:1px solid rgba(122,170,208,.07)}
+.modal-note strong{color:#8aabb8;font-weight:700}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:rgba(4,10,18,.8)}
+::-webkit-scrollbar-thumb{background:rgba(122,170,208,.18);border-radius:3px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1200px){
+  .page-layout{grid-template-columns:1fr}
+  .sidebar{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .topbar{grid-template-columns:1fr;height:auto;padding:16px 20px;gap:10px}
+  .brand,.live,.timezone{border:0;padding:0}
+  .nav{display:none}.time{text-align:left}
+}
+@media(max-width:700px){
+  .sidebar{grid-template-columns:1fr}
+  .econ-row{grid-template-columns:70px 28px 1fr 0 70px 60px}
+  .econ-row .ev-prev{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><div class="logo">MBS<span>GOAT</span></div><div class="lock">LOCKIQ <span>TERMINAL</span></div></div>
+  <div class="live"><i></i><b>LIVE MARKET</b><small>US Bond Market Open</small></div>
+  <nav class="nav">
+    <a href="index.html">Dashboard</a>
+    <a>Markets</a>
+    <a href="rates.html">Rates</a>
+    <a>Analytics</a>
+    <a class="active">Econ Calendar</a>
+    <a>Tools</a>
+  </nav>
+  <div class="timezone">
+    <button class="tz-btn" data-tz="PT">PT</button>
+    <button class="tz-btn" data-tz="MT">MT</button>
+    <button class="tz-btn" data-tz="CT">CT</button>
+    <button class="tz-btn active" data-tz="ET">ET</button>
+    <div class="tz-small" id="tzSmall">Eastern Time</div>
+  </div>
+  <div class="time"><strong id="clock">—</strong><span id="dateLine">—</span></div>
+</header>
+
+<div class="shell">
+
+  <div class="kicker">
+    <span>Economic Events · Rate Impact Intelligence</span>
+    <div class="right">
+      <span class="filter-label">Filter</span>
+      <div class="filter-group">
+        <button class="fpill active-all" data-filter="all">ALL</button>
+        <button class="fpill" data-filter="high">HIGH</button>
+        <button class="fpill" data-filter="med">MED</button>
+        <button class="fpill" data-filter="low">LOW</button>
+      </div>
+    </div>
+    <div class="line"></div>
+  </div>
+
+  <!-- STATS STRIP -->
+  <div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px">
+    <div class="stat-chip">
+      <div class="stat-chip-val red" id="statHighCount">—</div>
+      <div class="stat-chip-label">High Impact · 30 Days</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-val amber" id="statMedCount">—</div>
+      <div class="stat-chip-label">Medium Impact · 30 Days</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-val cyan" id="statFomcDays">—</div>
+      <div class="stat-chip-label">Days to Next FOMC</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-val green" id="statThisWeek">—</div>
+      <div class="stat-chip-label">Events This Week</div>
+    </div>
+  </div>
+
+  <div class="page-layout">
+
+    <!-- ═══ MAIN CALENDAR ═══ -->
+    <div class="cal-card">
+      <div class="cal-header">
+        <div>
+          <div class="cal-title">Economic Calendar</div>
+          <div class="cal-subtitle">Events with mortgage market impact · Click any row for detail</div>
+        </div>
+        <div class="cal-meta" id="calMeta">Loading...</div>
+      </div>
+
+      <!-- Column headers -->
+      <div class="cal-col-headers">
+        <div class="col-hdr">TIME ET</div>
+        <div class="col-hdr center">RISK</div>
+        <div class="col-hdr" style="padding-left:8px">EVENT</div>
+        <div class="col-hdr right">PRIOR</div>
+        <div class="col-hdr right">ACTUAL</div>
+        <div class="col-hdr right">IMPACT</div>
+      </div>
+
+      <div id="calBody">
+        <div class="empty-group">Loading calendar data...</div>
+      </div>
+    </div>
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <div class="sidebar">
+
+      <!-- FOMC COUNTDOWN -->
+      <div class="fomc-card">
+        <div class="fomc-inner">
+          <div class="fomc-label">▸ Next FOMC Decision</div>
+          <div class="fomc-date" id="fomcDate">Jun 18, 2026</div>
+          <div class="fomc-sub" id="fomcSub">Federal Open Market Committee</div>
+          <div class="fomc-countdown" id="fomcCountdown">42</div>
+          <div class="fomc-countdown-label">Days Until Decision</div>
+          <div class="fomc-rate">
+            <div>
+              <div class="fomc-rate-label">Current Target Rate</div>
+              <div class="fomc-rate-val" id="fomcRate">4.25–4.50%</div>
+            </div>
+            <div style="text-align:right">
+              <div class="fomc-rate-label">Meetings Left '26</div>
+              <div class="fomc-rate-val">6</div>
+            </div>
+          </div>
+          <div class="fomc-prob-row">
+            <div class="fomc-prob-label">Market Implied Probability · Jun</div>
+            <div style="display:flex;justify-content:space-between;font:9px JetBrains Mono,monospace;color:#5a4510;letter-spacing:.1em;margin-bottom:4px">
+              <span>HOLD</span><span>CUT 25bps</span>
+            </div>
+            <div class="fomc-prob-bar"><div class="fomc-prob-fill hold" id="probHold" style="width:62%"></div></div>
+            <div class="fomc-prob-bar" style="margin-top:3px"><div class="fomc-prob-fill cut25" id="probCut25" style="width:35%"></div></div>
+            <div class="fomc-prob-vals">
+              <span id="probHoldPct">62%</span>
+              <span id="probCut25Pct">35%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPCOMING KEY DATES -->
+      <div class="key-dates-card">
+        <div class="key-dates-header">
+          <div class="key-dates-title">▸ Key Dates — Next 30 Days</div>
+        </div>
+        <div id="keyDatesList"></div>
+      </div>
+
+      <!-- IMPACT LEGEND -->
+      <div class="legend-card">
+        <div class="legend-title">▸ Impact Rating Guide</div>
+        <div class="legend-row">
+          <div class="legend-dot high"></div>
+          <div class="legend-text"><strong>HIGH — Market Moving</strong>CPI, PCE, NFP, FOMC — direct rate sheet impact expected. Float bias changes on release.</div>
+        </div>
+        <div class="legend-row">
+          <div class="legend-dot med"></div>
+          <div class="legend-text"><strong>MEDIUM — Watch Closely</strong>Retail Sales, PMI, Jobless Claims — can move markets if data surprises significantly.</div>
+        </div>
+        <div class="legend-row">
+          <div class="legend-dot low"></div>
+          <div class="legend-text"><strong>LOW — Minor</strong>Consumer Credit, Housing Starts revisions — limited bond market sensitivity. Monitor only.</div>
+        </div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(122,170,208,.07);font:9px JetBrains Mono,monospace;color:#2e4455;letter-spacing:.08em;line-height:1.6">
+          Impact ratings reflect mortgage market sensitivity, not general financial market significance. Ratings are calibrated for LO pipeline management decisions.
+        </div>
+      </div>
+
+    </div><!-- /sidebar -->
+  </div><!-- /page-layout -->
+</div><!-- /shell -->
+
+<!-- ═══ EVENT DETAIL MODAL ═══ -->
+<div class="modal-overlay" id="eventModal" onclick="if(event.target===this)closeEventModal()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeEventModal()">✕ CLOSE</button>
+    <div class="modal-title" id="evModalTitle"></div>
+    <div class="modal-sub" id="evModalSub"></div>
+    <div class="modal-grid" id="evModalGrid"></div>
+    <div class="modal-note" id="evModalNote"></div>
+  </div>
+</div>
+
+<script>
+/* ── CLOCK ── */
+const ianaZones={ET:"America/New_York",CT:"America/Chicago",MT:"America/Denver",PT:"America/Los_Angeles"};
+const tzNames={ET:"Eastern Time",CT:"Central Time",MT:"Mountain Time",PT:"Pacific Time"};
+let currentZone="ET";
+function tick(){
+  const d=new Date();
+  const parts=new Intl.DateTimeFormat("en-US",{timeZone:ianaZones[currentZone],hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true}).formatToParts(d);
+  const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+  document.getElementById("clock").textContent=`${p.hour}:${p.minute}:${p.second} ${p.dayPeriod} ${currentZone}`;
+  const dd=new Intl.DateTimeFormat("en-US",{timeZone:ianaZones[currentZone],weekday:"short",month:"short",day:"numeric",year:"numeric"}).format(d);
+  document.getElementById("dateLine").textContent=dd.toUpperCase();
+}
+tick(); setInterval(tick,1000);
+document.querySelectorAll(".tz-btn").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".tz-btn").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    currentZone=b.dataset.tz;
+    document.getElementById("tzSmall").textContent=tzNames[currentZone];
+    tick();
+  });
+});
+
+/* ── FOMC COUNTDOWN ── */
+(function(){
+  const FOMC_DATES = [
+    {date:'2026-06-18',label:'Jun 18, 2026'},
+    {date:'2026-07-30',label:'Jul 30, 2026'},
+    {date:'2026-09-17',label:'Sep 17, 2026'},
+    {date:'2026-11-05',label:'Nov 5, 2026'},
+    {date:'2026-12-17',label:'Dec 17, 2026'},
+  ];
+  const now = new Date();
+  const next = FOMC_DATES.find(f => new Date(f.date+'T14:00:00-04:00') > now) || FOMC_DATES[0];
+  const diff = Math.ceil((new Date(next.date+'T14:00:00-04:00') - now) / 864e5);
+  document.getElementById('fomcDate').textContent = next.label;
+  document.getElementById('fomcCountdown').textContent = diff > 0 ? diff : 'TODAY';
+  document.getElementById('statFomcDays').textContent = diff > 0 ? diff : '0';
+})();
+
+/* ── ECON DATA ── */
+// Full calendar: past items with actual data, upcoming items pending
+// Format: { date, time, event, category, impact, prior, forecast, actual, note, isFomc }
+// actual: null = pending, string = released
+const TODAY_STR = (() => {
+  const d = new Date();
+  return d.toISOString().slice(0,10); // YYYY-MM-DD
+})();
+
+const ECON_DATA = [
+  // ─── Past (April / early May) ───
+  {date:'2026-04-10',time:'8:30 AM',event:'CPI MoM',category:'Inflation',impact:'high',prior:'0.2%',forecast:'0.1%',actual:'-0.1%',beat:false,note:'Softer than expected print. Marked the first monthly CPI decline since May 2020. Bonds rallied sharply on release — 10Y fell 12bps intraday. Most lenders repriced better by 12pm ET.'},
+  {date:'2026-04-10',time:'8:30 AM',event:'CPI YoY',category:'Inflation',impact:'high',prior:'2.8%',forecast:'2.6%',actual:'2.4%',beat:false,note:'Annual inflation at lowest since 2021. Reinforced dovish expectations heading into May FOMC.'},
+  {date:'2026-04-11',time:'8:30 AM',event:'PPI Final Demand',category:'Inflation',impact:'med',prior:'0.2%',forecast:'0.2%',actual:'-0.4%',beat:false,note:'Significant downside surprise on producer prices. Further evidence of disinflation in goods sector.'},
+  {date:'2026-04-16',time:'8:30 AM',event:'Retail Sales MoM',category:'Consumer',impact:'high',prior:'-0.9%',forecast:'1.3%',actual:'1.4%',beat:true,note:'Strong retail rebound driven by auto purchases. Partial reversal of prior month tariff-driven pullback. Bond markets sold off modestly — net neutral for mortgage rates.'},
+  {date:'2026-04-17',time:'8:30 AM',event:'Initial Jobless Claims',category:'Labor',impact:'med',prior:'224K',forecast:'225K',actual:'215K',beat:true,note:'Labor market remains resilient. Claims below 220K typically bond-bearish. 10Y rose ~3bps on release.'},
+  {date:'2026-04-23',time:'9:45 AM',event:'S&P Global PMI Flash',category:'Activity',impact:'med',prior:'52.7',forecast:'52.2',actual:'51.2',beat:false,note:'Services PMI dipped to 51.2, manufacturing held at 50.7. Composite softened. Modest bond-bullish reaction — not a major mover.'},
+  {date:'2026-04-25',time:'8:30 AM',event:'Core PCE Price Index MoM',category:'Inflation',impact:'high',prior:'0.4%',forecast:'0.1%',actual:'0.0%',beat:true,note:"Fed's preferred inflation gauge. Flat monthly print significantly below consensus — strongest dovish data point of Q2. UMBS opened +8 ticks the following Monday."},
+  {date:'2026-04-25',time:'8:30 AM',event:'Core PCE YoY',category:'Inflation',impact:'high',prior:'2.8%',forecast:'2.6%',actual:'2.6%',beat:null,note:'In-line with forecast. Annual core PCE still well above 2% target but trajectory positive.'},
+  {date:'2026-04-29',time:'8:30 AM',event:'Durable Goods Orders',category:'Activity',impact:'med',prior:'-1.0%',forecast:'2.1%',actual:'9.2%',beat:true,note:'Headline distorted by aircraft orders. Ex-transportation: +0.0%. Bond market largely dismissed the headline beat.'},
+  {date:'2026-04-30',time:'All Day',event:'FOMC Meeting Begins (Day 1)',category:'Fed',impact:'high',prior:'—',forecast:'—',actual:'—',beat:null,isFomc:true,note:'Two-day FOMC meeting begins. No major scheduled releases today. Market typically in holding pattern. Watch Fed speak for any last-minute signals.'},
+  {date:'2026-04-30',time:'8:30 AM',event:'Q1 GDP Advance Estimate',category:'Activity',impact:'high',prior:'2.4%',forecast:'-0.3%',actual:'-0.3%',beat:null,note:'GDP printed exactly at consensus — contraction driven by collapse in net exports (tariff front-running). Bond-neutral on release as it matched forecast.'},
+  {date:'2026-05-01',time:'2:00 PM',event:'FOMC Rate Decision',category:'Fed',impact:'high',prior:'4.25–4.50%',forecast:'Hold',actual:'Hold',beat:null,isFomc:true,note:'Fed held rates as expected. Statement retained "patient" language. Powell press conference highlighted tariff uncertainty and labor market stability. Markets interpreted as mildly hawkish — June cut probability fell from 60% to 35%.'},
+  {date:'2026-05-02',time:'8:30 AM',event:'Nonfarm Payrolls',category:'Labor',impact:'high',prior:'228K',forecast:'130K',actual:'177K',beat:true,note:'Above-forecast jobs print but below prior month. Unemployment held at 4.2%. Wage growth slowed to +0.2% MoM — bond-friendly aspect of the report. UMBS 5.5 was down ~6 ticks on the day.'},
+  {date:'2026-05-02',time:'8:30 AM',event:'Unemployment Rate',category:'Labor',impact:'high',prior:'4.2%',forecast:'4.3%',actual:'4.2%',beat:null,note:'Unemployment steady — labor market not deteriorating. Combined with NFP beat, provided support for the Fed hold stance.'},
+  {date:'2026-05-07',time:'3:00 PM',event:'Consumer Credit',category:'Consumer',impact:'low',prior:'$15.1B',forecast:'$14.0B',actual:null,note:'Credit card and auto loan data. Secondary indicator for consumer health. Rarely moves bond markets unless wildly off consensus.'},
+
+  // ─── Upcoming ───
+  {date:'2026-05-12',time:'8:30 AM',event:'CPI MoM',category:'Inflation',impact:'high',prior:'-0.1%',forecast:'0.3%',actual:null,note:'Most critical upcoming release. Tariff pass-through expected to begin showing in May data. A print above 0.4% would likely push UMBS lower and delay rate cut expectations significantly.'},
+  {date:'2026-05-12',time:'8:30 AM',event:'CPI YoY',category:'Inflation',impact:'high',prior:'2.4%',forecast:'2.7%',actual:null,note:'Annual CPI expected to rebound from April lows due to base effects and tariff impact. Watch for upside surprise risk.'},
+  {date:'2026-05-13',time:'8:30 AM',event:'PPI Final Demand',category:'Inflation',impact:'med',prior:'-0.4%',forecast:'0.2%',actual:null,note:'Producer prices expected to partially reverse April decline. Watch as leading indicator for future CPI.'},
+  {date:'2026-05-14',time:'8:30 AM',event:'Initial Jobless Claims',category:'Labor',impact:'med',prior:'228K',forecast:'220K',actual:null,note:'Weekly labor market pulse. Trend has been stable. A print above 240K would be bond-bullish.'},
+  {date:'2026-05-14',time:'8:30 AM',event:'Import Price Index',category:'Inflation',impact:'med',prior:'-0.1%',forecast:'0.4%',actual:null,note:'Tariff pass-through measure. Elevated print would confirm goods inflation re-acceleration.'},
+  {date:'2026-05-15',time:'8:30 AM',event:'Retail Sales MoM',category:'Consumer',impact:'high',prior:'1.4%',forecast:'-0.8%',actual:null,note:'Expected reversal of April surge. Consensus expects consumer pullback amid tariff uncertainty. Weak print would be bond-bullish.'},
+  {date:'2026-05-15',time:'9:15 AM',event:'Industrial Production MoM',category:'Activity',impact:'med',prior:'-0.3%',forecast:'0.1%',actual:null,note:'Manufacturing health check. Minor mover unless significantly off consensus.'},
+  {date:'2026-05-16',time:'10:00 AM',event:'U. of Mich. Consumer Sentiment',category:'Consumer',impact:'med',prior:'52.2',forecast:'53.0',actual:null,note:'Consumer confidence gauge. Inflation expectations component closely watched — if 1Y inflation expectations remain elevated, adds hawkish pressure.'},
+  {date:'2026-05-20',time:'8:30 AM',event:'Building Permits',category:'Housing',impact:'med',prior:'1.455M',forecast:'1.440M',actual:null,note:'Housing supply indicator. Relevant for understanding new construction pipeline but limited bond market impact in isolation.'},
+  {date:'2026-05-20',time:'8:30 AM',event:'Housing Starts',category:'Housing',impact:'med',prior:'1.324M',forecast:'1.360M',actual:null,note:'New construction starts. Contextually important for real estate markets. Minor bond mover.'},
+  {date:'2026-05-21',time:'8:30 AM',event:'Initial Jobless Claims',category:'Labor',impact:'med',prior:'215K',forecast:'220K',actual:null,note:'Second weekly claims read of May. Watch for trend vs the prior week.'},
+  {date:'2026-05-22',time:'8:30 AM',event:'Existing Home Sales',category:'Housing',impact:'low',prior:'4.02M',forecast:'4.10M',actual:null,note:'Lagging indicator. Limited bond market impact. Useful for LOs tracking purchase demand.'},
+  {date:'2026-05-27',time:'8:30 AM',event:'Q1 GDP Second Estimate',category:'Activity',impact:'med',prior:'-0.3%',forecast:'-0.2%',actual:null,note:'Revision to Q1 GDP. Small changes rarely market-moving unless revision is significant (+/- 0.5%).'},
+  {date:'2026-05-27',time:'10:00 AM',event:'Consumer Confidence (CB)',category:'Consumer',impact:'med',prior:'86.0',forecast:'88.0',actual:null,note:'Conference Board survey. Second confidence gauge after U of Mich. Watch for divergence as signal.'},
+  {date:'2026-05-28',time:'8:30 AM',event:'Initial Jobless Claims',category:'Labor',impact:'med',prior:'215K',forecast:'220K',actual:null,note:'Third weekly read in May. Trend accumulation becoming more meaningful.'},
+  {date:'2026-05-29',time:'8:30 AM',event:'Core PCE Price Index MoM',category:'Inflation',impact:'high',prior:'0.0%',forecast:'0.2%',actual:null,note:"Fed's preferred inflation gauge. Critical read for June FOMC setup. If core PCE comes in at or below 0.1%, cut probability rises sharply. Watch for upside tariff impact here."},
+  {date:'2026-05-29',time:'8:30 AM',event:'PCE Price Index YoY',category:'Inflation',impact:'high',prior:'2.3%',forecast:'2.5%',actual:null,note:'Annual headline PCE. Key Fed mandate target metric.'},
+  {date:'2026-06-04',time:'8:30 AM',event:'Initial Jobless Claims',category:'Labor',impact:'med',prior:'215K',forecast:'220K',actual:null,note:'First June labor market read.'},
+  {date:'2026-06-06',time:'8:30 AM',event:'Nonfarm Payrolls',category:'Labor',impact:'high',prior:'177K',forecast:'140K',actual:null,note:'May jobs report — final major release before June 18 FOMC. A weak print (<100K) would likely lock in a cut. Above 200K would strongly argue for continued hold.'},
+  {date:'2026-06-11',time:'8:30 AM',event:'CPI MoM',category:'Inflation',impact:'high',prior:'0.3%',forecast:'0.3%',actual:null,note:'May CPI — penultimate major inflation data point before June FOMC. Crucial for rate cut calculus.'},
+  {date:'2026-06-18',time:'2:00 PM',event:'FOMC Rate Decision',category:'Fed',impact:'high',prior:'4.25–4.50%',forecast:'Hold/Cut 25bps',actual:null,isFomc:true,note:'June FOMC decision. Market currently pricing ~35% probability of a 25bps cut. Decision hinges on CPI (May), NFP (May), and PCE (April) data released between now and this date.'},
+];
+
+/* ── FILTER & RENDER ── */
+let activeFilter = 'all';
+let activeEvent  = null;
+
+document.querySelectorAll('.fpill').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.fpill').forEach(x => { x.className = 'fpill'; });
+    b.className = 'fpill active-' + b.dataset.filter;
+    activeFilter = b.dataset.filter;
+    renderCalendar();
+  });
+});
+
+function isPast(ev) {
+  if (!ev.actual && ev.actual !== '') return false;
+  const evDate = new Date(ev.date + 'T23:59:00-04:00');
+  return evDate < new Date() || ev.actual !== null;
+}
+
+function isToday(dateStr) {
+  return dateStr === TODAY_STR;
+}
+
+function getWeekKey(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDay();
+  const mon = new Date(d); mon.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+  const fmt = d => d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return `${fmt(mon)} – ${fmt(fri)}, ${fri.getFullYear()}`;
+}
+
+function getWeekStart(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDay();
+  const mon = new Date(d); mon.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  return mon.toISOString().slice(0,10);
+}
+
+function fmtDay(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+
+function renderCalendar() {
+  const body = document.getElementById('calBody');
+  body.innerHTML = '';
+
+  const filtered = ECON_DATA.filter(ev => activeFilter === 'all' || ev.impact === activeFilter);
+
+  if (!filtered.length) {
+    body.innerHTML = '<div class="empty-group">No events match this filter.</div>';
+    return;
+  }
+
+  // Group by week then by day
+  const weeks = {};
+  const weekOrder = [];
+  filtered.forEach(ev => {
+    const wk = getWeekKey(ev.date);
+    if (!weeks[wk]) { weeks[wk] = {}; weekOrder.push(wk); }
+    if (!weeks[wk][ev.date]) weeks[wk][ev.date] = [];
+    weeks[wk][ev.date].push(ev);
+  });
+
+  // Dedup week order
+  const seenWk = new Set();
+  const uniqueWeeks = weekOrder.filter(w => { if (seenWk.has(w)) return false; seenWk.add(w); return true; });
+
+  uniqueWeeks.forEach(wk => {
+    const dayMap = weeks[wk];
+    const dayKeys = Object.keys(dayMap).sort();
+
+    // Count events for week header badge
+    const wkEvents = dayKeys.reduce((acc,d) => acc + dayMap[d].length, 0);
+    const wkHigh   = dayKeys.reduce((acc,d) => acc + dayMap[d].filter(e=>e.impact==='high').length, 0);
+
+    // Week header
+    const wh = document.createElement('div');
+    wh.className = 'week-header';
+    wh.innerHTML = `<span class="week-label">Week of ${wk}</span><span class="week-count">${wkEvents} events${wkHigh ? ` · ${wkHigh} high impact` : ''}</span>`;
+    body.appendChild(wh);
+
+    dayKeys.forEach(dateStr => {
+      const events = dayMap[dateStr];
+      const todayDay = isToday(dateStr);
+
+      // Day header
+      const dh = document.createElement('div');
+      dh.className = 'day-group';
+
+      const dhInner = document.createElement('div');
+      dhInner.className = 'day-header';
+
+      const dayLabel = document.createElement('div');
+      dayLabel.className = 'day-label' + (todayDay ? ' today' : '');
+      dayLabel.textContent = todayDay ? '▶ TODAY' : fmtDay(dateStr).toUpperCase().split(',')[0];
+
+      const dayFull = document.createElement('div');
+      dayFull.className = 'day-date-full';
+      dayFull.textContent = fmtDay(dateStr);
+
+      const impBar = document.createElement('div');
+      impBar.className = 'day-impact-bar';
+      events.forEach(ev => {
+        const dot = document.createElement('div');
+        dot.className = 'day-dot ' + ev.impact;
+        impBar.appendChild(dot);
+      });
+
+      dhInner.appendChild(dayLabel);
+      dhInner.appendChild(dayFull);
+      dhInner.appendChild(impBar);
+      dh.appendChild(dhInner);
+
+      events.forEach(ev => {
+        const row = document.createElement('div');
+        row.className = 'econ-row' +
+          (isPast(ev) ? ' past' : '') +
+          (todayDay ? ' today-row' : '') +
+          (ev.isFomc ? ' fomc-row' : '');
+        row.onclick = () => openEventModal(ev);
+
+        // Actual result
+        let actualHtml = '';
+        if (ev.actual !== null && ev.actual !== undefined && ev.actual !== '—') {
+          const beatClass = ev.beat === true ? 'beat' : ev.beat === false ? 'miss' : 'inline';
+          const beatLabel = ev.beat === true ? '▲ BEAT' : ev.beat === false ? '▼ MISS' : 'IN-LINE';
+          actualHtml = `<div class="ev-actual ${beatClass}">${ev.actual}<span>${beatLabel}</span></div>`;
+        } else if (ev.actual === '—') {
+          actualHtml = `<div class="ev-actual inline">—<span>N/A</span></div>`;
+        } else {
+          actualHtml = `<div class="ev-actual pending">PENDING<span>EST: ${ev.forecast||'—'}</span></div>`;
+        }
+
+        const fomcBadge = ev.isFomc ? ' fomc' : '';
+        row.innerHTML = `
+          <div class="ev-time">${ev.time}</div>
+          <div class="ev-impact"><div class="impact-dot ${ev.impact}"></div></div>
+          <div class="ev-name">${ev.event}<small>${ev.category}</small></div>
+          <div class="ev-prev">${ev.prior}<span>PRIOR</span></div>
+          ${actualHtml}
+          <div class="ev-impact-badge"><span class="ibadge ${ev.impact}${fomcBadge}">${ev.isFomc ? 'FOMC' : ev.impact.toUpperCase()}</span></div>
+        `;
+        dh.appendChild(row);
+      });
+
+      body.appendChild(dh);
+    });
+  });
+
+  // Update cal meta
+  const lastDate = ECON_DATA[ECON_DATA.length-1].date;
+  document.getElementById('calMeta').textContent = `${filtered.length} events · through ${new Date(lastDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`;
+
+  updateStats();
+}
+
+/* ── STATS ── */
+function updateStats() {
+  const now = new Date();
+  const thirtyDays = new Date(now.getTime() + 30*864e5);
+  const upcoming = ECON_DATA.filter(ev => {
+    const d = new Date(ev.date + 'T23:59:00');
+    return d >= now && d <= thirtyDays;
+  });
+  document.getElementById('statHighCount').textContent = upcoming.filter(e=>e.impact==='high').length;
+  document.getElementById('statMedCount').textContent  = upcoming.filter(e=>e.impact==='med').length;
+
+  // This week count
+  const weekStart = getWeekStart(TODAY_STR);
+  const weekEnd   = new Date(weekStart + 'T00:00:00');
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  const thisWeek  = ECON_DATA.filter(ev => {
+    const d = new Date(ev.date + 'T00:00:00');
+    return d >= new Date(weekStart) && d <= weekEnd;
+  });
+  document.getElementById('statThisWeek').textContent = thisWeek.length;
+}
+
+/* ── KEY DATES SIDEBAR ── */
+function buildKeyDates() {
+  const now  = new Date();
+  const soon = new Date(now.getTime() + 32*864e5);
+  const list = document.getElementById('keyDatesList');
+
+  const upcoming = ECON_DATA
+    .filter(ev => {
+      const d = new Date(ev.date + 'T23:59:00-04:00');
+      return d > now && d <= soon && (ev.impact === 'high' || ev.isFomc);
+    })
+    .slice(0, 10);
+
+  if (!upcoming.length) {
+    list.innerHTML = '<div class="empty-group">No high-impact events in 30 days.</div>';
+    return;
+  }
+
+  upcoming.forEach(ev => {
+    const row = document.createElement('div');
+    row.className = 'key-date-row';
+    row.style.cursor = 'pointer';
+    row.onclick = () => openEventModal(ev);
+
+    const d = new Date(ev.date + 'T12:00:00');
+    const dFmt = d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+    const badgeClass = ev.isFomc ? 'fomc' : 'high';
+    const badgeLabel = ev.isFomc ? 'FOMC' : 'HIGH';
+    row.innerHTML = `
+      <div class="kd-date">${dFmt}</div>
+      <div class="kd-event">${ev.event}</div>
+      <div><span class="kd-badge ${badgeClass}">${badgeLabel}</span></div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+/* ── EVENT MODAL ── */
+function openEventModal(ev) {
+  activeEvent = ev;
+  document.getElementById('evModalTitle').textContent = ev.event;
+  document.getElementById('evModalSub').textContent   = `${fmtDay(ev.date)} · ${ev.time} ET · ${ev.category} · ${ev.impact.toUpperCase()} IMPACT`;
+
+  const hasForecast = ev.forecast && ev.forecast !== '—';
+  const hasActual   = ev.actual !== null && ev.actual !== undefined && ev.actual !== '—';
+  const beatClass   = ev.beat === true ? 'beat' : ev.beat === false ? 'miss' : '';
+  const beatLabel   = ev.beat === true ? '▲ Beat' : ev.beat === false ? '▼ Miss' : 'In-Line';
+
+  document.getElementById('evModalGrid').innerHTML = `
+    <div class="modal-stat">
+      <div class="modal-stat-label">Prior</div>
+      <div class="modal-stat-val">${ev.prior || '—'}</div>
+    </div>
+    ${hasForecast ? `<div class="modal-stat"><div class="modal-stat-label">Consensus Forecast</div><div class="modal-stat-val">${ev.forecast}</div></div>` : ''}
+    <div class="modal-stat">
+      <div class="modal-stat-label">Actual Result</div>
+      <div class="modal-stat-val ${beatClass}">${hasActual ? ev.actual : '<span class="pending">PENDING</span>'}</div>
+    </div>
+    ${hasActual && ev.beat !== null ? `<div class="modal-stat"><div class="modal-stat-label">vs Consensus</div><div class="modal-stat-val ${beatClass}">${beatLabel}</div></div>` : ''}
+  `;
+
+  document.getElementById('evModalNote').innerHTML = ev.note
+    ? `<strong>LockIQ Analysis:</strong> ${ev.note}`
+    : '<span style="color:#2e4455">No analysis available for this event.</span>';
+
+  document.getElementById('eventModal').classList.add('open');
+}
+
+function closeEventModal() {
+  document.getElementById('eventModal').classList.remove('open');
+}
+
+/* ── INIT ── */
+renderCalendar();
+buildKeyDates();
+</script>
+</body>
+</html>
