@@ -32,7 +32,7 @@ body:before{
 
 /* TOP BAR */
 .topbar{
-  height:86px; display:grid; grid-template-columns:220px 205px 1fr 260px 168px;
+  height:86px; display:grid; grid-template-columns:220px 1fr 168px 315px;
   align-items:center; border-bottom:1px solid rgba(143,181,213,.13);
   background:rgba(3,8,14,.72); backdrop-filter:blur(20px);
 }
@@ -47,7 +47,7 @@ body:before{
 .live.after b{color:var(--red)}
 .live.after i{background:var(--red);box-shadow:0 0 15px var(--red)}
 .live small{display:block;margin:7px 0 0 23px;color:#8395a3}
-.nav{justify-self:center;display:flex;gap:38px;height:100%;align-items:center}
+.nav{justify-self:center;display:flex;gap:44px;height:100%;align-items:center}
 .nav a{height:100%;display:flex;align-items:center;color:#8793a1;text-decoration:none;text-transform:uppercase;font:12px JetBrains Mono,monospace;letter-spacing:.18em;position:relative}
 .nav a.active{color:#eaf7ff}
 .nav a.active:after{content:"";position:absolute;bottom:12px;left:0;right:0;height:2px;background:var(--cyan);box-shadow:0 0 20px var(--cyan)}
@@ -69,6 +69,42 @@ body:before{
 .time{font:13px JetBrains Mono,monospace;letter-spacing:.13em;text-align:right}
 .time strong{display:block;font-size:18px;color:#edf6fc}
 .time span{display:block;margin-top:5px;color:#718698;font-size:11px}
+.clock-market{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-start;
+  border-left:1px solid rgba(143,181,213,.11);
+  padding-left:22px;
+  font-family:JetBrains Mono,monospace;
+  text-transform:uppercase;
+}
+.clock-market .state{
+  font-size:12px;
+  letter-spacing:.14em;
+  color:var(--green);
+  font-weight:700;
+}
+.clock-market .state:before{
+  content:"";
+  display:inline-block;
+  width:9px;
+  height:9px;
+  margin-right:9px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 15px var(--green);
+}
+.clock-market.after .state{color:var(--red)}
+.clock-market.after .state:before{background:var(--red);box-shadow:0 0 15px var(--red)}
+.clock-market small{
+  display:block;
+  margin-top:7px;
+  color:#8395a3;
+  font-size:10px;
+  letter-spacing:.12em;
+}
 
 /* GLOBAL */
 .kicker{
@@ -114,15 +150,25 @@ body:before{
 }
 .orb:before,.orb:after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(66,243,111,.13);inset:-18px}
 .orb:after{inset:-36px;opacity:.55}
-.animal{position:absolute;inset:0;display:grid;place-items:center;font-size:76px;text-shadow:0 0 30px rgba(66,243,111,.75);filter:drop-shadow(0 0 20px rgba(66,243,111,.45))}
-.animal:before{content:"♉";transform:rotate(-18deg) scale(1.1)}
+.animal{position:absolute;inset:0;display:grid;place-items:center;filter:drop-shadow(0 0 20px rgba(66,243,111,.45))}
+.animal svg{width:108px;height:108px}
+.animal path,.animal polyline,.animal circle{
+  fill:none;
+  stroke:rgba(235,255,240,.96);
+  stroke-width:5.5;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  filter:drop-shadow(0 0 7px rgba(66,243,111,.8));
+}
 .hero.worse .orb{
   background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.13),transparent 22%),radial-gradient(circle,rgba(255,74,67,.42),rgba(255,74,67,.14) 54%,rgba(255,74,67,.03) 70%);
   border-color:rgba(255,91,83,.96); box-shadow:0 0 24px rgba(255,74,67,.74),0 0 70px rgba(255,74,67,.18),inset 0 0 42px rgba(255,74,67,.29);
 }
 .hero.worse .orb:before,.hero.worse .orb:after{border-color:rgba(255,74,67,.14)}
-.hero.worse .animal{text-shadow:0 0 30px rgba(255,74,67,.65);filter:drop-shadow(0 0 20px rgba(255,74,67,.42))}
-.hero.worse .animal:before{content:"🐻";font-size:66px;transform:none}
+.hero.worse .animal{filter:drop-shadow(0 0 20px rgba(255,74,67,.42))}
+.hero.worse .animal path,.hero.worse .animal polyline,.hero.worse .animal circle{
+  filter:drop-shadow(0 0 7px rgba(255,74,67,.8));
+}
 .signal{display:flex;flex-direction:column;justify-content:center;text-align:center;padding:56px 12px 38px}
 .signal-label{color:var(--green);font:800 22px JetBrains Mono,monospace;letter-spacing:.24em;text-shadow:0 0 19px rgba(66,243,111,.42)}
 .money{color:var(--green);font-size:92px;font-weight:900;line-height:.92;letter-spacing:-.085em;margin:14px 0 9px;text-shadow:0 0 24px rgba(66,243,111,.55),0 0 92px rgba(66,243,111,.18)}
@@ -327,7 +373,6 @@ select{
 <div class="shell">
 <header class="topbar">
   <div class="brand"><div class="logo">MBS<span>GOAT</span></div><div class="lock">LOCKIQ <span>TERMINAL</span></div></div>
-  <div class="live" id="liveBlock"><i id="marketDot"></i><b id="marketStatus">LIVE MARKET</b><small id="marketHours">8:00 AM – 5:00 PM ET</small></div>
   <nav class="nav"><a class="active">Dashboard</a><a>Markets</a><a>Rates</a><a>Econ Reports</a></nav>
   <div class="timezone" aria-label="Time zone selector">
     <button class="tz-btn" data-tz="PT">PT</button>
@@ -337,6 +382,10 @@ select{
     <div class="tz-small" id="tzSmall">Eastern Time</div>
   </div>
   <div class="time"><strong id="clock">5:48:02 PM ET</strong><span id="dateLine">WED MAY 6, 2026</span></div>
+  <div class="clock-market" id="clockMarket">
+    <div class="state" id="marketStatus">After Hours</div>
+    <small id="marketHours">Market: 8:00 AM – 5:00 PM ET</small>
+  </div>
 </header>
 
 <div class="kicker">Primary Intelligence Layer <div class="line"></div></div>
@@ -344,7 +393,17 @@ select{
 <section class="grid">
   <article class="card hero" id="heroCard">
     <div class="title">LOCKIQ SIGNAL <span>ⓘ</span></div>
-    <div class="hero-art"><div class="orb"><div class="animal"></div></div></div>
+    <div class="hero-art"><div class="orb"><div class="animal" id="signalAnimal">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <path d="M26 76 C30 54,43 35,61 35 C78 35,91 47,93 65" />
+        <path d="M38 39 C30 27,20 30,18 41 C25 37,31 40,38 47" />
+        <path d="M79 39 C89 27,100 30,102 41 C94 37,88 40,80 47" />
+        <circle cx="53" cy="56" r="2" />
+        <path d="M61 62 C66 67,72 66,77 61" />
+        <polyline points="21,86 45,72 58,84 98,45" />
+        <polyline points="82,45 98,45 98,61" />
+      </svg>
+    </div></div></div>
 
     <div class="signal">
       <div class="signal-label" id="signalLabel">MARKET BETTER</div>
@@ -426,8 +485,10 @@ const zoneOffsets = { ET:0, CT:-1, MT:-2, PT:-3 };
 const zoneNames = { ET:"Eastern Time", CT:"Central Time", MT:"Mountain Time", PT:"Pacific Time" };
 let currentZone = "ET";
 
-// Live clock. ET is treated as the market reference timezone.
-let demoET = new Date();
+// Static demo timestamp in ET. Change this to test after-hours:
+// const demoET = new Date("2026-05-06T17:48:02"); // after hours
+// const demoET = new Date("2026-05-06T12:48:02"); // live market
+const demoET = new Date("2026-05-06T17:48:02");
 
 const anchors = [
   "Yesterday Open",
@@ -447,43 +508,23 @@ const anchors = [
   "4:00 PM / Today Close"
 ];
 
-const ianaZones = {
-  ET:"America/New_York",
-  CT:"America/Chicago",
-  MT:"America/Denver",
-  PT:"America/Los_Angeles"
-};
-
-function getPartsForZone(date, zone){
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: ianaZones[zone],
-    hour:"numeric",
-    minute:"2-digit",
-    second:"2-digit",
-    hour12:true,
-    weekday:"short",
-    month:"short",
-    day:"numeric",
-    year:"numeric"
-  }).formatToParts(date);
-  return Object.fromEntries(parts.map(p => [p.type, p.value]));
-}
 function formatTime(date, zone){
-  const p = getPartsForZone(date, zone);
-  return `${p.hour}:${p.minute}:${p.second} ${p.dayPeriod} ${zone}`;
-}
-function formatDateLine(date, zone){
-  const p = getPartsForZone(date, zone);
-  return `${p.weekday.toUpperCase()} ${p.month.toUpperCase()} ${p.day}, ${p.year}`;
+  const hour = date.getHours();
+  const min = String(date.getMinutes()).padStart(2,"0");
+  const sec = String(date.getSeconds()).padStart(2,"0");
+  const h12 = hour % 12 || 12;
+  const ampm = hour >= 12 ? "PM" : "AM";
+  return `${h12}:${min}:${sec} ${ampm} ${zone}`;
 }
 function convertFromET(etDate, zone){
-  return etDate;
+  const d = new Date(etDate);
+  d.setHours(d.getHours() + zoneOffsets[zone]);
+  return d;
 }
-function marketIsLiveET(date){
-  const p = getPartsForZone(date, "ET");
-  let hour = Number(p.hour) % 12;
-  if(p.dayPeriod === "PM") hour += 12;
-  const minutes = hour * 60 + Number(p.minute);
+function marketIsLiveET(etDate){
+  const h = etDate.getHours();
+  const m = etDate.getMinutes();
+  const minutes = h * 60 + m;
   return minutes >= 8 * 60 && minutes < 17 * 60;
 }
 function convertLabel(label, zone){
@@ -501,27 +542,24 @@ function convertLabel(label, zone){
   return converted;
 }
 function updateMarketState(){
-  const liveBlock = document.getElementById("liveBlock");
+  const clockMarket = document.getElementById("clockMarket");
   const marketStatus = document.getElementById("marketStatus");
   const live = marketIsLiveET(demoET);
-  liveBlock.classList.toggle("after", !live);
-  marketStatus.textContent = live ? "LIVE MARKET" : "AFTER HOURS";
+  clockMarket.classList.toggle("after", !live);
+  marketStatus.textContent = live ? "Live Market" : "After Hours";
 }
 function updateZone(zone){
   currentZone = zone;
-  demoET = new Date();
   document.querySelectorAll(".tz-btn").forEach(b => b.classList.toggle("active", b.dataset.tz === zone));
   document.getElementById("tzSmall").textContent = zoneNames[zone];
 
   const local = convertFromET(demoET, zone);
   document.getElementById("clock").textContent = formatTime(local, zone);
-  document.getElementById("dateLine").textContent = formatDateLine(local, zone);
   document.getElementById("footUpdated").textContent = `Updated ${formatTime(local, zone)}`;
   document.getElementById("marketHours").textContent =
-    zone === "ET" ? "8:00 AM – 5:00 PM ET" :
-    zone === "CT" ? "7:00 AM – 4:00 PM CT" :
-    zone === "MT" ? "6:00 AM – 3:00 PM MT" : "5:00 AM – 2:00 PM PT";
-  updateMarketState();
+    zone === "ET" ? "Market: 8:00 AM – 5:00 PM ET" :
+    zone === "CT" ? "Market: 7:00 AM – 4:00 PM CT" :
+    zone === "MT" ? "Market: 6:00 AM – 3:00 PM MT" : "Market: 5:00 AM – 2:00 PM PT";
   updateAnchor();
 }
 function updateAnchor(){
@@ -553,7 +591,7 @@ const fallbackMarketData = {
     us10y_current: 4.352,
     us10y_delta: -4.3,
     us2y_current: 3.821,
-    us2y_delta: null,
+    us2y_delta: -2.1,
     mbb_current: 91.24,
     mbb_delta: 0.18,
     last_updated: "2026-05-06T21:48:02Z"
@@ -566,7 +604,8 @@ const fallbackMarketData = {
     last_updated: "2026-05-06T21:48:02Z"
   },
   liveStocks: {
-    DIA: { current: "387.42", change: "-0.92", percentChange: "-0.24%" },
+    DIA: { current: "387.42", change: "-92.00", percentChange: "-0.24%" },
+    // VIX/OIL intentionally pending until TradingView scraper is wired.
     VIX: null,
     OIL: null
   }
@@ -576,25 +615,6 @@ function cleanNumber(v){
   if(v === null || v === undefined || v === "" || v === "N/A") return null;
   const n = Number(String(v).replace("%",""));
   return Number.isFinite(n) ? n : null;
-}
-function pickNumber(...values){
-  for(const v of values){
-    const n = cleanNumber(v);
-    if(n !== null) return n;
-  }
-  return null;
-}
-function pickValue(...values){
-  for(const v of values){
-    if(v !== null && v !== undefined && v !== "" && v !== "N/A") return v;
-  }
-  return null;
-}
-function calcDelta(current, open, multiplier=1){
-  const c = cleanNumber(current);
-  const o = cleanNumber(open);
-  if(c === null || o === null) return null;
-  return Math.round((c - o) * multiplier * 1000) / 1000;
 }
 function directionClass(change, inverted=false){
   const n = cleanNumber(change);
@@ -641,116 +661,67 @@ function normalizePulseData(market, stocks){
   const futures = market.treasuryFutures || {};
   const stock = stocks || market.liveStocks || {};
 
-  const umbs50Price = pickNumber(mbs.umbs50_price, mbs.UMBS_5_0_Current);
-  const umbs50Delta = pickNumber(
-    mbs.umbs50_delta,
-    mbs.UMBS_5_0_Daily_Change,
-    calcDelta(mbs.umbs50_price ?? mbs.UMBS_5_0_Current, mbs.umbs50_open ?? mbs.UMBS_5_0_Open)
-  );
-
-  const gnma50Price = pickNumber(mbs.gnma50_price, mbs.GNMA_5_0_Current);
-  const gnma50Delta = pickNumber(
-    mbs.gnma50_delta,
-    mbs.GNMA_5_0_Daily_Change,
-    calcDelta(mbs.gnma50_price ?? mbs.GNMA_5_0_Current, mbs.gnma50_open ?? mbs.GNMA_5_0_Open)
-  );
-
-  const mbbCurrent = pickNumber(shadow.mbb_current, shadow.MBB_Current);
-  const mbbDelta = pickNumber(
-    shadow.mbb_delta,
-    shadow.MBB_Daily_Change,
-    calcDelta(shadow.mbb_current ?? shadow.MBB_Current, shadow.mbb_open ?? shadow.MBB_Open)
-  );
-
-  const us10yCurrent = pickNumber(shadow.us10y_current, shadow.US10Y_Current);
-  const us10yDelta = pickNumber(
-    shadow.us10y_delta,
-    shadow.US10Y_Daily_Change,
-    calcDelta(shadow.us10y_current ?? shadow.US10Y_Current, shadow.us10y_open ?? shadow.US10Y_Open, 100)
-  );
-
-  const us2yCurrent = pickNumber(shadow.us2y_current, shadow.US2Y_Current);
-  const us2yDelta = pickNumber(
-    shadow.us2y_delta,
-    shadow.US2Y_Daily_Change,
-    calcDelta(shadow.us2y_current ?? shadow.US2Y_Current, shadow.us2y_open ?? shadow.US2Y_Open, 100)
-  );
-
-  const znCurrent = pickNumber(futures.zn_current, futures.ZN1_Current);
-  const znDelta = pickNumber(
-    futures.zn_delta,
-    futures.ZN1_Daily_Change,
-    calcDelta(futures.zn_current ?? futures.ZN1_Current, futures.zn_open ?? futures.ZN1_Open)
-  );
-
-  const ztCurrent = pickNumber(futures.zt_current, futures.ZT1_Current);
-  const ztDelta = pickNumber(
-    futures.zt_delta,
-    futures.ZT1_Daily_Change,
-    calcDelta(futures.zt_current ?? futures.ZT1_Current, futures.zt_open ?? futures.ZT1_Open)
-  );
-
   return {
     mortgage: [
       {
         icon:"▣", name:"UMBS 5.0", sub:"Conventional",
-        value:formatPrice(umbs50Price,3),
-        change:umbs50Delta,
-        changeText:formatChange(umbs50Delta,3),
+        value:formatPrice(mbs.umbs50_price,3),
+        change:mbs.umbs50_delta,
+        changeText:formatChange(mbs.umbs50_delta,3),
         primary:true
       },
       {
         icon:"▤", name:"GNMA 5.0", sub:"Govy",
-        value:formatPrice(gnma50Price,3),
-        change:gnma50Delta,
-        changeText:gnma50Delta === null ? "current only" : formatChange(gnma50Delta,3)
+        value:formatPrice(mbs.gnma50_price,3),
+        change:mbs.gnma50_delta,
+        changeText:formatChange(mbs.gnma50_delta,3)
       },
       {
         icon:"◈", name:"MBB", sub:"ETF Proxy",
-        value:formatPrice(mbbCurrent,2),
-        change:mbbDelta,
-        changeText:formatChange(mbbDelta,2)
+        value:formatPrice(shadow.mbb_current,2),
+        change:shadow.mbb_delta,
+        changeText:formatChange(shadow.mbb_delta,2)
       }
     ],
     treasury: [
       {
         icon:"10", name:"US10Y", sub:"Yield",
-        value:formatPrice(us10yCurrent,3) + "%",
-        change:us10yDelta,
-        changeText:formatYieldChangeBps(us10yDelta),
+        value:formatPrice(shadow.us10y_current,3) + "%",
+        change:shadow.us10y_delta,
+        changeText:formatYieldChangeBps(shadow.us10y_delta),
         inverted:true,
         primary:true
       },
       {
         icon:"2Y", name:"US2Y", sub:"Yield",
-        value:formatPrice(us2yCurrent,3) + "%",
-        change:us2yDelta,
-        changeText:us2yDelta === null ? "current only" : formatYieldChangeBps(us2yDelta),
+        value:formatPrice(shadow.us2y_current ?? shadow.US2Y_Current,3) + "%",
+        change:shadow.us2y_delta ?? shadow.US2Y_Delta ?? null,
+        changeText:(shadow.us2y_delta ?? shadow.US2Y_Delta) !== undefined ? formatYieldChangeBps(shadow.us2y_delta ?? shadow.US2Y_Delta) : "current only",
         inverted:true
       },
       {
         icon:"ZN", name:"ZN", sub:"10Y Future",
-        value:formatPrice(znCurrent,3),
-        change:znDelta,
-        changeText:formatChange(znDelta,3)
+        value:formatPrice(futures.zn_current,3),
+        change:futures.zn_delta,
+        changeText:formatChange(futures.zn_delta,3)
       },
       {
         icon:"ZT", name:"ZT", sub:"2Y Future",
-        value:formatPrice(ztCurrent,3),
-        change:ztDelta,
-        changeText:formatChange(ztDelta,3)
+        value:formatPrice(futures.zt_current,3),
+        change:futures.zt_delta,
+        changeText:formatChange(futures.zt_delta,3)
       }
     ],
     risk: [
       {
-        icon:"VX", name:"VIX", sub:"TV Scrape Needed",
+        icon:"VX", name:"VIX", sub:"Volatility",
         value: stock.VIX ? formatPrice(stock.VIX.current,2) : "—",
         change: stock.VIX ? cleanNumber(stock.VIX.change) : null,
         changeText: stock.VIX ? formatChange(stock.VIX.change,2) : "pending",
         inverted:true
       },
       {
-        icon:"Oil", name:"Oil", sub:"TV Scrape Needed",
+        icon:"Oil", name:"Oil", sub:"Inflation",
         value: stock.OIL ? formatPrice(stock.OIL.current,2) : "—",
         change: stock.OIL ? cleanNumber(stock.OIL.change) : null,
         changeText: stock.OIL ? formatChange(stock.OIL.change,2) : "pending",
@@ -787,8 +758,6 @@ async function loadMarketPulse(){
     }
     if(stockRes.status === "fulfilled" && stockRes.value.ok){
       stocks = await stockRes.value.json();
-      // VIX/OIL can be populated later by TradingView scraper output.
-      // These aliases are supported if a future function provides them.
       if(stocks["CBOE:VIX"] && !stocks.VIX) stocks.VIX = stocks["CBOE:VIX"];
       if(stocks["OANDA:WTICO_USD"] && !stocks.OIL) stocks.OIL = stocks["OANDA:WTICO_USD"];
       if(stocks["CL=F"] && !stocks.OIL) stocks.OIL = stocks["CL=F"];
@@ -808,10 +777,22 @@ if(new URLSearchParams(location.search).get("mode") === "worse"){
   document.getElementById("signalLabel").textContent = "MARKET WORSE";
   document.getElementById("moneyValue").textContent = "-$110";
   document.getElementById("bpsValue").textContent = "-11.0 BPS";
+  document.getElementById("signalAnimal").innerHTML = `
+    <svg viewBox="0 0 120 120" aria-hidden="true">
+      <path d="M25 74 C26 49,43 34,62 35 C82 36,96 51,98 75" />
+      <path d="M35 38 C32 27,42 25,49 34" />
+      <path d="M78 34 C86 25,96 28,92 40" />
+      <circle cx="54" cy="56" r="2" />
+      <circle cx="74" cy="56" r="2" />
+      <path d="M54 72 C62 66,70 66,78 72" />
+      <path d="M29 80 L43 92" />
+      <path d="M95 80 L81 92" />
+      <polyline points="22,45 49,72 63,61 99,95" />
+      <polyline points="83,95 99,95 99,79" />
+    </svg>`;
 }
 updateMarketState();
 updateZone("ET");
-setInterval(() => updateZone(currentZone), 1000);
 </script>
 </body>
 </html>
