@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LockIQ — Markets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#03070d; --bg1:#07111c; --panel:#081522; --stroke:rgba(122,170,208,.16);
+  --white:#edf5f8; --soft:#b8c6d1; --muted:#6f8292;
+  --green:#42f36f; --cyan:#1bd8ff; --blue:#38a8ff; --amber:#ffbd27; --red:#ff4a43;
+  --purple:#b57fff; --teal:#00e5cc;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh; color:var(--white); font-family:Inter,system-ui,sans-serif; overflow-x:hidden;
+  background:
+    radial-gradient(1000px 400px at 25% 0%, rgba(27,216,255,.07), transparent 60%),
+    radial-gradient(800px 350px at 80% 20%, rgba(56,168,255,.06), transparent 60%),
+    radial-gradient(600px 300px at 60% 80%, rgba(255,189,39,.04), transparent 60%),
+    linear-gradient(180deg,#08121e 0%,#04080e 50%,#02050a 100%);
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.45;
+  background:linear-gradient(rgba(255,255,255,.016) 1px,transparent 1px),
+             linear-gradient(90deg,rgba(255,255,255,.016) 1px,transparent 1px);
+  background-size:34px 34px;
+  mask-image:linear-gradient(to bottom,#000 0%,transparent 65%);
+}
+
+/* ── TOP BAR ── */
+.topbar{
+  height:86px;display:grid;grid-template-columns:220px 205px 1fr 260px 168px;
+  align-items:center;border-bottom:1px solid rgba(143,181,213,.13);
+  background:rgba(3,8,14,.72);backdrop-filter:blur(20px);
+  position:sticky;top:0;z-index:100;
+}
+.brand{height:100%;display:flex;flex-direction:column;justify-content:center;border-right:1px solid rgba(143,181,213,.11);padding-left:20px}
+.logo{font-weight:900;letter-spacing:.28em;font-size:28px;line-height:.9}
+.logo span{color:var(--cyan);text-shadow:0 0 22px rgba(27,216,255,.45)}
+.lock{margin-top:10px;font:11px JetBrains Mono,monospace;letter-spacing:.30em;color:#f1bd2a}
+.lock span{color:#58778f;margin-left:9px}
+.live-block{padding-left:22px;font:12px JetBrains Mono,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
+.live-block b{color:var(--green);font-weight:700}
+.live-block.after b{color:var(--red)}
+.live-block.after i{background:var(--red);box-shadow:0 0 15px var(--red)}
+.live-block i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 15px var(--green);margin-right:10px;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.live-block small{display:block;margin:7px 0 0 23px;color:#8395a3}
+.nav{justify-self:center;display:flex;gap:44px;height:100%;align-items:center}
+.nav a{height:100%;display:flex;align-items:center;color:#8793a1;text-decoration:none;text-transform:uppercase;font:12px JetBrains Mono,monospace;letter-spacing:.18em;position:relative;cursor:pointer;transition:color .15s}
+.nav a.active{color:#eaf7ff}
+.nav a.active:after{content:"";position:absolute;bottom:12px;left:0;right:0;height:2px;background:var(--cyan);box-shadow:0 0 20px var(--cyan)}
+.nav a:hover:not(.active){color:#c5d8e6}
+.timezone{border-left:1px solid rgba(143,181,213,.11);padding-left:22px;height:100%;display:flex;align-items:center;gap:9px;position:relative}
+.tz-small{position:absolute;bottom:10px;left:23px;font:9px JetBrains Mono,monospace;letter-spacing:.13em;color:#70879a;text-transform:uppercase;white-space:nowrap}
+.tz-btn{font:11px JetBrains Mono,monospace;letter-spacing:.12em;color:#61798d;border:1px solid rgba(113,161,202,.18);background:rgba(20,45,70,.35);border-radius:6px;padding:7px 9px;cursor:pointer;transition:all .15s}
+.tz-btn.active{color:#051018;background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 18px rgba(27,216,255,.35)}
+.time-block{font:13px JetBrains Mono,monospace;letter-spacing:.13em;text-align:right;padding-right:20px}
+.time-block strong{display:block;font-size:18px;color:#edf6fc}
+.time-block span{display:block;margin-top:5px;color:#718698;font-size:11px}
+
+.shell{max-width:1640px;margin:0 auto;padding:0 20px 48px}
+
+/* ── KICKER ── */
+.kicker{display:flex;align-items:center;justify-content:space-between;margin:20px 0 18px;color:#61778a;font:11px JetBrains Mono,monospace;letter-spacing:.18em;text-transform:uppercase}
+.kicker .line{height:1px;flex:1;background:linear-gradient(90deg,rgba(27,216,255,.22),transparent);margin-left:16px}
+.kicker .right{display:flex;align-items:center;gap:10px}
+.refresh-note{font:9px JetBrains Mono,monospace;color:#3a5060;letter-spacing:.1em}
+
+/* ── TF PILLS ── */
+.tf-group{display:flex;gap:4px}
+.tf-pill{font:700 9px JetBrains Mono,monospace;letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid rgba(113,161,202,.18);background:rgba(15,35,55,.5);color:#6f8498;transition:all .15s}
+.tf-pill.active{background:var(--cyan);color:#051018;border-color:var(--cyan);box-shadow:0 0 12px rgba(27,216,255,.3)}
+.tf-pill:hover:not(.active){color:#a0b8cc;border-color:rgba(113,161,202,.35)}
+
+/* ── PAGE GRID ── */
+.page-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.col-wide{grid-column:span 2}
+.col-full{grid-column:1/-1}
+
+/* ── SECTION CARD ── */
+.mkt-card{
+  position:relative;border-radius:14px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(10,24,40,.88),rgba(4,12,22,.97));
+  border:1px solid var(--stroke);
+  box-shadow:0 24px 70px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.mkt-card:before{content:"";position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0}
+/* accent colors per section */
+.mkt-card.mbs:before{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+.mkt-card.treasuries:before{background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.mkt-card.futures:before{background:linear-gradient(90deg,transparent,#7fa8cc,transparent)}
+.mkt-card.equities:before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.mkt-card.risk:before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+.mkt-card.etf:before{background:linear-gradient(90deg,transparent,var(--purple),transparent)}
+
+.card-head{padding:14px 18px 10px;border-bottom:1px solid rgba(122,170,208,.07);display:flex;align-items:center;justify-content:space-between}
+.card-head-left{}
+.section-label{font:700 11px JetBrains Mono,monospace;letter-spacing:.2em;text-transform:uppercase}
+.mkt-card.mbs .section-label{color:var(--cyan)}
+.mkt-card.treasuries .section-label{color:var(--blue)}
+.mkt-card.futures .section-label{color:#7fa8cc}
+.mkt-card.equities .section-label{color:var(--green)}
+.mkt-card.risk .section-label{color:var(--amber)}
+.mkt-card.etf .section-label{color:var(--purple)}
+.section-sub{font:9px JetBrains Mono,monospace;color:#3e5565;letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+.card-head-right{display:flex;align-items:center;gap:8px}
+.src-badge{font:600 8px JetBrains Mono,monospace;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:4px;border:1px solid;white-space:nowrap}
+.src-badge.live{background:rgba(66,243,111,.08);color:#42f36f;border-color:rgba(66,243,111,.18)}
+.src-badge.delayed{background:rgba(255,189,39,.07);color:#c9a030;border-color:rgba(255,189,39,.15)}
+.src-badge.firestore{background:rgba(27,216,255,.07);color:#85d5ff;border-color:rgba(27,216,255,.15)}
+.card-updated{font:9px JetBrains Mono,monospace;color:#2e4455;letter-spacing:.08em}
+
+/* ── INSTRUMENT ROW ── */
+.instr-table{padding:2px 0}
+.instr-row{
+  display:grid;align-items:center;
+  padding:9px 18px;border-bottom:1px solid rgba(122,170,208,.04);
+  cursor:default;transition:background .1s;
+  position:relative;
+}
+.instr-row:last-child{border-bottom:none}
+.instr-row:hover{background:rgba(255,255,255,.02)}
+
+/* MBS row layout: icon · name+sub · price · change · ticks · h/l */
+.instr-row.mbs-row{grid-template-columns:28px 1fr 90px 78px 70px 110px}
+/* Treasury row: icon · name+sub · yield · bps chg · price · h/l */
+.instr-row.tsy-row{grid-template-columns:28px 1fr 90px 78px 80px 110px}
+/* Futures row: icon · name+sub · price · chg · ticks · h/l */
+.instr-row.fut-row{grid-template-columns:28px 1fr 95px 80px 70px 110px}
+/* Equities row: icon · name+sub · price · change · pct · bar */
+.instr-row.eq-row{grid-template-columns:28px 1fr 90px 78px 64px 1fr}
+/* Risk row: icon · name+sub · value · chg · pct · desc */
+.instr-row.risk-row{grid-template-columns:28px 1fr 90px 78px 64px 1fr}
+
+.instr-icon{
+  width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);
+  color:#8aabb8;flex-shrink:0;font-family:JetBrains Mono,monospace;
+}
+.mkt-card.mbs .instr-icon{color:var(--cyan);border-color:rgba(27,216,255,.15);background:rgba(27,216,255,.06)}
+.mkt-card.treasuries .instr-icon{color:var(--blue);border-color:rgba(56,168,255,.15);background:rgba(56,168,255,.05)}
+.mkt-card.futures .instr-icon{color:#7fa8cc;border-color:rgba(127,168,204,.15);background:rgba(127,168,204,.05)}
+.mkt-card.equities .instr-icon{color:var(--green);border-color:rgba(66,243,111,.15);background:rgba(66,243,111,.05)}
+.mkt-card.risk .instr-icon{color:var(--amber);border-color:rgba(255,189,39,.15);background:rgba(255,189,39,.05)}
+.mkt-card.etf .instr-icon{color:var(--purple);border-color:rgba(181,127,255,.15);background:rgba(181,127,255,.05)}
+
+.instr-name{font:600 12px JetBrains Mono,monospace;letter-spacing:.08em;text-transform:uppercase;color:#c8dce8;line-height:1}
+.instr-sub{font:9px JetBrains Mono,monospace;color:#3e5565;letter-spacing:.08em;margin-top:2px}
+
+.instr-price{font:700 14px JetBrains Mono,monospace;letter-spacing:.04em;color:#e0ecf4;text-align:right}
+.instr-price.yield{color:#b8cfdf}
+
+.instr-chg{font:700 12px JetBrains Mono,monospace;letter-spacing:.04em;text-align:right}
+.instr-chg.pos{color:var(--green)}
+.instr-chg.neg{color:var(--red)}
+.instr-chg.neu{color:#718698}
+
+.instr-ticks{font:600 11px JetBrains Mono,monospace;letter-spacing:.06em;text-align:right;color:#496070}
+.instr-ticks.pos{color:rgba(66,243,111,.7)}
+.instr-ticks.neg{color:rgba(255,68,43,.7)}
+
+.instr-hl{display:flex;align-items:center;gap:0;justify-content:flex-end}
+.hl-track{position:relative;width:70px;height:4px;border-radius:2px;background:rgba(255,255,255,.06);margin:0 6px;flex-shrink:0}
+.hl-fill{position:absolute;top:0;height:100%;border-radius:2px;background:rgba(27,216,255,.3)}
+.hl-labels{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.hl-h{font:600 9px JetBrains Mono,monospace;color:rgba(66,243,111,.6)}
+.hl-l{font:600 9px JetBrains Mono,monospace;color:rgba(255,68,43,.5)}
+
+/* Equities bar */
+.eq-bar{width:100%;height:3px;border-radius:2px;background:rgba(255,255,255,.05);overflow:hidden;margin-left:8px}
+.eq-bar-fill{height:100%;border-radius:2px;transition:width .4s ease}
+
+/* Risk descriptor */
+.risk-desc{font:10px JetBrains Mono,monospace;color:#496070;letter-spacing:.07em;text-align:right;padding-left:8px}
+.risk-desc.elevated{color:#c9a030}
+.risk-desc.high-risk{color:#ff6644}
+.risk-desc.low{color:var(--green)}
+
+/* Column headers */
+.col-headers{
+  display:grid;align-items:center;
+  padding:5px 18px;background:rgba(0,0,0,.25);
+  border-bottom:1px solid rgba(122,170,208,.06);
+}
+.col-headers.mbs-row{grid-template-columns:28px 1fr 90px 78px 70px 110px}
+.col-headers.tsy-row{grid-template-columns:28px 1fr 90px 78px 80px 110px}
+.col-headers.fut-row{grid-template-columns:28px 1fr 95px 80px 70px 110px}
+.col-headers.eq-row{grid-template-columns:28px 1fr 90px 78px 64px 1fr}
+.col-headers.risk-row{grid-template-columns:28px 1fr 90px 78px 64px 1fr}
+.ch{font:700 7px JetBrains Mono,monospace;letter-spacing:.18em;text-transform:uppercase;color:#2e4455}
+.ch.right{text-align:right}
+
+/* ── HERO DIAL SECTION (MBS headline + 10Y + ZN) ── */
+.dial-strip{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  padding:16px 18px;border-bottom:1px solid rgba(122,170,208,.07);
+}
+.dial-mini{text-align:center;padding:8px 6px}
+.dial-mini-label{font:700 9px JetBrains Mono,monospace;letter-spacing:.18em;text-transform:uppercase;color:#3e5565;margin-bottom:8px}
+.dial-mini-val{font:700 28px JetBrains Mono,monospace;letter-spacing:-.02em;line-height:1;margin-bottom:3px}
+.dial-mini-val.pos{color:var(--green);text-shadow:0 0 18px rgba(66,243,111,.35)}
+.dial-mini-val.neg{color:var(--red);text-shadow:0 0 18px rgba(255,68,43,.3)}
+.dial-mini-val.neu{color:#7a9ab0}
+.dial-mini-sub{font:10px JetBrains Mono,monospace;color:#496070;letter-spacing:.07em}
+.dial-mini-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.07);margin-top:8px;overflow:hidden}
+.dial-mini-bar-fill{height:100%;border-radius:2px;transition:width .5s ease}
+
+/* ── SPARKLINE ── */
+.spark-wrap{width:70px;height:22px;display:inline-block;vertical-align:middle;margin-left:6px}
+.spark-wrap svg{width:100%;height:100%}
+
+/* ── SUMMARY STAT CHIPS ── */
+.stat-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+.stat-chip{
+  border-radius:10px;padding:12px 14px;
+  background:rgba(8,20,32,.85);border:1px solid rgba(122,170,208,.1);
+  display:flex;flex-direction:column;gap:4px;
+}
+.stat-chip-label{font:700 8px JetBrains Mono,monospace;letter-spacing:.18em;text-transform:uppercase;color:#3e5565}
+.stat-chip-val{font:700 20px JetBrains Mono,monospace;letter-spacing:-.01em;line-height:1}
+.stat-chip-val.cyan{color:var(--cyan)}
+.stat-chip-val.green{color:var(--green)}
+.stat-chip-val.amber{color:var(--amber)}
+.stat-chip-val.red{color:var(--red)}
+.stat-chip-val.blue{color:var(--blue)}
+.stat-chip-chg{font:600 10px JetBrains Mono,monospace;letter-spacing:.06em}
+.stat-chip-chg.pos{color:rgba(66,243,111,.8)}
+.stat-chip-chg.neg{color:rgba(255,68,43,.8)}
+.stat-chip-chg.neu{color:#496070}
+
+/* ── SUBGROUP DIVIDER ── */
+.sub-divider{
+  padding:5px 18px 4px;font:700 8px JetBrains Mono,monospace;letter-spacing:.2em;
+  text-transform:uppercase;color:#2e4455;background:rgba(0,0,0,.15);
+  border-bottom:1px solid rgba(122,170,208,.04);border-top:1px solid rgba(122,170,208,.03);
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:rgba(4,10,18,.8)}
+::-webkit-scrollbar-thumb{background:rgba(122,170,208,.18);border-radius:3px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1300px){
+  .page-grid{grid-template-columns:1fr 1fr}
+  .col-wide{grid-column:span 2}
+  .topbar{grid-template-columns:1fr;height:auto;padding:16px 20px;gap:10px}
+  .brand,.live-block,.timezone{border:0;padding:0}
+  .nav{display:none}.time-block{text-align:left}
+  .stat-strip{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:800px){
+  .page-grid{grid-template-columns:1fr}
+  .col-wide{grid-column:span 1}
+  .stat-strip{grid-template-columns:1fr 1fr}
+  .instr-row.mbs-row,.col-headers.mbs-row{grid-template-columns:28px 1fr 80px 70px}
+  .instr-row .instr-ticks,.instr-row .instr-hl,.col-headers .ch:nth-child(5),.col-headers .ch:nth-child(6){display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><div class="logo">MBS<span>GOAT</span></div><div class="lock">LOCKIQ <span>TERMINAL</span></div></div>
+  <div class="live-block"><i></i><b id="mktStatus">LIVE MARKET</b><small id="mktHours">US Bond Market Open</small></div>
+  <nav class="nav">
+    <a href="index.html">Dashboard</a>
+    <a class="active" href="markets.html">Markets</a>
+    <a href="rates.html">Rates</a>
+    <a href="econ-report.html">Econ Report</a>
+  </nav>
+  <div class="timezone">
+    <button class="tz-btn" data-tz="PT">PT</button>
+    <button class="tz-btn" data-tz="MT">MT</button>
+    <button class="tz-btn" data-tz="CT">CT</button>
+    <button class="tz-btn active" data-tz="ET">ET</button>
+    <div class="tz-small" id="tzSmall">Eastern Time</div>
+  </div>
+  <div class="time-block"><strong id="clock">—</strong><span id="dateLine">—</span></div>
+</header>
+
+<div class="shell">
+
+  <div class="kicker">
+    <span>Market Intelligence · Live Instruments</span>
+    <div class="right">
+      <span class="refresh-note" id="refreshNote">Refreshing in 60s</span>
+      <div class="tf-group">
+        <button class="tf-pill active" data-tf="open">vs Open</button>
+        <button class="tf-pill" data-tf="close">vs Prev Close</button>
+      </div>
+    </div>
+    <div class="line"></div>
+  </div>
+
+  <!-- SUMMARY STAT CHIPS -->
+  <div class="stat-strip">
+    <div class="stat-chip">
+      <div class="stat-chip-label">UMBS 5.5 · Current</div>
+      <div class="stat-chip-val cyan" id="chipUmbs55">—</div>
+      <div class="stat-chip-chg" id="chipUmbs55Chg">—</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-label">10Y Yield</div>
+      <div class="stat-chip-val blue" id="chipT10y">—</div>
+      <div class="stat-chip-chg" id="chipT10yChg">—</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-label">ZN Futures (10Y Note)</div>
+      <div class="stat-chip-val" style="color:#7fa8cc" id="chipZN">—</div>
+      <div class="stat-chip-chg" id="chipZNChg">—</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-label">S&P 500 (SPY)</div>
+      <div class="stat-chip-val green" id="chipSPY">—</div>
+      <div class="stat-chip-chg" id="chipSPYChg">—</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-label">VIX · Volatility Index</div>
+      <div class="stat-chip-val amber" id="chipVIX">—</div>
+      <div class="stat-chip-chg" id="chipVIXChg">—</div>
+    </div>
+  </div>
+
+  <!-- PAGE GRID -->
+  <div class="page-grid">
+
+    <!-- ═══ MBS PRICES (wide, 2 cols) ═══ -->
+    <div class="mkt-card mbs col-wide">
+      <div class="card-head">
+        <div class="card-head-left">
+          <div class="section-label">MBS Prices</div>
+          <div class="section-sub">Mortgage-Backed Securities · UMBS &amp; GNMA Coupon Stack</div>
+        </div>
+        <div class="card-head-right">
+          <span class="src-badge firestore">● Firestore · MBS Live</span>
+          <div class="card-updated" id="mbsUpdated">—</div>
+        </div>
+      </div>
+
+      <!-- Sub-group: UMBS -->
+      <div class="sub-divider">UMBS — Uniform Mortgage-Backed Securities (Conventional / Fannie-Freddie)</div>
+      <div class="col-headers mbs-row">
+        <div class="ch"></div>
+        <div class="ch">Instrument</div>
+        <div class="ch right">Price</div>
+        <div class="ch right">Change</div>
+        <div class="ch right">Ticks</div>
+        <div class="ch right">Day Range</div>
+      </div>
+      <div class="instr-table" id="umbsPanel"></div>
+
+      <!-- Sub-group: GNMA -->
+      <div class="sub-divider">GNMA — Government (FHA / VA / USDA)</div>
+      <div class="col-headers mbs-row">
+        <div class="ch"></div>
+        <div class="ch">Instrument</div>
+        <div class="ch right">Price</div>
+        <div class="ch right">Change</div>
+        <div class="ch right">Ticks</div>
+        <div class="ch right">Day Range</div>
+      </div>
+      <div class="instr-table" id="gnmaPanel"></div>
+
+      <!-- MBB ETF row -->
+      <div class="sub-divider">MBB — iShares MBS ETF · Market Proxy</div>
+      <div class="col-headers mbs-row">
+        <div class="ch"></div>
+        <div class="ch">Instrument</div>
+        <div class="ch right">Price</div>
+        <div class="ch right">Change</div>
+        <div class="ch right">Pct</div>
+        <div class="ch right">Day Range</div>
+      </div>
+      <div class="instr-table" id="mbbPanel"></div>
+    </div>
+
+    <!-- ═══ TREASURY YIELDS ═══ -->
+    <div class="mkt-card treasuries">
+      <div class="card-head">
+        <div class="card-head-left">
+          <div class="section-label">Treasury Yields</div>
+          <div class="section-sub">US Government Bonds · Key Rate Curve Points</div>
+        </div>
+        <div class="card-head-right">
+          <span class="src-badge firestore">● Firestore</span>
+          <div class="card-updated" id="tsyUpdated">—</div>
+        </div>
+      </div>
+      <div class="col-headers tsy-row">
+        <div class="ch"></div>
+        <div class="ch">Tenor</div>
+        <div class="ch right">Yield</div>
+        <div class="ch right">Δ bps</div>
+        <div class="ch right">Price</div>
+        <div class="ch right">Day Range</div>
+      </div>
+      <div class="instr-table" id="tsyPanel"></div>
+    </div>
+
+    <!-- ═══ BOND FUTURES ═══ -->
+    <div class="mkt-card futures">
+      <div class="card-head">
+        <div class="card-head-left">
+          <div class="section-label">Bond Futures</div>
+          <div class="section-sub">CME Treasury Futures · Active Front Month</div>
+        </div>
+        <div class="card-head-right">
+          <span class="src-badge firestore">● Firestore · TV</span>
+          <div class="card-updated" id="futUpdated">—</div>
+        </div>
+      </div>
+      <div class="col-headers fut-row">
+        <div class="ch"></div>
+        <div class="ch">Contract</div>
+        <div class="ch right">Price</div>
+        <div class="ch right">Change</div>
+        <div class="ch right">Ticks</div>
+        <div class="ch right">Day Range</div>
+      </div>
+      <div class="instr-table" id="futPanel"></div>
+    </div>
+
+    <!-- ═══ EQUITIES ═══ -->
+    <div class="mkt-card equities">
+      <div class="card-head">
+        <div class="card-head-left">
+          <div class="section-label">Equities</div>
+          <div class="section-sub">Risk Proxies · Mortgage Market Correlation</div>
+        </div>
+        <div class="card-head-right">
+          <span class="src-badge delayed">◆ Finnhub</span>
+          <div class="card-updated" id="eqUpdated">—</div>
+        </div>
+      </div>
+      <div class="col-headers eq-row">
+        <div class="ch"></div>
+        <div class="ch">Symbol</div>
+        <div class="ch right">Price</div>
+        <div class="ch right">Change</div>
+        <div class="ch right">Pct</div>
+        <div class="ch right">Day Bar</div>
+      </div>
+      <div class="instr-table" id="eqPanel"></div>
+    </div>
+
+    <!-- ═══ RISK / SENTIMENT ═══ -->
+    <div class="mkt-card risk">
+      <div class="card-head">
+        <div class="card-head-left">
+          <div class="section-label">Risk &amp; Sentiment</div>
+          <div class="section-sub">Volatility · Commodities · Crypto</div>
+        </div>
+        <div class="card-head-right">
+          <span class="src-badge delayed">◆ Finnhub</span>
+          <div class="card-updated" id="riskUpdated">—</div>
+        </div>
+      </div>
+      <div class="sub-divider">Volatility</div>
+      <div class="col-headers risk-row">
+        <div class="ch"></div>
+        <div class="ch">Instrument</div>
+        <div class="ch right">Value</div>
+        <div class="ch right">Change</div>
+        <div class="ch right">Pct</div>
+        <div class="ch right">Reading</div>
+      </div>
+      <div class="instr-table" id="volPanel"></div>
+
+      <div class="sub-divider">Commodities</div>
+      <div class="col-headers risk-row">
+        <div class="ch"></div>
+        <div class="ch">Instrument</div>
+        <div class="ch right">Price</div>
+        <div class="ch right">Change</div>
+        <div class="ch right">Pct</div>
+        <div class="ch right">Context</div>
+      </div>
+      <div class="instr-table" id="cmdPanel"></div>
+
+      <div class="sub-divider">Digital Assets</div>
+      <div class="col-headers risk-row">
+        <div class="ch"></div>
+        <div class="ch">Asset</div>
+        <div class="ch right">Price</div>
+        <div class="ch right">Change</div>
+        <div class="ch right">Pct</div>
+        <div class="ch right">Regime</div>
+      </div>
+      <div class="instr-table" id="cryptoPanel"></div>
+    </div>
+
+  </div><!-- /page-grid -->
+</div><!-- /shell -->
+
+<script>
+/* ─── CLOCK ─── */
+const ianaZones={ET:"America/New_York",CT:"America/Chicago",MT:"America/Denver",PT:"America/Los_Angeles"};
+const tzNames={ET:"Eastern Time",CT:"Central Time",MT:"Mountain Time",PT:"Pacific Time"};
+let currentZone="ET";
+function tick(){
+  const d=new Date();
+  const pts=new Intl.DateTimeFormat("en-US",{timeZone:ianaZones[currentZone],hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true}).formatToParts(d);
+  const p=Object.fromEntries(pts.map(x=>[x.type,x.value]));
+  document.getElementById("clock").textContent=`${p.hour}:${p.minute}:${p.second} ${p.dayPeriod} ${currentZone}`;
+  const dd=new Intl.DateTimeFormat("en-US",{timeZone:ianaZones[currentZone],weekday:"short",month:"short",day:"numeric",year:"numeric"}).format(d);
+  document.getElementById("dateLine").textContent=dd.toUpperCase();
+  // Market hours check
+  const etParts=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit",hour12:false}).formatToParts(d);
+  const hhmm=parseInt(etParts.find(x=>x.type==='hour').value)*100+parseInt(etParts.find(x=>x.type==='minute').value);
+  const dow=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'})).getDay();
+  const isWeekday=dow>=1&&dow<=5;
+  const bondOpen=isWeekday&&hhmm>=800&&hhmm<1700;
+  const liveBlock=document.querySelector('.live-block');
+  if(liveBlock) liveBlock.classList.toggle('after', !bondOpen);
+  document.getElementById('mktStatus').textContent=bondOpen?'LIVE MARKET':'AFTER HOURS';
+  document.getElementById('mktHours').textContent=bondOpen?'US Bond Market Open':'Market: 8:00 AM – 5:00 PM ET';
+}
+tick(); setInterval(tick,1000);
+document.querySelectorAll(".tz-btn").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".tz-btn").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active"); currentZone=b.dataset.tz;
+    document.getElementById("tzSmall").textContent=tzNames[currentZone]; tick();
+  });
+});
+
+/* ─── TF TOGGLE ─── */
+let activeTf='open';
+document.querySelectorAll('.tf-pill').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.tf-pill').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); activeTf=b.dataset.tf;
+    renderAll();
+  });
+});
+
+/* ─── HELPERS ─── */
+function chgClass(v){ return v>0?'pos':v<0?'neg':'neu'; }
+function chgStr(v,dec=2){ return (v>0?'+':'')+v.toFixed(dec); }
+
+function fmtMBSPrice(v){
+  if(v===null||v===undefined||isNaN(v)) return '—';
+  const w=Math.floor(v), t=Math.round((v-w)*32);
+  return w+'-'+String(t).padStart(2,'0');
+}
+function fmtMBSTicks(v){
+  if(v===null||v===undefined||isNaN(v)) return '—';
+  const ticks=Math.round(v*32);
+  return (ticks>=0?'+':'')+ticks+' tks';
+}
+
+function priceToDollar(v){
+  if(v===null||v===undefined||isNaN(v)) return '—';
+  const w=Math.floor(v),t=Math.round((v-w)*32);
+  return w+'-'+String(t).padStart(2,'0');
+}
+
+function buildHLBar(lo,hi,cur){
+  const range=hi-lo;
+  if(!range||range<0) return '<div class="instr-hl"><div class="hl-labels"><div class="hl-h">—</div><div class="hl-l">—</div></div></div>';
+  const pct=Math.max(0,Math.min(100,((cur-lo)/range)*100));
+  return `<div class="instr-hl">
+    <div class="hl-labels"><div class="hl-h">H:${typeof hi==='number'?hi.toFixed(hi>10?2:3):hi}</div><div class="hl-l">L:${typeof lo==='number'?lo.toFixed(lo>10?2:3):lo}</div></div>
+    <div class="hl-track"><div class="hl-fill" style="left:${pct}%;width:3px;background:var(--cyan)"></div></div>
+  </div>`;
+}
+
+function buildEqBar(pct){
+  const w=Math.min(100,Math.abs(pct)/4*100);
+  const col=pct>0?'rgba(66,243,111,.7)':pct<0?'rgba(255,68,43,.65)':'rgba(255,255,255,.12)';
+  return `<div class="eq-bar"><div class="eq-bar-fill" style="width:${w}%;background:${col}"></div></div>`;
+}
+
+function nowStr(){ return new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit'})+' ET'; }
+
+/* ─── FALLBACK DATA ─── */
+const FALLBACK = {
+  mbs:{
+    UMBS_5_0:{cur:98.5312,chg:+0.2500,open:98.2812,hi:98.6250,lo:98.2187},
+    UMBS_5_5:{cur:100.1875,chg:+0.3438,open:99.8437,hi:100.2812,lo:99.8125},
+    UMBS_6_0:{cur:101.4688,chg:+0.2188,open:101.2500,hi:101.5312,lo:101.2187},
+    GNMA_5_0:{cur:98.7500,chg:+0.2812,open:98.4688,hi:98.8125,lo:98.4375},
+    GNMA_5_5:{cur:100.5000,chg:+0.3750,open:100.1250,hi:100.5938,lo:100.1250},
+    GNMA_6_0:{cur:101.7500,chg:+0.2500,open:101.5000,hi:101.8125,lo:101.4688},
+  },
+  mbb:{cur:94.23,chg:+0.34,pct:+0.36,hi:94.41,lo:93.88},
+  tsy:{
+    us2y:{yield:3.872,chg:-0.034,price:99.6875,hi:3.915,lo:3.855},
+    us10y:{yield:4.352,chg:-0.043,price:96.2188,hi:4.402,lo:4.338},
+    us30y:{yield:4.681,chg:-0.022,price:93.1250,hi:4.710,lo:4.670},
+  },
+  fut:{
+    ZT:{cur:102.3750,chg:+0.0625,hi:102.4062,lo:102.3125},
+    ZF:{cur:108.2500,chg:+0.0938,hi:108.3125,lo:108.1875},
+    ZN:{cur:111.5938,chg:+0.2188,hi:111.7188,lo:111.3750},
+    ZB:{cur:119.5000,chg:+0.6875,hi:119.8125,lo:118.9375},
+  },
+  eq:{
+    SPY:{cur:573.38,chg:+7.92,pct:+1.40,hi:574.12,lo:565.22},
+    QQQ:{cur:489.41,chg:+9.87,pct:+2.06,hi:490.18,lo:479.31},
+    DIA:{cur:424.67,chg:+5.23,pct:+1.25,hi:425.44,lo:419.31},
+  },
+  btc:{cur:61540,chg:+104,pct:+0.17,hi:62100,lo:60980},
+  vix:{cur:18.4,chg:-1.2,pct:-6.1},
+  brent:{cur:73.65,chg:-0.29,pct:-0.39,hi:74.22,lo:73.41},
+};
+
+/* ─── LIVE DATA CACHE ─── */
+let liveData = null;
+let stockData = null;
+
+/* ─── RENDER MBS ─── */
+function renderMBS(data){
+  const mbs = data?.mbs_products || FALLBACK.mbs;
+
+  const UMBS_CFGS = [
+    {key:'UMBS_5_0', label:'UMBS 5.0', sub:'Uniform MBS · 5.0% Coupon'},
+    {key:'UMBS_5_5', label:'UMBS 5.5', sub:'Uniform MBS · 5.5% Coupon · TBA Benchmark'},
+    {key:'UMBS_6_0', label:'UMBS 6.0', sub:'Uniform MBS · 6.0% Coupon'},
+  ];
+  const GNMA_CFGS = [
+    {key:'GNMA_5_0', label:'GNMA 5.0', sub:'Ginnie Mae · FHA / VA · 5.0% Coupon'},
+    {key:'GNMA_5_5', label:'GNMA 5.5', sub:'Ginnie Mae · FHA / VA · 5.5% Coupon'},
+    {key:'GNMA_6_0', label:'GNMA 6.0', sub:'Ginnie Mae · FHA / VA · 6.0% Coupon'},
+  ];
+
+  function buildMBSRows(cfgs, panelId){
+    const el = document.getElementById(panelId);
+    el.innerHTML='';
+    cfgs.forEach(cfg => {
+      // Try Firestore field names first
+      const cur   = data?.[cfg.key+'_Current']   ?? data?.[cfg.key]?.cur   ?? FALLBACK.mbs[cfg.key]?.cur;
+      const chg   = data?.[cfg.key+'_Daily_Change'] ?? data?.[cfg.key]?.chg ?? FALLBACK.mbs[cfg.key]?.chg;
+      const hiP   = data?.[cfg.key+'_TodayHigh'] ?? FALLBACK.mbs[cfg.key]?.hi;
+      const loP   = data?.[cfg.key+'_TodayLow']  ?? FALLBACK.mbs[cfg.key]?.lo;
+      const ticks = chg !== null && chg !== undefined ? Math.round(chg*32) : null;
+
+      const row = document.createElement('div');
+      row.className = 'instr-row mbs-row';
+
+      const hlBar = (hiP&&loP&&cur) ? buildHLBar(loP,hiP,cur) : '<div class="instr-hl"><div class="hl-labels"><div class="hl-h">—</div><div class="hl-l">—</div></div></div>';
+      const cls = chgClass(chg||0);
+
+      row.innerHTML = `
+        <div class="instr-icon">${cfg.label.replace(/\s/g,'').replace(/[^0-9.]/g,'')}</div>
+        <div><div class="instr-name">${cfg.label}</div><div class="instr-sub">${cfg.sub}</div></div>
+        <div class="instr-price">${cur!==undefined?fmtMBSPrice(cur):'—'}</div>
+        <div class="instr-chg ${cls}">${chg!==undefined?chgStr(chg,4):'—'}</div>
+        <div class="instr-ticks ${cls}">${ticks!==null?(ticks>=0?'+':'')+ticks+' tks':'—'}</div>
+        ${hlBar}
+      `;
+      el.appendChild(row);
+    });
+  }
+
+  buildMBSRows(UMBS_CFGS, 'umbsPanel');
+  buildMBSRows(GNMA_CFGS, 'gnmaPanel');
+
+  // MBB
+  const mbb = stockData?.['MBB'] || FALLBACK.mbb;
+  const mbbEl = document.getElementById('mbbPanel');
+  const mbbPct = mbb.pct ?? (mbb.chg&&mbb.cur ? mbb.chg/mbb.cur*100 : 0);
+  const mbbCls = chgClass(mbb.chg||0);
+  mbbEl.innerHTML = `
+    <div class="instr-row mbs-row">
+      <div class="instr-icon" style="font-size:9px">MBB</div>
+      <div><div class="instr-name">MBB ETF</div><div class="instr-sub">iShares MBS ETF · Finnhub · ~15min delayed</div></div>
+      <div class="instr-price">$${mbb.cur?.toFixed(2)||'—'}</div>
+      <div class="instr-chg ${mbbCls}">${mbb.chg!==undefined?chgStr(mbb.chg):'—'}</div>
+      <div class="instr-ticks ${mbbCls}">${mbbPct?chgStr(mbbPct)+'%':'—'}</div>
+      ${buildHLBar(mbb.lo||0, mbb.hi||0, mbb.cur||0)}
+    </div>`;
+
+  // Update chip
+  const u55 = data?.UMBS_5_5_Current ?? FALLBACK.mbs.UMBS_5_5.cur;
+  const u55c = data?.UMBS_5_5_Daily_Change ?? FALLBACK.mbs.UMBS_5_5.chg;
+  document.getElementById('chipUmbs55').textContent = u55 ? fmtMBSPrice(u55) : '—';
+  const u55ChgEl = document.getElementById('chipUmbs55Chg');
+  u55ChgEl.textContent = u55c !== undefined ? chgStr(u55c,4)+' pts' : '—';
+  u55ChgEl.className = 'stat-chip-chg '+chgClass(u55c||0);
+
+  document.getElementById('mbsUpdated').textContent = nowStr();
+}
+
+/* ─── RENDER TREASURIES ─── */
+function renderTSY(data){
+  const t10y_cur  = data?.t10y?.current ?? FALLBACK.tsy.us10y.yield;
+  const t10y_chg  = data?.t10y?.delta   ?? FALLBACK.tsy.us10y.chg;
+  const t30y_cur  = data?.t30y?.current ?? FALLBACK.tsy.us30y.yield;
+  const t30y_chg  = data?.t30y?.delta   ?? FALLBACK.tsy.us30y.chg;
+
+  const TSYS = [
+    {id:'us2y',  label:'2-Year',  sub:'US Treasury · 2Y Note',  yield:FALLBACK.tsy.us2y.yield,  chg:FALLBACK.tsy.us2y.chg,  price:FALLBACK.tsy.us2y.price,  hi:FALLBACK.tsy.us2y.hi,  lo:FALLBACK.tsy.us2y.lo},
+    {id:'us10y', label:'10-Year', sub:'US Treasury · 10Y Note · MBS Benchmark', yield:t10y_cur, chg:t10y_chg, price:FALLBACK.tsy.us10y.price, hi:FALLBACK.tsy.us10y.hi, lo:FALLBACK.tsy.us10y.lo},
+    {id:'us30y', label:'30-Year', sub:'US Treasury · 30Y Bond',  yield:t30y_cur, chg:t30y_chg, price:FALLBACK.tsy.us30y.price, hi:FALLBACK.tsy.us30y.hi, lo:FALLBACK.tsy.us30y.lo},
+  ];
+
+  const el = document.getElementById('tsyPanel');
+  el.innerHTML='';
+  TSYS.forEach(t=>{
+    const bpsDelta = t.chg ? (t.chg*100) : 0;
+    const cls = chgClass(-t.chg); // yield up = bad for MBS = red
+    const row = document.createElement('div');
+    row.className='instr-row tsy-row';
+    row.innerHTML=`
+      <div class="instr-icon" style="font-size:9px">${t.id==='us2y'?'2Y':t.id==='us10y'?'10Y':'30Y'}</div>
+      <div><div class="instr-name">${t.label} Treasury</div><div class="instr-sub">${t.sub}</div></div>
+      <div class="instr-price yield">${t.yield!==undefined&&t.yield!==null?t.yield.toFixed(3)+'%':'—'}</div>
+      <div class="instr-chg ${cls}">${bpsDelta?(bpsDelta>=0?'+':'')+bpsDelta.toFixed(1)+' bps':'—'}</div>
+      <div class="instr-ticks" style="color:#496070">${t.price?priceToDollar(t.price):'—'}</div>
+      ${buildHLBar(t.lo||0,t.hi||0,t.yield||0)}
+    `;
+    el.appendChild(row);
+  });
+
+  // Chips
+  const t10El = document.getElementById('chipT10y');
+  t10El.textContent = t10y_cur ? t10y_cur.toFixed(3)+'%' : '—';
+  const t10cEl = document.getElementById('chipT10yChg');
+  t10cEl.textContent = t10y_chg ? chgStr(t10y_chg*100,1)+' bps' : '—';
+  t10cEl.className = 'stat-chip-chg '+chgClass(-t10y_chg||0);
+
+  document.getElementById('tsyUpdated').textContent = nowStr();
+}
+
+/* ─── RENDER FUTURES ─── */
+function renderFutures(data){
+  const znCur = data?.zn?.current ?? FALLBACK.fut.ZN.cur;
+  const znChg = data?.zn?.delta   ?? FALLBACK.fut.ZN.chg;
+
+  const FUTS = [
+    {sym:'ZT', label:'ZT — 2Y T-Note Fut', sub:'CME · 2-Year Treasury Note · 1/128 pt min tick',
+     cur:FALLBACK.fut.ZT.cur, chg:FALLBACK.fut.ZT.chg, hi:FALLBACK.fut.ZT.hi, lo:FALLBACK.fut.ZT.lo, minTick:128},
+    {sym:'ZF', label:'ZF — 5Y T-Note Fut', sub:'CME · 5-Year Treasury Note · 1/128 pt min tick',
+     cur:FALLBACK.fut.ZF.cur, chg:FALLBACK.fut.ZF.chg, hi:FALLBACK.fut.ZF.hi, lo:FALLBACK.fut.ZF.lo, minTick:128},
+    {sym:'ZN', label:'ZN — 10Y T-Note Fut', sub:'CME · 10-Year Treasury Note · 1/64 pt min tick · MBS Primary Hedge',
+     cur:znCur, chg:znChg, hi:FALLBACK.fut.ZN.hi, lo:FALLBACK.fut.ZN.lo, minTick:64, isPrimary:true},
+    {sym:'ZB', label:'ZB — 30Y T-Bond Fut', sub:'CME · 30-Year Treasury Bond · 1/32 pt min tick',
+     cur:FALLBACK.fut.ZB.cur, chg:FALLBACK.fut.ZB.chg, hi:FALLBACK.fut.ZB.hi, lo:FALLBACK.fut.ZB.lo, minTick:32},
+  ];
+
+  const el = document.getElementById('futPanel');
+  el.innerHTML='';
+  FUTS.forEach(f=>{
+    const chg = f.chg||0;
+    const ticks = Math.round(Math.abs(chg)*f.minTick)*(chg<0?-1:1);
+    const cls = chgClass(chg);
+    const row = document.createElement('div');
+    row.className = 'instr-row fut-row';
+    if(f.isPrimary) row.style.background='linear-gradient(90deg,rgba(127,168,204,.05),transparent)';
+    row.innerHTML=`
+      <div class="instr-icon" style="font-size:9px">${f.sym}</div>
+      <div><div class="instr-name">${f.label}${f.isPrimary?' <span style="font-size:8px;color:var(--cyan);opacity:.8">★ PRIMARY</span>':''}</div><div class="instr-sub">${f.sub}</div></div>
+      <div class="instr-price">${f.cur?fmtMBSPrice(f.cur):'—'}</div>
+      <div class="instr-chg ${cls}">${chgStr(chg,4)}</div>
+      <div class="instr-ticks ${cls}">${(ticks>=0?'+':'')+ticks} tks</div>
+      ${buildHLBar(f.lo||0,f.hi||0,f.cur||0)}
+    `;
+    el.appendChild(row);
+  });
+
+  // ZN chip
+  document.getElementById('chipZN').textContent = znCur ? fmtMBSPrice(znCur) : '—';
+  const znChgEl = document.getElementById('chipZNChg');
+  const znTicks = znChg ? Math.round(znChg*64) : 0;
+  znChgEl.textContent = znChg ? (znTicks>=0?'+':'')+znTicks+' tks' : '—';
+  znChgEl.className = 'stat-chip-chg '+chgClass(znChg||0);
+
+  document.getElementById('futUpdated').textContent = nowStr();
+}
+
+/* ─── RENDER EQUITIES ─── */
+function renderEquities(sd){
+  const EQ = [
+    {sym:'SPY',  label:'S&P 500',   sub:'SPDR S&P 500 ETF · Broad Market Risk Proxy'},
+    {sym:'QQQ',  label:'Nasdaq 100',sub:'Invesco QQQ · Tech / Growth Risk Proxy'},
+    {sym:'DIA',  label:'Dow Jones', sub:'SPDR DJIA ETF · Industrial Average Proxy'},
+  ];
+
+  const el = document.getElementById('eqPanel');
+  el.innerHTML='';
+  EQ.forEach(e=>{
+    const q = sd?.[e.sym] || null;
+    const cur = q?.current ? parseFloat(q.current) : FALLBACK.eq[e.sym]?.cur;
+    const chg = q?.change ? parseFloat(q.change) : FALLBACK.eq[e.sym]?.chg;
+    const pct = q?.percentChange ? parseFloat(q.percentChange) : FALLBACK.eq[e.sym]?.pct;
+    const cls = chgClass(pct||0);
+
+    const row = document.createElement('div');
+    row.className = 'instr-row eq-row';
+    row.innerHTML = `
+      <div class="instr-icon" style="font-size:8px">${e.sym}</div>
+      <div><div class="instr-name">${e.label}</div><div class="instr-sub">${e.sub}</div></div>
+      <div class="instr-price">$${cur?cur.toFixed(2):'—'}</div>
+      <div class="instr-chg ${cls}">${chg!==undefined?chgStr(chg):'—'}</div>
+      <div class="instr-ticks ${cls}">${pct!==undefined?chgStr(pct)+'%':'—'}</div>
+      ${buildEqBar(pct||0)}
+    `;
+    el.appendChild(row);
+  });
+
+  // SPY chip
+  const spy = sd?.['SPY'] || null;
+  const spyCur = spy?.current ? parseFloat(spy.current) : FALLBACK.eq.SPY.cur;
+  const spyPct = spy?.percentChange ? parseFloat(spy.percentChange) : FALLBACK.eq.SPY.pct;
+  document.getElementById('chipSPY').textContent = spyCur ? '$'+spyCur.toFixed(2) : '—';
+  const spyChgEl = document.getElementById('chipSPYChg');
+  spyChgEl.textContent = spyPct ? chgStr(spyPct)+'%' : '—';
+  spyChgEl.className = 'stat-chip-chg '+chgClass(spyPct||0);
+
+  document.getElementById('eqUpdated').textContent = nowStr();
+}
+
+/* ─── RENDER RISK ─── */
+function renderRisk(sd){
+  // VIX
+  const vixEl = document.getElementById('volPanel');
+  const vix = sd?.['CBOE:VIX'] || sd?.['VIX'] || null;
+  const vixCur = vix?.current ? parseFloat(vix.current) : FALLBACK.vix.cur;
+  const vixChg = vix?.change ? parseFloat(vix.change) : FALLBACK.vix.chg;
+  const vixPct = vix?.percentChange ? parseFloat(vix.percentChange) : FALLBACK.vix.pct;
+  const vixLabel = vixCur < 15 ? 'COMPLACENT' : vixCur < 20 ? 'LOW VOL' : vixCur < 25 ? 'ELEVATED' : vixCur < 35 ? 'HIGH RISK' : 'EXTREME';
+  const vixLabelCls = vixCur < 15 ? 'low' : vixCur < 20 ? '' : vixCur < 25 ? 'elevated' : 'high-risk';
+  // VIX up = bad = red (inverted for bond markets)
+  const vixCls = chgClass(-(vixChg||0));
+
+  const moveLabel = 'MOVE INDEX';
+  vixEl.innerHTML = `
+    <div class="instr-row risk-row">
+      <div class="instr-icon" style="font-size:8px">VIX</div>
+      <div><div class="instr-name">CBOE VIX</div><div class="instr-sub">Equity Volatility Index · S&P 500 30-day Implied Vol</div></div>
+      <div class="instr-price">${vixCur?vixCur.toFixed(1):'—'}</div>
+      <div class="instr-chg ${vixCls}">${vixChg?chgStr(vixChg):'—'}</div>
+      <div class="instr-ticks ${vixCls}">${vixPct?chgStr(vixPct)+'%':'—'}</div>
+      <div class="risk-desc ${vixLabelCls}">${vixLabel}</div>
+    </div>`;
+
+  // Brent Crude
+  const cmdEl = document.getElementById('cmdPanel');
+  const brent = sd?.['OANDA:BCOUSD'] || sd?.['BRENT'] || null;
+  const bCur = brent?.current ? parseFloat(brent.current) : FALLBACK.brent.cur;
+  const bChg = brent?.change ? parseFloat(brent.change) : FALLBACK.brent.chg;
+  const bPct = brent?.percentChange ? parseFloat(brent.percentChange) : FALLBACK.brent.pct;
+  const bCls = chgClass(bPct||0);
+  const bContext = bCur > 90 ? 'INFLATIONARY' : bCur > 75 ? 'ELEVATED' : bCur > 60 ? 'MODERATE' : 'SUBDUED';
+  const bContextCls = bCur > 90 ? 'high-risk' : bCur > 75 ? 'elevated' : 'low';
+  cmdEl.innerHTML = `
+    <div class="instr-row risk-row">
+      <div class="instr-icon" style="font-size:8px;color:var(--amber)">OIL</div>
+      <div><div class="instr-name">Brent Crude</div><div class="instr-sub">OANDA · USD/bbl · Global Oil Benchmark · Inflation Proxy</div></div>
+      <div class="instr-price" style="color:var(--amber)">$${bCur?bCur.toFixed(2):'—'}</div>
+      <div class="instr-chg ${bCls}">${bChg?chgStr(bChg):'—'}</div>
+      <div class="instr-ticks ${bCls}">${bPct?chgStr(bPct)+'%':'—'}</div>
+      <div class="risk-desc ${bContextCls}">${bContext}</div>
+    </div>`;
+
+  // BTC
+  const cryptoEl = document.getElementById('cryptoPanel');
+  const btc = sd?.['BINANCE:BTCUSDT'] || null;
+  const btcCur = btc?.current ? parseFloat(btc.current) : FALLBACK.btc.cur;
+  const btcChg = btc?.change ? parseFloat(btc.change) : FALLBACK.btc.chg;
+  const btcPct = btc?.percentChange ? parseFloat(btc.percentChange) : FALLBACK.btc.pct;
+  const btcCls = chgClass(btcPct||0);
+  const btcRegime = btcPct > 3 ? 'RISK-ON' : btcPct > 0 ? 'MILDLY BULLISH' : btcPct > -3 ? 'MILDLY BEARISH' : 'RISK-OFF';
+  const btcRegimeCls = btcPct > 3 ? 'low' : btcPct > 0 ? '' : btcPct > -3 ? 'elevated' : 'high-risk';
+  cryptoEl.innerHTML = `
+    <div class="instr-row risk-row" style="border-bottom:none">
+      <div class="instr-icon" style="font-size:9px;color:#f7931a;border-color:rgba(247,147,26,.2);background:rgba(247,147,26,.05)">₿</div>
+      <div><div class="instr-name">Bitcoin / USD</div><div class="instr-sub">Binance · BTC/USDT · Risk Sentiment Proxy</div></div>
+      <div class="instr-price" style="color:#f7931a">$${btcCur?Math.round(btcCur).toLocaleString():'—'}</div>
+      <div class="instr-chg ${btcCls}">${btcChg?'$'+(btcChg>=0?'+':'')+Math.round(btcChg).toLocaleString():'—'}</div>
+      <div class="instr-ticks ${btcCls}">${btcPct?chgStr(btcPct)+'%':'—'}</div>
+      <div class="risk-desc ${btcRegimeCls}">${btcRegime}</div>
+    </div>`;
+
+  // VIX chip
+  document.getElementById('chipVIX').textContent = vixCur ? vixCur.toFixed(1) : '—';
+  const vixChipChg = document.getElementById('chipVIXChg');
+  vixChipChg.textContent = vixChg ? chgStr(vixChg) : '—';
+  vixChipChg.className = 'stat-chip-chg '+chgClass(-(vixChg||0));
+
+  document.getElementById('riskUpdated').textContent = nowStr();
+}
+
+/* ─── RENDER ALL ─── */
+function renderAll(){
+  renderMBS(liveData);
+  renderTSY(liveData);
+  renderFutures(liveData);
+  renderEquities(stockData);
+  renderRisk(stockData);
+}
+
+/* ─── FETCH MARKET DATA ─── */
+async function fetchMarketData(){
+  try{
+    const res = await fetch('/.netlify/functions/getMarketData');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    liveData = await res.json();
+    renderMBS(liveData);
+    renderTSY(liveData);
+    renderFutures(liveData);
+  }catch(e){ console.warn('Market data fetch failed:',e.message); }
+}
+
+/* ─── FETCH EQUITIES ─── */
+async function fetchEquities(){
+  try{
+    const res = await fetch('/.netlify/functions/getLiveStockData');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    stockData = await res.json();
+    renderEquities(stockData);
+    renderRisk(stockData);
+  }catch(e){ console.warn('Equities fetch failed:',e.message); }
+}
+
+/* ─── REFRESH COUNTDOWN ─── */
+let refreshCountdown = 60;
+function tickRefresh(){
+  refreshCountdown--;
+  if(refreshCountdown<=0){
+    refreshCountdown=60;
+    fetchEquities();
+  }
+  document.getElementById('refreshNote').textContent=`Equities refresh in ${refreshCountdown}s`;
+}
+setInterval(tickRefresh,1000);
+
+/* ─── INIT ─── */
+renderAll(); // show fallbacks immediately
+fetchMarketData();
+fetchEquities();
+setInterval(fetchMarketData, 30000); // bonds/MBS: 30s
+</script>
+</body>
+</html>
