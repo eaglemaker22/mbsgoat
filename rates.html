@@ -1039,18 +1039,17 @@ function closeRateChart() {
 const INFO_CONTENT = {
   bpi: {
     title: 'Broker Price Index (BPI) — Option A',
-    sub:   'Live wholesale rate sheets · Best-qualified borrower scenario',
+    sub:   'Live wholesale rate sheets · Well-qualified borrower scenario',
     body: `
-      <p><strong>Source:</strong> UWM and Rocket Pro TPO wholesale rate sheets, parsed daily when lenders publish new pricing. Published 1–3x per trading day.</p>
-      <p><strong>Option A scenario:</strong> 760+ FICO · 75% LTV · Single Family Residence · Primary residence · Purchase · $375K loan amount ($900K for Jumbo) · 30-day lock period.</p>
-      <p><strong>Comp assumption:</strong> Standard 100bps (1 point) originator compensation included in target price selection.</p>
-      <p><strong>Rate selection:</strong> Closest match to target price on the actual rate ladder — no interpolation or multiplier approximations.</p>
-      <p><strong>Coverage:</strong> 30Y Conventional, 30Y FHA, 30Y VA, 30Y Jumbo, 15Y Conventional, 30Y Cash-Out Refi, 30Y Investment.</p>
+      <p><strong>Source:</strong> Rate sheet data from top-tier wholesale lenders under a best-execution pricing scenario.</p>
+      <p><strong>Option A scenario:</strong> 760 FICO · 75% LTV · Single Family Residence · Primary residence · Purchase · $375K loan amount · 30-day lock period.</p>
+      <p><strong>Note:</strong> Rates reflect the most favorable standard pricing tier available on current rate sheets — minimal LLPA adjustments.</p>
+      <p><strong>Use case:</strong> The best rate a well-qualified borrower can realistically expect today. Use it as the benchmark when shopping lenders.</p>
     `
   },
   bpi_b: {
     title: 'Broker Price Index (BPI) — Option B',
-    sub:   'Live wholesale rate sheets · Average borrower scenario',
+    sub:   'Live wholesale rate sheets · Common borrower scenario',
     body: `
       <p><strong>Source:</strong> Rate sheet data from top-tier wholesale lenders under a standard specific scenario.</p>
       <p><strong>Option B scenario:</strong> 720 FICO · 80% LTV · Single Family Residence · Primary residence · Purchase · $375K loan amount · 30-day lock period.</p>
