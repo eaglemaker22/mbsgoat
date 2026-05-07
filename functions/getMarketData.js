@@ -295,18 +295,79 @@ exports.handler = async function (event) {
       created_at:  anchor.created_at  || null,
     } : null;
 
+    // ── Shaped UI blocks ─────────────────────────────────────────────────────
+    // These are the clean, named objects that HTML pages consume directly.
+    // getMarketData.js is the adapter layer — Firestore structure stays internal.
+
+    // freddie: Freddie Mac PMMS — rates.html freddiePanel
+    const freddie = {
+      rates: [
+        {
+          product: '30Y FIXED',
+          rate:     fv('MORTGAGE30US'),
+          prev:     fp('MORTGAGE30US'),
+          change:   fc('MORTGAGE30US'),
+        },
+        {
+          product: '15Y FIXED',
+          rate:     fv('MORTGAGE15US'),
+          prev:     fp('MORTGAGE15US'),
+          change:   fc('MORTGAGE15US'),
+        },
+      ].filter(r => r.rate !== null),
+      as_of: fd('MORTGAGE30US') || fred.last_updated || null,
+    };
+
+    // mcr: OBMMI / Optimal Blue Market Composite — rates.html mcrPanel
+    const mcr = {
+      rates: [
+        {product: '30Y CONV',  rate: fv('OBMMIC30YF'),     prev: fp('OBMMIC30YF'),     change: fc('OBMMIC30YF')},
+        {product: '30Y FHA',   rate: fv('OBMMIFHA30YF'),   prev: fp('OBMMIFHA30YF'),   change: fc('OBMMIFHA30YF')},
+        {product: '30Y VA',    rate: fv('OBMMIVA30YF'),    prev: fp('OBMMIVA30YF'),    change: fc('OBMMIVA30YF')},
+        {product: '30Y JUMBO', rate: fv('OBMMIJUMBO30YF'), prev: fp('OBMMIJUMBO30YF'), change: fc('OBMMIJUMBO30YF')},
+        {product: '15Y CONV',  rate: fv('OBMMIC15YF'),     prev: fp('OBMMIC15YF'),     change: fc('OBMMIC15YF')},
+      ].filter(r => r.rate !== null),
+      as_of: fd('OBMMIC30YF') || fred.last_updated || null,
+    };
+
+    // bpi: Broker Price Index — rates.html bpiPanelA + bpiPanelB
+    // Option A = best-qualified borrower (760 FICO, 75 LTV)
+    // Option B = estimated +0.250 LLPA premium (720 FICO, 80 LTV) until second scenario is parsed
+    const bpiRates = [
+      {product: '30Y CONV',    rate: num(broker.conv30)},
+      {product: '30Y FHA',     rate: num(broker.fha30)},
+      {product: '30Y VA',      rate: num(broker.va30)},
+      {product: '30Y JUMBO',   rate: num(broker.jumbo30),   tag: 'JUMBO'},
+      {product: '15Y CONV',    rate: num(broker.conv15)},
+      {product: '30Y CASHOUT', rate: num(broker.cashout30), tag: 'CASHOUT'},
+      {product: '30Y INVEST',  rate: num(broker.inv30),     tag: 'INVEST'},
+    ].filter(r => r.rate !== null);
+
+    const bpi = {
+      rates:   bpiRates,
+      rates_b: bpiRates.map(r => ({ ...r, rate: +(r.rate + 0.250).toFixed(3) })),
+      as_of:   broker.as_of || null,
+    };
+
     return {
       statusCode: 200,
       headers: HEADERS,
       body: JSON.stringify({
         fetchedAt: new Date().toISOString(),
         date:      today,
+        // ── Intraday market data (scrapers) ──
         mbsProducts,
         shadowBonds,
-        us30y:     us30yData,
+        us30y:          us30yData,
         treasuryFutures,
+        // ── Rate sheet data ──
         brokerRates,
+        bpi,
+        // ── FRED / external rates ──
+        freddie,
+        mcr,
         fredCache,
+        // ── Signal engine ──
         dailyAnchor,
       }),
     };
