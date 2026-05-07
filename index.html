@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LockIQ Step 1 - Hero + Top Bar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#03070d; --bg1:#07111c; --panel:#081522; --stroke:rgba(122,170,208,.16);
+  --strokeBright:rgba(69,255,130,.46); --white:#edf5f8; --soft:#b8c6d1; --muted:#6f8292;
+  --green:#42f36f; --cyan:#1bd8ff; --blue:#38a8ff; --amber:#ffbd27; --red:#ff4a43;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; color:var(--white); font-family:Inter,system-ui,sans-serif; overflow-x:hidden;
+  background:
+    radial-gradient(900px 360px at 19% 24%, rgba(35,255,111,.15), transparent 62%),
+    radial-gradient(760px 320px at 80% 13%, rgba(25,174,255,.10), transparent 64%),
+    linear-gradient(180deg,#09131f 0%, #04080e 44%, #02050a 100%);
+}
+body:before{
+  content:""; position:fixed; inset:0; pointer-events:none; opacity:.55;
+  background:
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:34px 34px; mask-image:linear-gradient(to bottom,#000 0%,transparent 72%);
+}
+.shell{max-width:1600px;margin:0 auto;padding:0 20px 28px}
+
+/* TOP BAR */
+.topbar{
+  height:86px; display:grid; grid-template-columns:220px 205px 1fr 260px 168px;
+  align-items:center; border-bottom:1px solid rgba(143,181,213,.13);
+  background:rgba(3,8,14,.72); backdrop-filter:blur(20px);
+}
+.brand{height:100%;display:flex;flex-direction:column;justify-content:center;border-right:1px solid rgba(143,181,213,.11)}
+.logo{font-weight:900;letter-spacing:.28em;font-size:28px;line-height:.9}
+.logo span{color:var(--cyan);text-shadow:0 0 22px rgba(27,216,255,.45)}
+.lock{margin-top:10px;font:11px JetBrains Mono,monospace;letter-spacing:.30em;color:#f1bd2a}
+.lock span{color:#58778f;margin-left:9px}
+.live{padding-left:22px;font:12px JetBrains Mono,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
+.live b{color:var(--green);font-weight:700}
+.live i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 15px var(--green);margin-right:10px}
+.live.after b{color:var(--red)}
+.live.after i{background:var(--red);box-shadow:0 0 15px var(--red)}
+.live small{display:block;margin:7px 0 0 23px;color:#8395a3}
+.nav{justify-self:center;display:flex;gap:38px;height:100%;align-items:center}
+.nav a{height:100%;display:flex;align-items:center;color:#8793a1;text-decoration:none;text-transform:uppercase;font:12px JetBrains Mono,monospace;letter-spacing:.18em;position:relative}
+.nav a.active{color:#eaf7ff}
+.nav a.active:after{content:"";position:absolute;bottom:12px;left:0;right:0;height:2px;background:var(--cyan);box-shadow:0 0 20px var(--cyan)}
+.timezone{
+  border-left:1px solid rgba(143,181,213,.11); padding-left:22px; height:100%;
+  display:flex; align-items:center; gap:9px; justify-content:flex-start; position:relative;
+}
+.tz-small{
+  position:absolute; bottom:10px; left:23px;
+  font:9px JetBrains Mono,monospace; letter-spacing:.13em; color:#70879a;
+  text-transform:uppercase; white-space:nowrap;
+}
+.tz-btn{
+  font:11px JetBrains Mono,monospace; letter-spacing:.12em; color:#61798d;
+  border:1px solid rgba(113,161,202,.18); background:rgba(20,45,70,.35);
+  border-radius:6px; padding:7px 9px; cursor:pointer;
+}
+.tz-btn.active{color:#051018;background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 18px rgba(27,216,255,.35)}
+.time{font:13px JetBrains Mono,monospace;letter-spacing:.13em;text-align:right}
+.time strong{display:block;font-size:18px;color:#edf6fc}
+.time span{display:block;margin-top:5px;color:#718698;font-size:11px}
+
+/* GLOBAL */
+.kicker{
+  display:flex;align-items:center;justify-content:space-between;margin:16px 0 10px;
+  color:#61778a;font:11px JetBrains Mono,monospace;letter-spacing:.18em;text-transform:uppercase;
+}
+.kicker .line{height:1px;flex:1;background:linear-gradient(90deg,rgba(27,216,255,.25),transparent);margin-left:16px}
+.grid{display:grid;grid-template-columns:minmax(800px,1.78fr) minmax(430px,1fr);gap:18px}
+.card{
+  position:relative;border-radius:14px;overflow:hidden;
+  background:
+    linear-gradient(180deg,rgba(13,30,47,.82),rgba(5,12,20,.94)),
+    radial-gradient(600px 260px at 10% 10%,rgba(255,255,255,.08),transparent);
+  border:1px solid var(--stroke);
+  box-shadow:0 28px 80px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.055);
+}
+.card:before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,rgba(255,255,255,.08),transparent 18%,transparent 82%,rgba(255,255,255,.03));
+  opacity:.6;
+}
+.title{position:absolute;top:20px;left:24px;z-index:3;font:700 14px JetBrains Mono,monospace;letter-spacing:.16em;text-transform:uppercase;color:#f3f8fb}
+.title span{color:#73889a;font-weight:500;margin-left:8px}
+
+/* HERO */
+.hero{
+  min-height:372px; border-color:var(--strokeBright);
+  box-shadow:0 30px 95px rgba(0,0,0,.5),0 0 0 1px rgba(66,243,111,.08),0 0 80px rgba(66,243,111,.11),inset 0 0 100px rgba(66,243,111,.055);
+  display:grid; grid-template-columns:230px minmax(340px,.9fr) minmax(390px,1.05fr);
+}
+.hero.worse{
+  border-color:rgba(255,74,67,.46);
+  box-shadow:0 30px 95px rgba(0,0,0,.5),0 0 0 1px rgba(255,74,67,.08),0 0 80px rgba(255,74,67,.11),inset 0 0 100px rgba(255,74,67,.055);
+}
+.hero-art{display:flex;align-items:center;justify-content:center;padding-top:40px}
+.orb{
+  width:160px;height:160px;border-radius:50%;position:relative;
+  background:
+    radial-gradient(circle at 35% 30%,rgba(255,255,255,.18),transparent 22%),
+    radial-gradient(circle,rgba(66,243,111,.44),rgba(66,243,111,.15) 54%,rgba(66,243,111,.03) 70%);
+  border:2px solid rgba(94,255,133,.96);
+  box-shadow:0 0 24px rgba(66,243,111,.88),0 0 70px rgba(66,243,111,.22),inset 0 0 42px rgba(66,243,111,.35);
+}
+.orb:before,.orb:after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(66,243,111,.13);inset:-18px}
+.orb:after{inset:-36px;opacity:.55}
+.animal{position:absolute;inset:0;display:grid;place-items:center;font-size:76px;text-shadow:0 0 30px rgba(66,243,111,.75);filter:drop-shadow(0 0 20px rgba(66,243,111,.45))}
+.animal:before{content:"♉";transform:rotate(-18deg) scale(1.1)}
+.hero.worse .orb{
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.13),transparent 22%),radial-gradient(circle,rgba(255,74,67,.42),rgba(255,74,67,.14) 54%,rgba(255,74,67,.03) 70%);
+  border-color:rgba(255,91,83,.96); box-shadow:0 0 24px rgba(255,74,67,.74),0 0 70px rgba(255,74,67,.18),inset 0 0 42px rgba(255,74,67,.29);
+}
+.hero.worse .orb:before,.hero.worse .orb:after{border-color:rgba(255,74,67,.14)}
+.hero.worse .animal{text-shadow:0 0 30px rgba(255,74,67,.65);filter:drop-shadow(0 0 20px rgba(255,74,67,.42))}
+.hero.worse .animal:before{content:"🐻";font-size:66px;transform:none}
+.signal{display:flex;flex-direction:column;justify-content:center;text-align:center;padding:56px 12px 38px}
+.signal-label{color:var(--green);font:800 22px JetBrains Mono,monospace;letter-spacing:.24em;text-shadow:0 0 19px rgba(66,243,111,.42)}
+.money{color:var(--green);font-size:92px;font-weight:900;line-height:.92;letter-spacing:-.085em;margin:14px 0 9px;text-shadow:0 0 24px rgba(66,243,111,.55),0 0 92px rgba(66,243,111,.18)}
+.hero.worse .signal-label,.hero.worse .money,.hero.worse .bps{color:var(--red);text-shadow:0 0 19px rgba(255,74,67,.42)}
+.per{font:600 14px JetBrains Mono,monospace;letter-spacing:.18em;color:#d3dee6}
+.bps{margin-top:18px;font:700 25px JetBrains Mono,monospace;color:var(--green)}
+.range-row{display:flex;justify-content:center;gap:18px;margin-top:13px;font:10px JetBrains Mono,monospace;color:#7f92a2;text-transform:uppercase;letter-spacing:.1em}
+.range-row b{display:block;color:#dfeaf0;font-size:13px;margin-top:4px}
+.range-row .hi b{color:var(--green)} .range-row .lo b{color:var(--red)}
+.advisor{border-left:1px solid rgba(133,176,209,.14);padding:58px 30px 0}
+.descriptor-label{color:var(--cyan);font:700 12px JetBrains Mono,monospace;letter-spacing:.18em;text-transform:uppercase;margin-bottom:11px}
+.advisor h2{margin:0 0 12px;font-size:24px;line-height:1.1;letter-spacing:.02em}
+.advisor p{margin:0 0 18px;color:#dce7ef;font-size:15px;line-height:1.62;max-width:410px}
+.selector-wrap{
+  margin-top:16px; border-top:1px solid rgba(133,176,209,.14); padding-top:16px;
+}
+.selector-label{display:flex;justify-content:space-between;align-items:center;font:10px JetBrains Mono,monospace;color:#9aacb8;letter-spacing:.13em;text-transform:uppercase;margin-bottom:10px}
+select{
+  width:100%; appearance:none; border:1px solid rgba(27,216,255,.28); border-radius:8px;
+  background:linear-gradient(180deg,rgba(12,32,50,.95),rgba(6,15,25,.95));
+  color:#eaf7ff; padding:12px 14px; font:12px JetBrains Mono,monospace; letter-spacing:.09em;
+  outline:none; box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+.anchor-slider{
+  position:relative;
+  padding:20px 2px 6px;
+}
+.anchor-slider input[type="range"]{
+  width:100%; appearance:none; height:6px; border-radius:999px;
+  background:linear-gradient(90deg,var(--amber) var(--sliderPct, 7%),rgba(133,176,209,.22) var(--sliderPct, 7%));
+  outline:none;
+}
+.anchor-slider input[type="range"]::-webkit-slider-thumb{
+  appearance:none; width:20px; height:20px; border-radius:50%;
+  background:var(--amber); border:2px solid #09131f;
+  box-shadow:0 0 0 1px rgba(255,189,39,.6),0 0 24px rgba(255,189,39,.45);
+  cursor:pointer;
+}
+.anchor-slider input[type="range"]::-moz-range-thumb{
+  width:20px; height:20px; border-radius:50%;
+  background:var(--amber); border:2px solid #09131f;
+  box-shadow:0 0 0 1px rgba(255,189,39,.6),0 0 24px rgba(255,189,39,.45);
+  cursor:pointer;
+}
+.slider-readout{
+  margin-top:12px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  font-family:JetBrains Mono,monospace;
+}
+.slider-readout strong{
+  color:#051018; background:var(--amber); border-radius:7px; padding:7px 10px;
+  font-size:11px; letter-spacing:.09em; white-space:nowrap;
+}
+.slider-readout span{
+  color:#9fafbc; font-size:10px; letter-spacing:.10em; text-align:right;
+}
+.tick-row{
+  display:grid; grid-template-columns:repeat(5,1fr); margin-top:10px;
+  color:#607789; font:9px JetBrains Mono,monospace; letter-spacing:.08em;
+}
+.tick-row span:nth-child(2),.tick-row span:nth-child(3),.tick-row span:nth-child(4){text-align:center}
+.tick-row span:last-child{text-align:right}
+.foot{
+  position:absolute;bottom:15px;left:22px;right:22px;display:grid;grid-template-columns:1fr 1fr 1fr;
+  color:#93a5b2;font:10px JetBrains Mono,monospace;letter-spacing:.13em;text-transform:uppercase;
+}
+.foot div:nth-child(2){text-align:center}.foot div:nth-child(3){text-align:right}
+
+/* MARKET PULSE V1 */
+.pulse{
+  min-height:372px;
+  padding:58px 20px 18px;
+}
+.real{
+  position:absolute;right:23px;top:21px;color:var(--green);
+  font:11px JetBrains Mono,monospace;letter-spacing:.13em;
+}
+.pulse-body{
+  position:relative;
+  z-index:2;
+}
+.pulse-section{
+  margin-bottom:13px;
+}
+.pulse-section:last-child{margin-bottom:0}
+.pulse-section-title{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin:0 0 6px;
+  font:700 9px JetBrains Mono,monospace;
+  color:#6f879a;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+}
+.pulse-section-title:after{
+  content:"";
+  height:1px;
+  flex:1;
+  background:linear-gradient(90deg,rgba(125,174,212,.20),transparent);
+}
+.pulse-row{
+  display:grid;
+  grid-template-columns:34px 96px 78px 1fr 72px;
+  align-items:center;
+  min-height:31px;
+  gap:9px;
+  border-radius:8px;
+  padding:4px 8px;
+  font-family:JetBrains Mono,monospace;
+  background:rgba(255,255,255,.014);
+  border:1px solid rgba(135,178,210,.055);
+  margin-bottom:5px;
+}
+.pulse-row.primary{
+  min-height:38px;
+  background:
+    linear-gradient(90deg,rgba(66,243,111,.08),rgba(66,243,111,.018)),
+    rgba(255,255,255,.018);
+  border-color:rgba(66,243,111,.20);
+  box-shadow:0 0 26px rgba(66,243,111,.045), inset 0 1px 0 rgba(255,255,255,.035);
+}
+.pulse-ico{
+  width:24px;height:24px;border-radius:7px;
+  display:grid;place-items:center;
+  color:#cbd8e1;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(135,178,210,.11);
+  font-size:13px;
+}
+.pulse-row.primary .pulse-ico{
+  color:var(--green);
+  border-color:rgba(66,243,111,.28);
+  box-shadow:0 0 16px rgba(66,243,111,.10);
+}
+.pulse-name{
+  color:#e5eef4;
+  font-size:11px;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+  font-weight:700;
+}
+.pulse-sub{
+  color:#61778a;
+  font-size:8px;
+  letter-spacing:.08em;
+  display:block;
+  margin-top:2px;
+  font-weight:500;
+}
+.pulse-value{
+  text-align:right;
+  color:#eaf5fa;
+  font-size:13px;
+  font-weight:700;
+}
+.pulse-row.primary .pulse-value{
+  font-size:16px;
+}
+.pulse-spark{
+  width:100%;
+  height:20px;
+}
+.pulse-spark path{
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2.2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  filter:drop-shadow(0 0 4px currentColor);
+}
+.pulse-change{
+  text-align:right;
+  font-size:11px;
+  font-weight:700;
+}
+.pulse-row.primary .pulse-change{
+  font-size:13px;
+}
+.green{color:var(--green)}
+.red{color:var(--red)}
+.cyan{color:var(--cyan)}
+.muted{color:#718698}
+.pulse-footer{
+  margin-top:10px;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  color:#61778a;
+  font:9px JetBrains Mono,monospace;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+.pulse-footer span:last-child{text-align:right}
+@media(max-width:1150px){
+  .topbar{grid-template-columns:1fr;height:auto;padding:16px 0;gap:13px}.brand,.live,.timezone{border:0;padding:0}.nav{display:none}.time{text-align:left}
+  .grid{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.advisor{border-left:0;border-top:1px solid rgba(133,176,209,.14);padding:28px}.foot{position:static;padding:14px 22px;display:block}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+  <div class="brand"><div class="logo">MBS<span>GOAT</span></div><div class="lock">LOCKIQ <span>TERMINAL</span></div></div>
+  <div class="live" id="liveBlock"><i id="marketDot"></i><b id="marketStatus">LIVE MARKET</b><small id="marketHours">8:00 AM – 5:00 PM ET</small></div>
+  <nav class="nav"><a class="active">Dashboard</a><a>Markets</a><a>Rates</a><a>Econ Reports</a></nav>
+  <div class="timezone" aria-label="Time zone selector">
+    <button class="tz-btn" data-tz="PT">PT</button>
+    <button class="tz-btn" data-tz="MT">MT</button>
+    <button class="tz-btn" data-tz="CT">CT</button>
+    <button class="tz-btn active" data-tz="ET">ET</button>
+    <div class="tz-small" id="tzSmall">Eastern Time</div>
+  </div>
+  <div class="time"><strong id="clock">5:48:02 PM ET</strong><span id="dateLine">WED MAY 6, 2026</span></div>
+</header>
+
+<div class="kicker">Primary Intelligence Layer <div class="line"></div></div>
+
+<section class="grid">
+  <article class="card hero" id="heroCard">
+    <div class="title">LOCKIQ SIGNAL <span>ⓘ</span></div>
+    <div class="hero-art"><div class="orb"><div class="animal"></div></div></div>
+
+    <div class="signal">
+      <div class="signal-label" id="signalLabel">MARKET BETTER</div>
+      <div class="money" id="moneyValue">+$110</div>
+      <div class="per">PER $100K LOAN</div>
+      <div class="bps" id="bpsValue">+11.0 BPS</div>
+      <div class="range-row">
+        <div class="hi">Daily High <b id="dailyHigh">+$142</b></div>
+        <div class="lo">Daily Low <b id="dailyLow">-$38</b></div>
+      </div>
+    </div>
+
+    <div class="advisor">
+      <div class="descriptor-label">What this signal means</div>
+      <h2>Live mortgage pricing translated into borrower impact.</h2>
+      <p>
+        LockIQ converts MBS, Treasury, and pricing movement into a simple estimate of how much rate-sheet value has changed for a typical borrower scenario.
+      </p>
+      <p>
+        The signal is directional market intelligence, not a lender quote. It helps an LO explain whether pricing has improved or worsened since the selected anchor time.
+      </p>
+
+      <div class="selector-wrap">
+        <div class="selector-label">
+          <span>Change Since</span>
+          <span id="anchorTimeNote">Default: Yesterday Close until Today Open</span>
+        </div>
+        <div class="anchor-slider">
+          <input id="changeSinceSlider" type="range" min="0" max="14" value="1" step="1" />
+          <div class="slider-readout">
+            <strong id="anchorReadout">Yesterday Close</strong>
+            <span id="anchorConverted">Default anchor until Today Open</span>
+          </div>
+          <div class="tick-row">
+            <span>Y OPEN</span><span>Y CLOSE</span><span>5AM</span><span>12PM</span><span>4PM CLOSE</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div id="footAnchor">□ Since Yesterday Close</div>
+      <div id="footUpdated">Updated 5:48 PM ET</div>
+      <div>Source: LockIQ Model</div>
+    </div>
+  </article>
+
+  <aside class="card pulse">
+    <div class="title">MARKET PULSE <span>ⓘ</span></div>
+    <div class="real" id="pulseStatus">● REAL-TIME</div>
+
+    <div class="pulse-body">
+      <div class="pulse-section">
+        <div class="pulse-section-title">Mortgage Market</div>
+        <div id="pulseMortgage"></div>
+      </div>
+
+      <div class="pulse-section">
+        <div class="pulse-section-title">Treasury Market</div>
+        <div id="pulseTreasury"></div>
+      </div>
+
+      <div class="pulse-section">
+        <div class="pulse-section-title">Risk Sentiment</div>
+        <div id="pulseRisk"></div>
+      </div>
+
+      <div class="pulse-footer">
+        <span id="pulseUpdated">Updated —</span>
+        <span>Color logic: mortgage ↑ green · yields ↑ red</span>
+      </div>
+    </div>
+  </aside>
+</section>
+</div>
+
+<script>
+const zoneOffsets = { ET:0, CT:-1, MT:-2, PT:-3 };
+const zoneNames = { ET:"Eastern Time", CT:"Central Time", MT:"Mountain Time", PT:"Pacific Time" };
+let currentZone = "ET";
+
+// Static demo timestamp in ET. Change this to test after-hours:
+// const demoET = new Date("2026-05-06T17:48:02"); // after hours
+// const demoET = new Date("2026-05-06T12:48:02"); // live market
+const demoET = new Date("2026-05-06T17:48:02");
+
+const anchors = [
+  "Yesterday Open",
+  "Yesterday Close",
+  "Today Open (5:00 AM)",
+  "5:30 AM",
+  "6:00 AM",
+  "7:00 AM",
+  "8:00 AM",
+  "9:00 AM",
+  "10:00 AM",
+  "11:00 AM",
+  "12:00 PM",
+  "1:00 PM",
+  "2:00 PM",
+  "3:00 PM",
+  "4:00 PM / Today Close"
+];
+
+function formatTime(date, zone){
+  const hour = date.getHours();
+  const min = String(date.getMinutes()).padStart(2,"0");
+  const sec = String(date.getSeconds()).padStart(2,"0");
+  const h12 = hour % 12 || 12;
+  const ampm = hour >= 12 ? "PM" : "AM";
+  return `${h12}:${min}:${sec} ${ampm} ${zone}`;
+}
+function convertFromET(etDate, zone){
+  const d = new Date(etDate);
+  d.setHours(d.getHours() + zoneOffsets[zone]);
+  return d;
+}
+function marketIsLiveET(etDate){
+  const h = etDate.getHours();
+  const m = etDate.getMinutes();
+  const minutes = h * 60 + m;
+  return minutes >= 8 * 60 && minutes < 17 * 60;
+}
+function convertLabel(label, zone){
+  if(label === "Yesterday Open" || label === "Yesterday Close") return label;
+  let timePart = label.match(/(\d{1,2})(?::(\d{2}))?\s(AM|PM)/);
+  if(!timePart) return label;
+  let hour = parseInt(timePart[1],10) % 12;
+  if(timePart[3] === "PM") hour += 12;
+  let minute = timePart[2] || "00";
+  let d = new Date("2026-05-06T00:00:00");
+  d.setHours(hour + zoneOffsets[zone], parseInt(minute), 0);
+  let converted = formatTime(d, zone).replace(":00 ", " ").replace(" " + zone,"");
+  if(label.includes("Today Open")) return `Today Open (${converted})`;
+  if(label.includes("Today Close")) return `${converted} / Today Close`;
+  return converted;
+}
+function updateMarketState(){
+  const liveBlock = document.getElementById("liveBlock");
+  const marketStatus = document.getElementById("marketStatus");
+  const live = marketIsLiveET(demoET);
+  liveBlock.classList.toggle("after", !live);
+  marketStatus.textContent = live ? "LIVE MARKET" : "AFTER HOURS";
+}
+function updateZone(zone){
+  currentZone = zone;
+  document.querySelectorAll(".tz-btn").forEach(b => b.classList.toggle("active", b.dataset.tz === zone));
+  document.getElementById("tzSmall").textContent = zoneNames[zone];
+
+  const local = convertFromET(demoET, zone);
+  document.getElementById("clock").textContent = formatTime(local, zone);
+  document.getElementById("footUpdated").textContent = `Updated ${formatTime(local, zone)}`;
+  document.getElementById("marketHours").textContent =
+    zone === "ET" ? "8:00 AM – 5:00 PM ET" :
+    zone === "CT" ? "7:00 AM – 4:00 PM CT" :
+    zone === "MT" ? "6:00 AM – 3:00 PM MT" : "5:00 AM – 2:00 PM PT";
+  updateAnchor();
+}
+function updateAnchor(){
+  const slider = document.getElementById("changeSinceSlider");
+  const idx = Number(slider.value);
+  const raw = anchors[idx];
+  const converted = convertLabel(raw, currentZone);
+  const pct = (idx / (anchors.length - 1)) * 100;
+
+  slider.style.setProperty("--sliderPct", `${pct}%`);
+  document.getElementById("anchorReadout").textContent = converted;
+  document.getElementById("anchorConverted").textContent =
+    raw === converted ? "Anchor shown in selected time zone" : `Converted from ET anchor: ${raw}`;
+  document.getElementById("footAnchor").textContent = `□ Since ${converted}`;
+}
+document.querySelectorAll(".tz-btn").forEach(btn => btn.addEventListener("click", () => updateZone(btn.dataset.tz)));
+document.getElementById("changeSinceSlider").addEventListener("input", updateAnchor);
+
+
+const fallbackMarketData = {
+  mbsProducts: {
+    umbs50_price: 99.812,
+    umbs50_delta: 0.188,
+    gnma50_price: 99.734,
+    gnma50_delta: 0.156,
+    last_updated: "2026-05-06T21:48:02Z"
+  },
+  shadowBonds: {
+    us10y_current: 4.352,
+    us10y_delta: -4.3,
+    us2y_current: 3.821,
+    us2y_delta: -2.1,
+    mbb_current: 91.24,
+    mbb_delta: 0.18,
+    last_updated: "2026-05-06T21:48:02Z"
+  },
+  treasuryFutures: {
+    zn_current: 110.50,
+    zn_delta: 0.125,
+    zt_current: 102.13,
+    zt_delta: 0.031,
+    last_updated: "2026-05-06T21:48:02Z"
+  },
+  liveStocks: {
+    DIA: { current: "387.42", change: "-92.00", percentChange: "-0.24%" },
+    // VIX/OIL intentionally pending until TradingView scraper is wired.
+    VIX: null,
+    OIL: null
+  }
+};
+
+function cleanNumber(v){
+  if(v === null || v === undefined || v === "" || v === "N/A") return null;
+  const n = Number(String(v).replace("%",""));
+  return Number.isFinite(n) ? n : null;
+}
+function directionClass(change, inverted=false){
+  const n = cleanNumber(change);
+  if(n === null || n === 0) return "muted";
+  const good = inverted ? n < 0 : n > 0;
+  return good ? "green" : "red";
+}
+function formatPrice(v, digits=3){
+  const n = cleanNumber(v);
+  return n === null ? "—" : n.toFixed(digits);
+}
+function formatChange(v, digits=3, suffix=""){
+  const n = cleanNumber(v);
+  if(n === null) return "—";
+  const sign = n > 0 ? "+" : "";
+  return `${sign}${n.toFixed(digits)}${suffix}`;
+}
+function formatYieldChangeBps(v){
+  const n = cleanNumber(v);
+  if(n === null) return "—";
+  const sign = n > 0 ? "+" : "";
+  return `${sign}${n.toFixed(1)} bps`;
+}
+function sparkline(colorClass){
+  return `<svg class="pulse-spark ${colorClass}" viewBox="0 0 120 24" preserveAspectRatio="none">
+    <path d="M2,17 L11,15 L20,18 L30,11 L40,13 L50,8 L61,12 L72,10 L84,15 L96,11 L108,14 L118,9"/>
+  </svg>`;
+}
+function pulseRow(item){
+  const cls = directionClass(item.change, item.inverted);
+  const primary = item.primary ? " primary" : "";
+  return `
+    <div class="pulse-row${primary}">
+      <div class="pulse-ico">${item.icon}</div>
+      <div class="pulse-name">${item.name}<span class="pulse-sub">${item.sub || ""}</span></div>
+      <div class="pulse-value">${item.value}</div>
+      ${sparkline(cls)}
+      <div class="pulse-change ${cls}">${item.changeText}</div>
+    </div>`;
+}
+function normalizePulseData(market, stocks){
+  const mbs = market.mbsProducts || {};
+  const shadow = market.shadowBonds || {};
+  const futures = market.treasuryFutures || {};
+  const stock = stocks || market.liveStocks || {};
+
+  return {
+    mortgage: [
+      {
+        icon:"▣", name:"UMBS 5.0", sub:"Conventional",
+        value:formatPrice(mbs.umbs50_price,3),
+        change:mbs.umbs50_delta,
+        changeText:formatChange(mbs.umbs50_delta,3),
+        primary:true
+      },
+      {
+        icon:"▤", name:"GNMA 5.0", sub:"Govy",
+        value:formatPrice(mbs.gnma50_price,3),
+        change:mbs.gnma50_delta,
+        changeText:formatChange(mbs.gnma50_delta,3)
+      },
+      {
+        icon:"◈", name:"MBB", sub:"ETF Proxy",
+        value:formatPrice(shadow.mbb_current,2),
+        change:shadow.mbb_delta,
+        changeText:formatChange(shadow.mbb_delta,2)
+      }
+    ],
+    treasury: [
+      {
+        icon:"10", name:"US10Y", sub:"Yield",
+        value:formatPrice(shadow.us10y_current,3) + "%",
+        change:shadow.us10y_delta,
+        changeText:formatYieldChangeBps(shadow.us10y_delta),
+        inverted:true,
+        primary:true
+      },
+      {
+        icon:"2Y", name:"US2Y", sub:"Yield",
+        value:formatPrice(shadow.us2y_current ?? shadow.US2Y_Current,3) + "%",
+        change:shadow.us2y_delta ?? shadow.US2Y_Delta ?? null,
+        changeText:(shadow.us2y_delta ?? shadow.US2Y_Delta) !== undefined ? formatYieldChangeBps(shadow.us2y_delta ?? shadow.US2Y_Delta) : "current only",
+        inverted:true
+      },
+      {
+        icon:"ZN", name:"ZN", sub:"10Y Future",
+        value:formatPrice(futures.zn_current,3),
+        change:futures.zn_delta,
+        changeText:formatChange(futures.zn_delta,3)
+      },
+      {
+        icon:"ZT", name:"ZT", sub:"2Y Future",
+        value:formatPrice(futures.zt_current,3),
+        change:futures.zt_delta,
+        changeText:formatChange(futures.zt_delta,3)
+      }
+    ],
+    risk: [
+      {
+        icon:"VX", name:"VIX", sub:"Volatility",
+        value: stock.VIX ? formatPrice(stock.VIX.current,2) : "—",
+        change: stock.VIX ? cleanNumber(stock.VIX.change) : null,
+        changeText: stock.VIX ? formatChange(stock.VIX.change,2) : "pending",
+        inverted:true
+      },
+      {
+        icon:"Oil", name:"Oil", sub:"Inflation",
+        value: stock.OIL ? formatPrice(stock.OIL.current,2) : "—",
+        change: stock.OIL ? cleanNumber(stock.OIL.change) : null,
+        changeText: stock.OIL ? formatChange(stock.OIL.change,2) : "pending",
+        inverted:true
+      },
+      {
+        icon:"DJ", name:"DIA", sub:"Dow ETF Proxy",
+        value: stock.DIA ? formatPrice(stock.DIA.current,2) : "—",
+        change: stock.DIA ? cleanNumber(stock.DIA.change) : null,
+        changeText: stock.DIA ? formatChange(stock.DIA.change,2) : "pending"
+      }
+    ],
+    updated: mbs.last_updated || shadow.last_updated || futures.last_updated || market.fetchedAt || null
+  };
+}
+function renderMarketPulse(data){
+  document.getElementById("pulseMortgage").innerHTML = data.mortgage.map(pulseRow).join("");
+  document.getElementById("pulseTreasury").innerHTML = data.treasury.map(pulseRow).join("");
+  document.getElementById("pulseRisk").innerHTML = data.risk.map(pulseRow).join("");
+  document.getElementById("pulseUpdated").textContent = data.updated ? `Updated ${data.updated}` : "Updated —";
+}
+async function loadMarketPulse(){
+  try{
+    const [marketRes, stockRes] = await Promise.allSettled([
+      fetch("/.netlify/functions/getMarketData"),
+      fetch("/.netlify/functions/getLiveStockData")
+    ]);
+
+    let market = fallbackMarketData;
+    let stocks = fallbackMarketData.liveStocks;
+
+    if(marketRes.status === "fulfilled" && marketRes.value.ok){
+      market = await marketRes.value.json();
+    }
+    if(stockRes.status === "fulfilled" && stockRes.value.ok){
+      stocks = await stockRes.value.json();
+      // VIX/OIL can be populated later by your TradingView scraper or alternate function.
+      // Supported friendly aliases if they exist:
+      if(stocks["CBOE:VIX"] && !stocks.VIX) stocks.VIX = stocks["CBOE:VIX"];
+      if(stocks["OANDA:WTICO_USD"] && !stocks.OIL) stocks.OIL = stocks["OANDA:WTICO_USD"];
+      if(stocks["CL=F"] && !stocks.OIL) stocks.OIL = stocks["CL=F"];
+    }
+
+    renderMarketPulse(normalizePulseData(market, stocks));
+  }catch(err){
+    console.warn("Market Pulse fallback loaded:", err);
+    renderMarketPulse(normalizePulseData(fallbackMarketData, fallbackMarketData.liveStocks));
+  }
+}
+loadMarketPulse();
+
+// Demo bear/bull switch: type ?mode=worse in URL to see red bear state.
+if(new URLSearchParams(location.search).get("mode") === "worse"){
+  document.getElementById("heroCard").classList.add("worse");
+  document.getElementById("signalLabel").textContent = "MARKET WORSE";
+  document.getElementById("moneyValue").textContent = "-$110";
+  document.getElementById("bpsValue").textContent = "-11.0 BPS";
+}
+updateMarketState();
+updateZone("ET");
+</script>
+</body>
+</html>
