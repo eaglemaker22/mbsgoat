@@ -166,9 +166,10 @@ exports.handler = async function (event) {
       umbs60_open:  num(mbs.UMBS_6_0_Open),
       umbs60_delta: delta(mbs.UMBS_6_0_Current, mbs.UMBS_6_0_Open),
 
-      gnma50_price: num(mbs.GNMA_5_0_Current),
-      gnma50_open:  num(mbs.GNMA_5_0_Open),
-      gnma50_delta: delta(mbs.GNMA_5_0_Current, mbs.GNMA_5_0_Open),
+      gnma50_price:  num(mbs.GNMA_5_0_Current),
+      gnma50_open:   num(mbs.GNMA_5_0_Open),
+      gnma50_delta:  delta(mbs.GNMA_5_0_Current, mbs.GNMA_5_0_Open),
+      gnma50_spread: num(mbs.GNMA_5_0_vs_UMBS_5_0_spread),
 
       gnma55_price: num(mbs.GNMA_5_5_Current),
       gnma55_open:  num(mbs.GNMA_5_5_Open),
