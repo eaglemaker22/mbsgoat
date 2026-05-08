@@ -125,26 +125,31 @@ exports.handler = async function (event) {
 
     const [
       mbsSnap, shadowSnap, us30ySnap, futuresSnap,
-      brokerSnap, fredSnap, fredHistSnap, anchorSnap
+      brokerSnap, brokerPrevSnap, brokerOpenSnap,
+      fredSnap, fredHistSnap, anchorSnap
     ] = await Promise.all([
       db.collection('market_data').doc('mbs_products').get(),
       db.collection('market_data').doc('shadow_bonds').get(),
       db.collection('market_data').doc('us30y_current').get(),
       db.collection('market_data').doc('treasury_futures').get(),
       db.collection('market_data').doc('broker_rates').get(),
+      db.collection('market_data').doc('broker_rates_prev').get(),
+      db.collection('market_data').doc('broker_rates_open').get(),
       db.collection('market_data').doc('fred_cache').get(),
       db.collection('market_data').doc('fred_history').get(),
       db.collection('daily_anchors').doc(today).get(),
     ]);
 
-    const mbs      = mbsSnap.exists      ? mbsSnap.data()      : {};
-    const shadow   = shadowSnap.exists   ? shadowSnap.data()   : {};
-    const us30y    = us30ySnap.exists    ? us30ySnap.data()    : {};
-    const futures  = futuresSnap.exists  ? futuresSnap.data()  : {};
-    const broker   = brokerSnap.exists   ? brokerSnap.data()   : {};
-    const fred     = fredSnap.exists     ? fredSnap.data()     : {};
-    const fredHist = fredHistSnap.exists ? fredHistSnap.data() : {};
-    const anchor   = anchorSnap.exists   ? anchorSnap.data()   : {};
+    const mbs        = mbsSnap.exists        ? mbsSnap.data()        : {};
+    const shadow     = shadowSnap.exists     ? shadowSnap.data()     : {};
+    const us30y      = us30ySnap.exists      ? us30ySnap.data()      : {};
+    const futures    = futuresSnap.exists    ? futuresSnap.data()    : {};
+    const broker     = brokerSnap.exists     ? brokerSnap.data()     : {};
+    const brokerPrev = brokerPrevSnap.exists ? brokerPrevSnap.data() : {};
+    const brokerOpen = brokerOpenSnap.exists ? brokerOpenSnap.data() : {};
+    const fred       = fredSnap.exists       ? fredSnap.data()       : {};
+    const fredHist   = fredHistSnap.exists   ? fredHistSnap.data()   : {};
+    const anchor     = anchorSnap.exists     ? anchorSnap.data()     : {};
 
     // ── MBS Products ─────────────────────────────────────────────────────────
     const mbsProducts = {
@@ -332,21 +337,80 @@ exports.handler = async function (event) {
 
     // bpi: Broker Price Index — rates.html bpiPanelA + bpiPanelB
     // Option A = best-qualified borrower (760 FICO, 75 LTV)
-    // Option B = estimated +0.250 LLPA premium (720 FICO, 80 LTV) until second scenario is parsed
+    // Option B = actual B-paper scenario (720 FICO, 80 LTV) from broker_rates _b fields
+    //
+    // change   = day-over-day: broker_rates vs broker_rates_prev (written by run_all.py)
+    // change_intraday = same-day: broker_rates vs broker_rates_open (first run of day)
+    const bpiDiff = (cur, prev) => {
+      const c = num(cur), p = num(prev);
+      if (c === null || p === null) return null;
+      return Math.round((c - p) * 1000) / 1000;
+    };
+
     const bpiRates = [
-      {product: '30Y CONV',    rate: num(broker.conv30)},
-      {product: '30Y FHA',     rate: num(broker.fha30)},
-      {product: '30Y VA',      rate: num(broker.va30)},
-      {product: '30Y JUMBO',   rate: num(broker.jumbo30),   tag: 'JUMBO'},
-      {product: '15Y CONV',    rate: num(broker.conv15)},
-      {product: '30Y CASHOUT', rate: num(broker.cashout30), tag: 'CASHOUT'},
-      {product: '30Y INVEST',  rate: num(broker.inv30),     tag: 'INVEST'},
+      {
+        product: '30Y CONV',
+        rate:            num(broker.conv30),
+        change:          bpiDiff(broker.conv30,    brokerPrev.conv30),
+        change_intraday: bpiDiff(broker.conv30,    brokerOpen.conv30),
+      },
+      {
+        product: '30Y FHA',
+        rate:            num(broker.fha30),
+        change:          bpiDiff(broker.fha30,     brokerPrev.fha30),
+        change_intraday: bpiDiff(broker.fha30,     brokerOpen.fha30),
+      },
+      {
+        product: '30Y VA',
+        rate:            num(broker.va30),
+        change:          bpiDiff(broker.va30,      brokerPrev.va30),
+        change_intraday: bpiDiff(broker.va30,      brokerOpen.va30),
+      },
+      {
+        product: '30Y JUMBO',
+        rate:            num(broker.jumbo30),
+        change:          bpiDiff(broker.jumbo30,   brokerPrev.jumbo30),
+        change_intraday: bpiDiff(broker.jumbo30,   brokerOpen.jumbo30),
+        tag: 'JUMBO',
+      },
+      {
+        product: '15Y CONV',
+        rate:            num(broker.conv15),
+        change:          bpiDiff(broker.conv15,    brokerPrev.conv15),
+        change_intraday: bpiDiff(broker.conv15,    brokerOpen.conv15),
+      },
+      {
+        product: '30Y CASHOUT',
+        rate:            num(broker.cashout30),
+        change:          bpiDiff(broker.cashout30, brokerPrev.cashout30),
+        change_intraday: bpiDiff(broker.cashout30, brokerOpen.cashout30),
+        tag: 'CASHOUT',
+      },
+      {
+        product: '30Y INVEST',
+        rate:            num(broker.inv30),
+        change:          bpiDiff(broker.inv30,     brokerPrev.inv30),
+        change_intraday: bpiDiff(broker.inv30,     brokerOpen.inv30),
+        tag: 'INVEST',
+      },
+    ].filter(r => r.rate !== null);
+
+    // B-paper: use actual parsed _b fields; fall back to A + 0.250 if not yet available
+    const bpiRates_b = [
+      {product: '30Y CONV',    rate: num(broker.conv30_b)    ?? (num(broker.conv30)    !== null ? +(num(broker.conv30)    + 0.250).toFixed(3) : null), change: bpiDiff(broker.conv30_b,    brokerPrev.conv30_b),    change_intraday: bpiDiff(broker.conv30_b,    brokerOpen.conv30_b)},
+      {product: '30Y FHA',     rate: num(broker.fha30_b)     ?? (num(broker.fha30)     !== null ? +(num(broker.fha30)     + 0.250).toFixed(3) : null), change: bpiDiff(broker.fha30_b,     brokerPrev.fha30_b),     change_intraday: bpiDiff(broker.fha30_b,     brokerOpen.fha30_b)},
+      {product: '30Y VA',      rate: num(broker.va30_b)      ?? (num(broker.va30)      !== null ? +(num(broker.va30)      + 0.250).toFixed(3) : null), change: bpiDiff(broker.va30_b,      brokerPrev.va30_b),      change_intraday: bpiDiff(broker.va30_b,      brokerOpen.va30_b)},
+      {product: '30Y JUMBO',   rate: num(broker.jumbo30_b)   ?? (num(broker.jumbo30)   !== null ? +(num(broker.jumbo30)   + 0.250).toFixed(3) : null), change: bpiDiff(broker.jumbo30_b,   brokerPrev.jumbo30_b),   change_intraday: bpiDiff(broker.jumbo30_b,   brokerOpen.jumbo30_b),   tag: 'JUMBO'},
+      {product: '15Y CONV',    rate: num(broker.conv15_b)    ?? (num(broker.conv15)    !== null ? +(num(broker.conv15)    + 0.250).toFixed(3) : null), change: bpiDiff(broker.conv15_b,    brokerPrev.conv15_b),    change_intraday: bpiDiff(broker.conv15_b,    brokerOpen.conv15_b)},
+      {product: '30Y CASHOUT', rate: num(broker.cashout30_b) ?? (num(broker.cashout30) !== null ? +(num(broker.cashout30) + 0.250).toFixed(3) : null), change: bpiDiff(broker.cashout30_b, brokerPrev.cashout30_b), change_intraday: bpiDiff(broker.cashout30_b, brokerOpen.cashout30_b), tag: 'CASHOUT'},
+      {product: '30Y INVEST',  rate: num(broker.inv30_b)     ?? (num(broker.inv30)     !== null ? +(num(broker.inv30)     + 0.250).toFixed(3) : null), change: bpiDiff(broker.inv30_b,     brokerPrev.inv30_b),     change_intraday: bpiDiff(broker.inv30_b,     brokerOpen.inv30_b),     tag: 'INVEST'},
     ].filter(r => r.rate !== null);
 
     const bpi = {
       rates:   bpiRates,
-      rates_b: bpiRates.map(r => ({ ...r, rate: +(r.rate + 0.250).toFixed(3) })),
+      rates_b: bpiRates_b,
       as_of:   broker.as_of || null,
+      has_prev: brokerPrevSnap.exists,   // lets UI know if change data is real
     };
 
     return {
