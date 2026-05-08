@@ -193,9 +193,7 @@ body:before{
 .rate-hint{font-size:9px;opacity:.35;margin-left:3px}
 .rate-row-val-cell{text-align:right}
 .rate-row-chg-cell{text-align:right}
-/* BPI: hide change column — no prior day data available */
-.rate-card.bpi .rate-row{grid-template-columns:1fr 96px 0}
-.rate-card.bpi .rate-row-chg-cell{visibility:hidden;width:0;overflow:hidden;padding:0}
+
 
 /* COMPACT (2-product freddie) */
 .rate-card.freddie .rate-row{grid-template-columns:1fr 110px 72px;padding:16px 18px}
@@ -700,15 +698,14 @@ function buildRateRow(r, source) {
   valCell.className = 'rate-row-val-cell';
   valCell.innerHTML = `<span class="rate-val">${r.rate.toFixed(3)}</span><span class="rate-pct">%</span>`;
 
-  const change = r.change || 0;
+  // change: use day-over-day if available, fall back to null (shows dash)
+  const change = (r.change !== undefined && r.change !== null) ? r.change : null;
   const chgCell = document.createElement('div');
   chgCell.className = 'rate-row-chg-cell';
-  // BPI has no prior-day data yet — suppress the change column entirely
-  const isBpi = source === 'bpi' || source === 'bpi_b';
-  if (isBpi) {
-    chgCell.innerHTML = '';
+  if (change === null) {
+    chgCell.innerHTML = '<div class="rate-chg neu">—</div>';
   } else {
-    chgCell.innerHTML = `<div class="rate-chg ${change>0?'pos':change<0?'neg':'neu'}">${change>0?'▲ +':change<0?'▼ ':''}${change.toFixed(3)}</div>`;
+    chgCell.innerHTML = `<div class="rate-chg ${change>0?'pos':change<0?'neg':'neu'}">${change>0?'▲ +':change<0?'▼ ':'— '}${Math.abs(change).toFixed(3)}</div>`;
   }
 
   row.appendChild(prodCell);
