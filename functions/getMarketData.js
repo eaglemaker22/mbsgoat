@@ -1,3 +1,4 @@
+// v2.1 — shaped UI blocks, BPI prev/open change tracking
 const admin = require('firebase-admin');
 
 if (!admin.apps.length) {
