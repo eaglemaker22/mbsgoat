@@ -127,7 +127,7 @@ exports.handler = async function (event) {
     const [
       mbsSnap, shadowSnap, us30ySnap, futuresSnap,
       brokerSnap, brokerPrevSnap, brokerOpenSnap,
-      fredSnap, fredHistSnap, anchorSnap
+      fredSnap, fredHistSnap, anchorSnap, riskSnap
     ] = await Promise.all([
       db.collection('market_data').doc('mbs_products').get(),
       db.collection('market_data').doc('shadow_bonds').get(),
@@ -139,6 +139,7 @@ exports.handler = async function (event) {
       db.collection('market_data').doc('fred_cache').get(),
       db.collection('market_data').doc('fred_history').get(),
       db.collection('daily_anchors').doc(today).get(),
+      db.collection('market_data').doc('risk_indicators').get(),
     ]);
 
     const mbs        = mbsSnap.exists        ? mbsSnap.data()        : {};
@@ -151,6 +152,7 @@ exports.handler = async function (event) {
     const fred       = fredSnap.exists       ? fredSnap.data()       : {};
     const fredHist   = fredHistSnap.exists   ? fredHistSnap.data()   : {};
     const anchor     = anchorSnap.exists     ? anchorSnap.data()     : {};
+    const risk = riskSnap.exists ? riskSnap.data() : {};
 
     // ── MBS Products ─────────────────────────────────────────────────────────
     const mbsProducts = {
@@ -203,6 +205,15 @@ exports.handler = async function (event) {
 
       last_updated:     shadow.last_updated     || null,
       trading_day_date: shadow.trading_day_date || null,
+    };
+
+    // ── Risk Indicators ─────────────────────────────────────────────────────
+    const riskIndicators = {
+      vix_current:       num(risk.VIX_Current),
+      oil_brent_current: num(risk.Oil_Brent_Current),
+      oil_brent_change:  num(risk.Oil_Brent_Daily_Change),
+
+      last_updated:      risk.last_updated || null,
     };
 
     // ── US 30Y ────────────────────────────────────────────────────────────────
@@ -430,6 +441,8 @@ exports.handler = async function (event) {
         shadowBonds,
         us30y:          us30yData,
         treasuryFutures,
+        riskIndicators,
+        
         // ── Rate sheet data ──
         brokerRates,
         bpi,
