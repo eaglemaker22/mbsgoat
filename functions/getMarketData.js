@@ -1,0 +1,12 @@
+{
+  "name": "mbsgoat-functions",
+  "version": "1.0.0",
+  "description": "Netlify functions for MBSGOAT Terminal",
+  "engines": {
+    "node": "18"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "node-fetch": "^2.7.0"
+  }
+}
