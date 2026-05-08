@@ -185,18 +185,17 @@ exports.handler = async function (event) {
 
     // ── Shadow Bonds ─────────────────────────────────────────────────────────
     const shadowBonds = {
-      const shadowBonds = {
-        us10y_current: num(shadow.US10Y_Current),
-        us10y_open:    num(shadow.US10Y_Open),
-        us10y_delta:   deltaBps(shadow.US10Y_Current, shadow.US10Y_Open),
+      us10y_current: num(shadow.US10Y_Current),
+      us10y_open:    num(shadow.US10Y_Open),
+      us10y_delta:   deltaBps(shadow.US10Y_Current, shadow.US10Y_Open),
 
-        us2y_current: num(shadow.US2Y_Current),
-        us2y_open:    num(shadow.US2Y_Open),
-        us2y_delta:   deltaBps(shadow.US2Y_Current, shadow.US2Y_Open),
+      us2y_current: num(shadow.US2Y_Current),
+      us2y_open:    num(shadow.US2Y_Open),
+      us2y_delta:   deltaBps(shadow.US2Y_Current, shadow.US2Y_Open),
 
-        mbb_current: num(shadow.MBB_Current),
-        mbb_open:    num(shadow.MBB_Open),
-        mbb_delta:   delta(shadow.MBB_Current, shadow.MBB_Open),
+      mbb_current: num(shadow.MBB_Current),
+      mbb_open:    num(shadow.MBB_Open),
+      mbb_delta:   delta(shadow.MBB_Current, shadow.MBB_Open),
 
       predicted_umbs55_delta: num(shadow.predicted_umbs55_delta)
                            ?? num(shadow.regression_predicted_umbs55_delta)
