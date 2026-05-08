@@ -191,28 +191,32 @@ select{
 }
 .foot div:nth-child(2){text-align:center}.foot div:nth-child(3){text-align:right}
 
-/* MARKET PULSE V1 */
+/* MARKET PULSE V2 — NO SPARKLINES */
 .pulse{
   min-height:372px;
-  padding:58px 20px 18px;
+  padding:58px 18px 18px;
 }
 .real{
-  position:absolute;right:23px;top:21px;color:var(--green);
-  font:11px JetBrains Mono,monospace;letter-spacing:.13em;
+  position:absolute;
+  right:23px;
+  top:21px;
+  color:var(--green);
+  font:11px JetBrains Mono,monospace;
+  letter-spacing:.13em;
 }
 .pulse-body{
   position:relative;
   z-index:2;
 }
 .pulse-section{
-  margin-bottom:13px;
+  margin-bottom:14px;
 }
 .pulse-section:last-child{margin-bottom:0}
 .pulse-section-title{
   display:flex;
   align-items:center;
   gap:9px;
-  margin:0 0 6px;
+  margin:0 0 8px;
   font:700 9px JetBrains Mono,monospace;
   color:#6f879a;
   letter-spacing:.18em;
@@ -224,90 +228,101 @@ select{
   flex:1;
   background:linear-gradient(90deg,rgba(125,174,212,.20),transparent);
 }
-.pulse-row{
+.pulse-card-grid{
   display:grid;
-  grid-template-columns:34px 96px 78px 1fr 72px;
-  align-items:center;
-  min-height:31px;
-  gap:9px;
-  border-radius:8px;
-  padding:4px 8px;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+}
+.pulse-tile{
+  min-height:78px;
+  border-radius:10px;
+  padding:10px 11px 9px;
   font-family:JetBrains Mono,monospace;
-  background:rgba(255,255,255,.014);
-  border:1px solid rgba(135,178,210,.055);
-  margin-bottom:5px;
-}
-.pulse-row.primary{
-  min-height:38px;
   background:
-    linear-gradient(90deg,rgba(66,243,111,.08),rgba(66,243,111,.018)),
-    rgba(255,255,255,.018);
-  border-color:rgba(66,243,111,.20);
-  box-shadow:0 0 26px rgba(66,243,111,.045), inset 0 1px 0 rgba(255,255,255,.035);
+    linear-gradient(180deg,rgba(255,255,255,.027),rgba(255,255,255,.010)),
+    rgba(2,8,14,.26);
+  border:1px solid rgba(135,178,210,.105);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
 }
-.pulse-ico{
-  width:24px;height:24px;border-radius:7px;
-  display:grid;place-items:center;
-  color:#cbd8e1;
-  background:rgba(255,255,255,.035);
-  border:1px solid rgba(135,178,210,.11);
-  font-size:13px;
+.pulse-tile.primary{
+  background:
+    linear-gradient(180deg,rgba(66,243,111,.075),rgba(66,243,111,.018)),
+    rgba(2,8,14,.28);
+  border-color:rgba(66,243,111,.22);
 }
-.pulse-row.primary .pulse-ico{
-  color:var(--green);
-  border-color:rgba(66,243,111,.28);
-  box-shadow:0 0 16px rgba(66,243,111,.10);
+.pulse-tile.danger{
+  border-color:rgba(255,74,67,.18);
 }
-.pulse-name{
+.pulse-tile-header{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  align-items:flex-start;
+}
+.pulse-symbol{
   color:#e5eef4;
-  font-size:11px;
+  font-size:12px;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+  font-weight:800;
+}
+.pulse-category{
+  display:block;
+  margin-top:3px;
+  color:#61778a;
+  font-size:8px;
+  letter-spacing:.10em;
+  font-weight:600;
+}
+.pulse-type{
+  color:#607789;
+  border:1px solid rgba(135,178,210,.13);
+  background:rgba(255,255,255,.025);
+  border-radius:5px;
+  padding:3px 5px;
+  font-size:8px;
   letter-spacing:.10em;
   text-transform:uppercase;
-  font-weight:700;
+  white-space:nowrap;
 }
-.pulse-sub{
+.pulse-tile-main{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:8px;
+  margin-top:10px;
+}
+.pulse-tile-value{
+  color:#eaf5fa;
+  font-size:19px;
+  line-height:1;
+  font-weight:800;
+  letter-spacing:-.03em;
+}
+.pulse-tile-change{
+  text-align:right;
+  font-size:12px;
+  line-height:1.1;
+  font-weight:800;
+  white-space:nowrap;
+}
+.pulse-note{
+  margin-top:7px;
   color:#61778a;
   font-size:8px;
   letter-spacing:.08em;
-  display:block;
-  margin-top:2px;
-  font-weight:500;
-}
-.pulse-value{
-  text-align:right;
-  color:#eaf5fa;
-  font-size:13px;
-  font-weight:700;
-}
-.pulse-row.primary .pulse-value{
-  font-size:16px;
-}
-.pulse-spark{
-  width:100%;
-  height:20px;
-}
-.pulse-spark path{
-  fill:none;
-  stroke:currentColor;
-  stroke-width:2.2;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-  filter:drop-shadow(0 0 4px currentColor);
-}
-.pulse-change{
-  text-align:right;
-  font-size:11px;
-  font-weight:700;
-}
-.pulse-row.primary .pulse-change{
-  font-size:13px;
+  text-transform:uppercase;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .green{color:var(--green)}
 .red{color:var(--red)}
 .cyan{color:var(--cyan)}
+.amber{color:var(--amber)}
 .muted{color:#718698}
 .pulse-footer{
-  margin-top:10px;
+  margin-top:11px;
   display:flex;
   justify-content:space-between;
   gap:12px;
@@ -421,23 +436,18 @@ select{
 
     <div class="pulse-body">
       <div class="pulse-section">
-        <div class="pulse-section-title">Mortgage Market</div>
-        <div id="pulseMortgage"></div>
+        <div class="pulse-section-title">Core Mortgage Market</div>
+        <div class="pulse-card-grid" id="pulseCore"></div>
       </div>
 
       <div class="pulse-section">
-        <div class="pulse-section-title">Treasury Market</div>
-        <div id="pulseTreasury"></div>
-      </div>
-
-      <div class="pulse-section">
-        <div class="pulse-section-title">Risk Sentiment</div>
-        <div id="pulseRisk"></div>
+        <div class="pulse-section-title">Macro / Risk Layer</div>
+        <div class="pulse-card-grid" id="pulseMacro"></div>
       </div>
 
       <div class="pulse-footer">
         <span id="pulseUpdated">Updated —</span>
-        <span>Color logic: mortgage ↑ green · yields ↑ red</span>
+        <span>Yields ↑ red · Mortgage prices ↑ green</span>
       </div>
     </div>
   </aside>
@@ -626,10 +636,14 @@ const fallbackMarketData = {
     zt_delta: 0.031,
     last_updated: "2026-05-06T21:48:02Z"
   },
+  riskIndicators: {
+    vix_current: 17.23,
+    oil_brent_current: 100.54,
+    oil_brent_change: null,
+    last_updated: "2026-05-06T21:48:02Z"
+  },
   liveStocks: {
-    DIA: { current: "387.42", change: "-0.92", percentChange: "-0.24%" },
-    VIX: null,
-    OIL: null
+    DIA: { current: "387.42", change: "-0.92", percentChange: "-0.24%" }
   }
 };
 
@@ -673,27 +687,32 @@ function formatYieldChangeBps(v){
   const sign = n > 0 ? "+" : "";
   return `${sign}${n.toFixed(1)} bps`;
 }
-function sparkline(colorClass){
-  return `<svg class="pulse-spark ${colorClass}" viewBox="0 0 120 24" preserveAspectRatio="none">
-    <path d="M2,17 L11,15 L20,18 L30,11 L40,13 L50,8 L61,12 L72,10 L84,15 L96,11 L108,14 L118,9"/>
-  </svg>`;
-}
-function pulseRow(item){
+function pulseTile(item){
   const cls = directionClass(item.change, item.inverted);
   const primary = item.primary ? " primary" : "";
+  const danger = cls === "red" ? " danger" : "";
   return `
-    <div class="pulse-row${primary}">
-      <div class="pulse-ico">${item.icon}</div>
-      <div class="pulse-name">${item.name}<span class="pulse-sub">${item.sub || ""}</span></div>
-      <div class="pulse-value">${item.value}</div>
-      ${sparkline(cls)}
-      <div class="pulse-change ${cls}">${item.changeText}</div>
+    <div class="pulse-tile${primary}${danger}">
+      <div class="pulse-tile-header">
+        <div>
+          <div class="pulse-symbol">${item.name}</div>
+          <span class="pulse-category">${item.sub || ""}</span>
+        </div>
+        <div class="pulse-type">${item.type || "LIVE"}</div>
+      </div>
+      <div class="pulse-tile-main">
+        <div class="pulse-tile-value">${item.value}</div>
+        <div class="pulse-tile-change ${cls}">${item.changeText}</div>
+      </div>
+      <div class="pulse-note">${item.note || ""}</div>
     </div>`;
 }
+
 function normalizePulseData(market, stocks){
   const mbs = market.mbsProducts || {};
   const shadow = market.shadowBonds || {};
   const futures = market.treasuryFutures || {};
+  const risk = market.riskIndicators || {};
   const stock = stocks || market.liveStocks || {};
 
   const umbs50Price = pickNumber(mbs.umbs50_price, mbs.UMBS_5_0_Current);
@@ -709,6 +728,7 @@ function normalizePulseData(market, stocks){
     mbs.GNMA_5_0_Daily_Change,
     calcDelta(mbs.gnma50_price ?? mbs.GNMA_5_0_Current, mbs.gnma50_open ?? mbs.GNMA_5_0_Open)
   );
+  const gnma50Spread = pickNumber(mbs.gnma50_spread, mbs.GNMA_5_0_vs_UMBS_5_0_spread);
 
   const mbbCurrent = pickNumber(shadow.mbb_current, shadow.MBB_Current);
   const mbbDelta = pickNumber(
@@ -745,90 +765,100 @@ function normalizePulseData(market, stocks){
     calcDelta(futures.zt_current ?? futures.ZT1_Current, futures.zt_open ?? futures.ZT1_Open)
   );
 
+  const vixCurrent = pickNumber(risk.vix_current, risk.VIX_Current, stock.VIX?.current);
+  const oilCurrent = pickNumber(risk.oil_brent_current, risk.Oil_Brent_Current, stock.OIL?.current);
+  const oilChange = pickNumber(risk.oil_brent_change, risk.Oil_Brent_Daily_Change, stock.OIL?.change);
+
   return {
-    mortgage: [
+    core: [
       {
-        icon:"▣", name:"UMBS 5.0", sub:"Conventional",
+        name:"UMBS 5.0", sub:"Conventional MBS", type:"MBS",
         value:formatPrice(umbs50Price,3),
         change:umbs50Delta,
         changeText:umbs50Delta === null ? "current only" : formatChange(umbs50Delta,3),
+        note:"Primary cash market input",
         primary:true
       },
       {
-        icon:"▤", name:"GNMA 5.0", sub:"Govy",
+        name:"GNMA 5.0", sub:"Govy MBS", type:"MBS",
         value:formatPrice(gnma50Price,3),
         change:gnma50Delta,
         changeText:gnma50Delta === null
-          ? (mbs.gnma50_spread !== null && mbs.gnma50_spread !== undefined
-              ? `Spread ${formatChange(mbs.gnma50_spread,2)}`
-              : "current only")
-          : formatChange(gnma50Delta,3)
+          ? (gnma50Spread !== null ? `Spread ${formatChange(gnma50Spread,2)}` : "current only")
+          : formatChange(gnma50Delta,3),
+        note:"Spread shown when open/change unavailable"
       },
       {
-        icon:"◈", name:"MBB", sub:"ETF Proxy",
-        value:formatPrice(mbbCurrent,2),
-        change:mbbDelta,
-        changeText:mbbDelta === null ? "current only" : formatChange(mbbDelta,2)
-      }
-    ],
-    treasury: [
-      {
-        icon:"10", name:"US10Y", sub:"Yield",
+        name:"US10Y", sub:"Benchmark Yield", type:"Yield",
         value:formatPrice(us10yCurrent,3) + "%",
         change:us10yDelta,
         changeText:us10yDelta === null ? "current only" : formatYieldChangeBps(us10yDelta),
+        note:"Rate sheet sensitivity anchor",
         inverted:true,
         primary:true
       },
       {
-        icon:"2Y", name:"US2Y", sub:"Yield",
+        name:"US2Y", sub:"Fed Path", type:"Yield",
         value:formatPrice(us2yCurrent,3) + "%",
         change:us2yDelta,
         changeText:us2yDelta === null ? "current only" : formatYieldChangeBps(us2yDelta),
+        note:"Front-end rate expectation pressure",
         inverted:true
       },
       {
-        icon:"ZN", name:"ZN", sub:"10Y Future",
+        name:"MBB", sub:"ETF Proxy", type:"ETF",
+        value:formatPrice(mbbCurrent,2),
+        change:mbbDelta,
+        changeText:mbbDelta === null ? "current only" : formatChange(mbbDelta,2),
+        note:"Public mortgage bond proxy"
+      }
+    ],
+    macro: [
+      {
+        name:"ZN", sub:"10Y Future", type:"Futures",
         value:formatPrice(znCurrent,3),
         change:znDelta,
-        changeText:znDelta === null ? "current only" : formatChange(znDelta,3)
+        changeText:znDelta === null ? "current only" : formatChange(znDelta,3),
+        note:"CME 10-year futures signal"
       },
       {
-        icon:"ZT", name:"ZT", sub:"2Y Future",
+        name:"ZT", sub:"2Y Future", type:"Futures",
         value:formatPrice(ztCurrent,3),
         change:ztDelta,
-        changeText:ztDelta === null ? "current only" : formatChange(ztDelta,3)
-      }
-    ],
-    risk: [
+        changeText:ztDelta === null ? "current only" : formatChange(ztDelta,3),
+        note:"Short Treasury futures signal"
+      },
       {
-        icon:"VX", name:"VIX", sub:"TV Scrape Needed",
-        value: stock.VIX ? formatPrice(stock.VIX.current,2) : "—",
-        change: stock.VIX ? cleanNumber(stock.VIX.change) : null,
-        changeText: stock.VIX ? formatChange(stock.VIX.change,2) : "pending",
+        name:"VIX", sub:"Volatility", type:"Risk",
+        value:formatPrice(vixCurrent,2),
+        change:null,
+        changeText:"live",
+        note:"Risk appetite / volatility gauge",
         inverted:true
       },
       {
-        icon:"Oil", name:"Oil", sub:"TV Scrape Needed",
-        value: stock.OIL ? formatPrice(stock.OIL.current,2) : "—",
-        change: stock.OIL ? cleanNumber(stock.OIL.change) : null,
-        changeText: stock.OIL ? formatChange(stock.OIL.change,2) : "pending",
+        name:"Brent", sub:"Oil", type:"Macro",
+        value:formatPrice(oilCurrent,2),
+        change:oilChange,
+        changeText:oilChange === null ? "current only" : formatChange(oilChange,2),
+        note:"Energy inflation pressure",
         inverted:true
       },
       {
-        icon:"DJ", name:"DIA", sub:"Dow ETF Proxy",
+        name:"DIA", sub:"Dow ETF Proxy", type:"Equity",
         value: stock.DIA ? formatPrice(stock.DIA.current,2) : "—",
         change: stock.DIA ? cleanNumber(stock.DIA.change) : null,
-        changeText: stock.DIA ? formatChange(stock.DIA.change,2) : "pending"
+        changeText: stock.DIA ? formatChange(stock.DIA.change,2) : "pending",
+        note:"Broad risk sentiment proxy"
       }
     ],
-    updated: mbs.last_updated || shadow.last_updated || futures.last_updated || market.fetchedAt || null
+    updated: mbs.last_updated || shadow.last_updated || futures.last_updated || risk.last_updated || market.fetchedAt || null
   };
 }
+
 function renderMarketPulse(data){
-  document.getElementById("pulseMortgage").innerHTML = data.mortgage.map(pulseRow).join("");
-  document.getElementById("pulseTreasury").innerHTML = data.treasury.map(pulseRow).join("");
-  document.getElementById("pulseRisk").innerHTML = data.risk.map(pulseRow).join("");
+  document.getElementById("pulseCore").innerHTML = data.core.map(pulseTile).join("");
+  document.getElementById("pulseMacro").innerHTML = data.macro.map(pulseTile).join("");
   document.getElementById("pulseUpdated").textContent = data.updated ? `Updated ${data.updated}` : "Updated —";
 }
 async function loadMarketPulse(){
