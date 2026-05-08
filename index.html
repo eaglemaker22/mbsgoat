@@ -758,7 +758,11 @@ function normalizePulseData(market, stocks){
         icon:"▤", name:"GNMA 5.0", sub:"Govy",
         value:formatPrice(gnma50Price,3),
         change:gnma50Delta,
-        changeText:gnma50Delta === null ? "current only" : formatChange(gnma50Delta,3)
+        changeText:gnma50Delta === null
+          ? (mbs.gnma50_spread !== null && mbs.gnma50_spread !== undefined
+              ? `Spread ${formatChange(mbs.gnma50_spread,2)}`
+              : "current only")
+          : formatChange(gnma50Delta,3)
       },
       {
         icon:"◈", name:"MBB", sub:"ETF Proxy",
