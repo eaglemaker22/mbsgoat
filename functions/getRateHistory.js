@@ -19,8 +19,8 @@ const SERIES_MAP = {
   'mcr:30Y FHA':     'OBMMIFHA30YF',
   'mcr:30Y VA':      'OBMMIVA30YF',
   'mcr:30Y JUMBO':   'OBMMIJUMBO30YF',
-  'freddie:30Y CONV':'MORTGAGE30US',
-  'freddie:15Y CONV':'MORTGAGE15US',
+  'freddie:30Y FIXED':'MORTGAGE30US',
+  'freddie:15Y FIXED':'MORTGAGE15US',
 };
 
 exports.handler = async function (event) {
