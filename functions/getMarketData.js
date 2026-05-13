@@ -127,7 +127,7 @@ exports.handler = async function (event) {
     const [
       mbsSnap, shadowSnap, us30ySnap, futuresSnap,
       brokerSnap, brokerPrevSnap, brokerOpenSnap,
-      fredSnap, fredHistSnap, anchorSnap, riskSnap
+      fredSnap, fredHistSnap, anchorSnap, riskSnap, lockiqSnap
     ] = await Promise.all([
       db.collection('market_data').doc('mbs_products').get(),
       db.collection('market_data').doc('shadow_bonds').get(),
@@ -140,6 +140,7 @@ exports.handler = async function (event) {
       db.collection('market_data').doc('fred_history').get(),
       db.collection('daily_anchors').doc(today).get(),
       db.collection('market_data').doc('risk_indicators').get(),
+      db.collection('market_data').doc('lockiq_signal').get(),
     ]);
 
     const mbs        = mbsSnap.exists        ? mbsSnap.data()        : {};
@@ -152,7 +153,8 @@ exports.handler = async function (event) {
     const fred       = fredSnap.exists       ? fredSnap.data()       : {};
     const fredHist   = fredHistSnap.exists   ? fredHistSnap.data()   : {};
     const anchor     = anchorSnap.exists     ? anchorSnap.data()     : {};
-    const risk = riskSnap.exists ? riskSnap.data() : {};
+    const risk       = riskSnap.exists       ? riskSnap.data()       : {};
+    const lockiq     = lockiqSnap.exists     ? lockiqSnap.data()     : {};
 
     // ── MBS Products ─────────────────────────────────────────────────────────
     const mbsProducts = {
@@ -430,6 +432,40 @@ exports.handler = async function (event) {
       has_prev: brokerPrevSnap.exists,   // lets UI know if change data is real
     };
 
+    // lockiqSignal: live projection engine output — used by the main dashboard
+    // Positive bps/dollars = borrower pricing worse. Negative = borrower pricing better.
+    const lockiqSignal = {
+      conv_change_bps: lockiq.conv_change_bps ?? null,
+      fha_change_bps:  lockiq.fha_change_bps  ?? null,
+      va_change_bps:   lockiq.va_change_bps   ?? null,
+
+      conv_change_bps_raw: lockiq.conv_change_bps_raw ?? null,
+      fha_change_bps_raw:  lockiq.fha_change_bps_raw  ?? null,
+      va_change_bps_raw:   lockiq.va_change_bps_raw   ?? null,
+
+      conv_dollars_per_100k: lockiq.conv_dollars_per_100k ?? null,
+      fha_dollars_per_100k:  lockiq.fha_dollars_per_100k  ?? null,
+      va_dollars_per_100k:   lockiq.va_dollars_per_100k   ?? null,
+
+      conv_signal: lockiq.conv_signal ?? null,
+      fha_signal:  lockiq.fha_signal  ?? null,
+      va_signal:   lockiq.va_signal   ?? null,
+
+      anchor_time:   lockiq.anchor_time   ?? null,
+      anchor_source: lockiq.anchor_source ?? null,
+      data_quality:  lockiq.data_quality  ?? null,
+      model_version: lockiq.model_version ?? null,
+      last_updated:  lockiq.last_updated  ?? null,
+
+      missing_inputs: lockiq.missing_inputs || [],
+      warnings:       lockiq.warnings || [],
+
+      deltas:          lockiq.deltas || {},
+      current_values:  lockiq.current_values || {},
+      anchor_values:   lockiq.anchor_values || {},
+      product_details: lockiq.product_details || {},
+    };
+
     return {
       statusCode: 200,
       headers: HEADERS,
@@ -452,6 +488,7 @@ exports.handler = async function (event) {
         fredCache,
         // ── Signal engine ──
         dailyAnchor,
+        lockiqSignal,
       }),
     };
 
