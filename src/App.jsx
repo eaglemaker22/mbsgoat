@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 
-const API_URL = "https://www.mbsgoat.com/.netlify/functions/getMarketData";
+const API_URL = "/.netlify/functions/getMarketData";
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -25,6 +25,13 @@ function fmtSigned(value, digits = 2, suffix = "") {
   return `${sign}${n.toFixed(digits)}${suffix}`;
 }
 
+function toneText(value, inverse = false) {
+  const n = asNum(value);
+  if (n === null || n === 0) return "text-slate-300";
+  const worse = inverse ? n < 0 : n > 0;
+  return worse ? "text-red-300" : "text-green-300";
+}
+
 function impactTone(value, inverse = false) {
   const n = asNum(value);
   if (n === null || n === 0) return "text-slate-300 border-slate-700 bg-slate-900/50";
@@ -41,6 +48,7 @@ function Pill({ children, tone = "neutral" }) {
     warn: "border-yellow-500/60 bg-yellow-950/40 text-yellow-300",
     neutral: "border-cyan-700/60 bg-cyan-950/30 text-cyan-200",
   };
+
   return (
     <span className={cx("rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.16em]", styles[tone])}>
       {children}
@@ -61,24 +69,28 @@ function Shell({ children }) {
 function TopNav({ data, loading }) {
   const quality = data?.lockiqSignal?.data_quality || "LOADING";
   const qualityTone = quality === "GOOD" ? "good" : quality === "LIMITED" ? "warn" : "neutral";
+
   return (
     <header className="mb-4 rounded-2xl border border-cyan-900/70 bg-slate-950/90 px-4 py-3 shadow-[0_0_30px_rgba(0,180,255,0.08)]">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="font-mono text-xl font-black tracking-[0.18em] text-cyan-200">MBSGOAT</div>
-          <div className="text-xs uppercase tracking-[0.26em] text-slate-500">LockIQ Market Dashboard</div>
+          <div className="text-xs uppercase tracking-[0.26em] text-slate-500">LockIQ Beta 2 Dashboard</div>
         </div>
+
         <nav className="flex flex-wrap gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-300">
           <span className="rounded-lg border border-cyan-700/60 bg-cyan-950/30 px-3 py-2 text-cyan-200">Dashboard</span>
           <span className="rounded-lg border border-slate-800 px-3 py-2">Markets</span>
           <span className="rounded-lg border border-slate-800 px-3 py-2">Rates</span>
           <span className="rounded-lg border border-slate-800 px-3 py-2">Econ Report</span>
         </nav>
+
         <div className="flex flex-wrap items-center gap-2">
           <Pill tone={qualityTone}>Quality: {quality}</Pill>
           <Pill tone="neutral">{loading ? "Refreshing" : "Live API"}</Pill>
         </div>
       </div>
+
       <div className="mt-3 grid gap-2 border-t border-cyan-950 pt-3 text-xs text-slate-400 md:grid-cols-3">
         <div>Fetched: <span className="font-mono text-slate-200">{data?.fetchedAt || "—"}</span></div>
         <div>LockIQ Updated: <span className="font-mono text-slate-200">{data?.lockiqSignal?.last_updated || "—"}</span></div>
@@ -105,6 +117,7 @@ function LockIQPanel({ signal }) {
           <div className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">LockIQ Rate Impact</div>
           <h1 className={cx("mt-1 font-mono text-4xl font-black tracking-tight md:text-5xl", headlineTone)}>{headline}</h1>
         </div>
+
         <div className="text-sm text-slate-400">
           <div>Model: <span className="font-mono text-slate-200">{signal?.model_version || "—"}</span></div>
           <div>Source: <span className="font-mono text-slate-200">{signal?.anchor_source || "—"}</span></div>
@@ -118,6 +131,7 @@ function LockIQPanel({ signal }) {
               <div className="font-mono text-lg font-black tracking-[0.18em]">{row.label}</div>
               <div className="text-xs font-bold uppercase tracking-[0.16em]">{row.text || "—"}</div>
             </div>
+
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div>
                 <div className="text-xs uppercase tracking-[0.18em] text-slate-400">BPS</div>
@@ -125,7 +139,7 @@ function LockIQPanel({ signal }) {
               </div>
               <div>
                 <div className="text-xs uppercase tracking-[0.18em] text-slate-400">$/100k</div>
-                <div className="font-mono text-3xl font-black">{fmtSigned(row.dollars, 0, "")}</div>
+                <div className="font-mono text-3xl font-black">{fmtSigned(row.dollars, 0)}</div>
               </div>
             </div>
           </div>
@@ -161,13 +175,16 @@ function MarketPulse({ data }) {
         <h2 className="text-sm font-black uppercase tracking-[0.22em] text-cyan-300">Market Pulse</h2>
         <span className="text-xs text-slate-500">Current / Open / Change</span>
       </div>
+
       <div className="divide-y divide-cyan-950/80">
         {rows.map((row) => (
           <div key={row.label} className="grid grid-cols-[1fr_80px_80px_90px] items-center gap-2 py-2 text-sm">
             <div className="font-bold tracking-[0.08em] text-slate-200">{row.label}</div>
             <div className="text-right font-mono text-slate-200">{row.current}</div>
             <div className="text-right font-mono text-slate-500">{row.open}</div>
-            <div className={cx("text-right font-mono font-black", impactTone(row.delta, row.inverse).split(" ")[0])}>{fmtSigned(row.delta, row.suffix.includes("bps") ? 1 : 3, row.suffix)}</div>
+            <div className={cx("text-right font-mono font-black", toneText(row.delta, row.inverse))}>
+              {fmtSigned(row.delta, row.suffix.includes("bps") ? 1 : 3, row.suffix)}
+            </div>
           </div>
         ))}
       </div>
@@ -194,6 +211,7 @@ function SignalDrivers({ signal }) {
         <h2 className="text-sm font-black uppercase tracking-[0.22em] text-cyan-300">Signal Drivers</h2>
         <span className="text-xs text-slate-500">Current vs Anchor</span>
       </div>
+
       <div className="overflow-x-auto">
         <table className="w-full min-w-[560px] text-sm">
           <thead className="text-xs uppercase tracking-[0.16em] text-slate-500">
@@ -210,7 +228,9 @@ function SignalDrivers({ signal }) {
                 <td className="py-2 font-bold text-slate-200">{row.label}</td>
                 <td className="py-2 text-right font-mono">{fmt(current[row.key], row.key === "zn" ? 5 : 3)}</td>
                 <td className="py-2 text-right font-mono text-slate-500">{fmt(anchor[row.key], row.key === "zn" ? 5 : 3)}</td>
-                <td className={cx("py-2 text-right font-mono font-black", impactTone(deltas[row.deltaKey]).split(" ")[0])}>{fmtSigned(deltas[row.deltaKey], 1, row.suffix)}</td>
+                <td className={cx("py-2 text-right font-mono font-black", toneText(deltas[row.deltaKey]))}>
+                  {fmtSigned(deltas[row.deltaKey], 1, row.suffix)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -222,12 +242,14 @@ function SignalDrivers({ signal }) {
 
 function BPITable({ bpi }) {
   const rows = bpi?.rates || [];
+
   return (
     <section className="rounded-2xl border border-cyan-900/70 bg-slate-950/90 p-4">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-black uppercase tracking-[0.22em] text-cyan-300">Broker Pricing Index</h2>
         <span className="text-xs text-slate-500">As of {bpi?.as_of || "—"}</span>
       </div>
+
       <div className="overflow-x-auto">
         <table className="w-full min-w-[620px] text-sm">
           <thead className="text-xs uppercase tracking-[0.16em] text-slate-500">
@@ -243,8 +265,8 @@ function BPITable({ bpi }) {
               <tr key={row.product}>
                 <td className="py-2 font-bold text-slate-200">{row.product}</td>
                 <td className="py-2 text-right font-mono">{fmt(row.rate, 3, "%")}</td>
-                <td className={cx("py-2 text-right font-mono font-black", impactTone(row.change).split(" ")[0])}>{fmtSigned(row.change, 3, "%")}</td>
-                <td className={cx("py-2 text-right font-mono font-black", impactTone(row.change_intraday).split(" ")[0])}>{fmtSigned(row.change_intraday, 3, "%")}</td>
+                <td className={cx("py-2 text-right font-mono font-black", toneText(row.change))}>{fmtSigned(row.change, 3, "%")}</td>
+                <td className={cx("py-2 text-right font-mono font-black", toneText(row.change_intraday))}>{fmtSigned(row.change_intraday, 3, "%")}</td>
               </tr>
             ))}
           </tbody>
@@ -258,6 +280,7 @@ function PricingTimeline({ signal }) {
   const conv = asNum(signal?.conv_dollars_per_100k) ?? 0;
   const fha = asNum(signal?.fha_dollars_per_100k) ?? 0;
   const va = asNum(signal?.va_dollars_per_100k) ?? 0;
+
   const chartData = useMemo(() => [
     { label: "Anchor", value: 0 },
     { label: "CONV", value: conv },
@@ -268,9 +291,10 @@ function PricingTimeline({ signal }) {
   return (
     <section className="rounded-2xl border border-cyan-900/70 bg-slate-950/90 p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-black uppercase tracking-[0.22em] text-cyan-300">Today&apos;s Pricing Timeline</h2>
+        <h2 className="text-sm font-black uppercase tracking-[0.22em] text-cyan-300">Today's Pricing Timeline</h2>
         <span className="text-xs text-slate-500">Phase 1 placeholder</span>
       </div>
+
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 18, bottom: 8, left: 0 }}>
@@ -288,6 +312,7 @@ function PricingTimeline({ signal }) {
           </AreaChart>
         </ResponsiveContainer>
       </div>
+
       <p className="mt-2 text-xs text-slate-500">Next phase: wire this to getIntradayHistory for true intraday LockIQ movement.</p>
     </section>
   );
