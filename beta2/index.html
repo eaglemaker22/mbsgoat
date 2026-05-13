@@ -1,0 +1,1176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MBSGOAT | LockIQ Beta 2</title>
+  <style>
+    :root {
+      --bg: #020811;
+      --panel: #071522;
+      --panel-2: #091b2b;
+      --border: rgba(56, 189, 248, 0.32);
+      --border-soft: rgba(148, 163, 184, 0.16);
+      --text: #e8f8ff;
+      --muted: #78909c;
+      --cyan: #22d3ee;
+      --green: #39ff88;
+      --red: #ff4b5f;
+      --yellow: #facc15;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: var(--font-sans);
+      background:
+        radial-gradient(circle at top left, rgba(34, 211, 238, 0.14), transparent 30rem),
+        radial-gradient(circle at top right, rgba(57, 255, 136, 0.08), transparent 26rem),
+        linear-gradient(180deg, #03111f 0%, #020811 45%, #01040a 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.026) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, black, transparent 90%);
+    }
+
+    .page {
+      width: min(1540px, calc(100vw - 24px));
+      margin: 0 auto;
+      padding-bottom: 24px;
+    }
+
+    .topbar {
+      height: 74px;
+      display: grid;
+      grid-template-columns: 260px 250px 1fr 390px;
+      align-items: center;
+      gap: 18px;
+      padding: 0 14px;
+      background: rgba(2, 9, 17, 0.86);
+      border-bottom: 1px solid var(--border-soft);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      border-right: 1px solid var(--border-soft);
+    }
+
+    .logo-main {
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: 0.27em;
+      line-height: 1;
+    }
+
+    .logo-main span { color: var(--cyan); }
+
+    .logo-sub {
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .market-state {
+      border-right: 1px solid var(--border-soft);
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .market-state .main {
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .market-state .main::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 9px;
+    }
+
+    .market-state.open .main { color: var(--green); }
+    .market-state.closed .main { color: var(--red); }
+
+    .market-state.open .main::before {
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green);
+    }
+
+    .market-state.closed .main::before {
+      background: var(--red);
+      box-shadow: 0 0 12px var(--red);
+    }
+
+    .market-state .sub {
+      margin-top: 9px;
+      padding-left: 20px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 38px;
+      height: 74px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.20em;
+      color: #9fb4bf;
+    }
+
+    .nav span {
+      height: 74px;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .nav .active {
+      color: var(--text);
+      font-weight: 900;
+    }
+
+    .nav .active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 3px;
+      background: var(--cyan);
+      box-shadow: 0 0 14px rgba(34, 211, 238, 0.75);
+    }
+
+    .clock-panel {
+      display: grid;
+      grid-template-columns: 1fr 170px;
+      gap: 16px;
+      align-items: center;
+      border-left: 1px solid var(--border-soft);
+      padding-left: 18px;
+    }
+
+    .zones {
+      display: flex;
+      gap: 7px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .zone-btn {
+      width: 39px;
+      height: 30px;
+      border: 1px solid rgba(125, 211, 252, 0.22);
+      border-radius: 7px;
+      background: rgba(8, 25, 40, 0.72);
+      color: #7f96a4;
+      font-family: var(--font-mono);
+      cursor: pointer;
+    }
+
+    .zone-btn.active {
+      color: #02111d;
+      background: linear-gradient(180deg, #67e8f9, #0ea5e9);
+      border-color: #67e8f9;
+      font-weight: 950;
+      box-shadow: 0 0 18px rgba(34, 211, 238, 0.38);
+    }
+
+    .zone-label {
+      width: 100%;
+      margin-top: 4px;
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .clock-wrap {
+      text-align: right;
+      font-family: var(--font-mono);
+    }
+
+    .clock {
+      font-size: 21px;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+    }
+
+    .date {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.17em;
+      text-transform: uppercase;
+    }
+
+    .error {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,75,95,0.55);
+      background: rgba(255,75,95,0.10);
+      color: #ffc8d0;
+      font-family: var(--font-mono);
+    }
+
+    .hero-grid {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1.65fr 1fr;
+      gap: 18px;
+    }
+
+    .mid-grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1.08fr 0.78fr 1.05fr;
+      gap: 18px;
+    }
+
+    .risk-grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr) 210px;
+      gap: 10px;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(34,211,238,0.055), transparent 28%),
+        linear-gradient(180deg, rgba(7,20,34,0.96), rgba(3,10,18,0.96));
+      box-shadow: 0 0 36px rgba(34,211,238,0.08);
+    }
+
+    .panel-head {
+      min-height: 50px;
+      padding: 14px 20px 11px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid rgba(125,211,252,0.10);
+    }
+
+    .panel-title {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+    }
+
+    .panel-sub,
+    .panel-meta {
+      margin-top: 7px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .panel-meta {
+      margin-top: 0;
+      white-space: nowrap;
+    }
+
+    .lock-body {
+      min-height: 340px;
+      padding: 24px 20px 18px;
+      display: grid;
+      grid-template-columns: 210px 1fr 360px;
+      gap: 22px;
+      align-items: center;
+    }
+
+    .orb {
+      width: 196px;
+      height: 196px;
+      border: 2px solid rgba(57,255,136,0.72);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green);
+      font-size: 70px;
+      background:
+        radial-gradient(circle at center, rgba(57,255,136,0.24), rgba(57,255,136,0.06) 52%, transparent 73%);
+      box-shadow:
+        inset 0 0 28px rgba(57,255,136,0.22),
+        0 0 34px rgba(57,255,136,0.23);
+    }
+
+    .lock-center {
+      text-align: center;
+      font-family: var(--font-mono);
+    }
+
+    .direction {
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: 0.30em;
+      text-transform: uppercase;
+    }
+
+    .big-money {
+      margin-top: 12px;
+      font-size: 92px;
+      line-height: 0.92;
+      font-weight: 950;
+      letter-spacing: -0.08em;
+    }
+
+    .money-label {
+      margin-top: 10px;
+      color: #c7d7df;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .big-bps {
+      margin-top: 22px;
+      font-size: 25px;
+      font-weight: 950;
+      letter-spacing: 0.14em;
+    }
+
+    .anchor-text {
+      margin-top: 9px;
+      color: #bdcbd3;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.20em;
+    }
+
+    .bias {
+      min-height: 245px;
+      padding-left: 22px;
+      border-left: 1px solid rgba(125,211,252,0.14);
+      font-family: var(--font-mono);
+    }
+
+    .bias-title {
+      color: var(--green);
+      font-size: 17px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.21em;
+    }
+
+    .bias-copy {
+      margin-top: 16px;
+      color: #dfeaf0;
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    .bias-stats {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(125,211,252,0.14);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      text-align: center;
+    }
+
+    .stat-k {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .stat-v {
+      margin-top: 8px;
+      font-size: 18px;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+    }
+
+    .pulse {
+      padding: 0 18px 18px;
+    }
+
+    .pulse-row {
+      min-height: 47px;
+      display: grid;
+      grid-template-columns: 36px 1fr 96px 84px;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(125,211,252,0.12);
+      font-family: var(--font-mono);
+    }
+
+    .pulse-row:last-child { border-bottom: none; }
+
+    .icon {
+      color: #d9e6ec;
+      opacity: 0.75;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .pulse-name {
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+    }
+
+    .pulse-val,
+    .pulse-chg {
+      text-align: right;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .panel-body {
+      padding: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+    }
+
+    th, td {
+      padding: 9px 8px;
+      border-bottom: 1px solid rgba(125,211,252,0.10);
+      text-align: right;
+      font-size: 12px;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+
+    th {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    td {
+      color: #edf9ff;
+      font-weight: 850;
+    }
+
+    .highlight {
+      background: rgba(250,204,21,0.09);
+      box-shadow: inset 0 0 0 1px rgba(250,204,21,0.25);
+    }
+
+    .star { color: var(--yellow); font-size: 16px; }
+
+    .bpi-top {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .bpi-box {
+      border: 1px solid rgba(125,211,252,0.16);
+      border-radius: 8px;
+      padding: 12px;
+      background: rgba(4,15,27,0.70);
+      font-family: var(--font-mono);
+    }
+
+    .bpi-box .label {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+    }
+
+    .bpi-box .value {
+      margin-top: 7px;
+      font-size: 31px;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+    }
+
+    .timeline-box {
+      height: 295px;
+      border: 1px solid rgba(125,211,252,0.14);
+      border-radius: 10px;
+      background: rgba(1,8,14,0.42);
+      padding: 10px;
+      position: relative;
+    }
+
+    .timeline-box svg {
+      width: 100%;
+      height: 210px;
+      overflow: visible;
+    }
+
+    .chart-label {
+      font-family: var(--font-mono);
+      fill: #a7bbc6;
+      font-size: 12px;
+    }
+
+    .timeline-impact {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 12px;
+      height: 56px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      border: 1px solid rgba(57,255,136,0.42);
+      border-radius: 8px;
+      background: rgba(57,255,136,0.08);
+      font-family: var(--font-mono);
+    }
+
+    .timeline-impact > div { padding: 0 18px; }
+    .timeline-impact > div:first-child { border-right: 1px solid rgba(125,211,252,0.16); }
+
+    .impact-big {
+      color: var(--green);
+      font-size: 30px;
+      font-weight: 950;
+    }
+
+    .risk-card,
+    .sentiment {
+      height: 105px;
+      border: 1px solid rgba(125,211,252,0.18);
+      border-radius: 10px;
+      padding: 13px 14px;
+      background: rgba(4,14,25,0.84);
+      font-family: var(--font-mono);
+    }
+
+    .risk-name {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .risk-value {
+      margin-top: 8px;
+      font-size: 22px;
+      font-weight: 850;
+    }
+
+    .risk-change {
+      margin-top: 7px;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .sentiment { text-align: center; }
+    .score { margin-top: 12px; color: var(--green); font-size: 38px; font-weight: 950; }
+
+    .green { color: var(--green) !important; }
+    .red { color: var(--red) !important; }
+    .yellow { color: var(--yellow) !important; }
+    .cyan { color: var(--cyan) !important; }
+
+    .loading { opacity: 0.72; }
+
+    @media (max-width: 1250px) {
+      .topbar, .hero-grid, .mid-grid, .risk-grid { grid-template-columns: 1fr; }
+      .topbar { height: auto; padding: 14px; }
+      .logo, .market-state, .clock-panel { border: none; padding: 0; }
+      .nav { height: auto; justify-content: flex-start; gap: 18px; }
+      .nav span { height: 36px; }
+      .lock-body { grid-template-columns: 1fr; height: auto; }
+      .orb { margin: 0 auto; }
+      .bias { border-left: none; padding-left: 0; }
+    }
+
+    @media (max-width: 700px) {
+      .page { width: calc(100vw - 14px); }
+      .clock-panel { grid-template-columns: 1fr; }
+      .zones { justify-content: flex-start; }
+      .zone-label, .clock-wrap { text-align: left; }
+      .big-money { font-size: 64px; }
+      .pulse-row { grid-template-columns: 28px 1fr 76px 68px; }
+      th, td { padding: 8px 5px; font-size: 11px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page" id="page">
+    <header class="topbar">
+      <div class="logo">
+        <div class="logo-main">MBS<span>GOAT</span></div>
+        <div class="logo-sub">LockIQ Terminal</div>
+      </div>
+
+      <div class="market-state closed" id="marketState">
+        <div class="main" id="marketStateMain">Loading</div>
+        <div class="sub">8:00 AM - 5:00 PM ET</div>
+      </div>
+
+      <nav class="nav">
+        <span class="active">Dashboard</span>
+        <span>Markets</span>
+        <span>Rates</span>
+        <span>Econ Reports</span>
+      </nav>
+
+      <div class="clock-panel">
+        <div>
+          <div class="zones">
+            <button class="zone-btn" data-zone="America/Los_Angeles" data-label="Pacific Time" data-short="PT">PT</button>
+            <button class="zone-btn" data-zone="America/Denver" data-label="Mountain Time" data-short="MT">MT</button>
+            <button class="zone-btn" data-zone="America/Chicago" data-label="Central Time" data-short="CT">CT</button>
+            <button class="zone-btn active" data-zone="America/New_York" data-label="Eastern Time" data-short="ET">ET</button>
+          </div>
+          <div class="zone-label" id="zoneLabel">Eastern Time</div>
+        </div>
+
+        <div class="clock-wrap">
+          <div class="clock" id="clock">--:--:-- -- ET</div>
+          <div class="date" id="date">--</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="error" id="errorBox"></div>
+
+    <section class="hero-grid">
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">LockIQ Signal</div>
+            <div class="panel-sub" id="lockSub">Since anchor</div>
+          </div>
+          <div class="panel-meta" id="lockUpdated">Updated --</div>
+        </div>
+
+        <div class="lock-body">
+          <div class="orb">♉</div>
+
+          <div class="lock-center">
+            <div class="direction cyan" id="heroDirection">Waiting</div>
+            <div class="big-money cyan" id="heroMoney">$--</div>
+            <div class="money-label">Per $100k Loan</div>
+            <div class="big-bps cyan" id="heroBps">-- BPS</div>
+            <div class="anchor-text" id="heroAnchor">Since --</div>
+          </div>
+
+          <div class="bias">
+            <div class="bias-title" id="biasTitle">Float Bias</div>
+            <div class="bias-copy" id="biasCopy">Waiting for LockIQ model output.</div>
+            <div class="bias-stats">
+              <div>
+                <div class="stat-k">Reprice Risk</div>
+                <div class="stat-v yellow" id="repriceRisk">--</div>
+              </div>
+              <div>
+                <div class="stat-k">Confidence</div>
+                <div class="stat-v green" id="confidence">--</div>
+              </div>
+              <div>
+                <div class="stat-k">Volatility</div>
+                <div class="stat-v cyan" id="volatility">--</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Market Pulse</div>
+            <div class="panel-sub">Live drivers feeding LockIQ</div>
+          </div>
+          <div class="panel-meta green">● Real-Time</div>
+        </div>
+        <div class="pulse" id="marketPulse"></div>
+      </article>
+    </section>
+
+    <section class="mid-grid">
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Rate Impact by Note Rate</div>
+            <div class="panel-sub">Directional estimate, not lender guarantee</div>
+          </div>
+          <div class="panel-meta" id="rateSince">Since anchor</div>
+        </div>
+        <div class="panel-body">
+          <table>
+            <thead>
+              <tr>
+                <th>Note Rate</th>
+                <th>BPS Change</th>
+                <th>$ / $100k</th>
+                <th>Signal</th>
+              </tr>
+            </thead>
+            <tbody id="rateRows"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Broker Pricing Index</div>
+            <div class="panel-sub">UWM + Rocket benchmark</div>
+          </div>
+          <div class="panel-meta" id="bpiAsOf">As of --</div>
+        </div>
+        <div class="panel-body">
+          <div class="bpi-top">
+            <div class="bpi-box">
+              <div class="label">Best Execution</div>
+              <div class="value green" id="bestExec">--%</div>
+            </div>
+            <div class="bpi-box">
+              <div class="label">Market Direction</div>
+              <div class="value green" id="bpiDirection">--</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Rate</th>
+                <th>Day</th>
+                <th>Intra</th>
+              </tr>
+            </thead>
+            <tbody id="bpiRows"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Today's Pricing Timeline</div>
+            <div class="panel-sub">Phase 1 visual // true intraday next</div>
+          </div>
+          <div class="panel-meta">Since anchor</div>
+        </div>
+        <div class="panel-body">
+          <div class="timeline-box">
+            <svg id="timelineSvg" viewBox="0 0 520 210" preserveAspectRatio="none"></svg>
+            <div class="timeline-impact">
+              <div>
+                <div class="panel-meta" id="timelineSince">Since Anchor</div>
+                <div class="panel-meta" id="timelineMode">Rates --</div>
+              </div>
+              <div>
+                <div class="impact-big" id="timelineMoney">$--</div>
+                <div class="panel-meta">Per $100k Loan</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="risk-grid" id="riskGrid"></section>
+  </div>
+
+  <script>
+    const API_URL = "/.netlify/functions/getMarketData";
+
+    const zones = {
+      "America/Los_Angeles": "PT",
+      "America/Denver": "MT",
+      "America/Chicago": "CT",
+      "America/New_York": "ET"
+    };
+
+    let activeZone = localStorage.getItem("mbsgoat-timezone") || "America/New_York";
+
+    const el = (id) => document.getElementById(id);
+
+    function asNumber(value) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function fmt(value, decimals = 2, suffix = "") {
+      const parsed = asNumber(value);
+      if (parsed === null) return "--";
+      return parsed.toFixed(decimals) + suffix;
+    }
+
+    function signed(value, decimals = 2, suffix = "") {
+      const parsed = asNumber(value);
+      if (parsed === null) return "--";
+      return (parsed > 0 ? "+" : "") + parsed.toFixed(decimals) + suffix;
+    }
+
+    function money(value) {
+      const parsed = asNumber(value);
+      if (parsed === null) return "$--";
+      if (parsed === 0) return "$0";
+      return (parsed > 0 ? "+$" : "-$") + Math.abs(parsed).toFixed(0);
+    }
+
+    function tone(value, inverse = false) {
+      const parsed = asNumber(value);
+      if (parsed === null || parsed === 0) return "cyan";
+      const bad = inverse ? parsed < 0 : parsed > 0;
+      return bad ? "red" : "green";
+    }
+
+    function signalTone(signal) {
+      const s = String(signal || "").toUpperCase();
+      if (s === "WORSE") return "red";
+      if (s === "BETTER") return "green";
+      return "cyan";
+    }
+
+    function signalText(signal) {
+      const s = String(signal || "").toUpperCase();
+      if (s === "WORSE") return "MARKET WORSE";
+      if (s === "BETTER") return "MARKET BETTER";
+      return "MARKET FLAT";
+    }
+
+    function updateClock() {
+      const short = zones[activeZone] || "ET";
+      const now = new Date();
+
+      el("clock").textContent = new Intl.DateTimeFormat("en-US", {
+        timeZone: activeZone,
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+      }).format(now) + " " + short;
+
+      el("date").textContent = new Intl.DateTimeFormat("en-US", {
+        timeZone: activeZone,
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      }).format(now).toUpperCase();
+
+      const etHour = Number(new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric",
+        hourCycle: "h23"
+      }).format(now));
+
+      const etDay = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        weekday: "short"
+      }).format(now);
+
+      const isOpen = !["Sat", "Sun"].includes(etDay) && etHour >= 8 && etHour < 17;
+      el("marketState").className = "market-state " + (isOpen ? "open" : "closed");
+      el("marketStateMain").textContent = isOpen ? "Live Market" : "After Hours";
+    }
+
+    function setupTimezoneButtons() {
+      document.querySelectorAll(".zone-btn").forEach((button) => {
+        const zone = button.dataset.zone;
+        button.classList.toggle("active", zone === activeZone);
+
+        if (zone === activeZone) {
+          el("zoneLabel").textContent = button.dataset.label;
+        }
+
+        button.addEventListener("click", () => {
+          activeZone = zone;
+          localStorage.setItem("mbsgoat-timezone", activeZone);
+
+          document.querySelectorAll(".zone-btn").forEach((b) => {
+            b.classList.remove("active");
+          });
+
+          button.classList.add("active");
+          el("zoneLabel").textContent = button.dataset.label;
+          updateClock();
+        });
+      });
+    }
+
+    function riskMode(data) {
+      const vix = asNumber(data?.riskIndicators?.vix_current);
+      const us10 = asNumber(data?.shadowBonds?.us10y_delta);
+
+      if (vix !== null && vix > 22) return "Elevated";
+      if (us10 !== null && us10 > 5) return "Defensive";
+      return "Favorable";
+    }
+
+    function marketTrend(data) {
+      const umbs = asNumber(data?.mbsProducts?.umbs50_delta);
+      const us10 = asNumber(data?.shadowBonds?.us10y_delta);
+
+      if ((umbs !== null && umbs > 0) || (us10 !== null && us10 < 0)) return "Positive";
+      if ((umbs !== null && umbs < 0) || (us10 !== null && us10 > 0)) return "Negative";
+      return "Neutral";
+    }
+
+    function renderPulse(data) {
+      const rows = [
+        ["▥", "US 10Y Yield", fmt(data?.shadowBonds?.us10y_current, 3, "%"), data?.shadowBonds?.us10y_delta, " bps", false],
+        ["▦", "UMBS 5.0", fmt(data?.mbsProducts?.umbs50_price, 2), data?.mbsProducts?.umbs50_delta, "", true],
+        ["▣", "MBS (MBB)", fmt(data?.shadowBonds?.mbb_current, 2), data?.shadowBonds?.mbb_delta, "", true],
+        ["◷", "Volatility (VIX)", fmt(data?.riskIndicators?.vix_current, 2), null, "", false],
+        ["◇", "Risk Mode", riskMode(data), null, "", false],
+        ["↗", "Market Trend", marketTrend(data), null, "", false]
+      ];
+
+      el("marketPulse").innerHTML = rows.map((row) => {
+        const deltaText = row[3] === null || row[3] === undefined
+          ? ""
+          : signed(row[3], row[4].includes("bps") ? 1 : 3, row[4]);
+
+        return `
+          <div class="pulse-row">
+            <div class="icon">${row[0]}</div>
+            <div class="pulse-name">${row[1]}</div>
+            <div class="pulse-val ${row[3] === null ? "green" : tone(row[3], row[5])}">${row[2]}</div>
+            <div class="pulse-chg ${tone(row[3], row[5])}">${deltaText}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderRates(signal) {
+      const baseBps = asNumber(signal?.conv_change_bps) ?? 0;
+      const baseMoney = asNumber(signal?.conv_dollars_per_100k) ?? 0;
+      const sig = signal?.conv_signal || "FLAT";
+      const rates = ["5.750", "5.875", "6.000", "6.125", "6.250", "6.375", "6.500", "6.625", "6.750"];
+
+      el("rateRows").innerHTML = rates.map((rate) => {
+        const isBase = rate === "6.375";
+        const adjustment = (Number(rate) - 6.375) * 1.4;
+        const bps = baseBps + adjustment;
+        const dollars = baseMoney + adjustment * 10;
+
+        return `
+          <tr class="${isBase ? "highlight" : ""}">
+            <td class="${isBase ? "star" : ""}">${isBase ? "★ " : ""}${rate}%</td>
+            <td class="${tone(bps)}">${signed(bps, 1)}</td>
+            <td class="${tone(dollars)}">${money(dollars)}</td>
+            <td class="${signalTone(sig)}">${isBase ? "STRONG" : sig}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderBpi(data) {
+      const rows = data?.bpi?.rates || [];
+      const conv = rows.find((row) => row.product === "30Y CONV") || rows[0] || {};
+      const intraday = asNumber(conv?.change_intraday) ?? 0;
+      const direction = intraday > 0 ? "WORSE ↑" : intraday < 0 ? "BETTER ↓" : "FLAT";
+
+      el("bpiAsOf").textContent = "As of " + (data?.bpi?.as_of || "--");
+      el("bestExec").textContent = conv?.rate ? fmt(conv.rate, 3, "%") : "--";
+      el("bpiDirection").textContent = direction;
+      el("bpiDirection").className = "value " + tone(intraday);
+
+      el("bpiRows").innerHTML = rows.slice(0, 7).map((row) => `
+        <tr>
+          <td>${row.product}</td>
+          <td>${fmt(row.rate, 3, "%")}</td>
+          <td class="${tone(row.change)}">${signed(row.change, 3, "%")}</td>
+          <td class="${tone(row.change_intraday)}">${signed(row.change_intraday, 3, "%")}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderTimeline(signal) {
+      const points = [
+        ["8:00", 0],
+        ["CONV", asNumber(signal?.conv_dollars_per_100k) ?? 0],
+        ["FHA", asNumber(signal?.fha_dollars_per_100k) ?? 0],
+        ["VA", asNumber(signal?.va_dollars_per_100k) ?? 0]
+      ].map((point, index) => ({
+        label: point[0],
+        value: point[1],
+        x: [35, 190, 340, 490][index],
+        y: Math.max(25, Math.min(160, 145 - point[1] * 2.1))
+      }));
+
+      const line = points.map((point, index) => {
+        return `${index ? "L" : "M"} ${point.x} ${point.y}`;
+      }).join(" ");
+
+      const area = `${line} L 490 168 L 35 168 Z`;
+
+      el("timelineSvg").innerHTML = `
+        <defs>
+          <linearGradient id="timelineFill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#39ff88" stop-opacity="0.42"/>
+            <stop offset="100%" stop-color="#39ff88" stop-opacity="0.02"/>
+          </linearGradient>
+        </defs>
+        <line x1="25" y1="168" x2="505" y2="168" stroke="rgba(125,211,252,.22)" />
+        <line x1="25" y1="108" x2="505" y2="108" stroke="rgba(125,211,252,.12)" />
+        <line x1="25" y1="48" x2="505" y2="48" stroke="rgba(125,211,252,.12)" />
+        <path d="${area}" fill="url(#timelineFill)" />
+        <path d="${line}" fill="none" stroke="#39ff88" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        ${points.map((point) => `
+          <circle cx="${point.x}" cy="${point.y}" r="5" fill="#39ff88"/>
+          <text x="${point.x}" y="194" text-anchor="middle" class="chart-label">${point.label}</text>
+          <text x="${point.x}" y="${point.y - 12}" text-anchor="middle" class="chart-label">${money(point.value)}</text>
+        `).join("")}
+      `;
+
+      el("timelineMoney").textContent = money(signal?.conv_dollars_per_100k);
+      el("timelineMode").textContent = String(signal?.conv_signal || "RATES --").toUpperCase();
+      el("timelineSince").textContent = "Since " + (signal?.anchor_time || "Anchor");
+    }
+
+    function sentimentScore(data) {
+      let score = 50;
+      const umbs = asNumber(data?.mbsProducts?.umbs50_delta);
+      const us10 = asNumber(data?.shadowBonds?.us10y_delta);
+      const mbb = asNumber(data?.shadowBonds?.mbb_delta);
+
+      if (umbs !== null) score += umbs * 90;
+      if (us10 !== null) score -= us10 * 2.5;
+      if (mbb !== null) score += mbb * 20;
+
+      return Math.max(0, Math.min(99, Math.round(score)));
+    }
+
+    function renderRisk(data) {
+      const items = [
+        ["US10Y", fmt(data?.shadowBonds?.us10y_current, 3, "%"), signed(data?.shadowBonds?.us10y_delta, 1, " bps"), tone(data?.shadowBonds?.us10y_delta)],
+        ["US30Y", fmt(data?.us30y?.us30y_current, 3, "%"), signed(data?.us30y?.us30y_delta, 1, " bps"), tone(data?.us30y?.us30y_delta)],
+        ["MBB", fmt(data?.shadowBonds?.mbb_current, 3), signed(data?.shadowBonds?.mbb_delta, 3), tone(data?.shadowBonds?.mbb_delta, true)],
+        ["ZN", fmt(data?.treasuryFutures?.zn_current, 5), signed(data?.treasuryFutures?.zn_delta, 4), tone(data?.treasuryFutures?.zn_delta, true)],
+        ["VIX", fmt(data?.riskIndicators?.vix_current, 2), "risk", "yellow"],
+        ["Brent", fmt(data?.riskIndicators?.oil_brent_current, 2), signed(data?.riskIndicators?.oil_brent_change, 2), tone(data?.riskIndicators?.oil_brent_change)]
+      ];
+
+      el("riskGrid").innerHTML = items.map((item) => `
+        <div class="risk-card">
+          <div class="risk-name">${item[0]}</div>
+          <div class="risk-value">${item[1]}</div>
+          <div class="risk-change ${item[3]}">${item[2]}</div>
+        </div>
+      `).join("") + `
+        <div class="sentiment">
+          <div class="risk-name">Market Sentiment</div>
+          <div class="score">${sentimentScore(data)}</div>
+        </div>
+      `;
+    }
+
+    function render(data) {
+      const signal = data?.lockiqSignal || {};
+      const mainSignal = signal?.conv_signal || "FLAT";
+      const mainTone = signalTone(mainSignal);
+
+      el("heroDirection").textContent = signalText(mainSignal);
+      el("heroDirection").className = "direction " + mainTone;
+      el("heroMoney").textContent = money(signal?.conv_dollars_per_100k);
+      el("heroMoney").className = "big-money " + mainTone;
+      el("heroBps").textContent = signed(signal?.conv_change_bps, 1, " BPS");
+      el("heroBps").className = "big-bps " + mainTone;
+      el("heroAnchor").textContent = "Since " + (signal?.anchor_time || "--");
+      el("lockSub").textContent = "Anchor source: " + (signal?.anchor_source || "--");
+      el("lockUpdated").textContent = "Updated " + (signal?.last_updated || "--");
+      el("rateSince").textContent = "Since " + (signal?.anchor_time || "--");
+
+      el("biasTitle").textContent = mainSignal === "WORSE"
+        ? "Lock Caution"
+        : mainSignal === "BETTER"
+          ? "Float Bias"
+          : "Neutral Bias";
+
+      el("biasCopy").textContent = mainSignal === "WORSE"
+        ? "Mortgage pricing has deteriorated since the anchor. Watch for lender reprices or pricing drag."
+        : mainSignal === "BETTER"
+          ? "Mortgage pricing has improved since the anchor. Some lenders may not have fully repriced better."
+          : "Market movement is muted. LockIQ is not showing a strong directional edge.";
+
+      el("repriceRisk").textContent = mainSignal === "WORSE"
+        ? "HIGH"
+        : mainSignal === "BETTER"
+          ? "MODERATE"
+          : "LOW";
+
+      el("confidence").textContent = signal?.data_quality === "GOOD"
+        ? "72%"
+        : signal?.data_quality === "LIMITED"
+          ? "45%"
+          : "60%";
+
+      el("volatility").textContent = riskMode(data) === "Elevated" ? "HIGH" : "LOW";
+
+      renderPulse(data);
+      renderRates(signal);
+      renderBpi(data);
+      renderTimeline(signal);
+      renderRisk(data);
+    }
+
+    async function loadData() {
+      el("page").classList.add("loading");
+      el("errorBox").style.display = "none";
+
+      try {
+        const response = await fetch(API_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error("API " + response.status);
+        const data = await response.json();
+        render(data);
+      } catch (error) {
+        el("errorBox").style.display = "block";
+        el("errorBox").textContent = "API error: " + (error?.message || error);
+      } finally {
+        el("page").classList.remove("loading");
+      }
+    }
+
+    setupTimezoneButtons();
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    loadData();
+    setInterval(loadData, 60000);
+  </script>
+</body>
+</html>
