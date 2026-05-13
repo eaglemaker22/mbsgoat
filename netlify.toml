@@ -1,8 +1,12 @@
 [build]
+  base = "."
   publish = "."
-  functions = "netlify/functions"
+  command = "echo 'Deploying static site'"
+  environment = { NODE_VERSION = "18" }
 
-[[redirects]]
-  from = "/beta2"
-  to = "/beta2/"
-  status = 301
+[functions]
+  directory = "functions"
+  node_bundler = "esbuild"
+
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
