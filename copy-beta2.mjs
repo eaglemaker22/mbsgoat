@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 
-const distRoot = path.resolve("dist");
 const sourceHtmlFolder = path.resolve("dist/beta2");
 const sourceAssetsFolder = path.resolve("dist/assets");
 
@@ -16,10 +15,10 @@ if (!fs.existsSync(sourceHtmlFolder)) {
 fs.rmSync(targetBeta2Folder, { recursive: true, force: true });
 fs.mkdirSync(targetBeta2Folder, { recursive: true });
 
-// Copy built /beta2/index.html into repo /beta2/
+// Copy built beta2/index.html into repo beta2/
 fs.cpSync(sourceHtmlFolder, targetBeta2Folder, { recursive: true });
 
-// Copy Vite-built assets into /beta2/assets/
+// Copy Vite-built CSS/JS assets into beta2/assets/
 if (fs.existsSync(sourceAssetsFolder)) {
   fs.mkdirSync(targetAssetsFolder, { recursive: true });
   fs.cpSync(sourceAssetsFolder, targetAssetsFolder, { recursive: true });
