@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 
-const API_URL = "/.netlify/functions/getMarketData";
+const API_URL = "https://www.mbsgoat.com/.netlify/functions/getMarketData";
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
