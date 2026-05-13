@@ -57,7 +57,7 @@
     <section class="risk" id="riskStrip"></section>
   </div>
   <script>
-    const API_URL="https://www.mbsgoat.com/.netlify/functions/getMarketData";
+    const API_URL="/.netlify/functions/getMarketData";
     const $=id=>document.getElementById(id);
     const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null};
     const fmt=(v,d=2,s="")=>num(v)===null?"--":num(v).toFixed(d)+s;
