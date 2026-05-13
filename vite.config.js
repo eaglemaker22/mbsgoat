@@ -6,10 +6,12 @@ export default defineConfig({
   base: "/beta2/",
   plugins: [react()],
   build: {
-    outDir: "beta2",
-    emptyOutDir: false,
+    outDir: "dist",
+    emptyOutDir: true,
     rollupOptions: {
-      input: resolve(__dirname, "beta2/index.html")
+      input: {
+        beta2: resolve(__dirname, "beta2/index.html")
+      }
     }
   }
 });
