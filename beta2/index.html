@@ -374,6 +374,124 @@
       letter-spacing: 0.20em;
     }
 
+
+    .lock-index-body {
+      min-height: 340px;
+      padding: 22px 20px 18px;
+      font-family: var(--font-mono);
+    }
+
+    .lock-index-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(125,211,252,0.14);
+    }
+
+    .lock-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      white-space: nowrap;
+    }
+
+    .lock-select {
+      min-width: 220px;
+      height: 36px;
+      border: 1px solid rgba(125,211,252,0.30);
+      border-radius: 8px;
+      background: rgba(1,8,14,0.92);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 850;
+      padding: 0 10px;
+      outline: none;
+    }
+
+    .index-cards {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .index-card {
+      min-height: 150px;
+      border: 1px solid rgba(125,211,252,0.16);
+      border-radius: 11px;
+      padding: 18px;
+      background:
+        radial-gradient(circle at top right, rgba(34,211,238,0.10), transparent 14rem),
+        rgba(4,15,27,0.74);
+    }
+
+    .index-label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .index-value {
+      margin-top: 12px;
+      font-size: 48px;
+      line-height: 0.95;
+      font-weight: 950;
+      letter-spacing: -0.05em;
+    }
+
+    .index-impact {
+      margin-top: 10px;
+      color: #c7d7df;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .detail-strip {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .detail-pill {
+      min-height: 72px;
+      border: 1px solid rgba(125,211,252,0.14);
+      border-radius: 9px;
+      padding: 12px;
+      background: rgba(1,8,14,0.40);
+    }
+
+    .detail-pill .k {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .detail-pill .v {
+      margin-top: 8px;
+      font-size: 17px;
+      font-weight: 950;
+    }
+
+    .lock-note {
+      margin-top: 14px;
+      color: #9fb4bf;
+      font-size: 11px;
+      line-height: 1.45;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
     .bias {
       min-height: 245px;
       padding-left: 22px;
@@ -625,6 +743,10 @@
       .zones { justify-content: flex-start; }
       .zone-label, .clock-wrap { text-align: left; }
       .big-money { font-size: 64px; }
+      .index-cards, .detail-strip { grid-template-columns: 1fr; }
+      .lock-index-controls { align-items: flex-start; flex-direction: column; }
+      .lock-select { width: 100%; min-width: 0; }
+      .lock-select-wrap { width: 100%; align-items: flex-start; flex-direction: column; }
       .pulse-row { grid-template-columns: 28px 1fr 76px 68px; }
       th, td { padding: 8px 5px; font-size: 11px; }
     }
@@ -675,40 +797,59 @@
       <article class="panel">
         <div class="panel-head">
           <div>
-            <div class="panel-title">LockIQ Signal</div>
-            <div class="panel-sub" id="lockSub">Since anchor</div>
+            <div class="panel-title">LockIQ Live Pricing Index</div>
+            <div class="panel-sub" id="lockSub">Estimated rate-sheet movement</div>
           </div>
           <div class="panel-meta" id="lockUpdated">Updated --</div>
         </div>
 
-        <div class="lock-body">
-          <div class="orb">♉</div>
-
-          <div class="lock-center">
-            <div class="direction cyan" id="heroDirection">Waiting</div>
-            <div class="big-money cyan" id="heroMoney">$--</div>
-            <div class="money-label">Per $100k Loan</div>
-            <div class="big-bps cyan" id="heroBps">-- BPS</div>
-            <div class="anchor-text" id="heroAnchor">Since --</div>
+        <div class="lock-index-body">
+          <div class="lock-index-controls">
+            <div>
+              <div class="direction cyan" id="lockiqDirection">Waiting</div>
+              <div class="anchor-text" id="heroAnchor">Since --</div>
+            </div>
+            <div class="lock-select-wrap">
+              <label for="lockiqAnchorSelect">Change Since</label>
+              <select class="lock-select" id="lockiqAnchorSelect"></select>
+            </div>
           </div>
 
-          <div class="bias">
-            <div class="bias-title" id="biasTitle">Float Bias</div>
-            <div class="bias-copy" id="biasCopy">Waiting for LockIQ model output.</div>
-            <div class="bias-stats">
-              <div>
-                <div class="stat-k">Reprice Risk</div>
-                <div class="stat-v yellow" id="repriceRisk">--</div>
-              </div>
-              <div>
-                <div class="stat-k">Confidence</div>
-                <div class="stat-v green" id="confidence">--</div>
-              </div>
-              <div>
-                <div class="stat-k">Volatility</div>
-                <div class="stat-v cyan" id="volatility">--</div>
-              </div>
+          <div class="index-cards">
+            <div class="index-card">
+              <div class="index-label">Live Conventional Index</div>
+              <div class="index-value cyan" id="liveConvIndex">--</div>
+              <div class="index-impact" id="liveConvImpact">--</div>
             </div>
+
+            <div class="index-card">
+              <div class="index-label">Live Gov't Index</div>
+              <div class="index-value cyan" id="liveGovtIndex">--</div>
+              <div class="index-impact" id="liveGovtImpact">--</div>
+            </div>
+          </div>
+
+          <div class="detail-strip">
+            <div class="detail-pill">
+              <div class="k">FHA Detail</div>
+              <div class="v cyan" id="fhaDetail">--</div>
+            </div>
+            <div class="detail-pill">
+              <div class="k">VA Detail</div>
+              <div class="v cyan" id="vaDetail">--</div>
+            </div>
+            <div class="detail-pill">
+              <div class="k">Data Quality</div>
+              <div class="v green" id="lockiqQuality">--</div>
+            </div>
+            <div class="detail-pill">
+              <div class="k">Model</div>
+              <div class="v cyan" id="lockiqModel">--</div>
+            </div>
+          </div>
+
+          <div class="lock-note" id="lockiqNote">
+            LockIQ converts live MBS, MBB, Treasury and futures movement into estimated lender point movement. This is directional, not a lender guarantee.
           </div>
         </div>
       </article>
@@ -814,6 +955,7 @@
 
   <script>
     const API_URL = "/.netlify/functions/getMarketData";
+    const LOCKIQ_API_URL = "/.netlify/functions/getLockIQIndex";
 
     const zones = {
       "America/Los_Angeles": "PT",
@@ -823,6 +965,8 @@
     };
 
     let activeZone = localStorage.getItem("mbsgoat-timezone") || "America/New_York";
+    let lockiqIndexData = null;
+    let selectedLockiqAnchorKey = localStorage.getItem("lockiq-anchor-key") || null;
 
     const el = (id) => document.getElementById(id);
 
@@ -1099,47 +1243,108 @@
       `;
     }
 
-    function render(data) {
-      const signal = data?.lockiqSignal || {};
-      const mainSignal = signal?.conv_signal || "FLAT";
+    function formatIndexPts(value) {
+      const parsed = asNumber(value);
+      if (parsed === null) return "--";
+      const sign = parsed > 0 ? "+" : "";
+      return sign + parsed.toFixed(4);
+    }
+
+    function impactText(value) {
+      const parsed = asNumber(value);
+      if (parsed === null) return "--";
+      if (parsed === 0) return "$0 / $100k • Flat";
+      return "$" + Math.abs(parsed).toFixed(0) + " / $100k • " + (parsed > 0 ? "Worse" : "Better");
+    }
+
+    function anchorForLockIQ(key) {
+      if (!lockiqIndexData) return null;
+      return lockiqIndexData?.anchors?.[key] || lockiqIndexData?.anchors?.[lockiqIndexData.default_anchor_key] || lockiqIndexData;
+    }
+
+    function normalizeLockIQSignal(anchorData) {
+      if (!anchorData) return {};
+      return {
+        conv_signal: anchorData.conv_signal || "FLAT",
+        govt_signal: anchorData.govt_signal || "FLAT",
+        fha_signal: anchorData.fha_signal || "FLAT",
+        va_signal: anchorData.va_signal || "FLAT",
+        conv_change_bps: anchorData.conv_change_bps,
+        govt_change_bps: anchorData.govt_change_bps,
+        fha_change_bps: anchorData.fha_change_bps,
+        va_change_bps: anchorData.va_change_bps,
+        conv_dollars_per_100k: anchorData.conv_dollars_per_100k,
+        govt_dollars_per_100k: anchorData.govt_dollars_per_100k,
+        fha_dollars_per_100k: anchorData.fha_dollars_per_100k,
+        va_dollars_per_100k: anchorData.va_dollars_per_100k,
+        anchor_time: anchorData.anchor_label || anchorData.anchor_time || "--",
+        data_quality: anchorData.data_quality || lockiqIndexData?.data_quality,
+        last_updated: lockiqIndexData?.last_updated || anchorData.last_updated
+      };
+    }
+
+    function setupLockIQDropdown() {
+      const select = el("lockiqAnchorSelect");
+      if (!select || !lockiqIndexData) return;
+
+      const options = lockiqIndexData.available_anchor_options || [];
+      const currentValue = selectedLockiqAnchorKey || lockiqIndexData.default_anchor_key || lockiqIndexData.anchor_key || "0715";
+
+      select.innerHTML = options.map((option) => `
+        <option value="${option.anchor_key}">${option.label}</option>
+      `).join("");
+
+      if (lockiqIndexData?.anchors?.[currentValue]) {
+        select.value = currentValue;
+      } else if (lockiqIndexData.default_anchor_key) {
+        select.value = lockiqIndexData.default_anchor_key;
+        selectedLockiqAnchorKey = lockiqIndexData.default_anchor_key;
+      }
+
+      select.onchange = () => {
+        selectedLockiqAnchorKey = select.value;
+        localStorage.setItem("lockiq-anchor-key", selectedLockiqAnchorKey);
+        renderLockIQLiveIndex();
+      };
+    }
+
+    function renderLockIQLiveIndex() {
+      if (!lockiqIndexData) return {};
+
+      const key = selectedLockiqAnchorKey || lockiqIndexData.default_anchor_key || lockiqIndexData.anchor_key || "0715";
+      const anchorData = anchorForLockIQ(key);
+      const signal = normalizeLockIQSignal(anchorData);
+      const mainSignal = signal.conv_signal || "FLAT";
       const mainTone = signalTone(mainSignal);
 
-      el("heroDirection").textContent = signalText(mainSignal);
-      el("heroDirection").className = "direction " + mainTone;
-      el("heroMoney").textContent = money(signal?.conv_dollars_per_100k);
-      el("heroMoney").className = "big-money " + mainTone;
-      el("heroBps").textContent = signed(signal?.conv_change_bps, 1, " BPS");
-      el("heroBps").className = "big-bps " + mainTone;
-      el("heroAnchor").textContent = "Since " + (signal?.anchor_time || "--");
-      el("lockSub").textContent = "Anchor source: " + (signal?.anchor_source || "--");
-      el("lockUpdated").textContent = "Updated " + (signal?.last_updated || "--");
-      el("rateSince").textContent = "Since " + (signal?.anchor_time || "--");
+      el("lockiqDirection").textContent = signalText(mainSignal);
+      el("lockiqDirection").className = "direction " + mainTone;
+      el("heroAnchor").textContent = "Since " + (anchorData?.anchor_label || anchorData?.anchor_time || "--");
+      el("lockSub").textContent = "Estimated lender-point movement";
+      el("lockUpdated").textContent = "Updated " + (lockiqIndexData.last_updated || "--");
 
-      el("biasTitle").textContent = mainSignal === "WORSE"
-        ? "Lock Caution"
-        : mainSignal === "BETTER"
-          ? "Float Bias"
-          : "Neutral Bias";
+      el("liveConvIndex").textContent = formatIndexPts(anchorData?.live_conventional_index_pts) + " pts";
+      el("liveConvIndex").className = "index-value " + signalTone(anchorData?.conv_signal);
+      el("liveConvImpact").textContent = impactText(anchorData?.conv_dollars_per_100k);
 
-      el("biasCopy").textContent = mainSignal === "WORSE"
-        ? "Mortgage pricing has deteriorated since the anchor. Watch for lender reprices or pricing drag."
-        : mainSignal === "BETTER"
-          ? "Mortgage pricing has improved since the anchor. Some lenders may not have fully repriced better."
-          : "Market movement is muted. LockIQ is not showing a strong directional edge.";
+      el("liveGovtIndex").textContent = formatIndexPts(anchorData?.live_government_index_pts) + " pts";
+      el("liveGovtIndex").className = "index-value " + signalTone(anchorData?.govt_signal);
+      el("liveGovtImpact").textContent = impactText(anchorData?.govt_dollars_per_100k);
 
-      el("repriceRisk").textContent = mainSignal === "WORSE"
-        ? "HIGH"
-        : mainSignal === "BETTER"
-          ? "MODERATE"
-          : "LOW";
+      el("fhaDetail").textContent = signed(anchorData?.fha_change_bps, 1, " bps");
+      el("fhaDetail").className = "v " + signalTone(anchorData?.fha_signal);
+      el("vaDetail").textContent = signed(anchorData?.va_change_bps, 1, " bps");
+      el("vaDetail").className = "v " + signalTone(anchorData?.va_signal);
+      el("lockiqQuality").textContent = anchorData?.data_quality || lockiqIndexData.data_quality || "--";
+      el("lockiqQuality").className = "v " + ((anchorData?.data_quality || "") === "GOOD" ? "green" : "yellow");
+      el("lockiqModel").textContent = (lockiqIndexData.model_version || "v1").replace("lockiq_live_index_", "");
 
-      el("confidence").textContent = signal?.data_quality === "GOOD"
-        ? "72%"
-        : signal?.data_quality === "LIMITED"
-          ? "45%"
-          : "60%";
+      return signal;
+    }
 
-      el("volatility").textContent = riskMode(data) === "Elevated" ? "HIGH" : "LOW";
+    function render(data) {
+      setupLockIQDropdown();
+      const signal = renderLockIQLiveIndex();
 
       renderPulse(data);
       renderRates(signal);
@@ -1153,9 +1358,17 @@
       el("errorBox").style.display = "none";
 
       try {
-        const response = await fetch(API_URL, { cache: "no-store" });
-        if (!response.ok) throw new Error("API " + response.status);
-        const data = await response.json();
+        const [marketResponse, lockiqResponse] = await Promise.all([
+          fetch(API_URL, { cache: "no-store" }),
+          fetch(LOCKIQ_API_URL, { cache: "no-store" })
+        ]);
+
+        if (!marketResponse.ok) throw new Error("Market API " + marketResponse.status);
+        if (!lockiqResponse.ok) throw new Error("LockIQ API " + lockiqResponse.status);
+
+        const data = await marketResponse.json();
+        lockiqIndexData = await lockiqResponse.json();
+
         render(data);
       } catch (error) {
         el("errorBox").style.display = "block";
