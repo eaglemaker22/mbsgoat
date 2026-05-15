@@ -1,29 +1,20 @@
+// getLockIQIndex.js — LockIQ Live Pricing Index API
 const admin = require("firebase-admin");
 
-function initFirebase() {
-  if (admin.apps.length) return;
-
-  // IMPORTANT:
-  // Use the same Firebase credential env vars/init style
-  // that your existing working Netlify Firebase function uses.
-  //
-  // This version expects FIREBASE_SERVICE_ACCOUNT as a JSON string.
-  // If your existing getMarketData.js uses different env vars,
-  // copy its admin.initializeApp block instead.
-
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
+if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
   });
 }
 
+const db = admin.firestore();
+
 exports.handler = async function () {
   try {
-    initFirebase();
-
-    const db = admin.firestore();
-
     const snap = await db
       .collection("market_data")
       .doc("lockiq_live_pricing_index")
@@ -32,9 +23,7 @@ exports.handler = async function () {
     if (!snap.exists) {
       return {
         statusCode: 404,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           error: "lockiq_live_pricing_index document not found",
         }),
@@ -54,9 +43,7 @@ exports.handler = async function () {
 
     return {
       statusCode: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         error: "Failed to load LockIQ index",
         details: error.message,
