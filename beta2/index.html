@@ -663,6 +663,37 @@
       font-size: 12px;
     }
 
+    .chart-axis-label {
+      font-family: var(--font-mono);
+      fill: #78909c;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .legend-conv { color: var(--green); }
+    .legend-govt { color: var(--cyan); }
+
     .timeline-impact {
       position: absolute;
       left: 14px;
@@ -927,13 +958,17 @@
       <article class="panel">
         <div class="panel-head">
           <div>
-            <div class="panel-title">Today's Pricing Timeline</div>
-            <div class="panel-sub">Phase 1 visual // true intraday next</div>
+            <div class="panel-title">LockIQ Pricing Timeline</div>
+            <div class="panel-sub">Conv + Gov\'t index by change-since anchor</div>
           </div>
           <div class="panel-meta">Since anchor</div>
         </div>
         <div class="panel-body">
           <div class="timeline-box">
+            <div class="chart-legend">
+              <span class="legend-conv"><span class="legend-dot"></span>Conv</span>
+              <span class="legend-govt"><span class="legend-dot"></span>Gov&apos;t</span>
+            </div>
             <svg id="timelineSvg" viewBox="0 0 520 210" preserveAspectRatio="none"></svg>
             <div class="timeline-impact">
               <div>
@@ -956,6 +991,7 @@
   <script>
     const API_URL = "/.netlify/functions/getMarketData";
     const LOCKIQ_API_URL = "/.netlify/functions/getLockIQIndex";
+    const LOCKIQ_CHART_API_URL = "/.netlify/functions/getLockIQChart";
 
     const zones = {
       "America/Los_Angeles": "PT",
@@ -966,6 +1002,7 @@
 
     let activeZone = localStorage.getItem("mbsgoat-timezone") || "America/New_York";
     let lockiqIndexData = null;
+    let lockiqChartData = null;
     let selectedLockiqAnchorKey = localStorage.getItem("lockiq-anchor-key") || null;
 
     const el = (id) => document.getElementById(id);
@@ -1163,47 +1200,117 @@
       `).join("");
     }
 
+    function svgPointLine(points, field, xForIndex, yForValue) {
+      return points
+        .map((point, index) => {
+          const value = asNumber(point[field]);
+          if (value === null) return null;
+          return `${index ? "L" : "M"} ${xForIndex(index)} ${yForValue(value)}`;
+        })
+        .filter(Boolean)
+        .join(" ");
+    }
+
     function renderTimeline(signal) {
-      const points = [
-        ["8:00", 0],
-        ["CONV", asNumber(signal?.conv_dollars_per_100k) ?? 0],
-        ["FHA", asNumber(signal?.fha_dollars_per_100k) ?? 0],
-        ["VA", asNumber(signal?.va_dollars_per_100k) ?? 0]
-      ].map((point, index) => ({
-        label: point[0],
-        value: point[1],
-        x: [35, 190, 340, 490][index],
-        y: Math.max(25, Math.min(160, 145 - point[1] * 2.1))
-      }));
+      const chartPointsRaw = lockiqChartData?.points || [];
+      const chartPoints = chartPointsRaw.filter((point) => {
+        return asNumber(point?.conv_index_pts) !== null || asNumber(point?.govt_index_pts) !== null;
+      });
 
-      const line = points.map((point, index) => {
-        return `${index ? "L" : "M"} ${point.x} ${point.y}`;
-      }).join(" ");
+      if (!chartPoints.length) {
+        el("timelineSvg").innerHTML = `
+          <text x="260" y="100" text-anchor="middle" class="chart-label">Waiting for LockIQ chart data</text>
+        `;
+        el("timelineMoney").textContent = money(signal?.conv_dollars_per_100k);
+        el("timelineMode").textContent = String(signal?.conv_signal || "RATES --").toUpperCase();
+        el("timelineSince").textContent = "Since " + (signal?.anchor_time || "Anchor");
+        return;
+      }
 
-      const area = `${line} L 490 168 L 35 168 Z`;
+      const width = 520;
+      const height = 210;
+      const left = 34;
+      const right = 506;
+      const top = 26;
+      const bottom = 160;
+
+      const allValues = chartPoints.flatMap((point) => [
+        asNumber(point.conv_index_pts),
+        asNumber(point.govt_index_pts)
+      ]).filter((value) => value !== null);
+
+      let minVal = Math.min(...allValues);
+      let maxVal = Math.max(...allValues);
+
+      // Keep zero visible and add padding so flat markets do not collapse the chart.
+      minVal = Math.min(minVal, 0);
+      maxVal = Math.max(maxVal, 0);
+
+      if (Math.abs(maxVal - minVal) < 0.02) {
+        maxVal += 0.02;
+        minVal -= 0.02;
+      }
+
+      const pad = (maxVal - minVal) * 0.16;
+      minVal -= pad;
+      maxVal += pad;
+
+      const xForIndex = (index) => {
+        if (chartPoints.length === 1) return (left + right) / 2;
+        return left + (index / (chartPoints.length - 1)) * (right - left);
+      };
+
+      const yForValue = (value) => {
+        return bottom - ((value - minVal) / (maxVal - minVal)) * (bottom - top);
+      };
+
+      const zeroY = yForValue(0);
+      const convLine = svgPointLine(chartPoints, "conv_index_pts", xForIndex, yForValue);
+      const govtLine = svgPointLine(chartPoints, "govt_index_pts", xForIndex, yForValue);
+
+      const xLabels = chartPoints.map((point, index) => {
+        const show = index === 0 || index === chartPoints.length - 1 || index % Math.ceil(chartPoints.length / 5) === 0;
+        if (!show) return "";
+        const x = xForIndex(index);
+        const label = point.anchor_key === "yesterday_open"
+          ? "Y-OPEN"
+          : point.anchor_key === "yesterday_close"
+            ? "Y-CLOSE"
+            : String(point.label || point.time || "").replace("LockIQ Pricing Anchor ", "").replace(" Market", "");
+        return `<text x="${x}" y="195" text-anchor="middle" class="chart-axis-label">${label}</text>`;
+      }).join("");
+
+      const pointDots = chartPoints.map((point, index) => {
+        const x = xForIndex(index);
+        const conv = asNumber(point.conv_index_pts);
+        const govt = asNumber(point.govt_index_pts);
+
+        return `
+          ${conv === null ? "" : `<circle cx="${x}" cy="${yForValue(conv)}" r="3.5" fill="#39ff88"><title>${point.label}: Conv ${formatIndexPts(conv)} pts</title></circle>`}
+          ${govt === null ? "" : `<circle cx="${x}" cy="${yForValue(govt)}" r="3.5" fill="#22d3ee"><title>${point.label}: Gov't ${formatIndexPts(govt)} pts</title></circle>`}
+        `;
+      }).join("");
 
       el("timelineSvg").innerHTML = `
-        <defs>
-          <linearGradient id="timelineFill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stop-color="#39ff88" stop-opacity="0.42"/>
-            <stop offset="100%" stop-color="#39ff88" stop-opacity="0.02"/>
-          </linearGradient>
-        </defs>
-        <line x1="25" y1="168" x2="505" y2="168" stroke="rgba(125,211,252,.22)" />
-        <line x1="25" y1="108" x2="505" y2="108" stroke="rgba(125,211,252,.12)" />
-        <line x1="25" y1="48" x2="505" y2="48" stroke="rgba(125,211,252,.12)" />
-        <path d="${area}" fill="url(#timelineFill)" />
-        <path d="${line}" fill="none" stroke="#39ff88" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        ${points.map((point) => `
-          <circle cx="${point.x}" cy="${point.y}" r="5" fill="#39ff88"/>
-          <text x="${point.x}" y="194" text-anchor="middle" class="chart-label">${point.label}</text>
-          <text x="${point.x}" y="${point.y - 12}" text-anchor="middle" class="chart-label">${money(point.value)}</text>
-        `).join("")}
+        <line x1="${left}" y1="${top}" x2="${left}" y2="${bottom}" stroke="rgba(125,211,252,.18)" />
+        <line x1="${left}" y1="${bottom}" x2="${right}" y2="${bottom}" stroke="rgba(125,211,252,.18)" />
+        <line x1="${left}" y1="${zeroY}" x2="${right}" y2="${zeroY}" stroke="rgba(250,204,21,.32)" stroke-dasharray="5 5" />
+        <line x1="${left}" y1="${top}" x2="${right}" y2="${top}" stroke="rgba(125,211,252,.10)" />
+        <line x1="${left}" y1="${(top + bottom) / 2}" x2="${right}" y2="${(top + bottom) / 2}" stroke="rgba(125,211,252,.10)" />
+        <text x="6" y="${top + 4}" class="chart-axis-label">${formatIndexPts(maxVal)}</text>
+        <text x="6" y="${zeroY + 4}" class="chart-axis-label">0</text>
+        <text x="6" y="${bottom + 4}" class="chart-axis-label">${formatIndexPts(minVal)}</text>
+        <path d="${convLine}" fill="none" stroke="#39ff88" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="${govtLine}" fill="none" stroke="#22d3ee" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+        ${pointDots}
+        ${xLabels}
       `;
 
       el("timelineMoney").textContent = money(signal?.conv_dollars_per_100k);
       el("timelineMode").textContent = String(signal?.conv_signal || "RATES --").toUpperCase();
-      el("timelineSince").textContent = "Since " + (signal?.anchor_time || "Anchor");
+
+      const selectedLabel = signal?.anchor_time || lockiqIndexData?.anchor_label || "Anchor";
+      el("timelineSince").textContent = "Since " + selectedLabel;
     }
 
     function sentimentScore(data) {
@@ -1358,9 +1465,10 @@
       el("errorBox").style.display = "none";
 
       try {
-        const [marketResponse, lockiqResponse] = await Promise.all([
+        const [marketResponse, lockiqResponse, chartResponse] = await Promise.all([
           fetch(API_URL, { cache: "no-store" }),
-          fetch(LOCKIQ_API_URL, { cache: "no-store" })
+          fetch(LOCKIQ_API_URL, { cache: "no-store" }),
+          fetch(LOCKIQ_CHART_API_URL, { cache: "no-store" })
         ]);
 
         if (!marketResponse.ok) throw new Error("Market API " + marketResponse.status);
@@ -1368,6 +1476,13 @@
 
         const data = await marketResponse.json();
         lockiqIndexData = await lockiqResponse.json();
+
+        if (chartResponse.ok) {
+          lockiqChartData = await chartResponse.json();
+        } else {
+          lockiqChartData = null;
+          console.warn("LockIQ chart API unavailable:", chartResponse.status);
+        }
 
         render(data);
       } catch (error) {
