@@ -1,0 +1,1963 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MBSGOAT | LockIQ Beta 2</title>
+  <style>
+    :root {
+      --bg: #020811;
+      --panel: #071522;
+      --panel-2: #091b2b;
+      --border: rgba(56, 189, 248, 0.32);
+      --border-soft: rgba(148, 163, 184, 0.16);
+      --text: #e8f8ff;
+      --muted: #78909c;
+      --cyan: #22d3ee;
+      --green: #39ff88;
+      --red: #ff4b5f;
+      --yellow: #facc15;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: var(--font-sans);
+      background:
+        radial-gradient(circle at top left, rgba(34, 211, 238, 0.14), transparent 30rem),
+        radial-gradient(circle at top right, rgba(57, 255, 136, 0.08), transparent 26rem),
+        linear-gradient(180deg, #03111f 0%, #020811 45%, #01040a 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.026) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, black, transparent 90%);
+    }
+
+    .page {
+      width: min(1540px, calc(100vw - 24px));
+      margin: 0 auto;
+      padding-bottom: 24px;
+    }
+
+    .topbar {
+      height: 74px;
+      display: grid;
+      grid-template-columns: 260px 250px 1fr 390px;
+      align-items: center;
+      gap: 18px;
+      padding: 0 14px;
+      background: rgba(2, 9, 17, 0.86);
+      border-bottom: 1px solid var(--border-soft);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      border-right: 1px solid var(--border-soft);
+    }
+
+    .logo-main {
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: 0.27em;
+      line-height: 1;
+    }
+
+    .logo-main span { color: var(--cyan); }
+
+    .logo-sub {
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .market-state {
+      border-right: 1px solid var(--border-soft);
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .market-state .main {
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .market-state .main::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 9px;
+    }
+
+    .market-state.open .main { color: var(--green); }
+    .market-state.closed .main { color: var(--red); }
+
+    .market-state.open .main::before {
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green);
+    }
+
+    .market-state.closed .main::before {
+      background: var(--red);
+      box-shadow: 0 0 12px var(--red);
+    }
+
+    .market-state .sub {
+      margin-top: 9px;
+      padding-left: 20px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 38px;
+      height: 74px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.20em;
+      color: #9fb4bf;
+    }
+
+    .nav span {
+      height: 74px;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .nav .active {
+      color: var(--text);
+      font-weight: 900;
+    }
+
+    .nav .active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 3px;
+      background: var(--cyan);
+      box-shadow: 0 0 14px rgba(34, 211, 238, 0.75);
+    }
+
+    .clock-panel {
+      display: grid;
+      grid-template-columns: 1fr 170px;
+      gap: 16px;
+      align-items: center;
+      border-left: 1px solid var(--border-soft);
+      padding-left: 18px;
+    }
+
+    .zones {
+      display: flex;
+      gap: 7px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .zone-btn {
+      width: 39px;
+      height: 30px;
+      border: 1px solid rgba(125, 211, 252, 0.22);
+      border-radius: 7px;
+      background: rgba(8, 25, 40, 0.72);
+      color: #7f96a4;
+      font-family: var(--font-mono);
+      cursor: pointer;
+    }
+
+    .zone-btn.active {
+      color: #02111d;
+      background: linear-gradient(180deg, #67e8f9, #0ea5e9);
+      border-color: #67e8f9;
+      font-weight: 950;
+      box-shadow: 0 0 18px rgba(34, 211, 238, 0.38);
+    }
+
+    .zone-label {
+      width: 100%;
+      margin-top: 4px;
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .clock-wrap {
+      text-align: right;
+      font-family: var(--font-mono);
+    }
+
+    .clock {
+      font-size: 21px;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+    }
+
+    .date {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.17em;
+      text-transform: uppercase;
+    }
+
+    .error {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,75,95,0.55);
+      background: rgba(255,75,95,0.10);
+      color: #ffc8d0;
+      font-family: var(--font-mono);
+    }
+
+    .hero-grid {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .mid-grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1.08fr 0.78fr 1.05fr;
+      gap: 18px;
+    }
+
+    .risk-grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr) 210px;
+      gap: 10px;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(34,211,238,0.055), transparent 28%),
+        linear-gradient(180deg, rgba(7,20,34,0.96), rgba(3,10,18,0.96));
+      box-shadow: 0 0 36px rgba(34,211,238,0.08);
+    }
+
+    .panel-head {
+      min-height: 50px;
+      padding: 14px 20px 11px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid rgba(125,211,252,0.10);
+    }
+
+    .panel-title {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+    }
+
+    .panel-sub,
+    .panel-meta {
+      margin-top: 7px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .panel-meta {
+      margin-top: 0;
+      white-space: nowrap;
+    }
+
+    .lock-body {
+      min-height: 340px;
+      padding: 24px 20px 18px;
+      display: grid;
+      grid-template-columns: 210px 1fr 360px;
+      gap: 22px;
+      align-items: center;
+    }
+
+    .orb {
+      width: 196px;
+      height: 196px;
+      border: 2px solid rgba(57,255,136,0.72);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green);
+      font-size: 70px;
+      background:
+        radial-gradient(circle at center, rgba(57,255,136,0.24), rgba(57,255,136,0.06) 52%, transparent 73%);
+      box-shadow:
+        inset 0 0 28px rgba(57,255,136,0.22),
+        0 0 34px rgba(57,255,136,0.23);
+    }
+
+    .lock-center {
+      text-align: center;
+      font-family: var(--font-mono);
+    }
+
+    .direction {
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: 0.30em;
+      text-transform: uppercase;
+    }
+
+    .big-money {
+      margin-top: 12px;
+      font-size: 92px;
+      line-height: 0.92;
+      font-weight: 950;
+      letter-spacing: -0.08em;
+    }
+
+    .money-label {
+      margin-top: 10px;
+      color: #c7d7df;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .big-bps {
+      margin-top: 22px;
+      font-size: 25px;
+      font-weight: 950;
+      letter-spacing: 0.14em;
+    }
+
+    .anchor-text {
+      margin-top: 9px;
+      color: #bdcbd3;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.20em;
+    }
+
+
+    .lock-index-body {
+      min-height: 340px;
+      padding: 22px 20px 18px;
+      font-family: var(--font-mono);
+    }
+
+    .lock-index-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(125,211,252,0.14);
+    }
+
+    .lock-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      white-space: nowrap;
+    }
+
+    .lock-select {
+      min-width: 220px;
+      height: 36px;
+      border: 1px solid rgba(125,211,252,0.30);
+      border-radius: 8px;
+      background: rgba(1,8,14,0.92);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 850;
+      padding: 0 10px;
+      outline: none;
+    }
+
+    .index-cards {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .index-card {
+      min-height: 150px;
+      border: 1px solid rgba(125,211,252,0.16);
+      border-radius: 11px;
+      padding: 18px;
+      background:
+        radial-gradient(circle at top right, rgba(34,211,238,0.10), transparent 14rem),
+        rgba(4,15,27,0.74);
+    }
+
+    .index-label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .index-value {
+      margin-top: 12px;
+      font-size: 48px;
+      line-height: 0.95;
+      font-weight: 950;
+      letter-spacing: -0.05em;
+    }
+
+    .index-impact {
+      margin-top: 10px;
+      color: #c7d7df;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .detail-strip {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .detail-pill {
+      min-height: 72px;
+      border: 1px solid rgba(125,211,252,0.14);
+      border-radius: 9px;
+      padding: 12px;
+      background: rgba(1,8,14,0.40);
+    }
+
+    .detail-pill .k {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .detail-pill .v {
+      margin-top: 8px;
+      font-size: 17px;
+      font-weight: 950;
+    }
+
+    .lock-note {
+      margin-top: 14px;
+      color: #9fb4bf;
+      font-size: 11px;
+      line-height: 1.45;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .bias {
+      min-height: 245px;
+      padding-left: 22px;
+      border-left: 1px solid rgba(125,211,252,0.14);
+      font-family: var(--font-mono);
+    }
+
+    .bias-title {
+      color: var(--green);
+      font-size: 17px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.21em;
+    }
+
+    .bias-copy {
+      margin-top: 16px;
+      color: #dfeaf0;
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    .bias-stats {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(125,211,252,0.14);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      text-align: center;
+    }
+
+    .stat-k {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .stat-v {
+      margin-top: 8px;
+      font-size: 18px;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+    }
+
+    .pulse {
+      padding: 0 18px 18px;
+    }
+
+    .pulse-row {
+      min-height: 47px;
+      display: grid;
+      grid-template-columns: 36px 1fr 96px 84px;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(125,211,252,0.12);
+      font-family: var(--font-mono);
+    }
+
+    .pulse-row:last-child { border-bottom: none; }
+
+    .icon {
+      color: #d9e6ec;
+      opacity: 0.75;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .pulse-name {
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+    }
+
+    .pulse-val,
+    .pulse-chg {
+      text-align: right;
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .panel-body {
+      padding: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+    }
+
+    th, td {
+      padding: 9px 8px;
+      border-bottom: 1px solid rgba(125,211,252,0.10);
+      text-align: right;
+      font-size: 12px;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+
+    th {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    td {
+      color: #edf9ff;
+      font-weight: 850;
+    }
+
+    .highlight {
+      background: rgba(250,204,21,0.09);
+      box-shadow: inset 0 0 0 1px rgba(250,204,21,0.25);
+    }
+
+    .star { color: var(--yellow); font-size: 16px; }
+
+    .bpi-top {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .bpi-box {
+      border: 1px solid rgba(125,211,252,0.16);
+      border-radius: 8px;
+      padding: 12px;
+      background: rgba(4,15,27,0.70);
+      font-family: var(--font-mono);
+    }
+
+    .bpi-box .label {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+    }
+
+    .bpi-box .value {
+      margin-top: 7px;
+      font-size: 31px;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+    }
+
+    .timeline-box {
+      height: 295px;
+      border: 1px solid rgba(125,211,252,0.14);
+      border-radius: 10px;
+      background: rgba(1,8,14,0.42);
+      padding: 10px;
+      position: relative;
+    }
+
+    .timeline-box svg {
+      width: 100%;
+      height: 210px;
+      overflow: visible;
+    }
+
+    .chart-label {
+      font-family: var(--font-mono);
+      fill: #a7bbc6;
+      font-size: 12px;
+    }
+
+    .timeline-impact {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 12px;
+      height: 56px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      border: 1px solid rgba(57,255,136,0.42);
+      border-radius: 8px;
+      background: rgba(57,255,136,0.08);
+      font-family: var(--font-mono);
+    }
+
+    .timeline-impact > div { padding: 0 18px; }
+    .timeline-impact > div:first-child { border-right: 1px solid rgba(125,211,252,0.16); }
+
+    .impact-big {
+      color: var(--green);
+      font-size: 30px;
+      font-weight: 950;
+    }
+
+    .risk-card,
+    .sentiment {
+      height: 105px;
+      border: 1px solid rgba(125,211,252,0.18);
+      border-radius: 10px;
+      padding: 13px 14px;
+      background: rgba(4,14,25,0.84);
+      font-family: var(--font-mono);
+    }
+
+    .risk-name {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .risk-value {
+      margin-top: 8px;
+      font-size: 22px;
+      font-weight: 850;
+    }
+
+    .risk-change {
+      margin-top: 7px;
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .sentiment { text-align: center; }
+    .score { margin-top: 12px; color: var(--green); font-size: 38px; font-weight: 950; }
+
+    .green { color: var(--green) !important; }
+    .red { color: var(--red) !important; }
+    .yellow { color: var(--yellow) !important; }
+    .cyan { color: var(--cyan) !important; }
+
+    .loading { opacity: 0.72; }
+
+    @media (max-width: 1250px) {
+      .topbar, .hero-grid, .mid-grid, .risk-grid { grid-template-columns: 1fr; }
+      .topbar { height: auto; padding: 14px; }
+      .logo, .market-state, .clock-panel { border: none; padding: 0; }
+      .nav { height: auto; justify-content: flex-start; gap: 18px; }
+      .nav span { height: 36px; }
+      .lock-body { grid-template-columns: 1fr; height: auto; }
+      .orb { margin: 0 auto; }
+      .bias { border-left: none; padding-left: 0; }
+    }
+
+    @media (max-width: 700px) {
+      .page { width: calc(100vw - 14px); }
+      .clock-panel { grid-template-columns: 1fr; }
+      .zones { justify-content: flex-start; }
+      .zone-label, .clock-wrap { text-align: left; }
+      .big-money { font-size: 64px; }
+      .index-cards, .detail-strip { grid-template-columns: 1fr; }
+      .lock-index-controls { align-items: flex-start; flex-direction: column; }
+      .lock-select { width: 100%; min-width: 0; }
+      .lock-select-wrap { width: 100%; align-items: flex-start; flex-direction: column; }
+      .pulse-row { grid-template-columns: 28px 1fr 76px 68px; }
+      th, td { padding: 8px 5px; font-size: 11px; }
+    }
+
+
+    /* ===== LOCKIQ CLAUDE-STYLE CHART MODULE ===== */
+    .lockiq-claude-panel { width: 100%; }
+    .lw {
+      background: linear-gradient(180deg, rgba(7,20,34,0.98), rgba(3,10,18,0.98));
+      border-radius: 16px;
+      border: 1px solid rgba(56,189,248,0.32);
+      font-family: var(--font-mono);
+      overflow: hidden;
+      color: var(--text);
+      user-select: none;
+      box-shadow: 0 0 36px rgba(34,211,238,0.08);
+    }
+    .lhdr { padding: 14px 20px 12px; border-bottom: 1px solid rgba(125,211,252,0.12); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .leyebrow { font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--cyan); margin-bottom: 5px; }
+    .ltitle { font-size: 22px; font-weight: 950; color: var(--text); letter-spacing: .10em; text-transform: uppercase; }
+    .lhead-right { text-align: right; }
+    .lwindow-headline { font-size: 15px; font-weight: 950; color: var(--text); text-transform: uppercase; letter-spacing: .12em; }
+    .lwindow-sub { font-size: 10px; color: var(--muted); margin-top: 5px; text-transform: uppercase; letter-spacing: .12em; }
+    .lmetarow { display: flex; align-items: center; border-bottom: 1px solid rgba(125,211,252,0.12); padding: 0 20px; min-height: 58px; gap: 0; flex-wrap: wrap; }
+    .lmr-seg { display: flex; align-items: center; gap: 10px; padding: 0 18px; flex-shrink: 0; }
+    .lmr-seg:first-child { padding-left: 0; }
+    .lmr-div { width: 1px; height: 30px; background: rgba(125,211,252,0.16); flex-shrink: 0; }
+    .lmr-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 10px currentColor; }
+    .lmr-label { font-size: 11px; color: var(--muted); font-weight: 850; letter-spacing: .10em; text-transform: uppercase; white-space: nowrap; }
+    .lmr-val { font-size: 23px; font-weight: 950; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .lmr-bps { font-size: 11px; color: var(--muted); white-space: nowrap; }
+    .lmr-cost { font-size: 16px; font-weight: 950; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .loan-seg { display: flex; align-items: center; gap: 8px; padding: 0 0 0 18px; flex-shrink: 0; margin-left: auto; }
+    .loan-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .10em; white-space: nowrap; }
+    .loan-pill { display: inline-flex; align-items: center; background: rgba(1,8,14,.72); border: 1px solid rgba(125,211,252,.22); border-radius: 20px; height: 30px; padding: 0 10px 0 9px; gap: 2px; }
+    .loan-pill:focus-within { border-color: var(--cyan); box-shadow: 0 0 14px rgba(34,211,238,.14); }
+    .loan-pfx { font-size: 12px; color: var(--muted); }
+    .loan-inp { background: transparent; border: none; outline: none; color: var(--text); font-size: 13px; font-weight: 900; width: 76px; height: 28px; font-variant-numeric: tabular-nums; font-family: var(--font-mono); padding: 0; }
+    .lsigbar { padding: 10px 20px; border-bottom: 1px solid rgba(125,211,252,0.12); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .lsig-left { display: flex; align-items: center; gap: 8px; }
+    .lsigbadge { font-size: 11px; font-weight: 950; letter-spacing: .09em; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; white-space: nowrap; }
+    .lsigdesc { font-size: 11px; color: var(--muted); }
+    .lsigtime { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; }
+    .lchart-wrap { padding: 12px 0 0; }
+    .lchart-hdr { display: flex; align-items: center; justify-content: space-between; padding: 0 20px 8px; }
+    .llegend { display: flex; gap: 16px; }
+    .lleg-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #9fb4bf; text-transform: uppercase; letter-spacing: .10em; }
+    .lleg-line { width: 22px; height: 3px; border-radius: 1px; }
+    .dashed-line { background: transparent; border-top: 2px dashed #38bdf8; height: 0; }
+    .lzone-label { font-size: 10px; color: var(--muted); letter-spacing: .10em; text-transform: uppercase; }
+    .lcanvas-outer { position: relative; width: 100%; height: 320px; padding: 0 10px; }
+    .ltt { position: absolute; background: #071522; border: 1px solid rgba(125,211,252,.26); border-radius: 10px; padding: 11px 13px; pointer-events: none; opacity: 0; transition: opacity .12s; min-width: 165px; z-index: 20; box-shadow: 0 12px 36px rgba(0,0,0,.35); }
+    .ltt.vis { opacity: 1; }
+    .ltt-title { font-size: 10px; color: var(--muted); font-weight: 850; margin-bottom: 7px; letter-spacing: .09em; text-transform: uppercase; }
+    .ltt-row { display: flex; justify-content: space-between; gap: 14px; margin-bottom: 3px; }
+    .ltt-k { font-size: 11px; color: var(--muted); }
+    .ltt-v { font-size: 12px; font-weight: 950; font-variant-numeric: tabular-nums; }
+    .lhandle-row { padding: 0 24px; height: 44px; }
+    .lhandle-track { position: relative; height: 44px; width: 100%; }
+    .lhandle-base { position: absolute; top: 20px; left: 0; right: 0; height: 3px; background: rgba(125,211,252,.14); border-radius: 2px; }
+    .lhandle-fill { position: absolute; top: 20px; height: 3px; background: rgba(34,211,238,.26); border-radius: 2px; }
+    .lhandle { position: absolute; top: 10px; width: 22px; height: 22px; border-radius: 50%; background: #071522; border: 2px solid var(--cyan); cursor: grab; transform: translateX(-50%); z-index: 10; display: flex; align-items: center; justify-content: center; }
+    .lhandle:hover { border-color: #7dd3fc; }
+    .lhandle:active { cursor: grabbing; }
+    .lhandle-inner { width: 5px; height: 5px; border-radius: 50%; background: var(--cyan); }
+    .lhandle-label { position: absolute; top: -17px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--cyan); white-space: nowrap; font-weight: 850; font-variant-numeric: tabular-nums; }
+    .lchips { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 20px 14px; border-top: 1px solid rgba(125,211,252,0.12); align-items: center; }
+    .lchips-label { font-size: 10px; color: var(--muted); margin-right: 3px; text-transform: uppercase; letter-spacing: .10em; }
+    .lchip { font-size: 11px; color: #9fb4bf; background: rgba(1,8,14,.52); border: 1px solid rgba(125,211,252,.18); border-radius: 20px; padding: 4px 11px; cursor: pointer; white-space: nowrap; }
+    .lchip:hover { color: var(--text); border-color: var(--cyan); }
+    .lchip.active { color: var(--cyan); border-color: var(--cyan); background: rgba(34,211,238,.08); }
+    .lfooter { padding: 10px 20px; border-top: 1px solid rgba(125,211,252,0.12); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .lqual { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .lqdot { width: 7px; height: 7px; border-radius: 50%; }
+    .lrefresh { font-size: 11px; color: var(--muted); }
+    @media (max-width: 900px) {
+      .lmetarow { align-items: flex-start; padding: 12px 20px; gap: 12px; }
+      .lmr-div { display: none; }
+      .lmr-seg { padding: 0; flex-wrap: wrap; }
+      .loan-seg { margin-left: 0; padding-left: 0; }
+      .lhdr, .lsigbar, .lchart-hdr, .lfooter { flex-direction: column; align-items: flex-start; }
+      .lhead-right { text-align: left; }
+    }
+    /* ===== END LOCKIQ CLAUDE-STYLE CHART MODULE ===== */
+
+  </style>
+</head>
+
+<body>
+  <div class="page" id="page">
+    <header class="topbar">
+      <div class="logo">
+        <div class="logo-main">MBS<span>GOAT</span></div>
+        <div class="logo-sub">LockIQ Terminal</div>
+      </div>
+
+      <div class="market-state closed" id="marketState">
+        <div class="main" id="marketStateMain">Loading</div>
+        <div class="sub">8:00 AM - 5:00 PM ET</div>
+      </div>
+
+      <nav class="nav">
+        <span class="active">Dashboard</span>
+        <span>Markets</span>
+        <span>Rates</span>
+        <span>Econ Reports</span>
+      </nav>
+
+      <div class="clock-panel">
+        <div>
+          <div class="zones">
+            <button class="zone-btn" data-zone="America/Los_Angeles" data-label="Pacific Time" data-short="PT">PT</button>
+            <button class="zone-btn" data-zone="America/Denver" data-label="Mountain Time" data-short="MT">MT</button>
+            <button class="zone-btn" data-zone="America/Chicago" data-label="Central Time" data-short="CT">CT</button>
+            <button class="zone-btn active" data-zone="America/New_York" data-label="Eastern Time" data-short="ET">ET</button>
+          </div>
+          <div class="zone-label" id="zoneLabel">Eastern Time</div>
+        </div>
+
+        <div class="clock-wrap">
+          <div class="clock" id="clock">--:--:-- -- ET</div>
+          <div class="date" id="date">--</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="error" id="errorBox"></div>
+
+    <section class="hero-grid">
+      <article id="lockiq-chart-module" class="lockiq-claude-panel">
+        <div class="lw">
+          <div class="lhdr">
+            <div>
+              <div class="leyebrow">LockIQ — Live Market Intelligence</div>
+              <div class="ltitle">Pricing Index</div>
+            </div>
+            <div class="lhead-right">
+              <div class="lwindow-headline" id="liqWindowHeadline">Change since 7:15 AM</div>
+              <div class="lwindow-sub">Updated <span id="liqLastUpdated">--:--</span> · <span id="liqMarketState">Live</span> · Drag handles to adjust</div>
+            </div>
+          </div>
+
+          <div class="lmetarow">
+            <div class="lmr-seg">
+              <span class="lmr-dot" style="background:#22c55e;"></span>
+              <span class="lmr-label">Conv index</span>
+              <span class="lmr-val" id="liqConvVal">--</span>
+              <span class="lmr-bps" id="liqConvBps">--</span>
+              <span class="lmr-cost" id="liqConvCost">--</span>
+            </div>
+            <div class="lmr-div"></div>
+            <div class="lmr-seg">
+              <span class="lmr-dot" style="background:#38bdf8;"></span>
+              <span class="lmr-label">Gov't index</span>
+              <span class="lmr-val" id="liqGovtVal">--</span>
+              <span class="lmr-bps" id="liqGovtBps">--</span>
+              <span class="lmr-cost" id="liqGovtCost">--</span>
+            </div>
+            <div class="lmr-div"></div>
+            <div class="loan-seg">
+              <span class="loan-lbl">Loan amt</span>
+              <div class="loan-pill">
+                <span class="loan-pfx">$</span>
+                <input class="loan-inp" type="text" id="liqLoanInput" value="375,000" placeholder="375,000" inputmode="numeric" />
+              </div>
+            </div>
+          </div>
+
+          <div class="lsigbar">
+            <div class="lsig-left">
+              <span class="lsigbadge" id="liqSigBadge">--</span>
+              <span class="lsigdesc" id="liqSigDesc">--</span>
+            </div>
+            <span class="lsigtime" id="liqSigTime">--</span>
+          </div>
+
+          <div class="lchart-wrap">
+            <div class="lchart-hdr">
+              <div class="llegend">
+                <div class="lleg-item"><div class="lleg-line" style="background:#22c55e;"></div>Conv</div>
+                <div class="lleg-item"><div class="lleg-line dashed-line"></div>Gov't</div>
+              </div>
+              <div class="lzone-label">Risk zones active</div>
+            </div>
+
+            <div class="lcanvas-outer">
+              <canvas id="liqChart" role="img" aria-label="LockIQ pricing index chart">LockIQ pricing chart.</canvas>
+              <div class="ltt" id="liqTooltip">
+                <div class="ltt-title" id="liqTTTitle">--</div>
+                <div class="ltt-row"><span class="ltt-k">Conv</span><span class="ltt-v" id="liqTTConv" style="color:#22c55e;">--</span></div>
+                <div class="ltt-row"><span class="ltt-k">Gov't</span><span class="ltt-v" id="liqTTGovt" style="color:#38bdf8;">--</span></div>
+                <div class="ltt-row"><span class="ltt-k">Impact</span><span class="ltt-v" id="liqTTImpact" style="color:#94a3b8;">--</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="lhandle-row">
+            <div class="lhandle-track" id="liqHandleTrack">
+              <div class="lhandle-base"></div>
+              <div class="lhandle-fill" id="liqHandleFill"></div>
+              <div class="lhandle" id="liqHandleL"><div class="lhandle-inner"></div><div class="lhandle-label" id="liqLblL">7:15</div></div>
+              <div class="lhandle" id="liqHandleR"><div class="lhandle-inner"></div><div class="lhandle-label" id="liqLblR">Now</div></div>
+            </div>
+          </div>
+
+          <div class="lchips" id="liqChipsRow">
+            <span class="lchips-label">Quick set:</span>
+          </div>
+
+          <div class="lfooter">
+            <div class="lqual"><div class="lqdot" id="liqQualDot" style="background:#22c55e;"></div><span id="liqQualLabel">Data quality: --</span></div>
+            <div class="lrefresh">Refreshes every 60s · Dollar math uses points × loan amount ÷ 100</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Market Pulse</div>
+            <div class="panel-sub">Live drivers feeding LockIQ</div>
+          </div>
+          <div class="panel-meta green">● Real-Time</div>
+        </div>
+        <div class="pulse" id="marketPulse"></div>
+      </article>
+    </section>
+
+    <section class="mid-grid">
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Rate Impact by Note Rate</div>
+            <div class="panel-sub">Directional estimate, not lender guarantee</div>
+          </div>
+          <div class="panel-meta" id="rateSince">Since anchor</div>
+        </div>
+        <div class="panel-body">
+          <table>
+            <thead>
+              <tr>
+                <th>Note Rate</th>
+                <th>BPS Change</th>
+                <th>$ / $100k</th>
+                <th>Signal</th>
+              </tr>
+            </thead>
+            <tbody id="rateRows"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Broker Pricing Index</div>
+            <div class="panel-sub">UWM + Rocket benchmark</div>
+          </div>
+          <div class="panel-meta" id="bpiAsOf">As of --</div>
+        </div>
+        <div class="panel-body">
+          <div class="bpi-top">
+            <div class="bpi-box">
+              <div class="label">Best Execution</div>
+              <div class="value green" id="bestExec">--%</div>
+            </div>
+            <div class="bpi-box">
+              <div class="label">Market Direction</div>
+              <div class="value green" id="bpiDirection">--</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Rate</th>
+                <th>Day</th>
+                <th>Intra</th>
+              </tr>
+            </thead>
+            <tbody id="bpiRows"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Today's Pricing Timeline</div>
+            <div class="panel-sub">Phase 1 visual // true intraday next</div>
+          </div>
+          <div class="panel-meta">Since anchor</div>
+        </div>
+        <div class="panel-body">
+          <div class="timeline-box">
+            <svg id="timelineSvg" viewBox="0 0 520 210" preserveAspectRatio="none"></svg>
+            <div class="timeline-impact">
+              <div>
+                <div class="panel-meta" id="timelineSince">Since Anchor</div>
+                <div class="panel-meta" id="timelineMode">Rates --</div>
+              </div>
+              <div>
+                <div class="impact-big" id="timelineMoney">$--</div>
+                <div class="panel-meta">Per $100k Loan</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="risk-grid" id="riskGrid"></section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    const API_URL = "/.netlify/functions/getMarketData";
+    const LOCKIQ_API_URL = "/.netlify/functions/getLockIQIndex";
+    const LOCKIQ_CHART_API_URL = "/.netlify/functions/getLockIQChart";
+
+    const zones = {
+      "America/Los_Angeles": "PT",
+      "America/Denver": "MT",
+      "America/Chicago": "CT",
+      "America/New_York": "ET"
+    };
+
+    let activeZone = localStorage.getItem("mbsgoat-timezone") || "America/New_York";
+    let lockiqIndexData = null;
+    let selectedLockiqAnchorKey = localStorage.getItem("lockiq-anchor-key") || null;
+
+    const el = (id) => document.getElementById(id);
+
+    function asNumber(value) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function fmt(value, decimals = 2, suffix = "") {
+      const parsed = asNumber(value);
+      if (parsed === null) return "--";
+      return parsed.toFixed(decimals) + suffix;
+    }
+
+    function signed(value, decimals = 2, suffix = "") {
+      const parsed = asNumber(value);
+      if (parsed === null) return "--";
+      return (parsed > 0 ? "+" : "") + parsed.toFixed(decimals) + suffix;
+    }
+
+    function money(value) {
+      const parsed = asNumber(value);
+      if (parsed === null) return "$--";
+      if (parsed === 0) return "$0";
+      return (parsed > 0 ? "+$" : "-$") + Math.abs(parsed).toFixed(0);
+    }
+
+    function tone(value, inverse = false) {
+      const parsed = asNumber(value);
+      if (parsed === null || parsed === 0) return "cyan";
+      const bad = inverse ? parsed < 0 : parsed > 0;
+      return bad ? "red" : "green";
+    }
+
+    function signalTone(signal) {
+      const s = String(signal || "").toUpperCase();
+      if (s === "WORSE") return "red";
+      if (s === "BETTER") return "green";
+      return "cyan";
+    }
+
+    function signalText(signal) {
+      const s = String(signal || "").toUpperCase();
+      if (s === "WORSE") return "MARKET WORSE";
+      if (s === "BETTER") return "MARKET BETTER";
+      return "MARKET FLAT";
+    }
+
+    function updateClock() {
+      const short = zones[activeZone] || "ET";
+      const now = new Date();
+
+      el("clock").textContent = new Intl.DateTimeFormat("en-US", {
+        timeZone: activeZone,
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+      }).format(now) + " " + short;
+
+      el("date").textContent = new Intl.DateTimeFormat("en-US", {
+        timeZone: activeZone,
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      }).format(now).toUpperCase();
+
+      const etHour = Number(new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric",
+        hourCycle: "h23"
+      }).format(now));
+
+      const etDay = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        weekday: "short"
+      }).format(now);
+
+      const isOpen = !["Sat", "Sun"].includes(etDay) && etHour >= 8 && etHour < 17;
+      el("marketState").className = "market-state " + (isOpen ? "open" : "closed");
+      el("marketStateMain").textContent = isOpen ? "Live Market" : "After Hours";
+    }
+
+    function setupTimezoneButtons() {
+      document.querySelectorAll(".zone-btn").forEach((button) => {
+        const zone = button.dataset.zone;
+        button.classList.toggle("active", zone === activeZone);
+
+        if (zone === activeZone) {
+          el("zoneLabel").textContent = button.dataset.label;
+        }
+
+        button.addEventListener("click", () => {
+          activeZone = zone;
+          localStorage.setItem("mbsgoat-timezone", activeZone);
+
+          document.querySelectorAll(".zone-btn").forEach((b) => {
+            b.classList.remove("active");
+          });
+
+          button.classList.add("active");
+          el("zoneLabel").textContent = button.dataset.label;
+          updateClock();
+        });
+      });
+    }
+
+    function riskMode(data) {
+      const vix = asNumber(data?.riskIndicators?.vix_current);
+      const us10 = asNumber(data?.shadowBonds?.us10y_delta);
+
+      if (vix !== null && vix > 22) return "Elevated";
+      if (us10 !== null && us10 > 5) return "Defensive";
+      return "Favorable";
+    }
+
+    function marketTrend(data) {
+      const umbs = asNumber(data?.mbsProducts?.umbs50_delta);
+      const us10 = asNumber(data?.shadowBonds?.us10y_delta);
+
+      if ((umbs !== null && umbs > 0) || (us10 !== null && us10 < 0)) return "Positive";
+      if ((umbs !== null && umbs < 0) || (us10 !== null && us10 > 0)) return "Negative";
+      return "Neutral";
+    }
+
+    function renderPulse(data) {
+      const rows = [
+        ["▥", "US 10Y Yield", fmt(data?.shadowBonds?.us10y_current, 3, "%"), data?.shadowBonds?.us10y_delta, " bps", false],
+        ["▦", "UMBS 5.0", fmt(data?.mbsProducts?.umbs50_price, 2), data?.mbsProducts?.umbs50_delta, "", true],
+        ["▣", "MBS (MBB)", fmt(data?.shadowBonds?.mbb_current, 2), data?.shadowBonds?.mbb_delta, "", true],
+        ["◷", "Volatility (VIX)", fmt(data?.riskIndicators?.vix_current, 2), null, "", false],
+        ["◇", "Risk Mode", riskMode(data), null, "", false],
+        ["↗", "Market Trend", marketTrend(data), null, "", false]
+      ];
+
+      el("marketPulse").innerHTML = rows.map((row) => {
+        const deltaText = row[3] === null || row[3] === undefined
+          ? ""
+          : signed(row[3], row[4].includes("bps") ? 1 : 3, row[4]);
+
+        return `
+          <div class="pulse-row">
+            <div class="icon">${row[0]}</div>
+            <div class="pulse-name">${row[1]}</div>
+            <div class="pulse-val ${row[3] === null ? "green" : tone(row[3], row[5])}">${row[2]}</div>
+            <div class="pulse-chg ${tone(row[3], row[5])}">${deltaText}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderRates(signal) {
+      const baseBps = asNumber(signal?.conv_change_bps) ?? 0;
+      const baseMoney = asNumber(signal?.conv_dollars_per_100k) ?? 0;
+      const sig = signal?.conv_signal || "FLAT";
+      const rates = ["5.750", "5.875", "6.000", "6.125", "6.250", "6.375", "6.500", "6.625", "6.750"];
+
+      el("rateRows").innerHTML = rates.map((rate) => {
+        const isBase = rate === "6.375";
+        const adjustment = (Number(rate) - 6.375) * 1.4;
+        const bps = baseBps + adjustment;
+        const dollars = baseMoney + adjustment * 10;
+
+        return `
+          <tr class="${isBase ? "highlight" : ""}">
+            <td class="${isBase ? "star" : ""}">${isBase ? "★ " : ""}${rate}%</td>
+            <td class="${tone(bps)}">${signed(bps, 1)}</td>
+            <td class="${tone(dollars)}">${money(dollars)}</td>
+            <td class="${signalTone(sig)}">${isBase ? "STRONG" : sig}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderBpi(data) {
+      const rows = data?.bpi?.rates || [];
+      const conv = rows.find((row) => row.product === "30Y CONV") || rows[0] || {};
+      const intraday = asNumber(conv?.change_intraday) ?? 0;
+      const direction = intraday > 0 ? "WORSE ↑" : intraday < 0 ? "BETTER ↓" : "FLAT";
+
+      el("bpiAsOf").textContent = "As of " + (data?.bpi?.as_of || "--");
+      el("bestExec").textContent = conv?.rate ? fmt(conv.rate, 3, "%") : "--";
+      el("bpiDirection").textContent = direction;
+      el("bpiDirection").className = "value " + tone(intraday);
+
+      el("bpiRows").innerHTML = rows.slice(0, 7).map((row) => `
+        <tr>
+          <td>${row.product}</td>
+          <td>${fmt(row.rate, 3, "%")}</td>
+          <td class="${tone(row.change)}">${signed(row.change, 3, "%")}</td>
+          <td class="${tone(row.change_intraday)}">${signed(row.change_intraday, 3, "%")}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderTimeline(signal) {
+      const points = [
+        ["8:00", 0],
+        ["CONV", asNumber(signal?.conv_dollars_per_100k) ?? 0],
+        ["FHA", asNumber(signal?.fha_dollars_per_100k) ?? 0],
+        ["VA", asNumber(signal?.va_dollars_per_100k) ?? 0]
+      ].map((point, index) => ({
+        label: point[0],
+        value: point[1],
+        x: [35, 190, 340, 490][index],
+        y: Math.max(25, Math.min(160, 145 - point[1] * 2.1))
+      }));
+
+      const line = points.map((point, index) => {
+        return `${index ? "L" : "M"} ${point.x} ${point.y}`;
+      }).join(" ");
+
+      const area = `${line} L 490 168 L 35 168 Z`;
+
+      el("timelineSvg").innerHTML = `
+        <defs>
+          <linearGradient id="timelineFill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#39ff88" stop-opacity="0.42"/>
+            <stop offset="100%" stop-color="#39ff88" stop-opacity="0.02"/>
+          </linearGradient>
+        </defs>
+        <line x1="25" y1="168" x2="505" y2="168" stroke="rgba(125,211,252,.22)" />
+        <line x1="25" y1="108" x2="505" y2="108" stroke="rgba(125,211,252,.12)" />
+        <line x1="25" y1="48" x2="505" y2="48" stroke="rgba(125,211,252,.12)" />
+        <path d="${area}" fill="url(#timelineFill)" />
+        <path d="${line}" fill="none" stroke="#39ff88" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        ${points.map((point) => `
+          <circle cx="${point.x}" cy="${point.y}" r="5" fill="#39ff88"/>
+          <text x="${point.x}" y="194" text-anchor="middle" class="chart-label">${point.label}</text>
+          <text x="${point.x}" y="${point.y - 12}" text-anchor="middle" class="chart-label">${money(point.value)}</text>
+        `).join("")}
+      `;
+
+      el("timelineMoney").textContent = money(signal?.conv_dollars_per_100k);
+      el("timelineMode").textContent = String(signal?.conv_signal || "RATES --").toUpperCase();
+      el("timelineSince").textContent = "Since " + (signal?.anchor_time || "Anchor");
+    }
+
+    function sentimentScore(data) {
+      let score = 50;
+      const umbs = asNumber(data?.mbsProducts?.umbs50_delta);
+      const us10 = asNumber(data?.shadowBonds?.us10y_delta);
+      const mbb = asNumber(data?.shadowBonds?.mbb_delta);
+
+      if (umbs !== null) score += umbs * 90;
+      if (us10 !== null) score -= us10 * 2.5;
+      if (mbb !== null) score += mbb * 20;
+
+      return Math.max(0, Math.min(99, Math.round(score)));
+    }
+
+    function renderRisk(data) {
+      const items = [
+        ["US10Y", fmt(data?.shadowBonds?.us10y_current, 3, "%"), signed(data?.shadowBonds?.us10y_delta, 1, " bps"), tone(data?.shadowBonds?.us10y_delta)],
+        ["US30Y", fmt(data?.us30y?.us30y_current, 3, "%"), signed(data?.us30y?.us30y_delta, 1, " bps"), tone(data?.us30y?.us30y_delta)],
+        ["MBB", fmt(data?.shadowBonds?.mbb_current, 3), signed(data?.shadowBonds?.mbb_delta, 3), tone(data?.shadowBonds?.mbb_delta, true)],
+        ["ZN", fmt(data?.treasuryFutures?.zn_current, 5), signed(data?.treasuryFutures?.zn_delta, 4), tone(data?.treasuryFutures?.zn_delta, true)],
+        ["VIX", fmt(data?.riskIndicators?.vix_current, 2), "risk", "yellow"],
+        ["Brent", fmt(data?.riskIndicators?.oil_brent_current, 2), signed(data?.riskIndicators?.oil_brent_change, 2), tone(data?.riskIndicators?.oil_brent_change)]
+      ];
+
+      el("riskGrid").innerHTML = items.map((item) => `
+        <div class="risk-card">
+          <div class="risk-name">${item[0]}</div>
+          <div class="risk-value">${item[1]}</div>
+          <div class="risk-change ${item[3]}">${item[2]}</div>
+        </div>
+      `).join("") + `
+        <div class="sentiment">
+          <div class="risk-name">Market Sentiment</div>
+          <div class="score">${sentimentScore(data)}</div>
+        </div>
+      `;
+    }
+
+    function formatIndexPts(value) {
+      const parsed = asNumber(value);
+      if (parsed === null) return "--";
+      const sign = parsed > 0 ? "+" : "";
+      return sign + parsed.toFixed(4);
+    }
+
+    function impactText(value) {
+      const parsed = asNumber(value);
+      if (parsed === null) return "--";
+      if (parsed === 0) return "$0 / $100k • Flat";
+      return "$" + Math.abs(parsed).toFixed(0) + " / $100k • " + (parsed > 0 ? "Worse" : "Better");
+    }
+
+    function anchorForLockIQ(key) {
+      if (!lockiqIndexData) return null;
+      return lockiqIndexData?.anchors?.[key] || lockiqIndexData?.anchors?.[lockiqIndexData.default_anchor_key] || lockiqIndexData;
+    }
+
+    function normalizeLockIQSignal(anchorData) {
+      if (!anchorData) return {};
+      return {
+        conv_signal: anchorData.conv_signal || "FLAT",
+        govt_signal: anchorData.govt_signal || "FLAT",
+        fha_signal: anchorData.fha_signal || "FLAT",
+        va_signal: anchorData.va_signal || "FLAT",
+        conv_change_bps: anchorData.conv_change_bps,
+        govt_change_bps: anchorData.govt_change_bps,
+        fha_change_bps: anchorData.fha_change_bps,
+        va_change_bps: anchorData.va_change_bps,
+        conv_dollars_per_100k: anchorData.conv_dollars_per_100k,
+        govt_dollars_per_100k: anchorData.govt_dollars_per_100k,
+        fha_dollars_per_100k: anchorData.fha_dollars_per_100k,
+        va_dollars_per_100k: anchorData.va_dollars_per_100k,
+        anchor_time: anchorData.anchor_label || anchorData.anchor_time || "--",
+        data_quality: anchorData.data_quality || lockiqIndexData?.data_quality,
+        last_updated: lockiqIndexData?.last_updated || anchorData.last_updated
+      };
+    }
+
+    function setupLockIQDropdown() {
+      const select = el("lockiqAnchorSelect");
+      if (!select || !lockiqIndexData) return;
+
+      const options = lockiqIndexData.available_anchor_options || [];
+      const currentValue = selectedLockiqAnchorKey || lockiqIndexData.default_anchor_key || lockiqIndexData.anchor_key || "0715";
+
+      select.innerHTML = options.map((option) => `
+        <option value="${option.anchor_key}">${option.label}</option>
+      `).join("");
+
+      if (lockiqIndexData?.anchors?.[currentValue]) {
+        select.value = currentValue;
+      } else if (lockiqIndexData.default_anchor_key) {
+        select.value = lockiqIndexData.default_anchor_key;
+        selectedLockiqAnchorKey = lockiqIndexData.default_anchor_key;
+      }
+
+      select.onchange = () => {
+        selectedLockiqAnchorKey = select.value;
+        localStorage.setItem("lockiq-anchor-key", selectedLockiqAnchorKey);
+        renderLockIQLiveIndex();
+      };
+    }
+
+    function renderLockIQLiveIndex() {
+      if (!lockiqIndexData) return {};
+
+      const key = selectedLockiqAnchorKey || lockiqIndexData.default_anchor_key || lockiqIndexData.anchor_key || "0715";
+      const anchorData = anchorForLockIQ(key);
+      const signal = normalizeLockIQSignal(anchorData);
+      const mainSignal = signal.conv_signal || "FLAT";
+      const mainTone = signalTone(mainSignal);
+
+      el("lockiqDirection").textContent = signalText(mainSignal);
+      el("lockiqDirection").className = "direction " + mainTone;
+      el("heroAnchor").textContent = "Since " + (anchorData?.anchor_label || anchorData?.anchor_time || "--");
+      el("lockSub").textContent = "Estimated lender-point movement";
+      el("lockUpdated").textContent = "Updated " + (lockiqIndexData.last_updated || "--");
+
+      el("liveConvIndex").textContent = formatIndexPts(anchorData?.live_conventional_index_pts) + " pts";
+      el("liveConvIndex").className = "index-value " + signalTone(anchorData?.conv_signal);
+      el("liveConvImpact").textContent = impactText(anchorData?.conv_dollars_per_100k);
+
+      el("liveGovtIndex").textContent = formatIndexPts(anchorData?.live_government_index_pts) + " pts";
+      el("liveGovtIndex").className = "index-value " + signalTone(anchorData?.govt_signal);
+      el("liveGovtImpact").textContent = impactText(anchorData?.govt_dollars_per_100k);
+
+      el("fhaDetail").textContent = signed(anchorData?.fha_change_bps, 1, " bps");
+      el("fhaDetail").className = "v " + signalTone(anchorData?.fha_signal);
+      el("vaDetail").textContent = signed(anchorData?.va_change_bps, 1, " bps");
+      el("vaDetail").className = "v " + signalTone(anchorData?.va_signal);
+      el("lockiqQuality").textContent = anchorData?.data_quality || lockiqIndexData.data_quality || "--";
+      el("lockiqQuality").className = "v " + ((anchorData?.data_quality || "") === "GOOD" ? "green" : "yellow");
+      el("lockiqModel").textContent = (lockiqIndexData.model_version || "v1").replace("lockiq_live_index_", "");
+
+      return signal;
+    }
+
+    function render(data) {
+      const key = selectedLockiqAnchorKey || lockiqIndexData?.default_anchor_key || lockiqIndexData?.anchor_key || "0715";
+      const signal = normalizeLockIQSignal(anchorForLockIQ(key));
+
+      renderPulse(data);
+      renderRates(signal);
+      renderBpi(data);
+      renderTimeline(signal);
+      renderRisk(data);
+    }
+
+    async function loadData() {
+      el("page").classList.add("loading");
+      el("errorBox").style.display = "none";
+
+      try {
+        const [marketResponse, lockiqResponse] = await Promise.all([
+          fetch(API_URL, { cache: "no-store" }),
+          fetch(LOCKIQ_API_URL, { cache: "no-store" })
+        ]);
+
+        if (!marketResponse.ok) throw new Error("Market API " + marketResponse.status);
+        if (!lockiqResponse.ok) throw new Error("LockIQ API " + lockiqResponse.status);
+
+        const data = await marketResponse.json();
+        lockiqIndexData = await lockiqResponse.json();
+
+        render(data);
+      } catch (error) {
+        el("errorBox").style.display = "block";
+        el("errorBox").textContent = "API error: " + (error?.message || error);
+      } finally {
+        el("page").classList.remove("loading");
+      }
+    }
+
+
+
+    // ===== LOCKIQ CLAUDE-STYLE PRICING INDEX CHART =====
+    (function() {
+      let LIQ_PTS = [];
+      let liqLeftIdx = 0;
+      let liqRightIdx = 0;
+      let liqLoanAmt = 375000;
+      let liqChart = null;
+      let liqHandlesSetup = false;
+
+      function liqNum(v) {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function liqFmtPts(v) {
+        return (v >= 0 ? "+" : "") + v.toFixed(4) + " pts";
+      }
+
+      function liqFmtBps(v) {
+        const bps = Math.abs(v * 100).toFixed(1);
+        return bps + " bps " + (v >= 0 ? "better" : "worse");
+      }
+
+      function liqFmtDollar(pts, loanAmount) {
+        // Correct mortgage point math:
+        // 1.000 point = 1% of loan amount.
+        // Example: -0.096 pts * $375,000 / 100 = -$360.
+        const dollars = Math.round((pts * loanAmount) / 100);
+        return (dollars >= 0 ? "+" : "-") + "$" + Math.abs(dollars).toLocaleString();
+      }
+
+      function liqParseLoan(s) {
+        const n = parseInt(String(s || "").replace(/[^0-9]/g, ""), 10);
+        return (!n || n <= 0) ? 375000 : n;
+      }
+
+      function liqFmtLoan(n) {
+        return n.toLocaleString();
+      }
+
+      function liqShortTime(t) {
+        if (!t) return "--";
+        return String(t).slice(0, 5);
+      }
+
+      function liqSignal(pts) {
+        const bps = pts * 100;
+        const a = Math.abs(bps);
+        if (bps >= 0) {
+          if (a <= 5)  return { t: "Neutral / Stable",      c: "#94a3b8", bg: "rgba(148,163,184,.10)", bd: "rgba(148,163,184,.25)" };
+          if (a <= 10) return { t: "Trending Safe",         c: "#22c55e", bg: "rgba(34,197,94,.10)",   bd: "rgba(34,197,94,.25)" };
+          if (a <= 15) return { t: "Improving",             c: "#4ade80", bg: "rgba(74,222,128,.10)",  bd: "rgba(74,222,128,.25)" };
+          if (a <= 25) return { t: "Improvement Possible",  c: "#86efac", bg: "rgba(134,239,172,.10)", bd: "rgba(134,239,172,.25)" };
+          return               { t: "Rate Sheets Improving",c: "#bbf7d0", bg: "rgba(187,247,208,.10)", bd: "rgba(187,247,208,.25)" };
+        }
+        if (a <= 5)  return { t: "Worsening — Monitor", c: "#f59e0b", bg: "rgba(245,158,11,.10)", bd: "rgba(245,158,11,.30)" };
+        if (a <= 10) return { t: "Worsening — Caution", c: "#f97316", bg: "rgba(249,115,22,.10)", bd: "rgba(249,115,22,.30)" };
+        if (a <= 15) return { t: "Reprice Possible",    c: "#ef4444", bg: "rgba(239,68,68,.10)",  bd: "rgba(239,68,68,.30)" };
+        if (a <= 25) return { t: "Reprice Likely",      c: "#dc2626", bg: "rgba(220,38,38,.12)",  bd: "rgba(220,38,38,.35)" };
+        return               { t: "Reprices Expected",  c: "#fca5a5", bg: "rgba(252,165,165,.08)",bd: "rgba(252,165,165,.40)" };
+      }
+
+      function liqCurrentDelta() {
+        if (!LIQ_PTS.length) return { dc: 0, dg: 0 };
+        const lp = LIQ_PTS[liqLeftIdx];
+        const rp = LIQ_PTS[liqRightIdx];
+
+        // Our current chart payload stores each anchor as "change from that anchor to current".
+        // When the right handle is Now, use the selected anchor's values directly.
+        if (rp && rp.anchor_key === "live") {
+          return {
+            dc: liqNum(lp.conv_index_pts),
+            dg: liqNum(lp.govt_index_pts)
+          };
+        }
+
+        return {
+          dc: liqNum(rp.conv_index_pts) - liqNum(lp.conv_index_pts),
+          dg: liqNum(rp.govt_index_pts) - liqNum(lp.govt_index_pts)
+        };
+      }
+
+      function liqDuration() {
+        if (!LIQ_PTS.length) return "--";
+        const lp = LIQ_PTS[liqLeftIdx];
+        const rp = LIQ_PTS[liqRightIdx];
+        if (rp.anchor_key === "live") return "to now";
+        const toM = t => { const [h, m] = String(t || "00:00").split(":").map(Number); return h * 60 + m; };
+        let d = toM(rp.time) - toM(lp.time);
+        if (d < 0) d += 1440;
+        const h = Math.floor(d / 60), m = d % 60;
+        return h === 0 ? m + "m" : m === 0 ? h + "h" : h + "h " + m + "m";
+      }
+
+      function liqWindowLabel() {
+        if (!LIQ_PTS.length) return "Change since --";
+        const lp = LIQ_PTS[liqLeftIdx];
+        const rp = LIQ_PTS[liqRightIdx];
+        if (rp.anchor_key === "live") return "Change since " + lp.label;
+        return lp.label + " → " + rp.label;
+      }
+
+      function liqUpdateAll() {
+        if (!LIQ_PTS.length) return;
+        const lp = LIQ_PTS[liqLeftIdx];
+        const rp = LIQ_PTS[liqRightIdx];
+        const { dc, dg } = liqCurrentDelta();
+        const sig = liqSignal(dc);
+        const convColor = dc >= 0 ? "#22c55e" : "#ef4444";
+        const govtColor = dg >= 0 ? "#22c55e" : "#38bdf8";
+
+        el("liqConvVal").textContent = liqFmtPts(dc);
+        el("liqConvVal").style.color = convColor;
+        el("liqConvBps").textContent = liqFmtBps(dc);
+        el("liqConvCost").textContent = liqFmtDollar(dc, liqLoanAmt);
+        el("liqConvCost").style.color = convColor;
+
+        el("liqGovtVal").textContent = liqFmtPts(dg);
+        el("liqGovtVal").style.color = govtColor;
+        el("liqGovtBps").textContent = liqFmtBps(dg);
+        el("liqGovtCost").textContent = liqFmtDollar(dg, liqLoanAmt);
+        el("liqGovtCost").style.color = govtColor;
+
+        el("liqWindowHeadline").textContent = liqWindowLabel();
+        const badge = el("liqSigBadge");
+        badge.textContent = sig.t;
+        badge.style.color = sig.c;
+        badge.style.background = sig.bg;
+        badge.style.border = "1px solid " + sig.bd;
+
+        el("liqSigDesc").textContent = lp.label + " → " + rp.label + " · " + liqDuration();
+        el("liqSigTime").textContent = "as of " + (rp.anchor_key === "live" ? "Now" : liqShortTime(rp.time));
+      }
+
+      const liqZonePlugin = {
+        id: "liqZones",
+        beforeDraw(ch) {
+          const { ctx, chartArea: ca, scales } = ch;
+          if (!ca) return;
+          const y = scales.y;
+          [
+            { y1: -0.05, y2: -0.10, c: "rgba(245,158,11,.05)" },
+            { y1: -0.10, y2: -0.15, c: "rgba(249,115,22,.06)" },
+            { y1: -0.15, y2: -0.25, c: "rgba(239,68,68,.07)"  },
+            { y1: -0.25, y2: -0.50, c: "rgba(220,38,38,.09)"  },
+            { y1:  0.05, y2:  0.15, c: "rgba(34,197,94,.05)"  },
+            { y1:  0.15, y2:  0.35, c: "rgba(34,197,94,.08)"  }
+          ].forEach(z => {
+            const p1 = y.getPixelForValue(z.y1), p2 = y.getPixelForValue(z.y2);
+            ctx.fillStyle = z.c;
+            ctx.fillRect(ca.left, Math.min(p1, p2), ca.width, Math.abs(p2 - p1));
+          });
+          const zp = y.getPixelForValue(0);
+          ctx.save();
+          ctx.strokeStyle = "rgba(148,163,184,.35)";
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath(); ctx.moveTo(ca.left, zp); ctx.lineTo(ca.right, zp); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
+      };
+
+      const liqDimPlugin = {
+        id: "liqDim",
+        beforeDatasetsDraw(ch) {
+          const { ctx, chartArea: ca, scales } = ch;
+          if (!ca || !LIQ_PTS.length) return;
+          const xs = scales.x;
+          const lx = xs.getPixelForValue(liqLeftIdx);
+          const rx = xs.getPixelForValue(liqRightIdx);
+          ctx.save();
+          ctx.fillStyle = "rgba(3,10,18,.62)";
+          if (lx > ca.left) ctx.fillRect(ca.left, ca.top, lx - ca.left, ca.height);
+          if (rx < ca.right) ctx.fillRect(rx, ca.top, ca.right - rx, ca.height);
+          ctx.strokeStyle = "rgba(34,211,238,.34)";
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath(); ctx.moveTo(lx, ca.top); ctx.lineTo(lx, ca.bottom); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(rx, ca.top); ctx.lineTo(rx, ca.bottom); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
+      };
+
+      function liqBuildChart() {
+        if (typeof Chart === "undefined") {
+          console.error("Chart.js is not loaded.");
+          return;
+        }
+        const canvas = el("liqChart");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        liqChart = new Chart(ctx, {
+          type: "line",
+          plugins: [liqZonePlugin, liqDimPlugin],
+          data: {
+            labels: LIQ_PTS.map(p => p.label),
+            datasets: [
+              {
+                label: "Conv",
+                data: LIQ_PTS.map(p => liqNum(p.conv_index_pts)),
+                borderColor: "#22c55e",
+                borderWidth: 2.5,
+                pointBackgroundColor: "#22c55e",
+                pointBorderColor: "#071522",
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: .35,
+                fill: false
+              },
+              {
+                label: "Gov't",
+                data: LIQ_PTS.map(p => liqNum(p.govt_index_pts)),
+                borderColor: "#38bdf8",
+                borderWidth: 2,
+                borderDash: [5, 3],
+                pointBackgroundColor: "#38bdf8",
+                pointBorderColor: "#071522",
+                pointBorderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: .35,
+                fill: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 350 },
+            interaction: { mode: "index", intersect: false },
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: {
+              x: {
+                grid: { color: "rgba(125,211,252,.08)" },
+                ticks: { color: "#78909c", font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 9 },
+                border: { color: "rgba(125,211,252,.14)" }
+              },
+              y: {
+                grid: { color: "rgba(125,211,252,.08)" },
+                ticks: { color: "#78909c", font: { size: 10 }, callback: v => (v >= 0 ? "+" : "") + Number(v).toFixed(3), maxTicksLimit: 8 },
+                border: { color: "rgba(125,211,252,.14)" }
+              }
+            },
+            layout: { padding: { left: 0, right: 10, top: 6, bottom: 4 } },
+            onHover: (evt, els, ch) => {
+              const tt = el("liqTooltip");
+              if (!els || !els.length) { tt.classList.remove("vis"); return; }
+              const i = els[0].index;
+              const c = liqNum(ch.data.datasets[0].data[i]);
+              const g = liqNum(ch.data.datasets[1].data[i]);
+              el("liqTTTitle").textContent = LIQ_PTS[i].label;
+              el("liqTTConv").textContent = liqFmtPts(c);
+              el("liqTTConv").style.color = c >= 0 ? "#22c55e" : "#ef4444";
+              el("liqTTGovt").textContent = liqFmtPts(g);
+              el("liqTTImpact").textContent = liqFmtDollar(c, liqLoanAmt) + " conv";
+              const wr = document.querySelector(".lcanvas-outer").getBoundingClientRect();
+              const meta = ch.getDatasetMeta(0);
+              const pt = meta.data[i];
+              let x = pt.x + 12, y = pt.y - 65;
+              if (x + 175 > wr.width) x = pt.x - 187;
+              if (y < 0) y = 4;
+              tt.style.left = x + "px";
+              tt.style.top = y + "px";
+              tt.classList.add("vis");
+            }
+          }
+        });
+      }
+
+      function liqPositionHandles() {
+        const track = el("liqHandleTrack");
+        if (!track || !LIQ_PTS.length) return;
+        const W = track.getBoundingClientRect().width;
+        if (!W) return;
+        const N = LIQ_PTS.length;
+        const step = W / Math.max(1, N - 1);
+        const lx = liqLeftIdx * step, rx = liqRightIdx * step;
+        el("liqHandleL").style.left = lx + "px";
+        el("liqHandleR").style.left = rx + "px";
+        el("liqHandleFill").style.left = lx + "px";
+        el("liqHandleFill").style.width = Math.max(0, rx - lx) + "px";
+        el("liqLblL").textContent = liqShortTime(LIQ_PTS[liqLeftIdx].time);
+        el("liqLblR").textContent = LIQ_PTS[liqRightIdx].anchor_key === "live" ? "Now" : liqShortTime(LIQ_PTS[liqRightIdx].time);
+      }
+
+      function liqSetupHandles() {
+        if (liqHandlesSetup) return;
+        liqHandlesSetup = true;
+        const track = el("liqHandleTrack");
+        ["liqHandleL", "liqHandleR"].forEach(id => {
+          const handle = el(id);
+          let dragging = false;
+          handle.addEventListener("mousedown", e => { dragging = true; e.preventDefault(); });
+          document.addEventListener("mousemove", e => {
+            if (!dragging || !LIQ_PTS.length) return;
+            const rect = track.getBoundingClientRect();
+            const step = rect.width / Math.max(1, LIQ_PTS.length - 1);
+            let idx = Math.round(Math.max(0, Math.min(rect.width, e.clientX - rect.left)) / step);
+            if (id === "liqHandleL") {
+              liqLeftIdx = Math.min(idx, liqRightIdx - 1);
+              if (liqLeftIdx < 0) liqLeftIdx = 0;
+            } else {
+              liqRightIdx = Math.max(idx, liqLeftIdx + 1);
+              if (liqRightIdx >= LIQ_PTS.length) liqRightIdx = LIQ_PTS.length - 1;
+            }
+            liqPositionHandles();
+            if (liqChart) liqChart.update("none");
+            liqUpdateAll();
+            document.querySelectorAll(".lchip").forEach(c => c.classList.remove("active"));
+          });
+          document.addEventListener("mouseup", () => { dragging = false; });
+        });
+        window.addEventListener("resize", liqPositionHandles);
+      }
+
+      function liqBuildChips() {
+        const row = el("liqChipsRow");
+        if (!row) return;
+        row.innerHTML = '<span class="lchips-label">Quick set:</span>';
+        LIQ_PTS.forEach((p, i) => {
+          if (p.anchor_key === "live") return;
+          const chip = document.createElement("div");
+          chip.className = "lchip" + (i === liqLeftIdx ? " active" : "");
+          chip.textContent = "Since " + p.label;
+          chip.addEventListener("click", () => {
+            liqLeftIdx = i;
+            liqRightIdx = LIQ_PTS.length - 1;
+            selectedLockiqAnchorKey = p.anchor_key;
+            localStorage.setItem("lockiq-anchor-key", selectedLockiqAnchorKey);
+            liqPositionHandles();
+            if (liqChart) liqChart.update("none");
+            liqUpdateAll();
+            document.querySelectorAll(".lchip").forEach(c => c.classList.remove("active"));
+            chip.classList.add("active");
+          });
+          row.appendChild(chip);
+        });
+      }
+
+      function liqSetupLoanInput() {
+        const inp = el("liqLoanInput");
+        if (!inp) return;
+        inp.addEventListener("input", e => {
+          liqLoanAmt = liqParseLoan(e.target.value);
+          liqUpdateAll();
+        });
+        inp.addEventListener("blur", () => { inp.value = liqFmtLoan(liqLoanAmt); });
+        inp.addEventListener("focus", () => {
+          inp.value = liqLoanAmt.toString();
+          setTimeout(() => inp.select(), 0);
+        });
+      }
+
+      function liqApplyQuality(data) {
+        const lastPt = LIQ_PTS[LIQ_PTS.length - 1] || {};
+        const q = lastPt.quality || data?.data_quality || "--";
+        const dot = el("liqQualDot");
+        const label = el("liqQualLabel");
+        if (!dot || !label) return;
+        if (q === "GOOD") {
+          dot.style.background = "#22c55e";
+          label.textContent = "Data quality: GOOD";
+        } else if (q === "OK_WITH_WARNINGS" || q === "OK") {
+          dot.style.background = "#f59e0b";
+          label.textContent = "Data quality: OK WITH WARNINGS";
+        } else {
+          dot.style.background = "#ef4444";
+          label.textContent = "Data quality: LIMITED";
+        }
+      }
+
+      async function liqFetchChart() {
+        try {
+          const res = await fetch(LOCKIQ_CHART_API_URL, { cache: "no-store" });
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          const data = await res.json();
+          const raw = Array.isArray(data.points) ? data.points : [];
+          const now = new Date();
+          const nowTime = now.toTimeString().slice(0, 5);
+
+          LIQ_PTS = raw
+            .filter(p => p && p.anchor_key && p.conv_index_pts !== undefined && p.govt_index_pts !== undefined)
+            .map(p => ({
+              ...p,
+              time: liqShortTime(p.time),
+              conv_index_pts: liqNum(p.conv_index_pts),
+              govt_index_pts: liqNum(p.govt_index_pts)
+            }));
+
+          // Add a virtual live point. Current chart doc stores each anchor as change-to-current;
+          // this point lets handles measure selected anchor → now cleanly.
+          LIQ_PTS.push({
+            anchor_key: "live",
+            label: "Now",
+            time: nowTime,
+            conv_index_pts: 0,
+            govt_index_pts: 0,
+            quality: data.current_data_quality || data.data_quality || "--",
+            warnings: []
+          });
+
+          if (!LIQ_PTS.length) return;
+
+          const defaultKey = selectedLockiqAnchorKey || data.default_anchor_key || "0715";
+          const defaultIdx = LIQ_PTS.findIndex(p => p.anchor_key === defaultKey);
+          liqLeftIdx = defaultIdx >= 0 ? defaultIdx : 0;
+          liqRightIdx = LIQ_PTS.length - 1;
+
+          if (data.last_updated) {
+            const t = String(data.last_updated).split(" ")[1] || data.last_updated;
+            el("liqLastUpdated").textContent = String(t).substring(0, 5);
+          }
+
+          const lastUpdated = data.last_updated ? new Date(String(data.last_updated).replace(" ", "T")) : null;
+          if (lastUpdated && Number.isFinite(lastUpdated.getTime())) {
+            const hoursSince = (Date.now() - lastUpdated.getTime()) / 36e5;
+            el("liqMarketState").textContent = hoursSince > 2 ? "Market Closed / Last Saved" : "Live";
+          }
+
+          liqApplyQuality(data);
+
+          if (!liqChart) {
+            liqBuildChart();
+            setTimeout(() => {
+              liqPositionHandles();
+              liqSetupHandles();
+            }, 100);
+          } else {
+            liqChart.data.labels = LIQ_PTS.map(p => p.label);
+            liqChart.data.datasets[0].data = LIQ_PTS.map(p => p.conv_index_pts);
+            liqChart.data.datasets[1].data = LIQ_PTS.map(p => p.govt_index_pts);
+            liqChart.update("active");
+            liqPositionHandles();
+          }
+
+          liqBuildChips();
+          liqUpdateAll();
+        } catch (err) {
+          console.error("LockIQ chart fetch error:", err);
+        }
+      }
+
+      function liqInit() {
+        liqSetupLoanInput();
+        liqFetchChart();
+        setInterval(liqFetchChart, 60000);
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", liqInit);
+      } else {
+        liqInit();
+      }
+    })();
+    // ===== END LOCKIQ CLAUDE-STYLE PRICING INDEX CHART =====
+
+
+    setupTimezoneButtons();
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    loadData();
+    setInterval(loadData, 60000);
+  </script>
+</body>
+</html>
