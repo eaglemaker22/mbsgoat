@@ -1813,30 +1813,32 @@
 
     function liqWindowLabel() {
       if (!LIQ_PTS.length) return "Change since --";
-      const left = LIQ_PTS[liqLeftIdx];
-      const right = LIQ_PTS[liqRightIdx];
+      const selected = LIQ_PTS[liqLeftIdx];
 
-      if (liqRightIdx === LIQ_PTS.length - 1 && left?.anchor_key === "0715") return "Change since 7:15 AM";
-      if (liqRightIdx === LIQ_PTS.length - 1) return "Change since " + (left?.label || "--");
-      return (left?.label || "--") + " → " + (right?.label || "--");
+      if (selected?.anchor_key === "0715") return "Change since 7:15 AM";
+      return "Change since " + (selected?.label || "--");
     }
 
     function liqDurationText() {
       if (!LIQ_PTS.length) return "--";
-      const left = LIQ_PTS[liqLeftIdx];
-      const right = LIQ_PTS[liqRightIdx];
-      return (left?.label || "--") + " → " + (right?.label || "Now");
+      const selected = LIQ_PTS[liqLeftIdx];
+      return (selected?.label || "--") + " → Current Market";
     }
 
     function liqUpdateDisplay() {
       if (!LIQ_PTS.length) return;
 
-      const left = LIQ_PTS[liqLeftIdx];
-      const right = LIQ_PTS[liqRightIdx];
-      const convDelta = Number(((asNumber(right?.conv_index_pts) || 0) - (asNumber(left?.conv_index_pts) || 0)).toFixed(4));
-      const govtDelta = Number(((asNumber(right?.govt_index_pts) || 0) - (asNumber(left?.govt_index_pts) || 0)).toFixed(4));
+      const selected = LIQ_PTS[liqLeftIdx];
+
+      // IMPORTANT:
+      // Each backend chart point is already the move from that anchor to current market.
+      // Do NOT subtract a right-handle point from a left-handle point.
+      // Example: the 0715 point already means "7:15 AM → now."
+      const convDelta = Number((asNumber(selected?.conv_index_pts) || 0).toFixed(4));
+      const govtDelta = Number((asNumber(selected?.govt_index_pts) || 0).toFixed(4));
+
       const convColor = convDelta >= 0 ? "var(--green)" : "var(--red)";
-      const govtColor = govtDelta >= 0 ? "var(--green)" : "var(--cyan)";
+      const govtColor = govtDelta >= 0 ? "var(--green)" : "var(--red)";
 
       el("liqConvVal").textContent = liqFmtPts(convDelta);
       el("liqConvVal").style.color = convColor;
@@ -1852,7 +1854,7 @@
 
       el("liqWindowHeadline").textContent = liqWindowLabel();
       el("liqSigDesc").textContent = liqDurationText();
-      el("liqSigTime").textContent = "as of " + liqTimeLabel(right);
+      el("liqSigTime").textContent = "as of current market";
 
       const sig = liqSignal(convDelta);
       el("liqSigBadge").textContent = sig.text;
@@ -2039,37 +2041,40 @@
       liqHandlesReady = true;
 
       const track = el("liqHandleTrack");
+      const leftHandle = el("liqHandleL");
+      const rightHandle = el("liqHandleR");
 
-      ["liqHandleL", "liqHandleR"].forEach((id) => {
-        const handle = el(id);
-        let dragging = false;
+      // The right handle represents current market and stays fixed at the far right.
+      // The left handle selects which backend anchor-to-current point to display.
+      if (rightHandle) {
+        rightHandle.style.cursor = "default";
+        rightHandle.title = "Current market";
+      }
 
-        handle.addEventListener("mousedown", (event) => {
-          dragging = true;
-          event.preventDefault();
-        });
+      let dragging = false;
 
-        document.addEventListener("mousemove", (event) => {
-          if (!dragging || !track) return;
-          const rect = track.getBoundingClientRect();
-          const step = rect.width / (LIQ_PTS.length - 1);
-          let idx = Math.round(Math.max(0, Math.min(rect.width, event.clientX - rect.left)) / step);
+      leftHandle.addEventListener("mousedown", (event) => {
+        dragging = true;
+        event.preventDefault();
+      });
 
-          if (id === "liqHandleL") {
-            liqLeftIdx = Math.max(0, Math.min(idx, liqRightIdx - 1));
-          } else {
-            liqRightIdx = Math.min(LIQ_PTS.length - 1, Math.max(idx, liqLeftIdx + 1));
-          }
+      document.addEventListener("mousemove", (event) => {
+        if (!dragging || !track) return;
+        const rect = track.getBoundingClientRect();
+        const step = rect.width / (LIQ_PTS.length - 1);
+        const idx = Math.round(Math.max(0, Math.min(rect.width, event.clientX - rect.left)) / step);
 
-          liqPositionHandles();
-          if (liqChart) liqChart.update("none");
-          liqUpdateDisplay();
-          document.querySelectorAll(".liq-chip").forEach((chip) => chip.classList.remove("active"));
-        });
+        liqLeftIdx = Math.max(0, Math.min(idx, LIQ_PTS.length - 1));
+        liqRightIdx = LIQ_PTS.length - 1;
 
-        document.addEventListener("mouseup", () => {
-          dragging = false;
-        });
+        liqPositionHandles();
+        if (liqChart) liqChart.update("none");
+        liqUpdateDisplay();
+        document.querySelectorAll(".liq-chip").forEach((chip) => chip.classList.remove("active"));
+      });
+
+      document.addEventListener("mouseup", () => {
+        dragging = false;
       });
 
       window.addEventListener("resize", liqPositionHandles);
