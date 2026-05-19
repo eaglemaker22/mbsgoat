@@ -866,42 +866,6 @@
       white-space: nowrap;
     }
 
-    .liq-chips {
-      padding: 10px 22px 13px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      flex-wrap: wrap;
-      border-top: 1px solid rgba(125,211,252,.12);
-    }
-
-    .liq-chips-label {
-      color: var(--muted);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      margin-right: 3px;
-    }
-
-    .liq-chip {
-      border: 1px solid rgba(125,211,252,.16);
-      border-radius: 999px;
-      background: rgba(4,15,27,.74);
-      color: #9fb4bf;
-      padding: 5px 11px;
-      font-size: 11px;
-      cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-
-    .liq-chip:hover,
-    .liq-chip.active {
-      color: var(--cyan);
-      border-color: rgba(34,211,238,.64);
-      background: rgba(34,211,238,.08);
-    }
-
     .liq-footer {
       padding: 10px 22px 14px;
       border-top: 1px solid rgba(125,211,252,.12);
@@ -1318,9 +1282,6 @@
             </div>
           </div>
 
-          <div class="liq-chips" id="liqChipsRow">
-            <span class="liq-chips-label">Quick set:</span>
-          </div>
 
           <div class="liq-footer">
             <div class="liq-quality">
@@ -2188,7 +2149,6 @@
           liqPositionHandles();
           if (liqChart) liqChart.update("none");
           liqUpdateDisplay();
-          document.querySelectorAll(".liq-chip").forEach((chip) => chip.classList.remove("active"));
         });
 
         document.addEventListener("mouseup", () => {
@@ -2197,34 +2157,6 @@
       });
 
       window.addEventListener("resize", liqPositionHandles);
-    }
-
-    function liqQuickSet(index) {
-      if (!LIQ_PTS.length) return;
-      liqLeftIdx = Math.max(0, Math.min(index, LIQ_PTS.length - 2));
-      liqRightIdx = LIQ_PTS.length - 1;
-      if (liqChart) liqChart.update("none");
-      liqUpdateDisplay();
-
-      document.querySelectorAll(".liq-chip").forEach((chip, i) => {
-        chip.classList.toggle("active", i === index);
-      });
-    }
-
-    function liqBuildChips() {
-      const row = el("liqChipsRow");
-      if (!row || !LIQ_PTS.length) return;
-
-      row.innerHTML = '<span class="liq-chips-label">Quick set:</span>';
-
-      LIQ_PTS.slice(0, -1).forEach((point, index) => {
-        const chip = document.createElement("button");
-        chip.type = "button";
-        chip.className = "liq-chip" + (index === liqLeftIdx ? " active" : "");
-        chip.textContent = "Since " + (point.label || point.anchor_key);
-        chip.addEventListener("click", () => liqQuickSet(index));
-        row.appendChild(chip);
-      });
     }
 
     function liqSetupLoanInput() {
@@ -2286,7 +2218,6 @@
           liqPositionHandles();
         }
 
-        liqBuildChips();
         liqSetupLoanInput();
         liqUpdateDisplay();
       } catch (error) {
