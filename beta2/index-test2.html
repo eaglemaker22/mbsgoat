@@ -492,389 +492,31 @@
       text-transform: uppercase;
     }
 
-
-    /* ===== LOCKIQ PRO PRICING INDEX / CHART ===== */
-    .lockiq-pro-panel { overflow: visible; }
-    .liq-module {
-      min-height: 560px;
-      background:
-        radial-gradient(circle at top left, rgba(34,211,238,.08), transparent 22rem),
-        radial-gradient(circle at top right, rgba(57,255,136,.06), transparent 20rem),
-        linear-gradient(180deg, rgba(7,20,34,.98), rgba(3,10,18,.98));
-      color: var(--text);
-      font-family: var(--font-mono);
-    }
-
-    .liq-head {
-      padding: 18px 22px 14px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      border-bottom: 1px solid rgba(125,211,252,.14);
-    }
-
-    .liq-eyebrow {
-      font-size: 11px;
-      font-weight: 900;
-      color: var(--cyan);
-      text-transform: uppercase;
-      letter-spacing: .19em;
-    }
-
-    .liq-title {
-      margin-top: 5px;
-      font-size: 26px;
-      line-height: 1;
-      font-weight: 950;
-      letter-spacing: .05em;
-      text-transform: uppercase;
-    }
-
-    .liq-head-right {
-      text-align: right;
-      min-width: 230px;
-    }
-
-    .liq-window-headline {
-      font-size: 17px;
-      font-weight: 950;
-      color: #edf9ff;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-
-    .liq-window-sub {
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .10em;
-    }
-
-    .liq-metric-row {
-      padding: 18px 22px;
-      display: grid;
-      grid-template-columns: minmax(240px, 1fr) minmax(240px, 1fr) 210px;
-      gap: 14px;
-      border-bottom: 1px solid rgba(125,211,252,.14);
-      align-items: stretch;
-    }
-
-    .liq-metric,
-    .liq-loan-box {
-      border: 1px solid rgba(125,211,252,.16);
-      border-radius: 12px;
-      background: rgba(1,8,14,.48);
-      padding: 16px;
-      min-height: 128px;
-    }
-
-    .liq-metric-top {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .liq-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
-    .liq-dot-conv { background: #22c55e; box-shadow: 0 0 12px rgba(34,197,94,.6); }
-    .liq-dot-govt { background: #38bdf8; box-shadow: 0 0 12px rgba(56,189,248,.55); }
-
-    .liq-label,
-    .liq-loan-label {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .15em;
-    }
-
-    .liq-value-line {
-      margin-top: 11px;
-      display: flex;
-      align-items: baseline;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .liq-main-val {
-      font-size: 44px;
-      line-height: .95;
-      font-weight: 950;
-      letter-spacing: -.06em;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .liq-bps {
-      color: #a7bbc6;
-      font-size: 15px;
-      font-weight: 850;
-      white-space: nowrap;
-    }
-
-    .liq-cost {
-      margin-top: 9px;
-      font-size: 25px;
-      font-weight: 950;
-      letter-spacing: -.03em;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .liq-loan-box {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .liq-loan-input-wrap {
-      height: 44px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      border: 1px solid rgba(125,211,252,.22);
-      border-radius: 999px;
-      padding: 0 15px;
-      background: rgba(4,15,27,.88);
-      color: var(--cyan);
-      font-size: 18px;
-      font-weight: 950;
-    }
-
-    .liq-loan-input-wrap input {
-      width: 100%;
-      min-width: 0;
-      background: transparent;
-      border: 0;
-      outline: 0;
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 19px;
-      font-weight: 950;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .liq-loan-sub {
-      color: var(--muted);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: .10em;
-    }
-
-    .liq-signal-row {
-      padding: 12px 22px;
-      border-bottom: 1px solid rgba(125,211,252,.14);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .liq-sig-badge {
-      display: inline-block;
-      padding: 6px 14px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 950;
-      text-transform: uppercase;
-      letter-spacing: .10em;
-      margin-right: 8px;
-    }
-
-    .liq-sig-desc,
-    .liq-sig-time {
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-
-    .liq-chart-wrap { padding: 12px 22px 0; }
-    .liq-chart-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .liq-legend {
-      display: flex;
-      gap: 18px;
-      color: #9fb4bf;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .10em;
-    }
-
-    .liq-legend span { display: flex; align-items: center; gap: 7px; }
-
-    .liq-line-conv,
-    .liq-line-govt {
-      width: 22px;
-      height: 3px;
-      display: inline-block;
-      border-radius: 2px;
-      background: #22c55e;
-    }
-
-    .liq-line-govt {
-      background: transparent;
-      border-top: 3px dashed #38bdf8;
-      height: 0;
-    }
-
-    .liq-zone-label {
-      color: var(--muted);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-    }
-
-    .liq-canvas-outer {
-      position: relative;
-      height: 275px;
-      border: 1px solid rgba(125,211,252,.14);
-      border-radius: 12px;
-      background: rgba(1,8,14,.42);
-      padding: 10px;
-    }
-
-    #liqChart {
-      width: 100% !important;
-      height: 100% !important;
-    }
-
-    .liq-tooltip {
-      position: absolute;
-      display: none;
-      pointer-events: none;
-      min-width: 170px;
-      border: 1px solid rgba(125,211,252,.28);
+    .lock-status-pill {
+      min-width: 210px;
+      border: 1px solid rgba(125,211,252,0.18);
       border-radius: 10px;
-      background: rgba(2,9,17,.96);
-      padding: 10px 12px;
-      z-index: 20;
-      box-shadow: 0 0 24px rgba(0,0,0,.42);
+      padding: 9px 12px;
+      background: rgba(1,8,14,0.45);
+      font-family: var(--font-mono);
+      text-align: right;
     }
 
-    .liq-tooltip.vis { display: block; }
-    .liq-tt-title {
-      color: var(--muted);
-      font-size: 10px;
+    .lock-status-main {
+      font-size: 12px;
+      font-weight: 950;
       text-transform: uppercase;
-      letter-spacing: .12em;
-      margin-bottom: 7px;
+      letter-spacing: 0.15em;
     }
-    .liq-tt-row { display: flex; justify-content: space-between; gap: 16px; font-size: 12px; margin-top: 4px; }
-    .liq-tt-row span { color: var(--muted); }
 
-    .liq-handle-row { padding: 5px 22px 0; height: 46px; }
-    .liq-handle-track { position: relative; height: 42px; width: 100%; }
-    .liq-handle-base,
-    .liq-handle-fill {
-      position: absolute;
-      top: 21px;
-      height: 4px;
-      border-radius: 2px;
-    }
-    .liq-handle-base { left: 0; right: 0; background: rgba(125,211,252,.14); }
-    .liq-handle-fill { background: rgba(34,211,238,.24); }
-    .liq-handle {
-      position: absolute;
-      top: 10px;
-      width: 25px;
-      height: 25px;
-      border-radius: 50%;
-      border: 2px solid var(--cyan);
-      background: #020811;
-      transform: translateX(-50%);
-      cursor: grab;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 5;
-      box-shadow: 0 0 12px rgba(34,211,238,.22);
-    }
-    .liq-handle:active { cursor: grabbing; }
-    .liq-handle div {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--cyan);
-    }
-    .liq-handle span {
-      position: absolute;
-      top: -18px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: var(--cyan);
-      font-size: 10px;
-      font-weight: 850;
+    .lock-status-sub {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
       white-space: nowrap;
     }
-
-    .liq-chips {
-      padding: 10px 22px 13px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      flex-wrap: wrap;
-      border-top: 1px solid rgba(125,211,252,.12);
-    }
-
-    .liq-chips-label {
-      color: var(--muted);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      margin-right: 3px;
-    }
-
-    .liq-chip {
-      border: 1px solid rgba(125,211,252,.16);
-      border-radius: 999px;
-      background: rgba(4,15,27,.74);
-      color: #9fb4bf;
-      padding: 5px 11px;
-      font-size: 11px;
-      cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-
-    .liq-chip:hover,
-    .liq-chip.active {
-      color: var(--cyan);
-      border-color: rgba(34,211,238,.64);
-      background: rgba(34,211,238,.08);
-    }
-
-    .liq-footer {
-      padding: 10px 22px 14px;
-      border-top: 1px solid rgba(125,211,252,.12);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: var(--muted);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-
-    .liq-quality { display: flex; align-items: center; gap: 7px; }
-    .liq-quality-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--yellow);
-    }
-    /* ===== END LOCKIQ PRO PRICING INDEX / CHART ===== */
 
     .bias {
       min-height: 245px;
@@ -1131,11 +773,11 @@
       .lock-index-controls { align-items: flex-start; flex-direction: column; }
       .lock-select { width: 100%; min-width: 0; }
       .lock-select-wrap { width: 100%; align-items: flex-start; flex-direction: column; }
+      .lock-status-pill { width: 100%; text-align: left; }
       .pulse-row { grid-template-columns: 28px 1fr 76px 68px; }
       th, td { padding: 8px 5px; font-size: 11px; }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -1148,7 +790,7 @@
 
       <div class="market-state closed" id="marketState">
         <div class="main" id="marketStateMain">Loading</div>
-        <div class="sub">8:00 AM - 5:00 PM ET</div>
+        <div class="sub">5:00 AM PRE • 6:00 AM - 5:00 PM OPEN</div>
       </div>
 
       <nav class="nav">
@@ -1179,100 +821,66 @@
     <div class="error" id="errorBox"></div>
 
     <section class="hero-grid">
-      <article class="panel lockiq-pro-panel">
-        <div class="liq-module">
-          <div class="liq-head">
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">LockIQ Live Pricing Index</div>
+            <div class="panel-sub" id="lockSub">Estimated rate-sheet movement</div>
+          </div>
+          <div class="panel-meta" id="lockUpdated">Updated --</div>
+        </div>
+
+        <div class="lock-index-body">
+          <div class="lock-index-controls">
             <div>
-              <div class="liq-eyebrow">LockIQ — Live Market Intelligence</div>
-              <div class="liq-title">Pricing Index</div>
+              <div class="direction cyan" id="lockiqDirection">Waiting</div>
+              <div class="anchor-text" id="heroAnchor">Since --</div>
             </div>
-            <div class="liq-head-right">
-              <div class="liq-window-headline" id="liqWindowHeadline">Change since 7:15 AM</div>
-              <div class="liq-window-sub">Updated <span id="liqLastUpdated">--:--</span> · Drag handles to adjust</div>
+            <div class="lock-select-wrap">
+              <label for="lockiqAnchorSelect">Change Since</label>
+              <select class="lock-select" id="lockiqAnchorSelect"></select>
             </div>
-          </div>
-
-          <div class="liq-metric-row">
-            <div class="liq-metric liq-metric-conv">
-              <div class="liq-metric-top">
-                <span class="liq-dot liq-dot-conv"></span>
-                <span class="liq-label">Conv index</span>
-              </div>
-              <div class="liq-value-line">
-                <span class="liq-main-val" id="liqConvVal">--</span>
-                <span class="liq-bps" id="liqConvBps">--</span>
-              </div>
-              <div class="liq-cost" id="liqConvCost">--</div>
-            </div>
-
-            <div class="liq-metric liq-metric-govt">
-              <div class="liq-metric-top">
-                <span class="liq-dot liq-dot-govt"></span>
-                <span class="liq-label">Gov't index</span>
-              </div>
-              <div class="liq-value-line">
-                <span class="liq-main-val" id="liqGovtVal">--</span>
-                <span class="liq-bps" id="liqGovtBps">--</span>
-              </div>
-              <div class="liq-cost" id="liqGovtCost">--</div>
-            </div>
-
-            <div class="liq-loan-box">
-              <div class="liq-loan-label">Loan amount</div>
-              <div class="liq-loan-input-wrap">
-                <span>$</span>
-                <input type="text" id="liqLoanInput" value="375,000" inputmode="numeric" />
-              </div>
-              <div class="liq-loan-sub">updates dollar impact</div>
+            <div class="lock-status-pill" id="lockiqStatusPill">
+              <div class="lock-status-main cyan" id="lockiqSessionLabel">Loading</div>
+              <div class="lock-status-sub" id="lockiqStatusSub">Checking engine</div>
             </div>
           </div>
 
-          <div class="liq-signal-row">
-            <div>
-              <span class="liq-sig-badge" id="liqSigBadge">--</span>
-              <span class="liq-sig-desc" id="liqSigDesc">--</span>
+          <div class="index-cards">
+            <div class="index-card">
+              <div class="index-label">Live Conventional Index</div>
+              <div class="index-value cyan" id="liveConvIndex">--</div>
+              <div class="index-impact" id="liveConvImpact">--</div>
             </div>
-            <span class="liq-sig-time" id="liqSigTime">--</span>
-          </div>
 
-          <div class="liq-chart-wrap">
-            <div class="liq-chart-top">
-              <div class="liq-legend">
-                <span><i class="liq-line-conv"></i> Conv</span>
-                <span><i class="liq-line-govt"></i> Gov't</span>
-              </div>
-              <div class="liq-zone-label">risk zones active</div>
-            </div>
-            <div class="liq-canvas-outer">
-              <canvas id="liqChart" role="img" aria-label="LockIQ pricing index chart"></canvas>
-              <div class="liq-tooltip" id="liqTooltip">
-                <div class="liq-tt-title" id="liqTTTitle">--</div>
-                <div class="liq-tt-row"><span>Conv</span><b id="liqTTConv">--</b></div>
-                <div class="liq-tt-row"><span>Gov't</span><b id="liqTTGovt">--</b></div>
-                <div class="liq-tt-row"><span>Impact</span><b id="liqTTImpact">--</b></div>
-              </div>
+            <div class="index-card">
+              <div class="index-label">Live Gov't Index</div>
+              <div class="index-value cyan" id="liveGovtIndex">--</div>
+              <div class="index-impact" id="liveGovtImpact">--</div>
             </div>
           </div>
 
-          <div class="liq-handle-row">
-            <div class="liq-handle-track" id="liqHandleTrack">
-              <div class="liq-handle-base"></div>
-              <div class="liq-handle-fill" id="liqHandleFill"></div>
-              <div class="liq-handle" id="liqHandleL"><div></div><span id="liqLblL">7:15</span></div>
-              <div class="liq-handle" id="liqHandleR"><div></div><span id="liqLblR">Now</span></div>
+          <div class="detail-strip">
+            <div class="detail-pill">
+              <div class="k">FHA Detail</div>
+              <div class="v cyan" id="fhaDetail">--</div>
+            </div>
+            <div class="detail-pill">
+              <div class="k">VA Detail</div>
+              <div class="v cyan" id="vaDetail">--</div>
+            </div>
+            <div class="detail-pill">
+              <div class="k">Data Quality</div>
+              <div class="v green" id="lockiqQuality">--</div>
+            </div>
+            <div class="detail-pill">
+              <div class="k">Model</div>
+              <div class="v cyan" id="lockiqModel">--</div>
             </div>
           </div>
 
-          <div class="liq-chips" id="liqChipsRow">
-            <span class="liq-chips-label">Quick set:</span>
-          </div>
-
-          <div class="liq-footer">
-            <div class="liq-quality">
-              <span class="liq-quality-dot" id="liqQualDot"></span>
-              <span id="liqQualLabel">Data quality: --</span>
-            </div>
-            <div id="liqFooterNote">Refreshes every 60s</div>
+          <div class="lock-note" id="lockiqNote">
+            LockIQ converts live MBS, MBB, Treasury and futures movement into estimated lender point movement. This is directional, not a lender guarantee.
           </div>
         </div>
       </article>
@@ -1379,7 +987,7 @@
   <script>
     const API_URL = "/.netlify/functions/getMarketData";
     const LOCKIQ_API_URL = "/.netlify/functions/getLockIQIndex";
-    const LOCKIQ_CHART_API_URL = "/.netlify/functions/getLockIQChart";
+    const LOCKIQ_STATUS_API_URL = "/.netlify/functions/getLockIQStatus";
 
     const zones = {
       "America/Los_Angeles": "PT",
@@ -1391,6 +999,7 @@
     let activeZone = localStorage.getItem("mbsgoat-timezone") || "America/New_York";
     let lockiqIndexData = null;
     let selectedLockiqAnchorKey = localStorage.getItem("lockiq-anchor-key") || null;
+    let lockiqStatusData = null;
 
     const el = (id) => document.getElementById(id);
 
@@ -1439,6 +1048,33 @@
       return "MARKET FLAT";
     }
 
+    function getArizonaSession(now = new Date()) {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Phoenix",
+        weekday: "short",
+        hour: "numeric",
+        minute: "2-digit",
+        hourCycle: "h23"
+      }).formatToParts(now);
+
+      const getPart = (type) => parts.find((p) => p.type === type)?.value;
+      const day = getPart("weekday");
+      const hour = Number(getPart("hour"));
+      const minute = Number(getPart("minute"));
+      const mins = hour * 60 + minute;
+
+      if (day === "Sat" || day === "Sun" || (day === "Mon" && mins < 300)) {
+        return { key: "WEEKEND", label: "Weekend", isOpen: false };
+      }
+      if (mins >= 300 && mins < 360) {
+        return { key: "PRE_MARKET", label: "Pre-Market", isOpen: false };
+      }
+      if (mins >= 360 && mins < 1020) {
+        return { key: "MARKET_OPEN", label: "Market Open", isOpen: true };
+      }
+      return { key: "AFTERHOURS", label: "Afterhours", isOpen: false };
+    }
+
     function updateClock() {
       const short = zones[activeZone] || "ET";
       const now = new Date();
@@ -1459,20 +1095,9 @@
         year: "numeric"
       }).format(now).toUpperCase();
 
-      const etHour = Number(new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/New_York",
-        hour: "numeric",
-        hourCycle: "h23"
-      }).format(now));
-
-      const etDay = new Intl.DateTimeFormat("en-US", {
-        timeZone: "America/New_York",
-        weekday: "short"
-      }).format(now);
-
-      const isOpen = !["Sat", "Sun"].includes(etDay) && etHour >= 8 && etHour < 17;
-      el("marketState").className = "market-state " + (isOpen ? "open" : "closed");
-      el("marketStateMain").textContent = isOpen ? "Live Market" : "After Hours";
+      const session = getArizonaSession(now);
+      el("marketState").className = "market-state " + (session.isOpen ? "open" : "closed");
+      el("marketStateMain").textContent = session.label;
     }
 
     function setupTimezoneButtons() {
@@ -1732,12 +1357,69 @@
       };
     }
 
+    function formatHeartbeatTime(value) {
+      if (!value) return "--";
+      const timePart = String(value).split(" ")[1] || String(value);
+      return timePart.substring(0, 5);
+    }
+
+    function renderLockIQStatus() {
+      const session = getArizonaSession();
+      const main = el("lockiqSessionLabel");
+      const sub = el("lockiqStatusSub");
+      if (!main || !sub) return;
+
+      main.textContent = session.label;
+      main.className = "lock-status-main " + (session.isOpen ? "green" : session.key === "PRE_MARKET" ? "yellow" : "cyan");
+
+      const lastHeartbeat = lockiqStatusData?.last_heartbeat;
+      const interval = Number(lockiqStatusData?.interval_seconds || 0);
+      let lastText = formatHeartbeatTime(lastHeartbeat);
+
+      if (session.key === "MARKET_OPEN") {
+        sub.textContent = lastHeartbeat ? `Engine update ${lastText}` : "Waiting for first update";
+      } else if (session.key === "PRE_MARKET") {
+        sub.textContent = lastHeartbeat ? `Pre-open update ${lastText}` : "Pre-open window";
+      } else if (session.key === "AFTERHOURS") {
+        sub.textContent = lastHeartbeat ? `Last update ${lastText}` : "Market closed";
+      } else {
+        sub.textContent = lastHeartbeat ? `Last market update ${lastText}` : "Weekend market closed";
+      }
+    }
+
     function renderLockIQLiveIndex() {
+      renderLockIQStatus();
       if (!lockiqIndexData) return {};
 
       const key = selectedLockiqAnchorKey || lockiqIndexData.default_anchor_key || lockiqIndexData.anchor_key || "0715";
       const anchorData = anchorForLockIQ(key);
-      return normalizeLockIQSignal(anchorData);
+      const signal = normalizeLockIQSignal(anchorData);
+      const mainSignal = signal.conv_signal || "FLAT";
+      const mainTone = signalTone(mainSignal);
+
+      el("lockiqDirection").textContent = signalText(mainSignal);
+      el("lockiqDirection").className = "direction " + mainTone;
+      el("heroAnchor").textContent = "Since " + (anchorData?.anchor_label || anchorData?.anchor_time || "--");
+      el("lockSub").textContent = "Estimated lender-point movement";
+      el("lockUpdated").textContent = "Updated " + (lockiqIndexData.last_updated || "--");
+
+      el("liveConvIndex").textContent = formatIndexPts(anchorData?.live_conventional_index_pts) + " pts";
+      el("liveConvIndex").className = "index-value " + signalTone(anchorData?.conv_signal);
+      el("liveConvImpact").textContent = impactText(anchorData?.conv_dollars_per_100k);
+
+      el("liveGovtIndex").textContent = formatIndexPts(anchorData?.live_government_index_pts) + " pts";
+      el("liveGovtIndex").className = "index-value " + signalTone(anchorData?.govt_signal);
+      el("liveGovtImpact").textContent = impactText(anchorData?.govt_dollars_per_100k);
+
+      el("fhaDetail").textContent = signed(anchorData?.fha_change_bps, 1, " bps");
+      el("fhaDetail").className = "v " + signalTone(anchorData?.fha_signal);
+      el("vaDetail").textContent = signed(anchorData?.va_change_bps, 1, " bps");
+      el("vaDetail").className = "v " + signalTone(anchorData?.va_signal);
+      el("lockiqQuality").textContent = anchorData?.data_quality || lockiqIndexData.data_quality || "--";
+      el("lockiqQuality").className = "v " + ((anchorData?.data_quality || "") === "GOOD" ? "green" : "yellow");
+      el("lockiqModel").textContent = (lockiqIndexData.model_version || "v1").replace("lockiq_live_index_", "");
+
+      return signal;
     }
 
     function render(data) {
@@ -1751,441 +1433,19 @@
       renderRisk(data);
     }
 
-
-    // ===== LOCKIQ PRO CHART MODULE =====
-    let LIQ_PTS = [];
-    let liqChart = null;
-    let liqLeftIdx = 0;
-    let liqRightIdx = 0;
-    let liqLoanAmt = 375000;
-    let liqHandlesReady = false;
-
-    function liqFmtPts(v) {
-      const parsed = asNumber(v);
-      if (parsed === null) return "--";
-      return (parsed >= 0 ? "+" : "") + parsed.toFixed(3) + " pts";
-    }
-
-    function liqFmtBps(v) {
-      const parsed = asNumber(v);
-      if (parsed === null) return "--";
-      const bps = Math.abs(parsed * 100).toFixed(1);
-      return bps + " bps " + (parsed >= 0 ? "better" : "worse");
-    }
-
-    function liqFmtDollar(pts, loanAmount) {
-      const parsed = asNumber(pts);
-      if (parsed === null) return "--";
-      // Mortgage point math:
-      // -0.096 points on $375,000 = -0.096% of loan = about -$360.
-      const dollars = Math.round(parsed * loanAmount / 100);
-      return (dollars >= 0 ? "+$" : "-$") + Math.abs(dollars).toLocaleString();
-    }
-
-    function liqParseLoan(value) {
-      const n = parseInt(String(value || "").replace(/[^0-9]/g, ""), 10);
-      return (!n || n <= 0) ? 375000 : n;
-    }
-
-    function liqSignal(pts) {
-      const bps = (asNumber(pts) || 0) * 100;
-      const abs = Math.abs(bps);
-
-      if (bps >= 0) {
-        if (abs <= 5) return { text: "Neutral / Stable", color: "#94a3b8", bg: "rgba(148,163,184,.10)", border: "rgba(148,163,184,.28)" };
-        if (abs <= 10) return { text: "Trending Safe", color: "#22c55e", bg: "rgba(34,197,94,.10)", border: "rgba(34,197,94,.28)" };
-        if (abs <= 15) return { text: "Improving", color: "#4ade80", bg: "rgba(74,222,128,.10)", border: "rgba(74,222,128,.28)" };
-        return { text: "Rate Sheets Improving", color: "#bbf7d0", bg: "rgba(187,247,208,.10)", border: "rgba(187,247,208,.32)" };
-      }
-
-      if (abs <= 5) return { text: "Worsening — Monitor", color: "#f59e0b", bg: "rgba(245,158,11,.10)", border: "rgba(245,158,11,.34)" };
-      if (abs <= 10) return { text: "Worsening — Caution", color: "#f97316", bg: "rgba(249,115,22,.10)", border: "rgba(249,115,22,.34)" };
-      if (abs <= 15) return { text: "Reprice Possible", color: "#ef4444", bg: "rgba(239,68,68,.10)", border: "rgba(239,68,68,.34)" };
-      if (abs <= 25) return { text: "Reprice Likely", color: "#dc2626", bg: "rgba(220,38,38,.12)", border: "rgba(220,38,38,.38)" };
-      return { text: "Reprices Expected", color: "#fca5a5", bg: "rgba(252,165,165,.10)", border: "rgba(252,165,165,.42)" };
-    }
-
-    function liqTimeLabel(point) {
-      if (!point) return "--";
-      if (String(point.anchor_key || "").includes("yesterday")) return point.label || "--";
-      return String(point.time || point.label || "--").slice(0, 5);
-    }
-
-    function liqWindowLabel() {
-      if (!LIQ_PTS.length) return "Change since --";
-      const selected = LIQ_PTS[liqLeftIdx];
-
-      if (selected?.anchor_key === "0715") return "Change since 7:15 AM";
-      return "Change since " + (selected?.label || "--");
-    }
-
-    function liqDurationText() {
-      if (!LIQ_PTS.length) return "--";
-      const selected = LIQ_PTS[liqLeftIdx];
-      return (selected?.label || "--") + " → Current Market";
-    }
-
-    function liqUpdateDisplay() {
-      if (!LIQ_PTS.length) return;
-
-      const selected = LIQ_PTS[liqLeftIdx];
-
-      // IMPORTANT:
-      // Each backend chart point is already the move from that anchor to current market.
-      // Do NOT subtract a right-handle point from a left-handle point.
-      // Example: the 0715 point already means "7:15 AM → now."
-      const convDelta = Number((asNumber(selected?.conv_index_pts) || 0).toFixed(4));
-      const govtDelta = Number((asNumber(selected?.govt_index_pts) || 0).toFixed(4));
-
-      const convColor = convDelta >= 0 ? "var(--green)" : "var(--red)";
-      const govtColor = govtDelta >= 0 ? "var(--green)" : "var(--red)";
-
-      el("liqConvVal").textContent = liqFmtPts(convDelta);
-      el("liqConvVal").style.color = convColor;
-      el("liqConvBps").textContent = liqFmtBps(convDelta);
-      el("liqConvCost").textContent = liqFmtDollar(convDelta, liqLoanAmt);
-      el("liqConvCost").style.color = convColor;
-
-      el("liqGovtVal").textContent = liqFmtPts(govtDelta);
-      el("liqGovtVal").style.color = govtColor;
-      el("liqGovtBps").textContent = liqFmtBps(govtDelta);
-      el("liqGovtCost").textContent = liqFmtDollar(govtDelta, liqLoanAmt);
-      el("liqGovtCost").style.color = govtColor;
-
-      el("liqWindowHeadline").textContent = liqWindowLabel();
-      el("liqSigDesc").textContent = liqDurationText();
-      el("liqSigTime").textContent = "as of current market";
-
-      const sig = liqSignal(convDelta);
-      el("liqSigBadge").textContent = sig.text;
-      el("liqSigBadge").style.color = sig.color;
-      el("liqSigBadge").style.background = sig.bg;
-      el("liqSigBadge").style.border = "1px solid " + sig.border;
-
-      liqPositionHandles();
-    }
-
-    const liqZonePlugin = {
-      id: "liqZones",
-      beforeDraw(chart) {
-        const { ctx, chartArea, scales } = chart;
-        if (!chartArea || !scales?.y) return;
-        const y = scales.y;
-        [
-          { y1: -0.05, y2: -0.10, c: "rgba(245,158,11,.05)" },
-          { y1: -0.10, y2: -0.15, c: "rgba(249,115,22,.06)" },
-          { y1: -0.15, y2: -0.25, c: "rgba(239,68,68,.07)" },
-          { y1: -0.25, y2: -0.50, c: "rgba(220,38,38,.09)" },
-          { y1: 0.05, y2: 0.15, c: "rgba(34,197,94,.05)" },
-          { y1: 0.15, y2: 0.35, c: "rgba(34,197,94,.08)" }
-        ].forEach((zone) => {
-          const p1 = y.getPixelForValue(zone.y1);
-          const p2 = y.getPixelForValue(zone.y2);
-          ctx.fillStyle = zone.c;
-          ctx.fillRect(chartArea.left, Math.min(p1, p2), chartArea.width, Math.abs(p2 - p1));
-        });
-
-        const zero = y.getPixelForValue(0);
-        ctx.save();
-        ctx.strokeStyle = "rgba(148,163,184,.32)";
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath();
-        ctx.moveTo(chartArea.left, zero);
-        ctx.lineTo(chartArea.right, zero);
-        ctx.stroke();
-        ctx.restore();
-      }
-    };
-
-    const liqDimPlugin = {
-      id: "liqDim",
-      beforeDatasetsDraw(chart) {
-        const { ctx, chartArea, scales } = chart;
-        if (!chartArea || !scales?.x || !LIQ_PTS.length) return;
-        const lx = scales.x.getPixelForValue(liqLeftIdx);
-        const rx = scales.x.getPixelForValue(liqRightIdx);
-
-        ctx.save();
-        ctx.fillStyle = "rgba(2,8,17,.58)";
-        if (lx > chartArea.left) ctx.fillRect(chartArea.left, chartArea.top, lx - chartArea.left, chartArea.height);
-        if (rx < chartArea.right) ctx.fillRect(rx, chartArea.top, chartArea.right - rx, chartArea.height);
-        ctx.strokeStyle = "rgba(34,211,238,.42)";
-        ctx.setLineDash([3, 4]);
-        ctx.beginPath();
-        ctx.moveTo(lx, chartArea.top);
-        ctx.lineTo(lx, chartArea.bottom);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(rx, chartArea.top);
-        ctx.lineTo(rx, chartArea.bottom);
-        ctx.stroke();
-        ctx.restore();
-      }
-    };
-
-    function liqBuildChart() {
-      if (typeof Chart === "undefined" || !el("liqChart")) return;
-
-      const ctx = el("liqChart").getContext("2d");
-      liqChart = new Chart(ctx, {
-        type: "line",
-        plugins: [liqZonePlugin, liqDimPlugin],
-        data: {
-          labels: LIQ_PTS.map((p) => p.label),
-          datasets: [
-            {
-              label: "Conv",
-              data: LIQ_PTS.map((p) => asNumber(p.conv_index_pts) || 0),
-              borderColor: "#22c55e",
-              borderWidth: 3,
-              pointBackgroundColor: "#22c55e",
-              pointBorderColor: "#020811",
-              pointBorderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              tension: 0.33
-            },
-            {
-              label: "Gov't",
-              data: LIQ_PTS.map((p) => asNumber(p.govt_index_pts) || 0),
-              borderColor: "#38bdf8",
-              borderWidth: 2.5,
-              borderDash: [6, 4],
-              pointBackgroundColor: "#38bdf8",
-              pointBorderColor: "#020811",
-              pointBorderWidth: 2,
-              pointRadius: 3.5,
-              pointHoverRadius: 5,
-              tension: 0.33
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: { duration: 350 },
-          interaction: { mode: "index", intersect: false },
-          plugins: { legend: { display: false }, tooltip: { enabled: false } },
-          scales: {
-            x: {
-              grid: { color: "rgba(125,211,252,.08)" },
-              ticks: { color: "#78909c", font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 },
-              border: { color: "rgba(125,211,252,.18)" }
-            },
-            y: {
-              grid: { color: "rgba(125,211,252,.08)" },
-              ticks: {
-                color: "#78909c",
-                font: { size: 10 },
-                callback: (v) => (v >= 0 ? "+" : "") + Number(v).toFixed(3),
-                maxTicksLimit: 8
-              },
-              border: { color: "rgba(125,211,252,.18)" }
-            }
-          },
-          onHover: (evt, active, chart) => {
-            const tt = el("liqTooltip");
-            if (!tt) return;
-            if (!active || !active.length) {
-              tt.classList.remove("vis");
-              return;
-            }
-
-            const i = active[0].index;
-            const point = LIQ_PTS[i];
-            const conv = asNumber(point.conv_index_pts) || 0;
-            const govt = asNumber(point.govt_index_pts) || 0;
-
-            el("liqTTTitle").textContent = point.label || "--";
-            el("liqTTConv").textContent = liqFmtPts(conv);
-            el("liqTTConv").style.color = conv >= 0 ? "#22c55e" : "#ef4444";
-            el("liqTTGovt").textContent = liqFmtPts(govt);
-            el("liqTTImpact").textContent = liqFmtDollar(conv, liqLoanAmt) + " conv";
-
-            const outer = document.querySelector(".liq-canvas-outer").getBoundingClientRect();
-            const meta = chart.getDatasetMeta(0);
-            const dot = meta.data[i];
-            let x = dot.x + 14;
-            let y = dot.y - 62;
-            if (x + 180 > outer.width) x = dot.x - 190;
-            if (y < 8) y = 8;
-            tt.style.left = x + "px";
-            tt.style.top = y + "px";
-            tt.classList.add("vis");
-          }
-        }
-      });
-    }
-
-    function liqPositionHandles() {
-      const track = el("liqHandleTrack");
-      if (!track || LIQ_PTS.length < 2) return;
-
-      const width = track.getBoundingClientRect().width;
-      if (!width) return;
-      const step = width / (LIQ_PTS.length - 1);
-      const lx = liqLeftIdx * step;
-      const rx = liqRightIdx * step;
-
-      el("liqHandleL").style.left = lx + "px";
-      el("liqHandleR").style.left = rx + "px";
-      el("liqHandleFill").style.left = lx + "px";
-      el("liqHandleFill").style.width = Math.max(0, rx - lx) + "px";
-      el("liqLblL").textContent = liqTimeLabel(LIQ_PTS[liqLeftIdx]);
-      el("liqLblR").textContent = liqRightIdx === LIQ_PTS.length - 1 ? "Now" : liqTimeLabel(LIQ_PTS[liqRightIdx]);
-    }
-
-    function liqSetupHandles() {
-      if (liqHandlesReady || LIQ_PTS.length < 2) return;
-      liqHandlesReady = true;
-
-      const track = el("liqHandleTrack");
-      const leftHandle = el("liqHandleL");
-      const rightHandle = el("liqHandleR");
-
-      // The right handle represents current market and stays fixed at the far right.
-      // The left handle selects which backend anchor-to-current point to display.
-      if (rightHandle) {
-        rightHandle.style.cursor = "default";
-        rightHandle.title = "Current market";
-      }
-
-      let dragging = false;
-
-      leftHandle.addEventListener("mousedown", (event) => {
-        dragging = true;
-        event.preventDefault();
-      });
-
-      document.addEventListener("mousemove", (event) => {
-        if (!dragging || !track) return;
-        const rect = track.getBoundingClientRect();
-        const step = rect.width / (LIQ_PTS.length - 1);
-        const idx = Math.round(Math.max(0, Math.min(rect.width, event.clientX - rect.left)) / step);
-
-        liqLeftIdx = Math.max(0, Math.min(idx, LIQ_PTS.length - 1));
-        liqRightIdx = LIQ_PTS.length - 1;
-
-        liqPositionHandles();
-        if (liqChart) liqChart.update("none");
-        liqUpdateDisplay();
-        document.querySelectorAll(".liq-chip").forEach((chip) => chip.classList.remove("active"));
-      });
-
-      document.addEventListener("mouseup", () => {
-        dragging = false;
-      });
-
-      window.addEventListener("resize", liqPositionHandles);
-    }
-
-    function liqQuickSet(index) {
-      if (!LIQ_PTS.length) return;
-      liqLeftIdx = Math.max(0, Math.min(index, LIQ_PTS.length - 2));
-      liqRightIdx = LIQ_PTS.length - 1;
-      if (liqChart) liqChart.update("none");
-      liqUpdateDisplay();
-
-      document.querySelectorAll(".liq-chip").forEach((chip, i) => {
-        chip.classList.toggle("active", i === index);
-      });
-    }
-
-    function liqBuildChips() {
-      const row = el("liqChipsRow");
-      if (!row || !LIQ_PTS.length) return;
-
-      row.innerHTML = '<span class="liq-chips-label">Quick set:</span>';
-
-      LIQ_PTS.slice(0, -1).forEach((point, index) => {
-        const chip = document.createElement("button");
-        chip.type = "button";
-        chip.className = "liq-chip" + (index === liqLeftIdx ? " active" : "");
-        chip.textContent = "Since " + (point.label || point.anchor_key);
-        chip.addEventListener("click", () => liqQuickSet(index));
-        row.appendChild(chip);
-      });
-    }
-
-    function liqSetupLoanInput() {
-      const input = el("liqLoanInput");
-      if (!input || input.dataset.ready === "1") return;
-      input.dataset.ready = "1";
-
-      input.addEventListener("input", () => {
-        liqLoanAmt = liqParseLoan(input.value);
-        liqUpdateDisplay();
-      });
-
-      input.addEventListener("focus", () => {
-        input.value = String(liqLoanAmt);
-        setTimeout(() => input.select(), 0);
-      });
-
-      input.addEventListener("blur", () => {
-        input.value = liqLoanAmt.toLocaleString();
-      });
-    }
-
-    async function loadLockIQChart() {
-      try {
-        const response = await fetch(LOCKIQ_CHART_API_URL, { cache: "no-store" });
-        if (!response.ok) throw new Error("LockIQ chart API " + response.status);
-        const data = await response.json();
-        const points = Array.isArray(data.points) ? data.points : [];
-
-        if (!points.length) return;
-
-        LIQ_PTS = points;
-        const defaultKey = data.default_anchor_key || "0715";
-        const defaultIdx = LIQ_PTS.findIndex((p) => p.anchor_key === defaultKey);
-        liqLeftIdx = defaultIdx >= 0 ? defaultIdx : 0;
-        liqRightIdx = LIQ_PTS.length - 1;
-
-        if (data.last_updated) {
-          const t = String(data.last_updated).split(" ")[1] || data.last_updated;
-          el("liqLastUpdated").textContent = t.slice(0, 5);
-        }
-
-        const lastPoint = LIQ_PTS[LIQ_PTS.length - 1];
-        const q = String(lastPoint.quality || "LIMITED").toUpperCase();
-        el("liqQualLabel").textContent = "Data quality: " + q;
-        el("liqQualDot").style.background = q === "GOOD" ? "var(--green)" : q === "OK_WITH_WARNINGS" ? "var(--yellow)" : "var(--red)";
-
-        if (!liqChart) {
-          liqBuildChart();
-          setTimeout(() => {
-            liqPositionHandles();
-            liqSetupHandles();
-          }, 100);
-        } else {
-          liqChart.data.labels = LIQ_PTS.map((p) => p.label);
-          liqChart.data.datasets[0].data = LIQ_PTS.map((p) => asNumber(p.conv_index_pts) || 0);
-          liqChart.data.datasets[1].data = LIQ_PTS.map((p) => asNumber(p.govt_index_pts) || 0);
-          liqChart.update("active");
-          liqPositionHandles();
-        }
-
-        liqBuildChips();
-        liqSetupLoanInput();
-        liqUpdateDisplay();
-      } catch (error) {
-        console.error("LockIQ chart error:", error);
-        const footer = el("liqFooterNote");
-        if (footer) footer.textContent = "Chart error: " + (error?.message || error);
-      }
-    }
-    // ===== END LOCKIQ PRO CHART MODULE =====
-
     async function loadData() {
       el("page").classList.add("loading");
       el("errorBox").style.display = "none";
 
       try {
-        const [marketResponse, lockiqResponse] = await Promise.all([
+        const statusPromise = fetch(LOCKIQ_STATUS_API_URL, { cache: "no-store" })
+          .then((response) => response.ok ? response.json() : null)
+          .catch(() => null);
+
+        const [marketResponse, lockiqResponse, statusData] = await Promise.all([
           fetch(API_URL, { cache: "no-store" }),
-          fetch(LOCKIQ_API_URL, { cache: "no-store" })
+          fetch(LOCKIQ_API_URL, { cache: "no-store" }),
+          statusPromise
         ]);
 
         if (!marketResponse.ok) throw new Error("Market API " + marketResponse.status);
@@ -2193,9 +1453,9 @@
 
         const data = await marketResponse.json();
         lockiqIndexData = await lockiqResponse.json();
+        lockiqStatusData = statusData;
 
         render(data);
-        loadLockIQChart();
       } catch (error) {
         el("errorBox").style.display = "block";
         el("errorBox").textContent = "API error: " + (error?.message || error);
@@ -2207,6 +1467,7 @@
     setupTimezoneButtons();
     updateClock();
     setInterval(updateClock, 1000);
+    setInterval(renderLockIQStatus, 60000);
 
     loadData();
     setInterval(loadData, 60000);
